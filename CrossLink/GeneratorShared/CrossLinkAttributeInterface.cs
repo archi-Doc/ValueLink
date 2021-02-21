@@ -18,11 +18,17 @@ namespace CrossLink
     }
 
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
-    public class CrossLinkAttribute : Attribute
+    public sealed class CrossLinkAttribute : Attribute
     {
-        public LinkType Type { get; private set; }
+        /// <summary>
+        /// Gets or sets a value indicating the type of object linkage.
+        /// </summary>
+        public LinkType Type { get; set; }
 
-        public string? Name { get; private set; }
+        /// <summary>
+        /// Gets or sets a string value which represents the name used for the linkage interface.
+        /// </summary>
+        public string Name { get; set; } = string.Empty;
 
         public CrossLinkAttribute()
         {
