@@ -3,6 +3,7 @@ using CrossLink;
 
 namespace Sandbox
 {
+    [CrossLinkObject()]
     public partial class TestClass
     {
         [CrossLink(Name = "test", Type = LinkType.LinkedList)]
