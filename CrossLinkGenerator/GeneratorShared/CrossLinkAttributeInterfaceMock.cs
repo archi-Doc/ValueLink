@@ -44,12 +44,54 @@ namespace CrossLink
         SortedList,
     }
 
-    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
-    public sealed class CrossLinkAttributeMock : Attribute
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = true)]
+    public sealed class CrossLinkObjectAttributeMock : Attribute
     {
-        public static readonly string SimpleName = "CrossLink";
+        public static readonly string SimpleName = "CrossLinkObject";
         public static readonly string StandardName = SimpleName + "Attribute";
         public static readonly string FullName = "CrossLink." + StandardName;
+
+        /// <summary>
+        /// Gets or sets a string value which represents the class name of Goshujin (Owner class).
+        /// </summary>
+        public string GoshujinClass { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets a string value which represents the member name of Goshujin (Owner class).
+        /// </summary>
+        public string GoshujinName { get; set; } = string.Empty;
+
+        public CrossLinkObjectAttributeMock()
+        {
+        }
+
+        public static CrossLinkObjectAttributeMock FromArray(object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
+        {
+            var attribute = new CrossLinkObjectAttributeMock();
+            object? val;
+
+            val = AttributeHelper.GetValue(-1, nameof(GoshujinClass), constructorArguments, namedArguments);
+            if (val != null)
+            {
+                attribute.GoshujinClass = (string)val;
+            }
+
+            val = AttributeHelper.GetValue(-1, nameof(GoshujinName), constructorArguments, namedArguments);
+            if (val != null)
+            {
+                attribute.GoshujinName = (string)val;
+            }
+
+            return attribute;
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Constructor | AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = true, Inherited = true)]
+    public sealed class LinkAttributeMock : Attribute
+    {
+        public static readonly string SimpleName = "Link";
+        public static readonly string StandardName = SimpleName + "Attribute";
+        public static readonly string FullName = "Link." + StandardName;
 
         /// <summary>
         /// Gets or sets a value indicating the type of object linkage.
@@ -61,8 +103,28 @@ namespace CrossLink
         /// </summary>
         public string Name { get; set; } = string.Empty;
 
-        public CrossLinkAttributeMock()
+        public LinkAttributeMock()
         {
+        }
+
+        public static LinkAttributeMock FromArray(object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
+        {
+            var attribute = new LinkAttributeMock();
+            object? val;
+
+            val = AttributeHelper.GetValue(-1, nameof(Type), constructorArguments, namedArguments);
+            if (val != null)
+            {
+                attribute.Type = (LinkType)val;
+            }
+
+            val = AttributeHelper.GetValue(-1, nameof(Name), constructorArguments, namedArguments);
+            if (val != null)
+            {
+                attribute.Name = (string)val;
+            }
+
+            return attribute;
         }
     }
 

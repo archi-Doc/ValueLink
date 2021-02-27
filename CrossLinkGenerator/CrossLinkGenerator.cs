@@ -32,7 +32,8 @@ namespace CrossLink.Generator
         public GeneratorExecutionContext Context { get; private set; }
 
         private CrossLinkBody body = default!;
-        private INamedTypeSymbol? crossLinkAttributeSymbol;
+        private INamedTypeSymbol? crossLinkObjectAttributeSymbol;
+        private INamedTypeSymbol? linkAttributeSymbol;
         private INamedTypeSymbol? crossLinkGeneratorOptionAttributeSymbol;
 #pragma warning disable RS1024
         private HashSet<INamedTypeSymbol?> processedSymbol = new();
@@ -52,8 +53,16 @@ namespace CrossLink.Generator
             }
 
             var compilation = context.Compilation;
-            this.crossLinkAttributeSymbol = compilation.GetTypeByMetadataName(CrossLinkAttributeMock.FullName);
-            if (this.crossLinkAttributeSymbol == null)
+
+            this.crossLinkObjectAttributeSymbol = compilation.GetTypeByMetadataName(CrossLinkObjectAttributeMock.FullName);
+            if (this.crossLinkObjectAttributeSymbol == null)
+            {
+                return;
+
+            }
+
+            this.linkAttributeSymbol = compilation.GetTypeByMetadataName(LinkAttributeMock.FullName);
+            if (this.linkAttributeSymbol == null)
             {
                 return;
             }
@@ -109,7 +118,7 @@ namespace CrossLink.Generator
         {
             // System.Diagnostics.Debugger.Launch();
 
-            context.RegisterForSyntaxNotifications(() => new TinyhandSyntaxReceiver());
+            context.RegisterForSyntaxNotifications(() => new CrossLinkSyntaxReceiver());
         }
 
         private void SalvageCloseGeneric(VisceralGenerics generics)
@@ -176,9 +185,8 @@ namespace CrossLink.Generator
             this.processedSymbol.Add(s);
             foreach (var x in s.GetAttributes())
             {
-                if (SymbolEqualityComparer.Default.Equals(x.AttributeClass, this.tinyhandObjectAttributeSymbol) ||
-                    SymbolEqualityComparer.Default.Equals(x.AttributeClass, this.tinyhandUnionAttributeSymbol))
-                { // TinyhandObject or TinyhandUnion
+                if (SymbolEqualityComparer.Default.Equals(x.AttributeClass, this.crossLinkObjectAttributeSymbol))
+                { // CrossLinkObject
                     var obj = this.body.Add(s);
                     break;
                 }
@@ -192,16 +200,10 @@ namespace CrossLink.Generator
 
             if (context.ParseOptions.PreprocessorSymbolNames.Any(x => x == "NET5_0"))
             {// .NET 5
-                this.MemberNotNullIsAvailable = true;
                 this.ModuleInitializerIsAvailable = true;
             }
             else
             {
-                if (compilation.GetTypeByMetadataName("System.Diagnostics.CodeAnalysis.MemberNotNullAttribute") is { } atr && atr.DeclaredAccessibility == Accessibility.Public)
-                {// [MemberNotNull] is supported.
-                    this.MemberNotNullIsAvailable = true;
-                }
-
                 if (compilation.GetTypeByMetadataName("System.Runtime.CompilerServices.ModuleInitializerAttribute") is { } atr2 && atr2.DeclaredAccessibility == Accessibility.Public)
                 {// [ModuleInitializer] is supported.
                     this.ModuleInitializerIsAvailable = true;
@@ -209,7 +211,7 @@ namespace CrossLink.Generator
             }
         }
 
-        private void ProcessGeneratorOption(TinyhandSyntaxReceiver receiver, Compilation compilation)
+        private void ProcessGeneratorOption(CrossLinkSyntaxReceiver receiver, Compilation compilation)
         {
             if (receiver.GeneratorOptionSyntax == null)
             {
@@ -219,11 +221,11 @@ namespace CrossLink.Generator
             var model = compilation.GetSemanticModel(receiver.GeneratorOptionSyntax.SyntaxTree);
             if (model.GetDeclaredSymbol(receiver.GeneratorOptionSyntax) is INamedTypeSymbol s)
             {
-                var attr = s.GetAttributes().FirstOrDefault(x => SymbolEqualityComparer.Default.Equals(x.AttributeClass, this.tinyhandGeneratorOptionAttributeSymbol));
+                var attr = s.GetAttributes().FirstOrDefault(x => SymbolEqualityComparer.Default.Equals(x.AttributeClass, this.crossLinkGeneratorOptionAttributeSymbol));
                 if (attr != null)
                 {
-                    var va = new VisceralAttribute(TinyhandGeneratorOptionAttributeMock.FullName, attr);
-                    var ta = TinyhandGeneratorOptionAttributeMock.FromArray(va.ConstructorArguments, va.NamedArguments);
+                    var va = new VisceralAttribute(CrossLinkGeneratorOptionAttributeMock.FullName, attr);
+                    var ta = CrossLinkGeneratorOptionAttributeMock.FromArray(va.ConstructorArguments, va.NamedArguments);
 
                     this.AttachDebugger = ta.AttachDebugger;
                     this.GenerateToFile = ta.GenerateToFile;
@@ -270,16 +272,14 @@ namespace CrossLink.Generator
                         var name = attribute.Name.ToString();
                         if (this.GeneratorOptionSyntax == null)
                         {
-                            if (name.EndsWith(TinyhandGeneratorOptionAttributeMock.Name) || name.EndsWith(TinyhandGeneratorOptionAttributeMock.SimpleName))
+                            if (name.EndsWith(CrossLinkGeneratorOptionAttributeMock.StandardName) || name.EndsWith(CrossLinkGeneratorOptionAttributeMock.SimpleName))
                             {
                                 this.GeneratorOptionSyntax = typeSyntax;
                             }
                         }
 
-                        if (name.EndsWith(TinyhandObjectAttributeMock.Name) ||
-                            name.EndsWith(TinyhandObjectAttributeMock.SimpleName) ||
-                            name.EndsWith(TinyhandUnionAttributeMock.Name) ||
-                            name.EndsWith(TinyhandUnionAttributeMock.SimpleName))
+                        if (name.EndsWith(CrossLinkObjectAttributeMock.StandardName) ||
+                            name.EndsWith(CrossLinkObjectAttributeMock.SimpleName))
                         {
                             return true;
                         }

@@ -6,7 +6,7 @@ namespace Sandbox
     [CrossLinkObject()]
     public partial class TestClass
     {
-        [CrossLink(Name = "test", Type = LinkType.LinkedList)]
+        [Link(Name = "test", Type = LinkType.LinkedList)]
         public int ID { get; set; }
 
     }

@@ -17,8 +17,26 @@ namespace CrossLink
         SortedList,
     }
 
-    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
-    public sealed class CrossLinkAttribute : Attribute
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = true)]
+    public sealed class CrossLinkObjectAttribute : Attribute
+    {
+        /// <summary>
+        /// Gets or sets a string value which represents the class name of Goshujin (Owner class).
+        /// </summary>
+        public string GoshujinClass { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets a string value which represents the member name of Goshujin (Owner class).
+        /// </summary>
+        public string GoshujinName { get; set; } = string.Empty;
+
+        public CrossLinkObjectAttribute()
+        {
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Constructor | AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = true, Inherited = true)]
+    public sealed class LinkAttribute : Attribute
     {
         /// <summary>
         /// Gets or sets a value indicating the type of object linkage.
@@ -30,7 +48,7 @@ namespace CrossLink
         /// </summary>
         public string Name { get; set; } = string.Empty;
 
-        public CrossLinkAttribute()
+        public LinkAttribute()
         {
         }
     }
