@@ -14,7 +14,6 @@ namespace Benchmark.Draft
     {
         public TestGoshujin()
         {
-
         }
 
         public void Add(TestClass x)
@@ -34,7 +33,7 @@ namespace Benchmark.Draft
         public TestClass(int id)
         {
             this.Id = id;
-            this.IdLink = new ListChain<TestClass>.Link(this);
+            // this.IdLink = new ListChain<TestClass>.Link(this);
         }
 
         public TestGoshujin Goshujin
@@ -56,11 +55,11 @@ namespace Benchmark.Draft
 
         public int Id { get; set; }
 
-        /* public ListChain<TestClass>.Link IdLink => this.IdLinkInstance != null ? this.IdLinkInstance : (this.IdLinkInstance = new());
+        public ListChain<TestClass>.Link IdLink => this.IdLinkInstance != null ? this.IdLinkInstance : (this.IdLinkInstance = new(this));
 
-        private ListChain<TestClass>.Link? IdLinkInstance;*/
+        private ListChain<TestClass>.Link? IdLinkInstance;
 
-        public ListChain<TestClass>.Link IdLink;
+        // public ListChain<TestClass>.Link IdLink;
 
         public string Name { get; set; } = string.Empty;
     }
@@ -107,6 +106,32 @@ namespace Benchmark.Draft
         }
 
         [Benchmark]
+        public List<TestClass2> Initialize_List()
+        {
+            var list = new List<TestClass2>();
+            list.Add(new TestClass2(10));
+            list.Add(new TestClass2(1));
+            list.Add(new TestClass2(2));
+            list.Add(new TestClass2(5));
+            list.Add(new TestClass2(3));
+
+            return list;
+        }
+
+        [Benchmark]
+        public TestGoshujin Initialize_CrossLink()
+        {
+            var goshujin = new TestGoshujin();
+            new TestClass(10).Goshujin = goshujin;
+            new TestClass(1).Goshujin = goshujin;
+            new TestClass(2).Goshujin = goshujin;
+            new TestClass(5).Goshujin = goshujin;
+            new TestClass(3).Goshujin = goshujin;
+
+            return goshujin;
+        }
+
+        /*[Benchmark]
         public int RemoveAdd_List()
         {
             var c = this.list[3];
@@ -140,8 +165,8 @@ namespace Benchmark.Draft
         public int RemoveAdd_CrossLink()
         {
             var c = this.goshujin.IdChain[3];
-            this.goshujin.IdChain.Remove(c.IdLink);
-            this.goshujin.IdChain.Add(c.IdLink);
+            this.goshujin.IdChain.Remove(ref c.IdLink);
+            this.goshujin.IdChain.Add(ref c.IdLink);
             return this.goshujin.IdChain.Count;
         }
 
@@ -155,6 +180,6 @@ namespace Benchmark.Draft
             }
 
             return n;
-        }
+        }*/
     }
 }

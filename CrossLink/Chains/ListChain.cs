@@ -53,9 +53,9 @@ namespace CrossLink
 
         public bool Add(Link link)
         {
-            if (link.Index >= 0)
+            if (link.IsLinked)
             {
-                return false;
+                this.Remove(link);
             }
 
             if (this.size == this.items.Length)
@@ -63,7 +63,7 @@ namespace CrossLink
                 this.EnsureCapacity(this.size + 1);
             }
 
-            link.Index = this.size;
+            link.index = this.size;
             this.items[this.size++] = link.obj;
             this.version++;
 
@@ -72,27 +72,32 @@ namespace CrossLink
 
         public bool Remove(Link link)
         {
-            if (link.Index >= 0)
+            if (!link.IsLinked)
             {
-                if ((uint)link.Index >= (uint)this.size)
-                {
-                    throw new ArgumentOutOfRangeException();
-                }
-
-                this.size--;
-                if (link.Index < this.size)
-                {
-                    Array.Copy(this.items, link.Index + 1, this.items, link.Index, this.size - link.Index);
-                }
-
-                link.Index = -1;
-                this.items[this.size] = default(T) !;
-                this.version++;
-
-                return true;
+                return false;
             }
 
-            return false;
+            if ((uint)link.index >= (uint)this.size)
+            {
+                throw new ArgumentOutOfRangeException();
+            }
+
+            if (link.obj?.Equals(this.items[link.index]) != true)
+            {
+                throw new InvalidOperationException();
+            }
+
+            this.size--;
+            if (link.index < this.size)
+            {
+                Array.Copy(this.items, link.index + 1, this.items, link.index, this.size - link.index);
+            }
+
+            link.index = -1;
+            this.items[this.size] = default(T) !;
+            this.version++;
+
+            return true;
         }
 
         private void EnsureCapacity(int min)
@@ -100,8 +105,7 @@ namespace CrossLink
             if (this.items.Length < min)
             {
                 int newCapacity = this.items.Length == 0 ? DefaultCapacity : this.items.Length * 2;
-                // Allow the list to grow to maximum possible capacity (~2G elements) before encountering overflow.
-                // Note that this check works even when _items.Length overflowed thanks to the (uint) cast
+
                 if ((uint)newCapacity > MaxArrayLength)
                 {
                     newCapacity = MaxArrayLength;
@@ -162,32 +166,19 @@ namespace CrossLink
             return new Enumerator(this);
         }
 
-        public sealed class Link : ILink
+        public sealed class Link : ILink<T>
         {
             internal T obj;
-            internal int rawIndex;
-
-            public Link(T obj, int index)
-            {
-                this.obj = obj;
-                this.Index = index;
-            }
+            internal int index = -1;
 
             public Link(T obj)
             {
                 this.obj = obj;
             }
 
-            public int Index
-            {
-                get => this.rawIndex - 1;
-                set
-                {
-                    this.rawIndex = value + 1;
-                }
-            }
+            public int Index => this.index;
 
-            public bool IsLinked => this.rawIndex > 0;
+            public bool IsLinked => this.index >= 0;
         }
 
         /*public struct Link : ILink
