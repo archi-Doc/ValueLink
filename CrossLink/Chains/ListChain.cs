@@ -51,7 +51,7 @@ namespace CrossLink
 
         public int Count => this.size;
 
-        public bool Add(ref Link link)
+        public bool Add(Link link)
         {
             if (link.Index >= 0)
             {
@@ -70,7 +70,7 @@ namespace CrossLink
             return true;
         }
 
-        public bool Remove(ref Link link)
+        public bool Remove(Link link)
         {
             if (link.Index >= 0)
             {
@@ -162,7 +162,7 @@ namespace CrossLink
             return new Enumerator(this);
         }
 
-        /*public sealed class Link
+        public sealed class Link : ILink
         {
             internal T obj;
             internal int rawIndex;
@@ -173,7 +173,7 @@ namespace CrossLink
                 this.Index = index;
             }
 
-        public Link(T obj)
+            public Link(T obj)
             {
                 this.obj = obj;
             }
@@ -186,9 +186,11 @@ namespace CrossLink
                     this.rawIndex = value + 1;
                 }
             }
-        }*/
 
-        public struct Link : ILink
+            public bool IsLinked => this.rawIndex > 0;
+        }
+
+        /*public struct Link : ILink
         {
             internal T obj;
             internal int rawIndex;
@@ -215,7 +217,7 @@ namespace CrossLink
             }
 
             public bool IsLinked => this.rawIndex > 0;
-        }
+        }*/
 
         public struct Enumerator : IEnumerator<T>, IEnumerator
         {

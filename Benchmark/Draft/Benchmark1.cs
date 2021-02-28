@@ -19,7 +19,7 @@ namespace Benchmark.Draft
 
         public void Add(TestClass x)
         {
-            this.IdChain.Add(ref x.IdLink);
+            this.IdChain.Add(x.IdLink);
         }
 
         public void Remove(TestClass x)
@@ -140,8 +140,8 @@ namespace Benchmark.Draft
         public int RemoveAdd_CrossLink()
         {
             var c = this.goshujin.IdChain[3];
-            this.goshujin.IdChain.Remove(ref c.IdLink);
-            this.goshujin.IdChain.Add(ref c.IdLink);
+            this.goshujin.IdChain.Remove(c.IdLink);
+            this.goshujin.IdChain.Add(c.IdLink);
             return this.goshujin.IdChain.Count;
         }
 
