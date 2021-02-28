@@ -6,6 +6,7 @@ using System.Collections.Generic;
 
 #pragma warning disable SA1307 // Accessible fields should begin with upper-case letter
 #pragma warning disable SA1401 // Fields should be private
+#pragma warning disable SA1615 // Element return value should be documented
 
 namespace CrossLink
 {
@@ -13,19 +14,46 @@ namespace CrossLink
     {
         private const int MaxArrayLength = 0X7FEFFFFF;
         private const int DefaultCapacity = 4;
-        private static readonly T[] EmptyArray = new T[0];
+
         private T[] items;
         private int size;
         private int version;
 
         public ListChain()
         {
-            this.items = EmptyArray;
+            this.items = Array.Empty<T>();
         }
 
-        public bool Add(T t, Link link)
+        public T this[int index]
         {
-            if (link.index >= 0)
+            get
+            {
+                // Following trick can reduce the range check by one
+                if ((uint)index >= (uint)this.size)
+                {
+                    throw new ArgumentOutOfRangeException();
+                }
+
+                return this.items[index];
+            }
+
+            set
+            {
+                if ((uint)index >= (uint)this.size)
+                {
+                    throw new ArgumentOutOfRangeException();
+                }
+
+                this.items[index] = value;
+                this.version++;
+            }
+        }
+
+        public int Count => this.size;
+
+        public bool Add(ref Link link)
+        {
+            if (link.Index >= 0)
             {
                 return false;
             }
@@ -35,30 +63,30 @@ namespace CrossLink
                 this.EnsureCapacity(this.size + 1);
             }
 
-            link.index = this.size;
-            this.items[this.size++] = t;
+            link.Index = this.size;
+            this.items[this.size++] = link.obj;
             this.version++;
 
             return true;
         }
 
-        public bool Remove(T item, Link link)
+        public bool Remove(ref Link link)
         {
-            if (link.index >= 0)
+            if (link.Index >= 0)
             {
-                if ((uint)link.index >= (uint)this.size)
+                if ((uint)link.Index >= (uint)this.size)
                 {
                     throw new ArgumentOutOfRangeException();
                 }
 
                 this.size--;
-                if (link.index < this.size)
+                if (link.Index < this.size)
                 {
-                    Array.Copy(this.items, link.index + 1, this.items, link.index, this.size - link.index);
+                    Array.Copy(this.items, link.Index + 1, this.items, link.Index, this.size - link.Index);
                 }
 
-                link.index = -1;
-                this.items[this.size] = default(T)!;
+                link.Index = -1;
+                this.items[this.size] = default(T) !;
                 this.version++;
 
                 return true;
@@ -112,23 +140,18 @@ namespace CrossLink
                     }
                     else
                     {
-                        this.items = EmptyArray;
+                        this.items = Array.Empty<T>();
                     }
                 }
             }
         }
 
-        // Returns an enumerator for this list with the given
-        // permission for removal of elements. If modifications made to the list 
-        // while an enumeration is in progress, the MoveNext and 
-        // GetObject methods of the enumerator will throw an exception.
-        //
         public Enumerator GetEnumerator()
         {
             return new Enumerator(this);
         }
 
-        /// <internalonly/>
+        /// <inheritdoc/>
         IEnumerator<T> IEnumerable<T>.GetEnumerator()
         {
             return new Enumerator(this);
@@ -139,23 +162,67 @@ namespace CrossLink
             return new Enumerator(this);
         }
 
-        public sealed class Link
+        /*public sealed class Link
         {
-            internal int index = -1;
+            internal T obj;
+            internal int rawIndex;
 
-            public Link()
+            public Link(T obj, int index)
             {
+                this.obj = obj;
+                this.Index = index;
             }
 
-            public int Index => this.index;
+        public Link(T obj)
+            {
+                this.obj = obj;
+            }
+
+            public int Index
+            {
+                get => this.rawIndex - 1;
+                set
+                {
+                    this.rawIndex = value + 1;
+                }
+            }
+        }*/
+
+        public struct Link : ILink
+        {
+            internal T obj;
+            internal int rawIndex;
+
+            public Link(T obj, int index)
+            {
+                this.obj = obj;
+                this.rawIndex = index + 1;
+            }
+
+            public Link(T obj)
+            {
+                this.obj = obj;
+                this.rawIndex = 0;
+            }
+
+            public int Index
+            {
+                get => this.rawIndex - 1;
+                set
+                {
+                    this.rawIndex = value + 1;
+                }
+            }
+
+            public bool IsLinked => this.rawIndex > 0;
         }
 
-        public struct Enumerator : IEnumerator<T>, System.Collections.IEnumerator
+        public struct Enumerator : IEnumerator<T>, IEnumerator
         {
             private ListChain<T> list;
             private int index;
             private int version;
-            private T current;
+            private T? current;
 
             internal Enumerator(ListChain<T> list)
             {
@@ -180,11 +247,6 @@ namespace CrossLink
                     return true;
                 }
 
-                return this.MoveNextRare();
-            }
-
-            private bool MoveNextRare()
-            {
                 if (this.version != this.list.version)
                 {
                     throw new Exception();
@@ -195,15 +257,9 @@ namespace CrossLink
                 return false;
             }
 
-            public T Current
-            {
-                get
-                {
-                    return this.current;
-                }
-            }
+            public T Current => this.current!;
 
-            object System.Collections.IEnumerator.Current
+            object IEnumerator.Current
             {
                 get
                 {
@@ -212,7 +268,7 @@ namespace CrossLink
                         throw new Exception();
                     }
 
-                    return Current;
+                    return this.Current!;
                 }
             }
 
@@ -226,7 +282,6 @@ namespace CrossLink
                 this.index = 0;
                 this.current = default(T);
             }
-
         }
     }
 }
