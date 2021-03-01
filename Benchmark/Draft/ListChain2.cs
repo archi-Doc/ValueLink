@@ -10,7 +10,7 @@ using System.Collections.Generic;
 
 namespace CrossLink
 {
-    public sealed class ListChain<T> : IEnumerable<T>
+    public sealed class ListChain2<T> : IEnumerable<T>
     {
         private const int MaxArrayLength = 0X7FEFFFFF;
         private const int DefaultCapacity = 4;
@@ -19,10 +19,15 @@ namespace CrossLink
         private int size;
         private int version;
 
-        public ListChain()
+        public ListChain2(Func<T, Link> f)
         {
             this.items = Array.Empty<T>();
+            this.ObjectToLink2 = f;
         }
+
+        public Link ObjectToLink(T obj) => default!;
+
+        public Func<T, Link> ObjectToLink2 = default!;
 
         public T this[int index]
         {
@@ -50,6 +55,11 @@ namespace CrossLink
         }
 
         public int Count => this.size;
+
+        public bool Add(T t) => this.Add(this.ObjectToLink2(t));
+
+        public bool Remove(T t) => this.Remove(this.ObjectToLink2(t));
+
 
         public bool Add(Link link)
         {
@@ -181,6 +191,7 @@ namespace CrossLink
             public bool IsLinked => this.index >= 0;
 
             public int Index => this.index;
+
         }
 
         /*public struct Link : ILink
@@ -214,12 +225,12 @@ namespace CrossLink
 
         public struct Enumerator : IEnumerator<T>, IEnumerator
         {
-            private ListChain<T> list;
+            private ListChain2<T> list;
             private int index;
             private int version;
             private T? current;
 
-            internal Enumerator(ListChain<T> list)
+            internal Enumerator(ListChain2<T> list)
             {
                 this.list = list;
                 this.index = 0;

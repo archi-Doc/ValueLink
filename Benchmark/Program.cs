@@ -72,6 +72,7 @@ namespace Benchmark
             foreach (var x in methods.Where(i => i.GetCustomAttributes(typeof(BenchmarkAttribute), false).Length > 0))
             { // [BenchmarkAttribute]
                 x.Invoke(t, null);
+                x.Invoke(t, null);
             }
 
             foreach (var x in methods.Where(i => i.GetCustomAttributes(typeof(GlobalCleanupAttribute), false).Length > 0))
