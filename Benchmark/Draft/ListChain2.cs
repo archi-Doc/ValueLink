@@ -22,12 +22,10 @@ namespace CrossLink
         public ListChain2(Func<T, Link> f)
         {
             this.items = Array.Empty<T>();
-            this.ObjectToLink2 = f;
+            this.ObjectToLink = f;
         }
 
-        public Link ObjectToLink(T obj) => default!;
-
-        public Func<T, Link> ObjectToLink2 = default!;
+        public Func<T, Link> ObjectToLink;
 
         public T this[int index]
         {
@@ -56,10 +54,9 @@ namespace CrossLink
 
         public int Count => this.size;
 
-        public bool Add(T t) => this.Add(this.ObjectToLink2(t));
+        public bool Add(T t) => this.Add(this.ObjectToLink(t));
 
-        public bool Remove(T t) => this.Remove(this.ObjectToLink2(t));
-
+        public bool Remove(T t) => this.Remove(this.ObjectToLink(t));
 
         public bool Add(Link link)
         {
