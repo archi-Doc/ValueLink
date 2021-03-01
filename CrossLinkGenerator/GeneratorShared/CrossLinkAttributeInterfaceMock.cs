@@ -103,6 +103,16 @@ namespace CrossLink
         /// </summary>
         public string Name { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Gets or sets a value indicating whether or not to create a link automatically [Default value is true].
+        /// </summary>
+        public bool AutoLink { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether or not to implement the INotifyPropertyChanged pattern. The class must inherit from CrossLink.BindableBase. [Default value is false].
+        /// </summary>
+        public bool AutoNotify { get; set; } = false;
+
         public LinkAttributeMock()
         {
         }
@@ -122,6 +132,18 @@ namespace CrossLink
             if (val != null)
             {
                 attribute.Name = (string)val;
+            }
+
+            val = AttributeHelper.GetValue(-1, nameof(AutoLink), constructorArguments, namedArguments);
+            if (val != null)
+            {
+                attribute.AutoLink = (bool)val;
+            }
+
+            val = AttributeHelper.GetValue(-1, nameof(AutoNotify), constructorArguments, namedArguments);
+            if (val != null)
+            {
+                attribute.AutoNotify = (bool)val;
             }
 
             return attribute;

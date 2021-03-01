@@ -10,7 +10,7 @@ using CrossLink;
 
 namespace Benchmark.Draft
 {
-    public class TestGoshujin
+    public sealed class TestGoshujin
     {
         public TestGoshujin()
         {
@@ -23,6 +23,7 @@ namespace Benchmark.Draft
 
         public void Remove(TestClass x)
         {
+            this.IdChain.Remove(x.IdLink);
         }
 
         public ListChain<TestClass> IdChain = new();
