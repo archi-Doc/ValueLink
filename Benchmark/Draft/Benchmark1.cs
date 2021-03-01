@@ -104,6 +104,11 @@ namespace Benchmark.Draft
             new TestClass(2).Goshujin = this.goshujin;
             new TestClass(5).Goshujin = this.goshujin;
             new TestClass(3).Goshujin = this.goshujin;
+
+            var tc = new TestClass(3);
+            tc.IdLink.Add();
+            tc.Goshujin.IdChain.Remove(tc);
+            tc.Goshujin.IdChain.Remove(tc.IdLink);
         }
 
         [Benchmark]

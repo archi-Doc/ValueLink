@@ -176,9 +176,12 @@ namespace CrossLink
                 this.obj = obj;
             }
 
-            public int Index => this.index;
+            public T Object => this.obj;
 
             public bool IsLinked => this.index >= 0;
+
+            public int Index => this.index;
+
         }
 
         /*public struct Link : ILink
