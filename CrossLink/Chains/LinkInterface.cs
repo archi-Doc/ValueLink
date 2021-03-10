@@ -8,7 +8,7 @@ namespace CrossLink
 {
     public interface ILink<T>
     {
-        T Object { get; }
+        // T Object { get; }
 
         bool IsLinked { get; }
     }
