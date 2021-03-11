@@ -145,6 +145,14 @@ namespace Benchmark.Draft
 
         public TestClass4 testClass43 = default!;
 
+        public TestGoshujin5 goshujin5 = default!;
+
+        public TestClass5 testClass53 = default!;
+
+        public TestGoshujin6 goshujin6 = default!;
+
+        public TestClass6 testClass63 = default!;
+
         public List<TestClass0> list = default!;
 
         public Benchmark1()
@@ -189,6 +197,22 @@ namespace Benchmark.Draft
             this.testClass43 = new TestClass4(5);
             this.testClass43.Goshujin = this.goshujin4;
             new TestClass4(3).Goshujin = this.goshujin4;
+
+            this.goshujin5 = new();
+            new TestClass5(10).Goshujin = this.goshujin5;
+            new TestClass5(1).Goshujin = this.goshujin5;
+            new TestClass5(2).Goshujin = this.goshujin5;
+            this.testClass53 = new TestClass5(5);
+            this.testClass53.Goshujin = this.goshujin5;
+            new TestClass5(3).Goshujin = this.goshujin5;
+
+            this.goshujin6 = new();
+            new TestClass6(10).Goshujin = this.goshujin6;
+            new TestClass6(1).Goshujin = this.goshujin6;
+            new TestClass6(2).Goshujin = this.goshujin6;
+            this.testClass63 = new TestClass6(5);
+            this.testClass63.Goshujin = this.goshujin6;
+            new TestClass6(3).Goshujin = this.goshujin6;
         }
 
         [Benchmark]
@@ -244,7 +268,7 @@ namespace Benchmark.Draft
         }
 
         [Benchmark]
-        public TestGoshujin4 Initialize_CrossLink4()
+        public TestGoshujin4 Initialize_LinkedList()
         {
             var g = new TestGoshujin4();
             new TestClass4(10).Goshujin = g;
@@ -252,6 +276,32 @@ namespace Benchmark.Draft
             new TestClass4(2).Goshujin = g;
             new TestClass4(5).Goshujin = g;
             new TestClass4(3).Goshujin = g;
+
+            return g;
+        }
+
+        [Benchmark]
+        public TestGoshujin5 Initialize_RawLinkedList()
+        {
+            var g = new TestGoshujin5();
+            new TestClass5(10).Goshujin = g;
+            new TestClass5(1).Goshujin = g;
+            new TestClass5(2).Goshujin = g;
+            new TestClass5(5).Goshujin = g;
+            new TestClass5(3).Goshujin = g;
+
+            return g;
+        }
+
+        [Benchmark]
+        public TestGoshujin6 Initialize_StructLinkedList()
+        {
+            var g = new TestGoshujin6();
+            new TestClass6(10).Goshujin = g;
+            new TestClass6(1).Goshujin = g;
+            new TestClass6(2).Goshujin = g;
+            new TestClass6(5).Goshujin = g;
+            new TestClass6(3).Goshujin = g;
 
             return g;
         }
@@ -302,12 +352,30 @@ namespace Benchmark.Draft
         }
 
         [Benchmark]
-        public int RemoveAdd_CrossLink4()
+        public int RemoveAdd_LinkedList()
         {
             var c = this.testClass43;
             this.goshujin4.IdChain.Remove(c);
             this.goshujin4.IdChain.AddLast(c);
             return this.goshujin4.IdChain.Count;
+        }
+
+        [Benchmark]
+        public int RemoveAdd_RawLinkedList()
+        {
+            var c = this.testClass53;
+            this.goshujin5.IdChain.Remove(c);
+            this.goshujin5.IdChain.AddLast(c);
+            return this.goshujin5.IdChain.Count;
+        }
+
+        [Benchmark]
+        public int RemoveAdd_StructLinkedList()
+        {
+            var c = this.testClass63;
+            this.goshujin6.IdChain.Remove(c);
+            this.goshujin6.IdChain.AddLast(c);
+            return this.goshujin6.IdChain.Count;
         }
 
         /* [Benchmark]
