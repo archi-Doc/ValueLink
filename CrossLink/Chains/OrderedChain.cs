@@ -83,13 +83,11 @@ namespace Benchmark.Draft
         }
     }
 
-    
-
     public class OrderedChainClass
     {
-        public sealed class Goshujin
+        public sealed class GoshujinClass
         {
-            public Goshujin()
+            public GoshujinClass()
             {
             }
 
@@ -111,7 +109,7 @@ namespace Benchmark.Draft
             this.Id2 = id;
         }
 
-        public Goshujin Goshujin2
+        public GoshujinClass Goshujin
         {
             get => this.GoshujinInstance;
             set
@@ -126,7 +124,7 @@ namespace Benchmark.Draft
             }
         }
 
-        private Goshujin GoshujinInstance = default!;
+        private GoshujinClass GoshujinInstance = default!;
 
         public int Id2 { get; set; }
 
