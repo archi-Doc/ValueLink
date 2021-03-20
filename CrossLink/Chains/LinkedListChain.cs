@@ -86,12 +86,8 @@ namespace CrossLink
         private ObjectToLinkDelegete objectToLink;
         private UnorderedLinkedList<T> chain = new();
 
-        public sealed class Link : ILink<T>
+        public struct Link : ILink<T>
         {
-            public Link()
-            {
-            }
-
             public bool IsLinked => this.Node != null;
 
             public T? Previous => this.Node == null || this.Node.Previous == null ? default(T) : this.Node.Previous.Value;
@@ -110,7 +106,22 @@ namespace CrossLink
         /// <summary>
         /// Removes all elements from the list.
         /// </summary>
-        public void Clear() => this.chain.Clear();
+        public void Clear()
+        {
+            UnorderedLinkedList<T>.Node? node;
+            while (true)
+            {
+                node = this.chain.Last;
+                if (node == null)
+                {
+                    break;
+                }
+
+                ref Link link = ref this.objectToLink(node.Value);
+                this.chain.Remove(node.Value);
+                link.Node = null;
+            }
+        }
 
         /// <summary>
         /// Determines whether an element is in the list.

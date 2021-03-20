@@ -148,9 +148,24 @@ namespace CrossLink
         public bool IsReadOnly => false;
 
         /// <summary>
-        /// Removes all elements from the stack.
+        /// Removes all elements from the list.
         /// </summary>
-        public void Clear() => this.chain.Clear();
+        public void Clear()
+        {
+            UnorderedLinkedList<T>.Node? node;
+            while (true)
+            {
+                node = this.chain.Last;
+                if (node == null)
+                {
+                    break;
+                }
+
+                ref Link link = ref this.objectToLink(node.Value);
+                this.chain.Remove(node.Value);
+                link.Node = null;
+            }
+        }
 
         void ICollection.CopyTo(Array array, int index) => ((ICollection)this.chain).CopyTo(array, index);
 

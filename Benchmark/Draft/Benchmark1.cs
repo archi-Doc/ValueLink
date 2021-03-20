@@ -7,9 +7,65 @@ using System.IO;
 using System.Linq;
 using BenchmarkDotNet.Attributes;
 using CrossLink;
+using CrossLink.Obsolete;
 
 namespace Benchmark.Draft
 {
+    public sealed class TestGoshujinObsolete
+    {
+        public TestGoshujinObsolete()
+        {
+        }
+
+        public void Add(TestClassObsolete x)
+        {
+            this.IdChain.Add(x.IdLink);
+        }
+
+        public void Remove(TestClassObsolete x)
+        {
+            this.IdChain.Remove(x.IdLink);
+        }
+
+        public ListChainObsolete<TestClassObsolete> IdChain = new();
+    }
+
+    public class TestClassObsolete
+    {
+        public TestClassObsolete(int id)
+        {
+            this.Id = id;
+            // this.IdLink = new ListChain<TestClass>.Link(this);
+        }
+
+        public TestGoshujinObsolete Goshujin
+        {
+            get => this.GoshujinInstance;
+            set
+            {
+                if (this.GoshujinInstance != null)
+                {
+                    this.GoshujinInstance.Remove(this);
+                }
+
+                this.GoshujinInstance = value;
+                this.GoshujinInstance.Add(this);
+            }
+        }
+
+        private TestGoshujinObsolete GoshujinInstance = default!;
+
+        public int Id { get; set; }
+
+        public ListChainObsolete<TestClassObsolete>.Link IdLink => this.IdLinkInstance != null ? this.IdLinkInstance : (this.IdLinkInstance = new(this));
+
+        private ListChainObsolete<TestClassObsolete>.Link? IdLinkInstance;
+
+        // public ListChain<TestClass>.Link IdLink;
+
+        public string Name { get; set; } = string.Empty;
+    }
+
     public sealed class TestGoshujin
     {
         public TestGoshujin()
@@ -18,15 +74,15 @@ namespace Benchmark.Draft
 
         public void Add(TestClass x)
         {
-            this.IdChain.Add(x.IdLink);
+            this.IdChain.Add(x);
         }
 
         public void Remove(TestClass x)
         {
-            this.IdChain.Remove(x.IdLink);
+            this.IdChain.Remove(x);
         }
 
-        public ListChain<TestClass> IdChain = new();
+        public ListChain<TestClass> IdChain = new(static x => ref x.IdLink);
     }
 
     public class TestClass
@@ -56,11 +112,7 @@ namespace Benchmark.Draft
 
         public int Id { get; set; }
 
-        public ListChain<TestClass>.Link IdLink => this.IdLinkInstance != null ? this.IdLinkInstance : (this.IdLinkInstance = new(this));
-
-        private ListChain<TestClass>.Link? IdLinkInstance;
-
-        // public ListChain<TestClass>.Link IdLink;
+        public ListChain<TestClass>.Link IdLink;
 
         public string Name { get; set; } = string.Empty;
     }
@@ -135,7 +187,9 @@ namespace Benchmark.Draft
     [Config(typeof(BenchmarkConfig))]
     public class Benchmark1
     {
-        public TestGoshujin goshujin = default!;
+        public TestGoshujinObsolete goshujin = default!;
+
+        public TestGoshujin goshujin1 = default!;
 
         public TestGoshujin2 goshujin2 = default!;
 
@@ -170,11 +224,18 @@ namespace Benchmark.Draft
             this.list.Add(new TestClass0(3));
 
             this.goshujin = new();
-            new TestClass(10).Goshujin = this.goshujin;
-            new TestClass(1).Goshujin = this.goshujin;
-            new TestClass(2).Goshujin = this.goshujin;
-            new TestClass(5).Goshujin = this.goshujin;
-            new TestClass(3).Goshujin = this.goshujin;
+            new TestClassObsolete(10).Goshujin = this.goshujin;
+            new TestClassObsolete(1).Goshujin = this.goshujin;
+            new TestClassObsolete(2).Goshujin = this.goshujin;
+            new TestClassObsolete(5).Goshujin = this.goshujin;
+            new TestClassObsolete(3).Goshujin = this.goshujin;
+
+            this.goshujin1 = new();
+            new TestClass(10).Goshujin = this.goshujin1;
+            new TestClass(1).Goshujin = this.goshujin1;
+            new TestClass(2).Goshujin = this.goshujin1;
+            new TestClass(5).Goshujin = this.goshujin1;
+            new TestClass(3).Goshujin = this.goshujin1;
 
             this.goshujin2 = new();
             new TestClass2(10).Goshujin = this.goshujin2;
@@ -229,7 +290,20 @@ namespace Benchmark.Draft
         }
 
         [Benchmark]
-        public TestGoshujin Initialize_CrossLink()
+        public TestGoshujinObsolete Initialize_CrossLinkObsolete()
+        {
+            var g = new TestGoshujinObsolete();
+            new TestClassObsolete(10).Goshujin = g;
+            new TestClassObsolete(1).Goshujin = g;
+            new TestClassObsolete(2).Goshujin = g;
+            new TestClassObsolete(5).Goshujin = g;
+            new TestClassObsolete(3).Goshujin = g;
+
+            return g;
+        }
+
+        [Benchmark]
+        public TestGoshujin Initialize_CrossLink1()
         {
             var g = new TestGoshujin();
             new TestClass(10).Goshujin = g;
@@ -325,12 +399,21 @@ namespace Benchmark.Draft
         }
 
         [Benchmark]
-        public int RemoveAdd_CrossLink()
+        public int RemoveAdd_CrossLinkObsolete()
         {
             var c = this.goshujin.IdChain[4];
             this.goshujin.IdChain.Remove(c.IdLink);
             this.goshujin.IdChain.Add(c.IdLink);
             return this.goshujin.IdChain.Count;
+        }
+
+        [Benchmark]
+        public int RemoveAdd_CrossLink1()
+        {
+            var c = this.goshujin1.IdChain[4];
+            this.goshujin1.IdChain.Remove(c);
+            this.goshujin1.IdChain.Add(c);
+            return this.goshujin1.IdChain.Count;
         }
 
         [Benchmark]

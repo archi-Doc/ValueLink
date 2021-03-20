@@ -128,7 +128,7 @@ namespace Benchmark.Draft
             this.IdChain.Remove(x);
         }
 
-        public LinkedListChain<TestClass4> IdChain = new(static x => x.IdLink);
+        public LinkedListChain<TestClass4> IdChain = new(static x => ref x.IdLink);
     }
 
     public class TestClass4
@@ -157,9 +157,7 @@ namespace Benchmark.Draft
 
         public int Id { get; set; }
 
-        public LinkedListChain<TestClass4>.Link IdLink => this.IdLinkInstance != null ? this.IdLinkInstance : (this.IdLinkInstance = new());
-
-        private LinkedListChain<TestClass4>.Link? IdLinkInstance;
+        public LinkedListChain<TestClass4>.Link IdLink;
 
         public string Name { get; set; } = string.Empty;
     }

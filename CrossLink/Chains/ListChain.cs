@@ -3,280 +3,184 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using Arc.Collection;
 
+#pragma warning disable SA1124 // Do not use regions
 #pragma warning disable SA1307 // Accessible fields should begin with upper-case letter
 #pragma warning disable SA1401 // Fields should be private
 #pragma warning disable SA1615 // Element return value should be documented
 
 namespace CrossLink
 {
-    public sealed class ListChain<T> : IEnumerable<T>
+    public class ListChain<T> : IList<T>, IReadOnlyList<T>
     {
-        private const int MaxArrayLength = 0X7FEFFFFF;
-        private const int DefaultCapacity = 4;
+        public delegate ref Link ObjectToLinkDelegete(T obj);
 
-        private T[] items;
-        private int size;
-        private int version;
-
-        public ListChain()
+        public ListChain(ObjectToLinkDelegete objectToLink)
         {
-            this.items = Array.Empty<T>();
+            this.objectToLink = objectToLink;
         }
+
+        public int Count => this.chain.Count;
+
+        private ObjectToLinkDelegete objectToLink;
+        private UnorderedList<T> chain = new();
+
+        public struct Link : ILink<T>
+        {
+            public bool IsLinked { get; internal set; }
+        }
+
+        #region ICollection
+
+        public bool IsReadOnly => false;
+
+        /// <summary>
+        /// Adds an object to the end of the list.
+        /// <br/>O(1) operation.
+        /// </summary>
+        /// <param name="obj">The object to be added to the end of the list.</param>
+        public void Add(T obj)
+        {
+            ref Link link = ref this.objectToLink(obj);
+            if (link.IsLinked)
+            {
+                this.chain.Remove(obj);
+            }
+
+            this.chain.Add(obj);
+            link.IsLinked = true;
+        }
+
+        /// <summary>
+        /// Removes all elements from the list.
+        /// </summary>
+        public void Clear()
+        {
+            foreach (var x in this)
+            {
+                ref Link link = ref this.objectToLink(x);
+                link.IsLinked = false;
+            }
+
+            this.chain.Clear();
+        }
+
+        /// <summary>
+        /// Determines whether an element is in the list.
+        /// <br/>O(n) operation.
+        /// </summary>
+        /// <param name="value">The value to locate in the list.</param>
+        /// <returns>true if value is found in the list.</returns>
+        public bool Contains(T value) => this.IndexOf(value) >= 0;
+
+        /// <summary>
+        /// Copies the list or a portion of it to an array.
+        /// </summary>
+        /// <param name="array">The one-dimensional Array that is the destination of the elements copied from list.</param>
+        /// <param name="arrayIndex">The zero-based index in array at which copying begins.</param>
+        public void CopyTo(T[] array, int arrayIndex) => this.chain.CopyTo(array, arrayIndex);
+
+        /// <summary>
+        /// Copies the list or a portion of it to an array.
+        /// </summary>
+        /// <param name="array">The one-dimensional Array that is the destination of the elements copied from list.</param>
+        public void CopyTo(T[] array) => this.CopyTo(array, 0);
+
+        /// <summary>
+        /// Removes the first occurrence of a specific object from the <see cref="UnorderedList{T}"/>.
+        /// <br/>O(n) operation.
+        /// </summary>
+        /// <param name="value">The object to remove from the <see cref="UnorderedList{T}"/>. </param>
+        /// <returns>true if item is successfully removed.</returns>
+        public bool Remove(T value)
+        {
+            var index = this.IndexOf(value);
+            if (index >= 0)
+            {
+                this.RemoveAt(index);
+                return true;
+            }
+
+            return false;
+        }
+
+        #endregion
+
+        #region IList
 
         public T this[int index]
         {
-            get
-            {
-                // Following trick can reduce the range check by one
-                if ((uint)index >= (uint)this.size)
-                {
-                    throw new ArgumentOutOfRangeException();
-                }
-
-                return this.items[index];
-            }
+            get => this.chain[index];
 
             set
             {
-                if ((uint)index >= (uint)this.size)
+                if ((uint)index >= (uint)this.chain.Count)
                 {
                     throw new ArgumentOutOfRangeException();
                 }
 
-                this.items[index] = value;
-                this.version++;
+                var t = this.chain[index];
+                ref Link link = ref this.objectToLink(t);
+                link.IsLinked = false;
+
+                this.chain[index] = value;
+                link = ref this.objectToLink(value);
+                link.IsLinked = true;
             }
         }
 
-        public int Count => this.size;
+        /// <summary>
+        /// Returns the zero-based index of the first occurrence of a value in the list.
+        /// <br/>O(n) operation.
+        /// </summary>
+        /// <param name="obj">The object to locate in the list.</param>
+        /// <returns>The zero-based index of the first occurrence of item.</returns>
+        public int IndexOf(T obj) => this.chain.IndexOf(obj);
 
-        public bool Add(Link link)
+        /// <summary>
+        /// Inserts an element into the <see cref="UnorderedList{T}"/> at the specified index.
+        /// <br/>O(n) operation.
+        /// </summary>
+        /// <param name="index">The zero-based index at which item should be inserted.</param>
+        /// <param name="obj">The object to insert.</param>
+        public void Insert(int index, T obj)
         {
+            ref Link link = ref this.objectToLink(obj);
             if (link.IsLinked)
             {
-                this.Remove(link);
+                this.chain.Remove(obj);
             }
 
-            if (this.size == this.items.Length)
-            {
-                this.EnsureCapacity(this.size + 1);
-            }
-
-            link.index = this.size;
-            this.items[this.size++] = link.obj;
-            this.version++;
-
-            return true;
+            this.chain.Insert(index, obj);
+            link.IsLinked = true;
         }
 
-        public bool Remove(Link link)
+        /// <summary>
+        /// Removes the element at the specified index of the list.
+        /// <br/>O(n) operation.
+        /// </summary>
+        /// <param name="index">The zero-based index of the element to remove.</param>
+        public void RemoveAt(int index)
         {
-            if (!link.IsLinked)
-            {
-                return false;
-            }
+            var obj = this[index];
+            ref Link link = ref this.objectToLink(obj);
 
-            if ((uint)link.index >= (uint)this.size)
-            {
-                throw new ArgumentOutOfRangeException();
-            }
-
-            if (link.obj?.Equals(this.items[link.index]) != true)
-            {
-                throw new InvalidOperationException();
-            }
-
-            this.size--;
-            if (link.index < this.size)
-            {
-                Array.Copy(this.items, link.index + 1, this.items, link.index, this.size - link.index);
-            }
-
-            link.index = -1;
-            this.items[this.size] = default(T) !;
-            this.version++;
-
-            return true;
+            this.chain.RemoveAt(index);
+            link.IsLinked = false;
         }
 
-        private void EnsureCapacity(int min)
-        {
-            if (this.items.Length < min)
-            {
-                int newCapacity = this.items.Length == 0 ? DefaultCapacity : this.items.Length * 2;
+        #endregion
 
-                if ((uint)newCapacity > MaxArrayLength)
-                {
-                    newCapacity = MaxArrayLength;
-                }
+        #region Enumerator
 
-                if (newCapacity < min)
-                {
-                    newCapacity = min;
-                }
+        public UnorderedList<T>.Enumerator GetEnumerator() => this.chain.GetEnumerator();
 
-                this.Capacity = newCapacity;
-            }
-        }
+        IEnumerator<T> IEnumerable<T>.GetEnumerator() => this.chain.GetEnumerator();
 
-        public int Capacity
-        {
-            get => this.items.Length;
-            set
-            {
-                if (value < this.size)
-                {
-                    throw new ArgumentOutOfRangeException();
-                }
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => this.chain.GetEnumerator();
 
-                if (value != this.items.Length)
-                {
-                    if (value > 0)
-                    {
-                        T[] newItems = new T[value];
-                        if (this.size > 0)
-                        {
-                            Array.Copy(this.items, 0, newItems, 0, this.size);
-                        }
-
-                        this.items = newItems;
-                    }
-                    else
-                    {
-                        this.items = Array.Empty<T>();
-                    }
-                }
-            }
-        }
-
-        public Enumerator GetEnumerator()
-        {
-            return new Enumerator(this);
-        }
-
-        /// <inheritdoc/>
-        IEnumerator<T> IEnumerable<T>.GetEnumerator()
-        {
-            return new Enumerator(this);
-        }
-
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-        {
-            return new Enumerator(this);
-        }
-
-        public sealed class Link : ILink<T>
-        {
-            internal T obj;
-            internal int index = -1;
-
-            public Link(T obj)
-            {
-                this.obj = obj;
-            }
-
-            public T Object => this.obj;
-
-            public bool IsLinked => this.index >= 0;
-
-            public int Index => this.index;
-        }
-
-        /*public struct Link : ILink
-        {
-            internal T obj;
-            internal int rawIndex;
-
-            public Link(T obj, int index)
-            {
-                this.obj = obj;
-                this.rawIndex = index + 1;
-            }
-
-            public Link(T obj)
-            {
-                this.obj = obj;
-                this.rawIndex = 0;
-            }
-
-            public int Index
-            {
-                get => this.rawIndex - 1;
-                set
-                {
-                    this.rawIndex = value + 1;
-                }
-            }
-
-            public bool IsLinked => this.rawIndex > 0;
-        }*/
-
-        public struct Enumerator : IEnumerator<T>, IEnumerator
-        {
-            private ListChain<T> list;
-            private int index;
-            private int version;
-            private T? current;
-
-            internal Enumerator(ListChain<T> list)
-            {
-                this.list = list;
-                this.index = 0;
-                this.version = list.version;
-                this.current = default(T);
-            }
-
-            public void Dispose()
-            {
-            }
-
-            public bool MoveNext()
-            {
-                var localList = this.list;
-
-                if (this.version == localList.version && ((uint)this.index < (uint)localList.size))
-                {
-                    this.current = localList.items[this.index];
-                    this.index++;
-                    return true;
-                }
-
-                if (this.version != this.list.version)
-                {
-                    throw new Exception();
-                }
-
-                this.index = this.list.size + 1;
-                this.current = default(T);
-                return false;
-            }
-
-            public T Current => this.current!;
-
-            object IEnumerator.Current
-            {
-                get
-                {
-                    if (this.index == 0 || this.index == this.list.size + 1)
-                    {
-                        throw new Exception();
-                    }
-
-                    return this.Current!;
-                }
-            }
-
-            void System.Collections.IEnumerator.Reset()
-            {
-                if (this.version != this.list.version)
-                {
-                    throw new Exception();
-                }
-
-                this.index = 0;
-                this.current = default(T);
-            }
-        }
+        #endregion
     }
 }
