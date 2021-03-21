@@ -19,6 +19,9 @@ namespace CrossLink.Generator
 {
     public class CrossLinkBody : VisceralBody<CrossLinkObject>
     {
+        public static readonly string DefaultGoshujinClass = "GoshujinClass";
+        public static readonly string DefaultGoshujinInstance = "Goshujin";
+
         public static readonly DiagnosticDescriptor Error_NotPartial = new DiagnosticDescriptor(
             id: "CLG001", title: "Not a partial class/struct", messageFormat: "CrossLinkObject '{0}' is not a partial class/struct",
             category: "CrossLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
@@ -29,6 +32,10 @@ namespace CrossLink.Generator
 
         public static readonly DiagnosticDescriptor Error_AttributePropertyError = new DiagnosticDescriptor(
             id: "CLG003", title: "Attribute property type error", messageFormat: "The argument specified does not match the type of the property",
+            category: "CrossLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Error_KeywordUsed = new DiagnosticDescriptor(
+            id: "CLG004", title: "Keyword used", messageFormat: "'{0}' has already been used, please specify a different keyword",
             category: "CrossLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public CrossLinkBody(GeneratorExecutionContext context)

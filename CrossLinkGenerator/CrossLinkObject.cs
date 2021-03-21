@@ -54,6 +54,8 @@ namespace CrossLink.Generator
 
         public LinkAttributeMock? LinkAttribute { get; private set; }
 
+        public HashSet<string> UsedKeywords { get; private set; } = new();
+
         public CrossLinkObject[] Members { get; private set; } = Array.Empty<CrossLinkObject>(); // Members have valid TypeObject && not static && property or field
 
         public IEnumerable<CrossLinkObject> MembersWithFlag(CrossLinkObjectFlag flag) => this.Members.Where(x => x.ObjectFlag.HasFlag(flag));
@@ -122,6 +124,7 @@ namespace CrossLink.Generator
             // CrossLinkObjectAttribute
             if (this.AllAttributes.FirstOrDefault(x => x.FullName == CrossLinkObjectAttributeMock.FullName) is { } objectAttribute)
             {
+                this.Location = objectAttribute.Location;
                 try
                 {
                     this.ObjectAttribute = CrossLinkObjectAttributeMock.FromArray(objectAttribute.ConstructorArguments, objectAttribute.NamedArguments);
@@ -147,10 +150,16 @@ namespace CrossLink.Generator
 
             if (this.LinkAttribute != null)
             {
-                this.ObjectFlag |= CrossLinkObjectFlag.Linked;
-                if (this.LinkAttribute.AutoLink)
-                {
-                    this.ObjectFlag |= CrossLinkObjectFlag.AutoLink;
+                if (this.LinkAttribute.Type != LinkType.None)
+                {// Valid link type
+                    this.ObjectFlag |= CrossLinkObjectFlag.Linked;
+                    if (this.LinkAttribute.AutoLink)
+                    {
+                        this.ObjectFlag |= CrossLinkObjectFlag.AutoLink;
+                    }
+                }
+                else
+                {// No link
                 }
 
                 if (this.LinkAttribute.AutoNotify)
@@ -167,6 +176,12 @@ namespace CrossLink.Generator
 
         private void ConfigureObject()
         {
+            // Used keywords
+            foreach (var x in this.AllMembers)
+            {
+                this.UsedKeywords.Add(x.SimpleName);
+            }
+
             // Members: Property
             var list = new List<CrossLinkObject>();
             foreach (var x in this.AllMembers.Where(x => x.Kind == VisceralObjectKind.Property))
@@ -188,7 +203,7 @@ namespace CrossLink.Generator
                 }
             }
 
-            this.Members = list.Where(x => x.ObjectFlag.HasFlag(CrossLinkObjectFlag.Linked)).ToArray();
+            this.Members = list.Where(x => x.LinkAttribute != null).ToArray();
         }
 
         public void ConfigureRelation()
@@ -287,14 +302,13 @@ namespace CrossLink.Generator
                 }
             }
 
-            // Target
-            foreach (var x in this.Members)
-            {
-                if (!x.IsSerializable || x.IsReadOnly)
-                {// Not serializable
-                    continue;
-                }
-            }
+            // Goshujin Class
+            this.ObjectAttribute!.GoshujinClass = (this.ObjectAttribute!.GoshujinClass != string.Empty) ? this.ObjectAttribute!.GoshujinClass : CrossLinkBody.DefaultGoshujinClass;
+            this.CheckKeyword(this.ObjectAttribute!.GoshujinClass, this.Location);
+
+            // Goshujin Instance
+            this.ObjectAttribute!.GoshujinInstance = (this.ObjectAttribute!.GoshujinInstance != string.Empty) ? this.ObjectAttribute!.GoshujinInstance : CrossLinkBody.DefaultGoshujinInstance;
+            this.CheckKeyword(this.ObjectAttribute!.GoshujinInstance);
 
             // Check members.
             foreach (var x in this.Members)
@@ -309,6 +323,14 @@ namespace CrossLink.Generator
             if (this.TypeObject == null)
             {
                 return;
+            }
+        }
+
+        public void CheckKeyword(string keyword, Location? location = null)
+        {
+            if (this.UsedKeywords.Contains(keyword))
+            {
+                this.Body.AddDiagnostic(CrossLinkBody.Error_KeywordUsed, location ?? Location.None, keyword);
             }
         }
 

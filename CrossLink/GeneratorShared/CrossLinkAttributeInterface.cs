@@ -7,6 +7,11 @@ namespace CrossLink
     public enum LinkType
     {
         /// <summary>
+        /// No link.
+        /// </summary>
+        None,
+
+        /// <summary>
         /// Represents a list of objects (<see cref="ListChain{T}"/>).
         /// </summary>
         List,
@@ -51,7 +56,7 @@ namespace CrossLink
         /// <summary>
         /// Gets or sets a value indicating the type of object linkage.
         /// </summary>
-        public LinkType Type { get; set; }
+        public LinkType Type { get; set; } = LinkType.None;
 
         /// <summary>
         /// Gets or sets a string value which represents the name used for the linkage interface.

@@ -10,6 +10,7 @@ namespace CrossLink
 {
     public enum LinkType
     {
+        None,
         List,
         LinkedList,
         StackList,
