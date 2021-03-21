@@ -58,7 +58,6 @@ namespace CrossLink.Generator
             if (this.crossLinkObjectAttributeSymbol == null)
             {
                 return;
-
             }
 
             this.linkAttributeSymbol = compilation.GetTypeByMetadataName(LinkAttributeMock.FullName);
@@ -248,7 +247,7 @@ namespace CrossLink.Generator
                 if (syntaxNode is TypeDeclarationSyntax typeSyntax)
                 {// Our target is a type syntax.
                     if (this.CheckAttribute(typeSyntax))
-                    {// If a type has the specific attribute.
+                    {// If the type has the specific attribute.
                         this.CandidateSet.Add(typeSyntax);
                     }
                 }

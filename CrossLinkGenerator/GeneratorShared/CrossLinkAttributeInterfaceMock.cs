@@ -4,8 +4,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+#pragma warning disable SA1602 // Enumeration items should be documented
+
 namespace CrossLink
 {
+    public enum LinkType
+    {
+        List,
+        LinkedList,
+        StackList,
+        Ordered,
+    }
+
     public static class AttributeHelper
     {
         public static object? GetValue(int constructorIndex, string? name, object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
@@ -31,19 +41,6 @@ namespace CrossLink
         }
     }
 
-    public enum LinkType
-    {
-        /// <summary>
-        /// Represents a doubly linked list.
-        /// </summary>
-        LinkedList,
-
-        /// <summary>
-        /// Represents a collection of sorted objects.
-        /// </summary>
-        SortedList,
-    }
-
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = true)]
     public sealed class CrossLinkObjectAttributeMock : Attribute
     {
@@ -52,14 +49,14 @@ namespace CrossLink
         public static readonly string FullName = "CrossLink." + StandardName;
 
         /// <summary>
-        /// Gets or sets a string value which represents the class name of Goshujin (Owner class).
+        /// Gets or sets a string value which represents the class name of Goshujin (Owner class) [Default value is "GoshujinClass"].
         /// </summary>
         public string GoshujinClass { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets a string value which represents the member name of Goshujin (Owner class).
+        /// Gets or sets a string value which represents the instance name of Goshujin (Owner class) [Default value is "Goshujin"].
         /// </summary>
-        public string GoshujinName { get; set; } = string.Empty;
+        public string GoshujinInstance { get; set; } = string.Empty;
 
         public CrossLinkObjectAttributeMock()
         {
@@ -76,10 +73,10 @@ namespace CrossLink
                 attribute.GoshujinClass = (string)val;
             }
 
-            val = AttributeHelper.GetValue(-1, nameof(GoshujinName), constructorArguments, namedArguments);
+            val = AttributeHelper.GetValue(-1, nameof(GoshujinInstance), constructorArguments, namedArguments);
             if (val != null)
             {
-                attribute.GoshujinName = (string)val;
+                attribute.GoshujinInstance = (string)val;
             }
 
             return attribute;
@@ -91,7 +88,7 @@ namespace CrossLink
     {
         public static readonly string SimpleName = "Link";
         public static readonly string StandardName = SimpleName + "Attribute";
-        public static readonly string FullName = "Link." + StandardName;
+        public static readonly string FullName = "CrossLink." + StandardName;
 
         /// <summary>
         /// Gets or sets a value indicating the type of object linkage.

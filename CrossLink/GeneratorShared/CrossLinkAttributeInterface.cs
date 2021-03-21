@@ -31,14 +31,14 @@ namespace CrossLink
     public sealed class CrossLinkObjectAttribute : Attribute
     {
         /// <summary>
-        /// Gets or sets a string value which represents the class name of Goshujin (Owner class) [Default value is GoshujinClass].
+        /// Gets or sets a string value which represents the class name of Goshujin (Owner class) [Default value is "GoshujinClass"].
         /// </summary>
         public string GoshujinClass { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets a string value which represents the instance name of Goshujin (Owner class) [Default value is Goshujin].
+        /// Gets or sets a string value which represents the instance name of Goshujin (Owner class) [Default value is "Goshujin"].
         /// </summary>
-        public string GoshujinName { get; set; } = string.Empty;
+        public string GoshujinInstance { get; set; } = string.Empty;
 
         public CrossLinkObjectAttribute()
         {
