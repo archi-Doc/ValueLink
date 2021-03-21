@@ -7,26 +7,36 @@ namespace CrossLink
     public enum LinkType
     {
         /// <summary>
-        /// Represents a doubly linked list.
+        /// Represents a list of objects (<see cref="ListChain{T}"/>).
+        /// </summary>
+        List,
+
+        /// <summary>
+        /// Represents a doubly linked list (<see cref="LinkedListChain{T}"/>).
         /// </summary>
         LinkedList,
 
         /// <summary>
-        /// Represents a collection of sorted objects.
+        /// Represents a stack list (<see cref="StackListChain{T}"/>).
         /// </summary>
-        SortedList,
+        StackList,
+
+        /// <summary>
+        /// Represents a collection of sorted objects (<see cref="OrderedChain{TKey, TValue}"/>).
+        /// </summary>
+        Ordered,
     }
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = true)]
     public sealed class CrossLinkObjectAttribute : Attribute
     {
         /// <summary>
-        /// Gets or sets a string value which represents the class name of Goshujin (Owner class).
+        /// Gets or sets a string value which represents the class name of Goshujin (Owner class) [Default value is GoshujinClass].
         /// </summary>
         public string GoshujinClass { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets a string value which represents the member name of Goshujin (Owner class).
+        /// Gets or sets a string value which represents the instance name of Goshujin (Owner class) [Default value is Goshujin].
         /// </summary>
         public string GoshujinName { get; set; } = string.Empty;
 

@@ -8,7 +8,10 @@ using System.Threading.Tasks;
 using Arc.Collection;
 using CrossLink;
 
-namespace Benchmark.Draft
+#pragma warning disable SA1306 // Field names should begin with lower-case letter
+#pragma warning disable SA1401 // Fields should be private
+
+namespace CrossLink
 {
     public class OrderedChain<TKey, TObj>
     {
