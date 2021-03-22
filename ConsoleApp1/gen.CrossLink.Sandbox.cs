@@ -8,7 +8,7 @@ using CrossLink;
 
 #nullable enable
 
-namespace Sandbox
+namespace ConsoleApp1
 {
     public partial class TestClass
     {

@@ -123,11 +123,11 @@ namespace CrossLink.Generator
             this.ObjectFlag |= CrossLinkObjectFlag.Configured;
 
             // Open generic type is not supported.
-            var genericsType = this.Generics_Kind;
+            /*var genericsType = this.Generics_Kind;
             if (genericsType == VisceralGenericsKind.OpenGeneric)
             {
                 return;
-            }
+            }*/
 
             // CrossLinkObjectAttribute
             if (this.AllAttributes.FirstOrDefault(x => x.FullName == CrossLinkObjectAttributeMock.FullName) is { } objectAttribute)
@@ -453,7 +453,12 @@ namespace CrossLink.Generator
 
             using (var cls = ssb.ScopeBrace($"{this.AccessibilityName} partial {this.KindName} {this.LocalName}{interfaceString}"))
             {
-                foreach (var x in this.ConstructedObjects)
+                if (this.ObjectAttribute != null)
+                {
+                    this.Generate2(ssb, info);
+                }
+
+                /*foreach (var x in this.ConstructedObjects)
                 {
                     if (x.ObjectAttribute == null)
                     {
@@ -466,10 +471,7 @@ namespace CrossLink.Generator
                     }
 
                     x.Generate2(ssb, info);
-                }
-
-                // StringKey fields
-                // this.GenerateStringKeyFields(ssb, info);
+                }*/
 
                 if (this.Children?.Count > 0)
                 {// Generate children and loader.
@@ -521,13 +523,13 @@ namespace CrossLink.Generator
                 using (var scopeSet = ssb.ScopeBrace("set"))
                 {
                     string compare;
-                    if (x.IsPrimitive)
+                    if (x.TypeObject.IsPrimitive)
                     {
-                        compare = $"value != this.{x.SimpleName}";
+                        compare = $"if (value != this.{x.SimpleName})";
                     }
                     else
                     {
-                        compare = $"!EqualityComparer<{x.TypeObject.FullName}>.Default.Equals(value, this.{x.SimpleName})";
+                        compare = $"if (!EqualityComparer<{x.TypeObject.FullName}>.Default.Equals(value, this.{x.SimpleName}))";
                     }
 
                     using (var scopeCompare = ssb.ScopeBrace(compare))
@@ -535,11 +537,36 @@ namespace CrossLink.Generator
                         ssb.AppendLine($"this.{x.SimpleName} = value;");
                         if (link.AutoLink)
                         {
-                            ssb.AppendLine($"this.{goshujinInstance}.Remove(this);");
                         }
                     }
                 }
             }
+
+            ssb.AppendLine();
+        }
+
+        internal void GenerateLink_Link(ScopingStringBuilder ssb, GeneratorInformation info, CrossLinkObject x)
+        {
+            var link = x.LinkAttribute;
+            if (x.TypeObject == null || link == null)
+            {
+                return;
+            }
+
+            if (link.Type == LinkType.None)
+            {
+                return;
+            }
+            else if (link.Type == LinkType.Ordered)
+            {
+                ssb.AppendLine($"public {link.Type.LinkTypeToChain()}<{x.TypeObject!.FullName}, {this.LocalName}>.Link {x.LinkName};");
+            }
+            else
+            {
+                ssb.AppendLine($"public {link.Type.LinkTypeToChain()}<{this.LocalName}>.Link {x.LinkName};");
+            }
+
+            ssb.AppendLine();
         }
 
         internal void GenerateGoshujinClass(ScopingStringBuilder ssb, GeneratorInformation info)

@@ -30,7 +30,7 @@ namespace CrossLink
             this.objectToLink = objectToLink;
         }
 
-        public void Add(TObj obj)
+        /*public void Add(TObj obj)
         {
             if (this.objectToKey == null)
             {
@@ -49,7 +49,7 @@ namespace CrossLink
                 var result = this.chain.Add(key, obj);
                 link.Node = result.node;
             }
-        }
+        }*/
 
         public void Add(TObj obj, TKey key)
         {
@@ -89,6 +89,8 @@ namespace CrossLink
         public struct Link : ILink<TObj>
         {
             public bool IsLinked => this.Node != null;
+
+            public TObj? Previous => this.Node == null || this.Node.Previous == null ? default(TObj) : this.Node.Previous.Value;
 
             public TObj? Next => this.Node == null || this.Node.Next == null ? default(TObj) : this.Node.Next.Value;
 
