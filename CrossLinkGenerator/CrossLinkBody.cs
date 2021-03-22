@@ -46,6 +46,22 @@ namespace CrossLink.Generator
             id: "CLG006", title: "Name error", messageFormat: "The field '{0}' to be linked must start with a lowercase letter",
             category: "CrossLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
+        public static readonly DiagnosticDescriptor Error_MultipleLink = new DiagnosticDescriptor(
+            id: "CLG007", title: "Link error", messageFormat: "One link is allowed per member, consider adding a LinkAttribute to a constructor",
+            category: "CrossLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Error_NoLinkTarget = new DiagnosticDescriptor(
+            id: "CLG008", title: "Link error", messageFormat: "This type of link requires a property or field to be linked",
+            category: "CrossLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Error_NoNotifyTarget = new DiagnosticDescriptor(
+            id: "CLG009", title: "Link error", messageFormat: "AutoNotify option requires a property or field",
+            category: "CrossLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Error_LinkNameRequired = new DiagnosticDescriptor(
+            id: "CLG010", title: "Link error", messageFormat: "Link name is required",
+            category: "CrossLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
         public CrossLinkBody(GeneratorExecutionContext context)
             : base(context)
         {

@@ -37,11 +37,6 @@ namespace CrossLink.Generator
         HasLink = 1 << 10, // Has valid link (not LinkType.None)
         HasNotify = 1 << 11, // Has AutoNotify
         CanCreateInstance = 1 << 12, // Can create an instance
-
-        // Link target
-        Linked = 1 << 21, // LinkType != LinkType.None
-        AutoLink = 1 << 22,
-        AutoNotify = 1 << 23,
     }
 
     public class CrossLinkObject : VisceralObjectBase<CrossLinkObject>
@@ -58,13 +53,7 @@ namespace CrossLink.Generator
 
         public LinkAttributeMock? LinkAttribute { get; private set; }
 
-        public string LinkName { get; private set; } = string.Empty;
-
-        public string ChainName { get; private set; } = string.Empty;
-
-        public CrossLinkObject[] Members { get; private set; } = Array.Empty<CrossLinkObject>(); // Members have valid TypeObject && not static && property or field
-
-        public IEnumerable<CrossLinkObject> MembersWithFlag(CrossLinkObjectFlag flag) => this.Members.Where(x => x.ObjectFlag.HasFlag(flag));
+        public List<Linkage>? Links { get; private set; } = null;
 
         public bool IsAbstractOrInterface => this.Kind == VisceralObjectKind.Interface || (this.symbol is INamedTypeSymbol nts && nts.IsAbstract);
 
@@ -147,36 +136,30 @@ namespace CrossLink.Generator
                 }
             }
 
-            // LinkAttribute
-            if (this.AllAttributes.FirstOrDefault(x => x.FullName == LinkAttributeMock.FullName) is { } linkAttribute)
+            // Linkage
+            bool linkageFlag = false;
+            foreach (var linkAttribute in this.AllAttributes.Where(x => x.FullName == LinkAttributeMock.FullName))
             {
-                try
-                {
-                    this.LinkAttribute = LinkAttributeMock.FromArray(linkAttribute.ConstructorArguments, linkAttribute.NamedArguments);
+                if (linkageFlag && !this.Method_IsConstructor)
+                {// One link is allowed per member.
+                    this.Body.AddDiagnostic(CrossLinkBody.Error_MultipleLink, linkAttribute.Location);
                 }
-                catch (InvalidCastException)
-                {
-                    this.Body.ReportDiagnostic(CrossLinkBody.Error_AttributePropertyError, linkAttribute.Location);
-                }
-            }
 
-            if (this.LinkAttribute != null)
-            {
-                if (this.LinkAttribute.Type != LinkType.None)
-                {// Valid link type
-                    this.ObjectFlag |= CrossLinkObjectFlag.Linked;
-                    if (this.LinkAttribute.AutoLink)
+                linkageFlag = true;
+                var linkage = Linkage.Create(this, linkAttribute);
+                if (linkage == null)
+                {
+                    continue;
+                }
+
+                if (this.ContainingObject is { } parent)
+                {// Add to parent's list
+                    if (parent.Links == null)
                     {
-                        this.ObjectFlag |= CrossLinkObjectFlag.AutoLink;
+                        parent.Links = new();
                     }
-                }
-                else
-                {// No link
-                }
 
-                if (this.LinkAttribute.AutoNotify)
-                {
-                    this.ObjectFlag |= CrossLinkObjectFlag.AutoNotify;
+                    parent.Links.Add(linkage);
                 }
             }
 
@@ -216,18 +199,19 @@ namespace CrossLink.Generator
                 }
             }
 
-            this.Members = list.Where(x => x.LinkAttribute != null).ToArray();
-
-            foreach (var x in this.Members)
+            if (this.Links != null)
             {
-                if (x.LinkAttribute!.Type != LinkType.None)
+                foreach (var x in this.Links)
                 {
-                    this.ObjectFlag |= CrossLinkObjectFlag.HasLink;
-                }
+                    if (x.IsValidLink)
+                    {
+                        this.ObjectFlag |= CrossLinkObjectFlag.HasLink;
+                    }
 
-                if (x.LinkAttribute!.AutoNotify)
-                {
-                    this.ObjectFlag |= CrossLinkObjectFlag.HasNotify;
+                    if (x.AutoNotify)
+                    {
+                        this.ObjectFlag |= CrossLinkObjectFlag.HasNotify;
+                    }
                 }
             }
         }
@@ -334,14 +318,18 @@ namespace CrossLink.Generator
                 this.CheckKeyword(this.ObjectAttribute!.GoshujinInstance, this.Location);
             }
 
-            // Check members.
-            foreach (var x in this.Members)
+            // Check Links.
+            if (this.Links != null)
             {
-                x.CheckMember(this);
-                if (x.LinkAttribute != null)
+                foreach (var x in this.Links)
                 {
-                    this.CheckKeyword(x.LinkAttribute.Name, x.Location);
-                    if (x.LinkAttribute.Type != LinkType.None)
+                    if (x.Target != null)
+                    {
+                        x.Target.CheckMember(this);
+                    }
+
+                    this.CheckKeyword(x.Name, x.Location);
+                    if (x.IsValidLink)
                     {
                         this.CheckKeyword(x.LinkName, x.Location);
                     }
@@ -363,26 +351,6 @@ namespace CrossLink.Generator
                 {// Link target must be a field
                     this.Body.AddDiagnostic(CrossLinkBody.Error_LinkTargetNotField, this.Location, this.SimpleName);
                 }*/
-
-                if (this.LinkAttribute.Type != LinkType.None)
-                {// Valid link
-                    if (this.LinkAttribute.Name == string.Empty)
-                    {
-                        var name = this.SimpleName.ToCharArray();
-                        if (!char.IsLower(name[0]))
-                        {// Link name must start with a lowercase letter.
-                            this.Body.AddDiagnostic(CrossLinkBody.Error_LinkTargetNameError, this.Location, this.SimpleName);
-                        }
-                        else
-                        {
-                            name[0] = char.ToUpperInvariant(name[0]);
-                            this.LinkAttribute.Name = new string(name);
-                        }
-                    }
-
-                    this.LinkName = this.LinkAttribute.Name + "Link";
-                    this.ChainName = this.LinkAttribute.Name + "Chain";
-                }
             }
         }
 
@@ -497,47 +465,50 @@ namespace CrossLink.Generator
                 this.GenerateGoshujinInstance(ssb, info);
             }
 
-            foreach (var x in this.Members)
+            if (this.Links != null)
             {
-                this.GenerateLink(ssb, info, x);
+                foreach (var x in this.Links)
+                {
+                    this.GenerateLink(ssb, info, x);
+                }
             }
 
             return;
         }
 
-        internal void GenerateLink(ScopingStringBuilder ssb, GeneratorInformation info, CrossLinkObject x)
+        internal void GenerateLink(ScopingStringBuilder ssb, GeneratorInformation info, Linkage x)
         {
             this.GenerateLink_Property(ssb, info, x);
             this.GenerateLink_Link(ssb, info, x);
         }
 
-        internal void GenerateLink_Property(ScopingStringBuilder ssb, GeneratorInformation info, CrossLinkObject x)
+        internal void GenerateLink_Property(ScopingStringBuilder ssb, GeneratorInformation info, Linkage x)
         {
-            var link = x.LinkAttribute;
-            if (x.TypeObject == null || link == null)
+            var target = x.Target;
+            if (target == null || target.TypeObject == null)
             {
                 return;
             }
 
-            using (var scopeProperty = ssb.ScopeBrace($"public {x.TypeObject.FullName} {link.Name}"))
+            using (var scopeProperty = ssb.ScopeBrace($"public {target.TypeObject.FullName} {x.Name}"))
             {
-                ssb.AppendLine($"get => this.{x.SimpleName};");
+                ssb.AppendLine($"get => this.{x.TargetName};");
                 using (var scopeSet = ssb.ScopeBrace("set"))
                 {
                     string compare;
-                    if (x.TypeObject.IsPrimitive)
+                    if (target.TypeObject.IsPrimitive)
                     {
-                        compare = $"if (value != this.{x.SimpleName})";
+                        compare = $"if (value != this.{x.TargetName})";
                     }
                     else
                     {
-                        compare = $"if (!EqualityComparer<{x.TypeObject.FullName}>.Default.Equals(value, this.{x.SimpleName}))";
+                        compare = $"if (!EqualityComparer<{target.TypeObject.FullName}>.Default.Equals(value, this.{x.TargetName}))";
                     }
 
                     using (var scopeCompare = ssb.ScopeBrace(compare))
                     {
-                        ssb.AppendLine($"this.{x.SimpleName} = value;");
-                        if (link.AutoLink)
+                        ssb.AppendLine($"this.{x.TargetName} = value;");
+                        if (x.AutoLink)
                         {
                         }
                     }
@@ -547,25 +518,19 @@ namespace CrossLink.Generator
             ssb.AppendLine();
         }
 
-        internal void GenerateLink_Link(ScopingStringBuilder ssb, GeneratorInformation info, CrossLinkObject x)
+        internal void GenerateLink_Link(ScopingStringBuilder ssb, GeneratorInformation info, Linkage x)
         {
-            var link = x.LinkAttribute;
-            if (x.TypeObject == null || link == null)
+            if (x.Type == LinkType.None)
             {
                 return;
             }
-
-            if (link.Type == LinkType.None)
+            else if (x.Type == LinkType.Ordered && x.Target != null && x.Target.TypeObject != null)
             {
-                return;
-            }
-            else if (link.Type == LinkType.Ordered)
-            {
-                ssb.AppendLine($"public {link.Type.LinkTypeToChain()}<{x.TypeObject!.FullName}, {this.LocalName}>.Link {x.LinkName};");
+                ssb.AppendLine($"public {x.Type.LinkTypeToChain()}<{x.Target!.TypeObject!.FullName}, {this.LocalName}>.Link {x.LinkName};");
             }
             else
             {
-                ssb.AppendLine($"public {link.Type.LinkTypeToChain()}<{this.LocalName}>.Link {x.LinkName};");
+                ssb.AppendLine($"public {x.Type.LinkTypeToChain()}<{this.LocalName}>.Link {x.LinkName};");
             }
 
             ssb.AppendLine();
@@ -593,28 +558,30 @@ namespace CrossLink.Generator
             using (var scopeParameter = ssb.ScopeObject("x"))
             using (var scopeMethod = ssb.ScopeBrace($"public void Add({this.LocalName} {ssb.FullObject})"))
             {
-                foreach (var chain in this.Members)
+                if (this.Links != null)
                 {
-                    var link = chain.LinkAttribute!;
-                    if (!link.AutoLink || link.Type == LinkType.None)
-                    {// Manual link or invalid link
-                        continue;
-                    }
-                    else if (link.Type == LinkType.Ordered)
+                    foreach (var link in this.Links)
                     {
-                        ssb.AppendLine($"this.{chain.ChainName}.Add({ssb.FullObject}, {ssb.FullObject}.{chain.SimpleName});");
-                    }
-                    else if (link.Type == LinkType.LinkedList)
-                    {
-                        ssb.AppendLine($"this.{chain.ChainName}.AddLast({ssb.FullObject});");
-                    }
-                    else if (link.Type == LinkType.StackList)
-                    {
-                        ssb.AppendLine($"this.{chain.ChainName}.Push({ssb.FullObject});");
-                    }
-                    else
-                    {
-                        ssb.AppendLine($"this.{chain.ChainName}.Add({ssb.FullObject});");
+                        if (!link.AutoLink || link.Type == LinkType.None)
+                        {// Manual link or invalid link
+                            continue;
+                        }
+                        else if (link.Type == LinkType.Ordered)
+                        {
+                            ssb.AppendLine($"this.{link.ChainName}.Add({ssb.FullObject}, {ssb.FullObject}.{link.Target!.SimpleName});");
+                        }
+                        else if (link.Type == LinkType.LinkedList)
+                        {
+                            ssb.AppendLine($"this.{link.ChainName}.AddLast({ssb.FullObject});");
+                        }
+                        else if (link.Type == LinkType.StackList)
+                        {
+                            ssb.AppendLine($"this.{link.ChainName}.Push({ssb.FullObject});");
+                        }
+                        else
+                        {
+                            ssb.AppendLine($"this.{link.ChainName}.Add({ssb.FullObject});");
+                        }
                     }
                 }
             }
@@ -627,16 +594,18 @@ namespace CrossLink.Generator
             using (var scopeParameter = ssb.ScopeObject("x"))
             using (var scopeMethod = ssb.ScopeBrace($"public void Remove({this.LocalName} {ssb.FullObject})"))
             {
-                foreach (var chain in this.Members)
+                if (this.Links != null)
                 {
-                    var link = chain.LinkAttribute!;
-                    if (link.Type == LinkType.None)
+                    foreach (var link in this.Links)
                     {
-                        continue;
-                    }
-                    else
-                    {
-                        ssb.AppendLine($"this.{chain.ChainName}.Remove({ssb.FullObject});");
+                        if (link.Type == LinkType.None)
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            ssb.AppendLine($"this.{link.ChainName}.Remove({ssb.FullObject});");
+                        }
                     }
                 }
             }
@@ -646,20 +615,24 @@ namespace CrossLink.Generator
 
         internal void GenerateGoshujin_Chain(ScopingStringBuilder ssb, GeneratorInformation info)
         {
-            foreach (var chain in this.Members)
+            if (this.Links == null)
             {
-                var link = chain.LinkAttribute!;
+                return;
+            }
+
+            foreach (var link in this.Links)
+            {
                 if (link.Type == LinkType.None)
                 {
                     continue;
                 }
                 else if (link.Type == LinkType.Ordered)
                 {
-                    ssb.AppendLine($"public {link.Type.LinkTypeToChain()}<{chain.TypeObject!.FullName}, {this.LocalName}> {chain.ChainName} {{ get; }} = new(static x => ref x.{chain.LinkName});");
+                    ssb.AppendLine($"public {link.Type.LinkTypeToChain()}<{link.Target!.TypeObject!.FullName}, {this.LocalName}> {link.ChainName} {{ get; }} = new(static x => ref x.{link.LinkName});");
                 }
                 else
                 {
-                    ssb.AppendLine($"public {link.Type.LinkTypeToChain()}<{this.LocalName}> {chain.ChainName} {{ get; }} = new(static x => ref x.{chain.LinkName});");
+                    ssb.AppendLine($"public {link.Type.LinkTypeToChain()}<{this.LocalName}> {link.ChainName} {{ get; }} = new(static x => ref x.{link.LinkName});");
                 }
             }
         }
