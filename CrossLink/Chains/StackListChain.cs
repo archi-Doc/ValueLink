@@ -148,12 +148,8 @@ namespace CrossLink
         private ObjectToLinkDelegete objectToLink;
         private UnorderedLinkedList<T> chain = new();
 
-        public sealed class Link : ILink<T>
+        public struct Link : ILink<T>
         {
-            public Link()
-            {
-            }
-
             public bool IsLinked => this.Node != null;
 
             public T? Previous => this.Node == null || this.Node.Previous == null ? default(T) : this.Node.Previous.Value;
