@@ -41,9 +41,13 @@ namespace Sandbox
         [Link(Type = LinkType.Ordered)]
         private T id { get; set; }
 
+        [Link(Type = LinkType.StackList, Name = "name")]
+        [Link(Type = LinkType.StackList, Name = "Stack2")]
         [Link(Type = LinkType.Ordered)]
         private string name { get; set; }
 
+        [Link(Type = LinkType.StackList, Name = "Stack")]
+        [Link(Type = LinkType.StackList, Name = "Stack")]
         public TestClass3(T id, string name)
         {
             this.id = id;

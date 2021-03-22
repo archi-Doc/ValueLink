@@ -5,7 +5,7 @@ using CrossLink;
 
 namespace Sandbox
 {
-    [CrossLinkGeneratorOption(AttachDebugger = false, GenerateToFile = false)]
+    [CrossLinkGeneratorOption(AttachDebugger = false, GenerateToFile = true)]
     internal class GeneratorOption
     {
     }
