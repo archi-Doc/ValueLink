@@ -7,10 +7,10 @@ namespace Sandbox
     public partial class TestClass
     {
         [Link(Name = "Test", Type = LinkType.LinkedList)]
-        private int id { get; set; }
+        private int id;
 
         [Link(Type = LinkType.Ordered)]
-        private string name { get; set; }
+        private string name;
 
         public TestClass(int id, string name)
         {
@@ -23,20 +23,16 @@ namespace Sandbox
     public partial class TestClass2
     {
         [Link(Type = LinkType.Ordered)]
-        private int id { get; set; }
+        private int id;
 
-        [Link(Type = LinkType.Ordered)]
-        private string name { get; set; }
-
-        private string Instance = string.Empty;
+        [Link(Type = LinkType.Ordered, Name = "Name2")]
+        private string Name { get; set; }
 
         public TestClass2(int id, string name)
         {
             this.id = id;
-            this.name = name;
+            this.Name = name;
         }
-
-        public int Id;
     }
 
     [CrossLinkObject]
@@ -70,7 +66,7 @@ namespace Sandbox
         }
 
         [CrossLinkObject]
-        partial class NestedClaass
+        partial class NestedClass
         {
             [Link(Type = LinkType.Ordered)]
             private uint id { get; set; }

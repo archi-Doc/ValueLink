@@ -35,7 +35,15 @@ namespace CrossLink.Generator
             category: "CrossLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public static readonly DiagnosticDescriptor Error_KeywordUsed = new DiagnosticDescriptor(
-            id: "CLG004", title: "Keyword used", messageFormat: "'{0}' has already been used, please specify a different keyword",
+            id: "CLG004", title: "Keyword used", messageFormat: "The type '{0}' already contains a definition for '{1}'",
+            category: "CrossLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Error_LinkTargetNotField = new DiagnosticDescriptor(
+            id: "CLG005", title: "Not field", messageFormat: "The target of the link '{0}' must be a field",
+            category: "CrossLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Error_LinkTargetNameError = new DiagnosticDescriptor(
+            id: "CLG006", title: "Name error", messageFormat: "The field '{0}' to be linked must start with a lowercase letter",
             category: "CrossLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public CrossLinkBody(GeneratorExecutionContext context)

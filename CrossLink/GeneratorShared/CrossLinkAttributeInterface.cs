@@ -7,7 +7,7 @@ namespace CrossLink
     public enum LinkType
     {
         /// <summary>
-        /// No link.
+        /// No link. In case you want to use AutoNotify only.
         /// </summary>
         None,
 

@@ -125,6 +125,26 @@ namespace CrossLink
             link.Node = this.chain.AddLast(obj);
         }
 
+        /// <summary>
+        /// Removes the specified object from the <see cref="StackListChain{T}"/>.
+        /// </summary>
+        /// <param name="obj">The object to remove from the <see cref="StackListChain{T}"/>.</param>
+        /// <returns>true if the object is successfully removed.</returns>
+        public bool Remove(T obj)
+        {
+            ref Link link = ref this.objectToLink(obj);
+            if (link.Node != null)
+            {
+                this.chain.Remove(link.Node);
+                link.Node = null;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         private ObjectToLinkDelegete objectToLink;
         private UnorderedLinkedList<T> chain = new();
 

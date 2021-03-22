@@ -25,8 +25,18 @@ namespace CrossLink
             this.objectToKey = objectToKey;
         }
 
+        public OrderedChain(ObjectToLinkDelegete objectToLink)
+        {
+            this.objectToLink = objectToLink;
+        }
+
         public void Add(TObj obj)
         {
+            if (this.objectToKey == null)
+            {
+                throw new InvalidOperationException();
+            }
+
             ref Link link = ref this.objectToLink(obj);
             ref TKey key = ref this.objectToKey(obj);
 
@@ -41,7 +51,7 @@ namespace CrossLink
             }
         }
 
-        public void Add2(TKey key, TObj obj)
+        public void Add(TObj obj, TKey key)
         {
             ref Link link = ref this.objectToLink(obj);
 
@@ -73,7 +83,7 @@ namespace CrossLink
         public TObj? Last => this.chain.Last == null ? default(TObj) : this.chain.Last.Value;
 
         private ObjectToLinkDelegete objectToLink;
-        private ObjectToKeyDelegete objectToKey;
+        private ObjectToKeyDelegete? objectToKey;
         private OrderedMap<TKey, TObj> chain = new();
 
         public struct Link : ILink<TObj>
@@ -96,7 +106,7 @@ namespace CrossLink
 
             public void Add(OrderedChainClass x)
             {
-                this.IdChain.Add2(x.Id2, x);
+                this.IdChain.Add(x, x.Id2);
             }
 
             public void Remove(OrderedChainClass x)
@@ -141,7 +151,7 @@ namespace CrossLink
                 if (value != this.id)
                 {
                     this.id = value;
-                    this.GoshujinInstance.IdChain.Add2(value, this);
+                    this.GoshujinInstance.IdChain.Add(this, value);
                 }
             }
         }
