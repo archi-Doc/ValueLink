@@ -178,24 +178,22 @@ namespace CrossLink.Generator
                 this.Identifier.Add(x.SimpleName);
             }
 
-            // Members: Property
-            var list = new List<CrossLinkObject>();
-            foreach (var x in this.AllMembers.Where(x => x.Kind == VisceralObjectKind.Property))
+            // Members: Property / Field / Constructor
+            foreach (var x in this.AllMembers)
             {
-                if (x.TypeObject != null && !x.IsStatic)
-                { // Valid TypeObject && not static
-                    x.Configure();
-                    list.Add(x);
+                var flag = false;
+                if (x.Kind == VisceralObjectKind.Property || x.Kind == VisceralObjectKind.Field)
+                {
+                    flag = true;
                 }
-            }
+                else if (x.Kind == VisceralObjectKind.Method && x.Method_IsConstructor)
+                {
+                    flag = true;
+                }
 
-            // Members: Field
-            foreach (var x in this.AllMembers.Where(x => x.Kind == VisceralObjectKind.Field))
-            {
-                if (x.TypeObject != null && !x.IsStatic)
+                if (flag && x.TypeObject != null && !x.IsStatic)
                 { // Valid TypeObject && not static
                     x.Configure();
-                    list.Add(x);
                 }
             }
 
@@ -647,14 +645,20 @@ namespace CrossLink.Generator
                 ssb.AppendLine($"get => this.{goshujinInstance};");
                 using (var scopeSet = ssb.ScopeBrace("set"))
                 {
-                    using (var scopeIfNull = ssb.ScopeBrace($"if (this.{goshujinInstance} != null)"))
+                    using (var scopeEqual = ssb.ScopeBrace($"if (!EqualityComparer<{this.ObjectAttribute!.GoshujinClass}>.Default.Equals(value, this.{goshujinInstance}))"))
                     {
-                        ssb.AppendLine($"this.{goshujinInstance}.Remove(this);");
-                    }
+                        using (var scopeIfNull = ssb.ScopeBrace($"if (this.{goshujinInstance} != null)"))
+                        {
+                            ssb.AppendLine($"this.{goshujinInstance}.Remove(this);");
+                        }
 
-                    ssb.AppendLine();
-                    ssb.AppendLine($"this.{goshujinInstance} = value;");
-                    ssb.AppendLine($"this.{goshujinInstance}.Add(this);");
+                        ssb.AppendLine();
+                        ssb.AppendLine($"this.{goshujinInstance} = value;");
+                        using (var scopeIfNull2 = ssb.ScopeBrace($"if (value != null)"))
+                        {
+                            ssb.AppendLine($"this.{goshujinInstance}.Add(this);");
+                        }
+                    }
                 }
             }
 
