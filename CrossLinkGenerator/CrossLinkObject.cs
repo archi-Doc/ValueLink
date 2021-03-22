@@ -62,8 +62,6 @@ namespace CrossLink.Generator
 
         public string ChainName { get; private set; } = string.Empty;
 
-        public HashSet<string> UsedKeywords { get; private set; } = new();
-
         public CrossLinkObject[] Members { get; private set; } = Array.Empty<CrossLinkObject>(); // Members have valid TypeObject && not static && property or field
 
         public IEnumerable<CrossLinkObject> MembersWithFlag(CrossLinkObjectFlag flag) => this.Members.Where(x => x.ObjectFlag.HasFlag(flag));
@@ -73,6 +71,8 @@ namespace CrossLink.Generator
         public List<CrossLinkObject>? Children { get; private set; } // The opposite of ContainingObject
 
         public List<CrossLinkObject>? ConstructedObjects { get; private set; } // The opposite of ConstructedFrom
+
+        public VisceralIdentifier Identifier { get; private set; } = VisceralIdentifier.Default;
 
         public int GenericsNumber { get; private set; }
 
@@ -189,9 +189,10 @@ namespace CrossLink.Generator
         private void ConfigureObject()
         {
             // Used keywords
+            this.Identifier = new VisceralIdentifier();
             foreach (var x in this.AllMembers)
             {
-                this.UsedKeywords.Add(x.SimpleName);
+                this.Identifier.Add(x.SimpleName);
             }
 
             // Members: Property
@@ -387,7 +388,8 @@ namespace CrossLink.Generator
 
         public void CheckKeyword(string keyword, Location? location = null)
         {
-            if (this.UsedKeywords.Contains(keyword))
+            var st = this.Identifier.GetIdentifier();
+            if (!this.Identifier.Add(keyword))
             {
                 this.Body.AddDiagnostic(CrossLinkBody.Error_KeywordUsed, location ?? Location.None, this.SimpleName, keyword);
             }
