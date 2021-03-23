@@ -67,13 +67,24 @@ namespace CrossLink
             }
         }
 
-        public void Remove(TObj obj)
+        /// <summary>
+        /// Removes the specific object from the chain.
+        /// <br/>O(1) operation.
+        /// </summary>
+        /// <param name="obj">The object to remove from the chain. </param>
+        /// <returns>true if item is successfully removed.</returns>
+        public bool Remove(TObj obj)
         {
             ref Link link = ref this.objectToLink(obj);
             if (link.Node != null)
             {
                 this.chain.RemoveNode(link.Node);
                 link.Node = null;
+                return true;
+            }
+            else
+            {
+                return false;
             }
         }
 
@@ -83,8 +94,14 @@ namespace CrossLink
 
         public int Count => this.chain.Count;
 
+        /// <summary>
+        /// Gets the first object.
+        /// </summary>
         public TObj? First => this.chain.First == null ? default(TObj) : this.chain.First.Value;
 
+        /// <summary>
+        /// Gets the last object.
+        /// </summary>
         public TObj? Last => this.chain.Last == null ? default(TObj) : this.chain.Last.Value;
 
         private ObjectToLinkDelegete objectToLink;
@@ -95,76 +112,17 @@ namespace CrossLink
         {
             public bool IsLinked => this.Node != null;
 
+            /// <summary>
+            /// Gets the previous object.
+            /// </summary>
             public TObj? Previous => this.Node == null || this.Node.Previous == null ? default(TObj) : this.Node.Previous.Value;
 
+            /// <summary>
+            /// Gets the next object.
+            /// </summary>
             public TObj? Next => this.Node == null || this.Node.Next == null ? default(TObj) : this.Node.Next.Value;
 
             internal OrderedMap<TKey, TObj>.Node? Node { get; set; }
         }
-    }
-
-    public class OrderedChainClass
-    {
-        public sealed class GoshujinClass
-        {
-            public GoshujinClass()
-            {
-            }
-
-            public void Add(OrderedChainClass x)
-            {
-                this.IdChain.Add(x, x.Id2);
-            }
-
-            public void Remove(OrderedChainClass x)
-            {
-                this.IdChain.Remove(x);
-            }
-
-            public OrderedChain<int, OrderedChainClass> IdChain { get; } = new(static x => ref x.id, static x => ref x.IdLink);
-        }
-
-        public OrderedChainClass(int id)
-        {
-            this.Id2 = id;
-        }
-
-        public GoshujinClass Goshujin
-        {
-            get => this.GoshujinInstance;
-            set
-            {
-                if (this.GoshujinInstance != null)
-                {
-                    this.GoshujinInstance.Remove(this);
-                }
-
-                this.GoshujinInstance = value;
-                this.GoshujinInstance.Add(this);
-            }
-        }
-
-        private GoshujinClass GoshujinInstance = default!;
-
-        public int Id2 { get; set; }
-
-        private int id;
-
-        public int Id
-        {
-            get => this.id;
-            set
-            {
-                if (value != this.id)
-                {
-                    this.id = value;
-                    this.GoshujinInstance.IdChain.Add(this, value);
-                }
-            }
-        }
-
-        public OrderedChain<int, OrderedChainClass>.Link IdLink;
-
-        public string Name { get; set; } = string.Empty;
     }
 }

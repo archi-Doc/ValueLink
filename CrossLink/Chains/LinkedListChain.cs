@@ -7,12 +7,13 @@ using System.Linq;
 using Arc.Collection;
 
 #pragma warning disable SA1124 // Do not use regions
-#pragma warning disable SA1307 // Accessible fields should begin with upper-case letter
-#pragma warning disable SA1401 // Fields should be private
-#pragma warning disable SA1615 // Element return value should be documented
 
 namespace CrossLink
 {
+    /// <summary>
+    /// Represents a doubly linked list.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the list.</typeparam>
     public class LinkedListChain<T> : ICollection<T>, IReadOnlyCollection<T>, ICollection
     {
         public delegate ref Link ObjectToLinkDelegete(T obj);
@@ -22,6 +23,10 @@ namespace CrossLink
             this.objectToLink = objectToLink;
         }
 
+        /// <summary>
+        /// Adds a new object at the start of the list.
+        /// </summary>
+        /// <param name="obj">The new object to add at the start of the list.</param>
         public void AddFirst(T obj)
         {
             ref Link link = ref this.objectToLink(obj);
@@ -33,6 +38,10 @@ namespace CrossLink
             link.Node = this.chain.AddFirst(obj);
         }
 
+        /// <summary>
+        /// Adds a new object at the end of the list.
+        /// </summary>
+        /// <param name="obj">The new object to add at the end of the list.</param>
         public void AddLast(T obj)
         {
             ref Link link = ref this.objectToLink(obj);
@@ -44,6 +53,12 @@ namespace CrossLink
             link.Node = this.chain.AddLast(obj);
         }
 
+        /// <summary>
+        /// Removes the specific object from the list.
+        /// <br/>O(1) operation.
+        /// </summary>
+        /// <param name="obj">The object to remove from the list. </param>
+        /// <returns>true if item is successfully removed.</returns>
         public bool Remove(T obj)
         {
             ref Link link = ref this.objectToLink(obj);
@@ -61,8 +76,14 @@ namespace CrossLink
 
         public int Count => this.chain.Count;
 
+        /// <summary>
+        /// Gets the first object.
+        /// </summary>
         public T? First => this.chain.First == null ? default(T) : this.chain.First.Value;
 
+        /// <summary>
+        /// Gets the last object.
+        /// </summary>
         public T? Last => this.chain.Last == null ? default(T) : this.chain.Last.Value;
 
         /// <summary>
@@ -90,8 +111,14 @@ namespace CrossLink
         {
             public bool IsLinked => this.Node != null;
 
+            /// <summary>
+            /// Gets the previous object.
+            /// </summary>
             public T? Previous => this.Node == null || this.Node.Previous == null ? default(T) : this.Node.Previous.Value;
 
+            /// <summary>
+            /// Gets the next object.
+            /// </summary>
             public T? Next => this.Node == null || this.Node.Next == null ? default(T) : this.Node.Next.Value;
 
             internal UnorderedLinkedList<T>.Node? Node { get; set; }
