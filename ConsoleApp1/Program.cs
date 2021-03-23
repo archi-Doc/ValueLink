@@ -45,15 +45,21 @@ namespace ConsoleApp1
             new TestClass(3, "A", 77, 1.2).Goshujin = g;
             new TestClass(0, "Zero", 100, 0).Goshujin = g;
 
-            ConsoleWriteIEnumerable("[List]", g.ListChain);
+            ConsoleWriteIEnumerable("[List]", g.ListChain); // ListChain is virtually a List<TestClass>
 
             Console.WriteLine("List[2]");
             Console.WriteLine(g.ListChain[2]);
             Console.WriteLine();
 
-            ConsoleWriteIEnumerable("[Sorted by Id]", g.IdChain);
+            ConsoleWriteIEnumerable("[Sorted by Id]", g.IdChain); 
             ConsoleWriteIEnumerable("[Sorted by Name]", g.NameChain);
+
             ConsoleWriteIEnumerable("[Sorted by Age]", g.AgeChain);
+            var t = g.ListChain[0];
+            Console.WriteLine($"{t.Name} age {t.Age} => 90");
+            t.Age = 90;
+            ConsoleWriteIEnumerable("[Sorted by Age modified]", g.AgeChain);
+
             ConsoleWriteIEnumerable("[Sorted by Height]", g.HeightChain);
             ConsoleWriteIEnumerable("[Stack]", g.StackChain);
 
@@ -65,6 +71,12 @@ namespace ConsoleApp1
 
             ConsoleWriteIEnumerable("[Stack]", g.StackChain);
             ConsoleWriteIEnumerable("[Sorted by Id]", g.IdChain);
+
+            var g2 = new TestClass.GoshujinClass(); // New Goshujin
+            g.ListChain[0].Goshujin = g2; // Change Goshujin
+            ConsoleWriteIEnumerable("[List]", g.ListChain);
+            ConsoleWriteIEnumerable("[List2]", g2.ListChain);
+
 
             static void ConsoleWriteIEnumerable<T>(string? header, IEnumerable<T> e)
             {
