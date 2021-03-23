@@ -149,8 +149,14 @@ namespace CrossLink
         {
             public bool IsLinked => this.Node != null;
 
+            /// <summary>
+            /// Gets the previous object.
+            /// </summary>
             public T? Previous => this.Node == null || this.Node.Previous == null ? default(T) : this.Node.Previous.Value;
 
+            /// <summary>
+            /// Gets the next object.
+            /// </summary>
             public T? Next => this.Node == null || this.Node.Next == null ? default(T) : this.Node.Next.Value;
 
             internal UnorderedLinkedList<T>.Node? Node { get; set; }

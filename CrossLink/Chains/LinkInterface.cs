@@ -2,10 +2,15 @@
 
 namespace CrossLink
 {
+    /// <summary>
+    /// Link interface.
+    /// </summary>
+    /// <typeparam name="T">The type of the object to be linked.</typeparam>
     public interface ILink<T>
     {
-        // T Object { get; }
-
+        /// <summary>
+        /// Gets a value indicating whether an object is linked.
+        /// </summary>
         bool IsLinked { get; }
     }
 }

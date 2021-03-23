@@ -13,6 +13,10 @@ using Arc.Collection;
 
 namespace CrossLink
 {
+    /// <summary>
+    /// Represents a list of objects that can be accessed by index.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the list.</typeparam>
     public class ListChain<T> : IList<T>, IReadOnlyList<T>
     {
         public delegate ref Link ObjectToLinkDelegete(T obj);

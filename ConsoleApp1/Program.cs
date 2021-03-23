@@ -20,6 +20,7 @@ namespace ConsoleApp1
         private double height;
 
         [Link(Type = LinkType.StackList, Name = "Stack")]
+        [Link(Type = LinkType.List, Name = "List")]
         public TestClass(int id, string name, int age, double height)
         {
             this.id = id;
@@ -35,21 +36,21 @@ namespace ConsoleApp1
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            Console.WriteLine("CrossLink Quick Start.");
+            Console.WriteLine();
 
-            var list = new List<TestClass>();
             var g = new TestClass.GoshujinClass(); // Goshujin (Owner) class
-            list.Add(new TestClass(1, "Hoge", 17, 1.7));
-            list.Add(new TestClass(2, "Fuga", 18, 1.5));
-            list.Add(new TestClass(3, "A", 77, 1.2));
-            list.Add(new TestClass(0, "Zero", 100, 0));
+            new TestClass(1, "Hoge", 17, 1.7).Goshujin = g; // Set Goshujin (Owner)
+            new TestClass(2, "Fuga", 18, 1.5).Goshujin = g;
+            new TestClass(3, "A", 77, 1.2).Goshujin = g;
+            new TestClass(0, "Zero", 100, 0).Goshujin = g;
 
-            foreach (var x in list)
-            {
-                x.Goshujin = g; // Set Goshujin (Owner)
-            }
+            ConsoleWriteIEnumerable("[List]", g.ListChain);
 
-            ConsoleWriteIEnumerable("[List]", list);
+            Console.WriteLine("List[2]");
+            Console.WriteLine(g.ListChain[2]);
+            Console.WriteLine();
+
             ConsoleWriteIEnumerable("[Sorted by Id]", g.IdChain);
             ConsoleWriteIEnumerable("[Sorted by Name]", g.NameChain);
             ConsoleWriteIEnumerable("[Sorted by Age]", g.AgeChain);
@@ -58,8 +59,8 @@ namespace ConsoleApp1
 
             Console.WriteLine("Pop");
             var pc = g.StackChain.Pop();
-            Console.WriteLine(pc);
             g.Remove(pc);
+            Console.WriteLine(pc);
             Console.WriteLine();
 
             ConsoleWriteIEnumerable("[Stack]", g.StackChain);
