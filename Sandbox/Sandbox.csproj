@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Generated\" />
+    <Compile Remove="Generated\*" />
   </ItemGroup>
 
   <ItemGroup>

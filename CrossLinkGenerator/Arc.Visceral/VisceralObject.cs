@@ -1835,18 +1835,28 @@ namespace Arc.Visceral
         {
             get
             {
-                if (this.symbol != null)
+                if (this.location == Location.None)
                 {
-                    var first = this.symbol.Locations.First();
-                    if (first != null)
+                    if (this.symbol != null)
                     {
-                        return first;
+                        var first = this.symbol.Locations.First();
+                        if (first != null)
+                        {
+                            this.location = first;
+                        }
                     }
                 }
 
-                return Location.None;
+                return this.location;
+            }
+
+            set
+            {
+                this.location = value;
             }
         }
+
+        private Location location = Location.None;
 
         public bool Generics_IsGeneric
         {
