@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\CrossLinkGenerator\CrossLinkGenerator.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
     <ProjectReference Include="..\CrossLink\CrossLink.csproj" />
   </ItemGroup>
 

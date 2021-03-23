@@ -12,18 +12,18 @@ using Arc.Collection;
 namespace CrossLink
 {
     /// <summary>
-    /// Represents a variable size last-in-first-out (LIFO) collection of instances of the same specified type.
+    /// Represents a first-in, first-out (FIFO) collection of instances of the same specified type.
     /// </summary>
     /// <typeparam name="T">Specifies the type of elements in the stack.</typeparam>
-    public class StackListChain<T> : IReadOnlyCollection<T>, ICollection
+    public class QueueListChain<T> : IReadOnlyCollection<T>, ICollection
     {
         public delegate ref Link ObjectToLinkDelegete(T obj);
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="StackListChain{T}"/> class (Doubly linked list).
+        /// Initializes a new instance of the <see cref="QueueListChain{T}"/> class (Doubly linked list).
         /// </summary>
         /// <param name="objectToLink">ObjectToLinkDelegete.</param>
-        public StackListChain(ObjectToLinkDelegete objectToLink)
+        public QueueListChain(ObjectToLinkDelegete objectToLink)
         {
             this.objectToLink = objectToLink;
         }
@@ -31,48 +31,48 @@ namespace CrossLink
         public int Count => this.chain.Count;
 
         /// <summary>
-        /// Returns the object at the top of the <see cref="StackListChain{T}"/> without removing it.
+        /// Returns the object at the beginning of the <see cref="QueueListChain{T}"/> without removing it.
         /// </summary>
-        /// <returns>The object at the top of the stack.</returns>
+        /// <returns>The object at the beginning of the queue.</returns>
         public T Peek()
         {
-            if (this.chain.Last == null)
+            if (this.chain.First == null)
             {
-                throw new InvalidOperationException("Stack empty.");
+                throw new InvalidOperationException("Queue empty.");
             }
 
-            return this.chain.Last.Value;
+            return this.chain.First.Value;
         }
 
         /// <summary>
-        /// Returns a value that indicates whether there is an object at the top of the <see cref="StackListChain{T}"/>, and if one is present, copies it to the result parameter. The object is not removed from the  <see cref="StackListChain{T}"/>.
+        /// Returns a value that indicates whether there is an object at the beginning of the <see cref="QueueListChain{T}"/>, and if one is present, copies it to the result parameter. The object is not removed from the  <see cref="QueueListChain{T}"/>.
         /// </summary>
-        /// <param name="result">If present, the object at the top of the<see cref="StackListChain{T}"/>; otherwise, the default value of T.</param>
-        /// <returns>true if there is an object at the top of the <see cref="StackListChain{T}"/>; false if the <see cref="StackListChain{T}"/> is empty.</returns>
+        /// <param name="result">If present, the object at the beginning of the<see cref="QueueListChain{T}"/>; otherwise, the default value of T.</param>
+        /// <returns>true if there is an object at the beginning of the <see cref="QueueListChain{T}"/>; false if the <see cref="QueueListChain{T}"/> is empty.</returns>
         public bool TryPeek([MaybeNullWhen(false)] out T result)
         {
-            if (this.chain.Last == null)
+            if (this.chain.First == null)
             {
                 result = default(T);
                 return false;
             }
 
-            result = this.chain.Last.Value;
+            result = this.chain.First.Value;
             return true;
         }
 
         /// <summary>
-        /// Removes and returns the object at the top of the <see cref="StackListChain{T}"/>.
+        /// Removes and returns the object at the beginning of the <see cref="QueueListChain{T}"/>.
         /// </summary>
-        /// <returns>The object removed from the top of the <see cref="StackListChain{T}"/>.</returns>
-        public T Pop()
+        /// <returns>The object removed from the beginning of the <see cref="QueueListChain{T}"/>.</returns>
+        public T Dequeue()
         {
-            if (this.chain.Last == null)
+            if (this.chain.First == null)
             {
-                throw new InvalidOperationException("Stack empty.");
+                throw new InvalidOperationException("Queue empty.");
             }
 
-            var t = this.chain.Last.Value;
+            var t = this.chain.First.Value;
             ref Link link = ref this.objectToLink(t);
             if (link.Node != null)
             {
@@ -84,19 +84,19 @@ namespace CrossLink
         }
 
         /// <summary>
-        /// Returns a value that indicates whether there is an object at the top of the <see cref="StackListChain{T}"/>, and if one is present, copies it to the result parameter, and removes it from the <see cref="StackListChain{T}"/>.
+        /// Returns a value that indicates whether there is an object at the beginning of the <see cref="QueueListChain{T}"/>, and if one is present, copies it to the result parameter, and removes it from the <see cref="QueueListChain{T}"/>.
         /// </summary>
-        /// <param name="result">If present, the object at the top of the <see cref="StackListChain{T}"/>; otherwise, the default value of T.</param>
-        /// <returns>true if there is an object at the top of the <see cref="StackListChain{T}"/>; false if the <see cref="StackListChain{T}"/> is empty.</returns>
-        public bool TryPop([MaybeNullWhen(false)] out T result)
+        /// <param name="result">If present, the object at the beginning of the <see cref="QueueListChain{T}"/>; otherwise, the default value of T.</param>
+        /// <returns>true if there is an object at the beginning of the <see cref="QueueListChain{T}"/>; false if the <see cref="QueueListChain{T}"/> is empty.</returns>
+        public bool TryDequeue([MaybeNullWhen(false)] out T result)
         {
-            if (this.chain.Last == null)
+            if (this.chain.First == null)
             {
                 result = default(T);
                 return false;
             }
 
-            result = this.chain.Last.Value;
+            result = this.chain.First.Value;
             ref Link link = ref this.objectToLink(result);
             if (link.Node != null)
             {
@@ -108,10 +108,10 @@ namespace CrossLink
         }
 
         /// <summary>
-        /// Inserts an object at the top of the <see cref="StackListChain{T}"/>.
+        /// Adds an object to the end of the <see cref="QueueListChain{T}"/>.
         /// </summary>
-        /// <param name="obj">The object to push onto the <see cref="StackListChain{T}"/>. The value can be null for reference types.</param>
-        public void Push(T obj)
+        /// <param name="obj">The object to add to the <see cref="QueueListChain{T}"/>. The value can be null for reference types.</param>
+        public void Enqueue(T obj)
         {
             ref Link link = ref this.objectToLink(obj);
             if (link.Node != null)
@@ -123,9 +123,9 @@ namespace CrossLink
         }
 
         /// <summary>
-        /// Removes the specified object from the <see cref="StackListChain{T}"/>.
+        /// Removes the specified object from the <see cref="QueueListChain{T}"/>.
         /// </summary>
-        /// <param name="obj">The object to remove from the <see cref="StackListChain{T}"/>.</param>
+        /// <param name="obj">The object to remove from the <see cref="QueueListChain{T}"/>.</param>
         /// <returns>true if the object is successfully removed.</returns>
         public bool Remove(T obj)
         {

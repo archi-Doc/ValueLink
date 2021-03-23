@@ -55,7 +55,7 @@ namespace CrossLink.Generator
             category: "CrossLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public static readonly DiagnosticDescriptor Error_NoNotifyTarget = new DiagnosticDescriptor(
-            id: "CLG009", title: "Link error", messageFormat: "AutoNotify option requires a property or field",
+            id: "CLG009", title: "Link error", messageFormat: "AutoNotify option requires a property or field to be linked",
             category: "CrossLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public static readonly DiagnosticDescriptor Error_LinkNameRequired = new DiagnosticDescriptor(

@@ -27,6 +27,11 @@ namespace CrossLink
         StackList,
 
         /// <summary>
+        /// Represents a queue list (<see cref="QueueListChain{T}"/>).
+        /// </summary>
+        QueueList,
+
+        /// <summary>
         /// Represents a collection of sorted objects (<see cref="OrderedChain{TKey, TValue}"/>).
         /// </summary>
         Ordered,

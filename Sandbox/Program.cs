@@ -45,7 +45,7 @@ namespace Sandbox
         private string name { get; set; }
 
         [Link(Type = LinkType.StackList, Name = "Stack")]
-        // [Link(Type = LinkType.StackList, Name = "Stack")]
+        [Link(Type = LinkType.StackList, Name = "Stack2")]
         public TestClass3(T id, string name)
         {
             this.id = id;
@@ -82,6 +82,9 @@ namespace Sandbox
             Console.WriteLine("Hello World!");
 
             var tc3 = new TestClass3<int>(1, "test");
+            var g = new TestClass3<int>.GoshujinClass();
+            tc3.Goshujin = g;
+
         }
     }
 }

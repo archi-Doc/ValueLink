@@ -14,6 +14,7 @@ namespace Arc.Visceral
     public class VisceralIdentifier
     {
         public static VisceralIdentifier Default = new VisceralIdentifier();
+        // public static int IdentifierSerial = 0;
 
         private HashSet<string> identifier = new();
         private string identifierFormat = "__gen_visceral_identifier__";
@@ -31,7 +32,7 @@ namespace Arc.Visceral
             while (true)
             {
                 if (this.identifierSerial++ < 10_000)
-                {
+                {// this.identifierSerial
                     identifier = this.identifierFormat + this.identifierSerial.ToString("D4");
                 }
                 else

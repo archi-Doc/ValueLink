@@ -14,6 +14,7 @@ namespace CrossLink
         List,
         LinkedList,
         StackList,
+        QueueList,
         Ordered,
     }
 

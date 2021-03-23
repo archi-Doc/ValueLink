@@ -1,76 +1,34 @@
 ﻿using System;
+using System.Collections.Generic;
 using CrossLink;
 
 namespace ConsoleApp1
 {
-    [CrossLinkObject()]
+    [CrossLinkObject]
     public partial class TestClass
     {
-        [Link(Name = "Test", Type = LinkType.LinkedList)]
-        private int id;
-
-        [Link(Type = LinkType.Ordered)]
-        private string name;
-
-        public TestClass(int id, string name)
-        {
-            this.id = id;
-            this.name = name;
-        }
-    }
-
-    [CrossLinkObject(GoshujinClass = "Goshu", GoshujinInstance = "Instance")]
-    public partial class TestClass2
-    {
         [Link(Type = LinkType.Ordered)]
         private int id;
 
-        [Link(Type = LinkType.Ordered, Name = "Name2")]
-        private string Name { get; set; }
-
-        public TestClass2(int id, string name)
-        {
-            this.id = id;
-            this.Name = name;
-        }
-    }
-
-    [CrossLinkObject]
-    public partial class TestClass3<T>
-    {
         [Link(Type = LinkType.Ordered)]
-        private T id { get; set; }
+        public string name { get; private set; } = string.Empty;
 
         [Link(Type = LinkType.Ordered)]
-        private string name { get; set; }
+        public int age { get; private set; }
 
-        public TestClass3(T id, string name)
+        [Link(Type = LinkType.Ordered)]
+        private double height;
+
+        [Link(Type = LinkType.StackList, Name = "Stack")]
+        public TestClass(int id, string name, int age, double height)
         {
             this.id = id;
             this.name = name;
-        }
-    }
-
-    public partial class TestClass4
-    {
-        // [Link(Type = LinkType.Ordered)]
-        private int id { get; set; }
-
-        // [Link(Type = LinkType.Ordered)]
-        private string name { get; set; }
-
-        public TestClass4(int id, string name)
-        {
-            this.id = id;
-            this.name = name;
+            this.age = age;
+            this.height = height;
         }
 
-        [CrossLinkObject]
-        partial class NestedClass
-        {
-            [Link(Type = LinkType.Ordered)]
-            private uint id { get; set; }
-        }
+        public override string ToString() => $"ID:{this.id, 2}, {this.name, -5}, Age:{this.age, 3}, Height:{this.height:F2}";
     }
 
     class Program
@@ -79,15 +37,48 @@ namespace ConsoleApp1
         {
             Console.WriteLine("Hello World!");
 
-            var tc = new TestClass(1, "1");
-            var tc0 = new TestClass(0, "0");
-            var g = new TestClass.GoshujinClass();
-            tc.Goshujin = g;
-            tc0.Goshujin = g;
+            var list = new List<TestClass>();
+            var g = new TestClass.GoshujinClass(); // Goshujin (Owner) class
+            list.Add(new TestClass(1, "Hoge", 17, 1.7));
+            list.Add(new TestClass(2, "Fuga", 18, 1.5));
+            list.Add(new TestClass(3, "A", 77, 1.2));
+            list.Add(new TestClass(0, "Zero", 100, 0));
 
-            var tc3 = new TestClass3<int>(3, "3");
-            var g3 = new TestClass3<int>.GoshujinClass();
-            tc3.Goshujin = g3;
+            foreach (var x in list)
+            {
+                x.Goshujin = g; // Set Goshujin (Owner)
+            }
+
+            ConsoleWriteIEnumerable("[List]", list);
+            ConsoleWriteIEnumerable("[Sorted by Id]", g.IdChain);
+            ConsoleWriteIEnumerable("[Sorted by Name]", g.NameChain);
+            ConsoleWriteIEnumerable("[Sorted by Age]", g.AgeChain);
+            ConsoleWriteIEnumerable("[Sorted by Height]", g.HeightChain);
+            ConsoleWriteIEnumerable("[Stack]", g.StackChain);
+
+            Console.WriteLine("Pop");
+            var pc = g.StackChain.Pop();
+            Console.WriteLine(pc);
+            g.Remove(pc);
+            Console.WriteLine();
+
+            ConsoleWriteIEnumerable("[Stack]", g.StackChain);
+            ConsoleWriteIEnumerable("[Sorted by Id]", g.IdChain);
+
+            static void ConsoleWriteIEnumerable<T>(string? header, IEnumerable<T> e)
+            {
+                if (header != null)
+                {
+                    Console.WriteLine(header);
+                }
+
+                foreach (var x in e)
+                {
+                    Console.WriteLine(x!.ToString());
+                }
+
+                Console.WriteLine();
+            }
         }
     }
 }

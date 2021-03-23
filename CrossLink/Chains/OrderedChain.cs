@@ -1,6 +1,7 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,7 +14,7 @@ using CrossLink;
 
 namespace CrossLink
 {
-    public class OrderedChain<TKey, TObj>
+    public class OrderedChain<TKey, TObj> : IEnumerable<TObj>
     {
         public delegate ref Link ObjectToLinkDelegete(TObj obj);
 
@@ -75,6 +76,10 @@ namespace CrossLink
                 link.Node = null;
             }
         }
+
+        IEnumerator<TObj> IEnumerable<TObj>.GetEnumerator() => this.chain.Values.GetEnumerator();
+
+        IEnumerator IEnumerable.GetEnumerator() => this.chain.Values.GetEnumerator();
 
         public int Count => this.chain.Count;
 
