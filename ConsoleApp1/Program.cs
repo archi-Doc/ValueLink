@@ -42,7 +42,7 @@ namespace ConsoleApp1
             var g = new TestClass.GoshujinClass(); // Goshujin (Owner) class
             new TestClass(1, "Hoge", 17, 1.7).Goshujin = g; // Set Goshujin (Owner)
             new TestClass(2, "Fuga", 18, 1.5).Goshujin = g;
-            new TestClass(3, "A", 77, 1.2).Goshujin = g;
+            new TestClass(1, "A", 77, 1.2).Goshujin = g;
             new TestClass(0, "Zero", 100, 0).Goshujin = g;
 
             ConsoleWriteIEnumerable("[List]", g.ListChain); // ListChain is virtually a List<TestClass>

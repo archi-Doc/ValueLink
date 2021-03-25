@@ -106,7 +106,7 @@ namespace CrossLink
 
         private ObjectToLinkDelegete objectToLink;
         private ObjectToKeyDelegete? objectToKey;
-        private OrderedMap<TKey, TObj> chain = new();
+        private OrderedMultiMap<TKey, TObj> chain = new();
 
         public struct Link : ILink<TObj>
         {
@@ -122,7 +122,7 @@ namespace CrossLink
             /// </summary>
             public TObj? Next => this.Node == null || this.Node.Next == null ? default(TObj) : this.Node.Next.Value;
 
-            internal OrderedMap<TKey, TObj>.Node? Node { get; set; }
+            internal OrderedMultiMap<TKey, TObj>.Node? Node { get; set; }
         }
     }
 }
