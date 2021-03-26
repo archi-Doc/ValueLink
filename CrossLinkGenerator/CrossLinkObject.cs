@@ -552,7 +552,7 @@ namespace CrossLink.Generator
             }
             else if (link.Type == LinkType.Ordered)
             {
-                ssb.AppendLine($"{prefix}.{link.ChainName}.Add({ssb.FullObject}, {ssb.FullObject}.{link.Target!.SimpleName});");
+                ssb.AppendLine($"{prefix}.{link.ChainName}.Add({ssb.FullObject}.{link.Target!.SimpleName}, {ssb.FullObject});");
             }
             else if (link.Type == LinkType.LinkedList)
             {
