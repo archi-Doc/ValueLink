@@ -14,7 +14,7 @@ namespace CrossLink
     /// Represents a doubly linked list.
     /// </summary>
     /// <typeparam name="T">The type of elements in the list.</typeparam>
-    public class LinkedListChain<T> : ICollection<T>, IReadOnlyCollection<T>, ICollection
+    public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
     {
         public delegate ref Link ObjectToLinkDelegete(T obj);
 
@@ -88,6 +88,7 @@ namespace CrossLink
 
         /// <summary>
         /// Finds the first node that contains the specified value.
+        /// <br/>O(n) operation.
         /// </summary>
         /// <param name="value">The value to locate in the list.</param>
         /// <returns>The first object that contains the specified value, if found; otherwise, null.</returns>
@@ -128,8 +129,6 @@ namespace CrossLink
 
         public bool IsReadOnly => false;
 
-        void ICollection<T>.Add(T value) => this.AddLast(value);
-
         /// <summary>
         /// Removes all elements from the list.
         /// </summary>
@@ -149,16 +148,6 @@ namespace CrossLink
                 link.Node = null;
             }
         }
-
-        /// <summary>
-        /// Determines whether an element is in the list.
-        /// <br/>O(n) operation.
-        /// </summary>
-        /// <param name="value">The value to locate in the list.</param>
-        /// <returns>true if value is found in the list.</returns>
-        public bool Contains(T value) => this.Find(value) != null;
-
-        public void CopyTo(T[] array, int arrayIndex) => this.chain.CopyTo(array, arrayIndex);
 
         void ICollection.CopyTo(Array array, int index) => ((ICollection)this.chain).CopyTo(array, index);
 
