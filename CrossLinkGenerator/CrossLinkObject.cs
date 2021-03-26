@@ -596,8 +596,8 @@ namespace CrossLink.Generator
             using (var scopeClass = ssb.ScopeBrace("public sealed class " + goshujinClass))
             {
                 // Constructor
-                ssb.AppendLine("public " + goshujinClass + "() {}");
-                ssb.AppendLine();
+                // ssb.AppendLine("public " + goshujinClass + "() {}");
+                // ssb.AppendLine();
 
                 this.GenerateGoshujin_Add(ssb, info);
                 this.GenerateGoshujin_Remove(ssb, info);

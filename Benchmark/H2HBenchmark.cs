@@ -37,7 +37,7 @@ namespace Benchmark
     {
         public const int N = 10;
 
-        [Params(100, 10_000)]
+        [Params(100)]
         public int Length;
 
         public int[] IntArray = default!;
