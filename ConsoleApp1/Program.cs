@@ -14,22 +14,18 @@ namespace ConsoleApp1
         public string name { get; private set; } = string.Empty;
 
         [Link(Type = LinkType.Ordered)]
-        public int age { get; private set; }
-
-        [Link(Type = LinkType.Ordered)]
-        private double height;
+        private int age;
 
         [Link(Type = LinkType.StackList, Name = "Stack")]
         [Link(Type = LinkType.List, Name = "List")]
-        public TestClass(int id, string name, int age, double height)
+        public TestClass(int id, string name, int age)
         {
             this.id = id;
             this.name = name;
             this.age = age;
-            this.height = height;
         }
 
-        public override string ToString() => $"ID:{this.id, 2}, {this.name, -5}, Age:{this.age, 3}, Height:{this.height:F1}";
+        public override string ToString() => $"ID:{this.id, 2}, {this.name, -5}, {this.age, 2}";
     }
 
     class Program
@@ -40,40 +36,40 @@ namespace ConsoleApp1
             Console.WriteLine();
 
             var g = new TestClass.GoshujinClass(); // Goshujin (Owner) class
-            new TestClass(1, "Hoge", 17, 1.7).Goshujin = g; // Set Goshujin (Owner)
-            new TestClass(2, "Fuga", 18, 1.5).Goshujin = g;
-            new TestClass(1, "A", 7, 1.2).Goshujin = g;
-            new TestClass(0, "Zero", 100, 0).Goshujin = g;
+            new TestClass(1, "Hoge", 27).Goshujin = g; // Set Goshujin (Owner)
+            new TestClass(2, "Fuga", 15).Goshujin = g;
+            new TestClass(1, "A", 7).Goshujin = g;
+            new TestClass(0, "Zero", 50).Goshujin = g;
 
             ConsoleWriteIEnumerable("[List]", g.ListChain); // ListChain is virtually a List<TestClass>
 
-            Console.WriteLine("List[2] : ");
+            Console.WriteLine("ListChain[2] : ");
             Console.WriteLine(g.ListChain[2]);
             Console.WriteLine();
 
             ConsoleWriteIEnumerable("[Sorted by Id]", g.IdChain); 
             ConsoleWriteIEnumerable("[Sorted by Name]", g.NameChain);
 
-            ConsoleWriteIEnumerable("[Sorted by Age]", g.AgeChain);
-            var t = g.ListChain[0];
-            Console.WriteLine($"{t.Name} age {t.Age} => 90");
-            t.Age = 90;
-            ConsoleWriteIEnumerable("[Sorted by Age modified]", g.AgeChain);
+            ConsoleWriteIEnumerable("[Sorted by Height]", g.AgeChain);
+            var t = g.ListChain[1];
+            Console.WriteLine($"{t.Name} age {t.Age} => 95");
+            t.Age = 95;
+            ConsoleWriteIEnumerable("[Sorted by Height]", g.AgeChain);
 
-            ConsoleWriteIEnumerable("[Sorted by Height]", g.HeightChain);
             ConsoleWriteIEnumerable("[Stack]", g.StackChain);
 
-            Console.WriteLine("Pop");
-            var pc = g.StackChain.Pop();
-            g.Remove(pc);
-            Console.WriteLine(pc);
+            t = g.StackChain.Pop();
+            Console.WriteLine($"{t.Name} => Pop");
+            g.Remove(t);
             Console.WriteLine();
 
             ConsoleWriteIEnumerable("[Stack]", g.StackChain);
-            ConsoleWriteIEnumerable("[Sorted by Id]", g.IdChain);
 
             var g2 = new TestClass.GoshujinClass(); // New Goshujin
-            g.ListChain[0].Goshujin = g2; // Change Goshujin
+            t = g.ListChain[0];
+            Console.WriteLine($"{t.Name} Goshujin => Goshujin2");
+            Console.WriteLine();
+            t.Goshujin = g2; // Change Goshujin
             ConsoleWriteIEnumerable("[Goshujin]", g.ListChain);
             ConsoleWriteIEnumerable("[Goshujin2]", g2.ListChain);
 
