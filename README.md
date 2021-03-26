@@ -48,3 +48,39 @@ This is a small sample code to use CrossLink.
     }
 ```
 
+
+
+## Performance
+
+Performance is my first priority.
+Although CrossLink do a little bit complex process than a simple collection class, CrossLink is faster than a collection class.
+
+This is a benchmark with generic collection ```SortedDictionary<TKey, TValue>```.
+The following code creates an instance of a collection, creates H2HClass and adds to the collection in sorted order.
+
+```csharp
+var g = new SortedDictionary<int, H2HClass>();
+foreach (var x in this.IntArray)
+{
+    g.Add(x, new H2HClass(x));
+}
+```
+
+This is the CrossLink version and it does almost the same process.
+
+```csharp
+var g = new H2HClass2.GoshujinClass();
+foreach (var x in this.IntArray)
+{
+    new H2HClass2(x).Goshujin = g;
+}
+```
+
+The result; CrossLink is faster than plain ```SortedDictionary<TKey, TValue>```.
+
+
+
+When it comes to modifying an object (remove/add), CrossLink is much faster than the collection class.
+
+
+
