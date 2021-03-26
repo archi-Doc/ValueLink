@@ -21,10 +21,11 @@ namespace Benchmark
 
         public static void Main(string[] args)
         {
-            DebugRun<Draft.Benchmark1>();
+            DebugRun<H2HBenchmark>();
 
             var switcher = new BenchmarkSwitcher(new[]
             {
+                typeof(H2HBenchmark),
                 typeof(Draft.Benchmark1),
             });
 

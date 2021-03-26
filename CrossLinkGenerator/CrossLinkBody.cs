@@ -159,6 +159,7 @@ namespace CrossLink.Generator
             ssb.AddUsing("Arc.Collection");
             ssb.AddUsing("CrossLink");
             ssb.AppendLine("#nullable enable", false);
+            ssb.AppendLine("#pragma warning disable CS1591", false);
             // ssb.AppendLine("#pragma warning disable SA1306", false); // Field names should begin with lower-case letter
             // ssb.AppendLine("#pragma warning disable SA1401", false); // Fields should be private
             ssb.AppendLine();
