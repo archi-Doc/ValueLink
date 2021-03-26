@@ -142,7 +142,7 @@ namespace Benchmark
 
             for (var n = 0; n < N; n++)
             {
-                this.H2HGoshujin.IdChain.Add(this.H2HList2[n] , this.H2HList2[n].Id);
+                this.H2HGoshujin.IdChain.Add(this.H2HList2[n].Id, this.H2HList2[n]);
             }
 
             return this.H2HGoshujin.IdChain.Count;

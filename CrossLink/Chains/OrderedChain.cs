@@ -3,18 +3,20 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Arc.Collection;
 using CrossLink;
 
+#pragma warning disable SA1124 // Do not use regions
 #pragma warning disable SA1306 // Field names should begin with lower-case letter
 #pragma warning disable SA1401 // Fields should be private
 
 namespace CrossLink
 {
-    public class OrderedChain<TKey, TObj> : IEnumerable<TObj>
+    public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     {
         public delegate ref Link ObjectToLinkDelegete(TObj obj);
 
@@ -52,7 +54,7 @@ namespace CrossLink
             }
         }*/
 
-        public void Add(TObj obj, TKey key)
+        public void Add(TKey key, TObj obj)
         {
             ref Link link = ref this.objectToLink(obj);
 
@@ -88,11 +90,44 @@ namespace CrossLink
             }
         }
 
-        IEnumerator<TObj> IEnumerable<TObj>.GetEnumerator() => this.chain.Values.GetEnumerator();
-
-        IEnumerator IEnumerable.GetEnumerator() => this.chain.Values.GetEnumerator();
-
         public int Count => this.chain.Count;
+
+        /// <summary>
+        /// Gets or sets the element with the specified key.
+        /// <br/>O(log n) operation.
+        /// </summary>
+        /// <param name="key">The key of the element to get or set.</param>
+        /// <returns>The element with the specified key.</returns>
+        public TObj? this[TKey key]
+        {
+            get
+            {
+                var node = this.chain.FindFirstNode(key);
+                return node == null ? default : node.Value;
+            }
+        }
+
+        public IEnumerable<TKey> Keys => this.chain.Keys;
+
+        public IEnumerable<TObj> Objects => this.chain.Values;
+
+        public IEnumerable<KeyValuePair<TKey, TObj>> KeyObjects => this.chain;
+
+        /// <summary>
+        /// Determines whether the chain contains an element with the specified key.
+        /// <br/>O(log n) operation.
+        /// </summary>
+        /// <param name="key">The key to locate in the chain.</param>
+        /// <returns>true if the chain contains an element with the key; otherwise, false.</returns>
+        public bool ContainsKey(TKey key) => this.chain.ContainsKey(key);
+
+        /// <summary>
+        /// Gets the object associated with the specified key.
+        /// </summary>
+        /// <param name="key">The key whose value to get.</param>
+        /// <param name="obj">When this method returns, the value associated with the specified key, if the key is found.</param>
+        /// <returns>true if the chain contains an element with the key; otherwise, false.</returns>
+        public bool TryGetValue(TKey key, [MaybeNullWhen(false)] out TObj obj) => this.chain.TryGetValue(key, out obj);
 
         /// <summary>
         /// Gets the first object.
@@ -124,5 +159,42 @@ namespace CrossLink
 
             internal OrderedMultiMap<TKey, TObj>.Node? Node { get; set; }
         }
+
+        #region ICollection
+
+        public bool IsReadOnly => false;
+
+        /// <summary>
+        /// Removes all elements from the list.
+        /// </summary>
+        public void Clear()
+        {
+            while (true)
+            {
+                var node = this.chain.Last;
+                if (node == null)
+                {
+                    break;
+                }
+
+                ref Link link = ref this.objectToLink(node.Value);
+                this.chain.RemoveNode(link.Node!);
+                link.Node = null;
+            }
+        }
+
+        void ICollection.CopyTo(Array array, int index) => ((ICollection)this.chain).CopyTo(array, index);
+
+        bool ICollection.IsSynchronized => false;
+
+        object ICollection.SyncRoot => this;
+
+        #endregion
+
+        public OrderedMultiMap<TKey, TObj>.ValueCollection.Enumerator GetEnumerator() => this.chain.Values.GetEnumerator();
+
+        IEnumerator<TObj> IEnumerable<TObj>.GetEnumerator() => this.chain.Values.GetEnumerator();
+
+        IEnumerator IEnumerable.GetEnumerator() => this.chain.Values.GetEnumerator();
     }
 }
