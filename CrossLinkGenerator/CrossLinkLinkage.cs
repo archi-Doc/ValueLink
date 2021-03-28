@@ -33,8 +33,8 @@ namespace CrossLink.Generator
             }
 
             linkage.AutoNotify = linkAttribute.AutoNotify;
-            if (linkage.IsValidLink)
-            {// Valid link type
+            if (linkage.IsValidLink || linkage.AutoNotify)
+            {// Valid link type or AutoNotify
                 linkage.AutoLink = linkAttribute.AutoLink;
 
                 if (linkAttribute.Name == string.Empty)

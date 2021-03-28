@@ -27,6 +27,7 @@ namespace Arc.Visceral
         Field, // Value (IFieldSymbol)
         Property, // Value (IPropertySymbol)
         Method, // Method (IMethodSymbol)
+        Event, // Event (IEventSymbol)
     }
 
     [Flags]
@@ -42,6 +43,7 @@ namespace Arc.Visceral
         Struct = 32,
         Interface = 64,
         Record = 128,
+        Event = 256,
         Type = Class | Struct | Interface | Record,
         All = ~0,
     }
@@ -2291,6 +2293,7 @@ namespace Arc.Visceral
             IFieldSymbol => VisceralObjectKind.Field,
             IPropertySymbol => VisceralObjectKind.Property,
             IMethodSymbol => VisceralObjectKind.Method,
+            IEventSymbol => VisceralObjectKind.Event,
             _ => VisceralObjectKind.None,
         };
 
@@ -2303,6 +2306,7 @@ namespace Arc.Visceral
             VisceralObjectKind.Field => (target & VisceralTarget.Field) != 0,
             VisceralObjectKind.Property => (target & VisceralTarget.Property) != 0,
             VisceralObjectKind.Method => (target & VisceralTarget.Method) != 0,
+            VisceralObjectKind.Event => (target & VisceralTarget.Event) != 0,
             _ => false,
         };
 

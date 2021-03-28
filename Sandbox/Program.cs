@@ -1,9 +1,10 @@
 ﻿using System;
+using System.ComponentModel;
 using CrossLink;
 
 namespace Sandbox
 {
-    [CrossLinkObject()]
+    /*[CrossLinkObject()]
     public partial class TestClass
     {
         [Link(Name = "Test", Type = LinkType.LinkedList)]
@@ -75,15 +76,59 @@ namespace Sandbox
         }
     }
 
+    [CrossLinkObject]
+    public partial class TestNotifyPropertyChanged : INotifyPropertyChanged
+    {
+        [Link(AutoNotify = true)]
+        private int id;
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+    }*/
+
+    [CrossLinkObject]
+    public partial class TestNotifyPropertyChanged2 : INotifyPropertyChanged
+    {
+        [Link(AutoNotify = true)]
+        private int id;
+
+        public event PropertyChangedEventHandler? propertyChanged;
+
+        event PropertyChangedEventHandler? INotifyPropertyChanged.PropertyChanged
+        {
+            add
+            {
+                this.propertyChanged += value;
+            }
+
+            remove
+            {
+                this.propertyChanged -= value;
+            }
+        }
+
+        public void TEs()
+        {
+            ((INotifyPropertyChanged)this).propertyChanged?.Invoke(this, new PropertyChangedEventArgs("UserBool"));
+
+        }
+    }
+
+    [CrossLinkObject]
+    public partial class TestNotifyPropertyChanged3
+    {
+        [Link(AutoNotify = true)]
+        private int id;
+    }
+
     class Program
     {
         static void Main(string[] args)
         {
             Console.WriteLine("Hello World!");
 
-            var tc3 = new TestClass3<int>(1, "test");
-            var g = new TestClass3<int>.GoshujinClass();
-            tc3.Goshujin = g;
+            // var tc3 = new TestClass3<int>(1, "test");
+            // var g = new TestClass3<int>.GoshujinClass();
+            // tc3.Goshujin = g;
 
         }
     }
