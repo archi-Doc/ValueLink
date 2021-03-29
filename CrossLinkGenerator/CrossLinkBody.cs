@@ -21,6 +21,7 @@ namespace CrossLink.Generator
     {
         public static readonly string DefaultGoshujinClass = "GoshujinClass";
         public static readonly string DefaultGoshujinInstance = "Goshujin";
+        public static readonly string ExplicitPropertyChanged = "PropertyChanged";
 
         public static readonly DiagnosticDescriptor Error_NotPartial = new DiagnosticDescriptor(
             id: "CLG001", title: "Not a partial class/struct", messageFormat: "CrossLinkObject '{0}' is not a partial class/struct",
@@ -61,6 +62,10 @@ namespace CrossLink.Generator
         public static readonly DiagnosticDescriptor Error_LinkNameRequired = new DiagnosticDescriptor(
             id: "CLG010", title: "Link error", messageFormat: "Link name is required",
             category: "CrossLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Warning_PropertyChanged = new DiagnosticDescriptor(
+            id: "CLG011", title: "INotifyPropertyChanged implementation", messageFormat: "{0} must implement INotifyPropertyChanged directly (PropertyChanged.Invoke() is not allowed to be called from inherited classes)",
+            category: "CrossLinkGenerator", DiagnosticSeverity.Warning, isEnabledByDefault: true);
 
         public CrossLinkBody(GeneratorExecutionContext context)
             : base(context)

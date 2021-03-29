@@ -50,6 +50,11 @@ namespace CrossLink
         /// </summary>
         public string GoshujinInstance { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Gets or sets a string value which represents the explicit name of INotifyPropertyChanged.PropertyChanged event [Default value is "PropertyChanged"].
+        /// </summary>
+        public string ExplicitPropertyChanged { get; set; } = string.Empty;
+
         public CrossLinkObjectAttribute()
         {
         }

@@ -18,12 +18,11 @@ using Microsoft.CodeAnalysis;
 
 namespace CrossLink.Generator
 {
-    public enum MethodCondition
+    public enum DeclarationCondition
     {
-        MemberMethod, // member method (generated)
-        StaticMethod, // static method (generated, for generic class)
-        Declared, // declared (user-declared)
-        ExplicitlyDeclared, // declared (explicit interface)
+        NotDeclared, // Not declared
+        ImplicitlyDeclared, // declared (implicitly)
+        ExplicitlyDeclared, // declared (explicitly interface)
     }
 
     [Flags]
@@ -37,6 +36,7 @@ namespace CrossLink.Generator
         HasLink = 1 << 10, // Has valid link (not LinkType.None)
         HasNotify = 1 << 11, // Has AutoNotify
         CanCreateInstance = 1 << 12, // Can create an instance
+        GenerateINotifyPropertyChanged = 1 << 13, // Generate INotifyPropertyChanged
     }
 
     public class CrossLinkObject : VisceralObjectBase<CrossLinkObject>
@@ -50,6 +50,8 @@ namespace CrossLink.Generator
         public CrossLinkObjectFlag ObjectFlag { get; private set; }
 
         public CrossLinkObjectAttributeMock? ObjectAttribute { get; private set; }
+
+        public DeclarationCondition PropertyChangedDeclaration { get; private set; }
 
         public LinkAttributeMock? LinkAttribute { get; private set; }
 
@@ -131,6 +133,7 @@ namespace CrossLink.Generator
                     // Goshujin Class / Instance
                     this.ObjectAttribute.GoshujinClass = (this.ObjectAttribute.GoshujinClass != string.Empty) ? this.ObjectAttribute.GoshujinClass : CrossLinkBody.DefaultGoshujinClass;
                     this.ObjectAttribute.GoshujinInstance = (this.ObjectAttribute.GoshujinInstance != string.Empty) ? this.ObjectAttribute.GoshujinInstance : CrossLinkBody.DefaultGoshujinInstance;
+                    this.ObjectAttribute.ExplicitPropertyChanged = (this.ObjectAttribute.ExplicitPropertyChanged != string.Empty) ? this.ObjectAttribute.ExplicitPropertyChanged : CrossLinkBody.ExplicitPropertyChanged;
                 }
                 catch (InvalidCastException)
                 {
@@ -213,6 +216,24 @@ namespace CrossLink.Generator
                         this.ObjectFlag |= CrossLinkObjectFlag.HasNotify;
                     }
                 }
+            }
+
+            if (this.AllInterfaces.Any(x => x == "System.ComponentModel.INotifyPropertyChanged"))
+            {// INotifyPropertyChanged implemented
+                if (this.symbol is INamedTypeSymbol nts && nts.Interfaces.Any(x => x.Name == "INotifyPropertyChanged" && x.ContainingNamespace.ToDisplayString() == "System.ComponentModel"))
+                {// INotifyPropertyChanged is directly implemented.
+                    this.PropertyChangedDeclaration = DeclarationCondition.ExplicitlyDeclared;
+                }
+                else
+                {// Inherited from the parent's class.
+                    this.PropertyChangedDeclaration = DeclarationCondition.NotDeclared; // INotifyPropertyChanged
+                    this.Body.AddDiagnostic(CrossLinkBody.Warning_PropertyChanged, this.Location, this.SimpleName);
+                }
+            }
+            else if (this.ObjectFlag.HasFlag(CrossLinkObjectFlag.HasNotify))
+            {// Generate INotifyPropertyChanged
+                this.ObjectFlag |= CrossLinkObjectFlag.GenerateINotifyPropertyChanged;
+                this.PropertyChangedDeclaration = DeclarationCondition.ImplicitlyDeclared;
             }
         }
 
@@ -438,9 +459,9 @@ namespace CrossLink.Generator
             }
 
             var interfaceString = string.Empty;
-            if (this.ObjectAttribute != null)
+            if (this.ObjectFlag.HasFlag(CrossLinkObjectFlag.GenerateINotifyPropertyChanged))
             {
-                // interfaceString = " : ITinyhandSerialize";
+                interfaceString = " : System.ComponentModel.INotifyPropertyChanged";
             }
 
             using (var cls = ssb.ScopeBrace($"{this.AccessibilityName} partial {this.KindName} {this.LocalName}{interfaceString}"))
@@ -482,13 +503,19 @@ namespace CrossLink.Generator
         internal void Generate2(ScopingStringBuilder ssb, GeneratorInformation info)
         {
             if (this.ObjectFlag.HasFlag(CrossLinkObjectFlag.HasLink))
-            {
+            {// Generate Goshujin
                 this.GenerateGoshujinClass(ssb, info);
                 this.GenerateGoshujinInstance(ssb, info);
             }
 
+            if (this.ObjectFlag.HasFlag(CrossLinkObjectFlag.GenerateINotifyPropertyChanged))
+            {// Generate PropertyChanged
+                ssb.AppendLine("public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;");
+                ssb.AppendLine();
+            }
+
             if (this.Links != null)
-            {
+            {// Generate Link
                 foreach (var x in this.Links)
                 {
                     this.GenerateLink(ssb, info, x);
@@ -535,6 +562,10 @@ namespace CrossLink.Generator
                             using (var obj = ssb.ScopeObject("this"))
                             {
                                 this.Generate_AddLink(ssb, info, x, $"this.{this.ObjectAttribute!.GoshujinInstance}");
+                                if (x.AutoNotify)
+                                {
+                                    this.Generate_Notify(ssb, info, x);
+                                }
                             }
                         }
                     }
@@ -542,6 +573,18 @@ namespace CrossLink.Generator
             }
 
             ssb.AppendLine();
+        }
+
+        internal void Generate_Notify(ScopingStringBuilder ssb, GeneratorInformation info, Linkage link)
+        {
+            if (this.PropertyChangedDeclaration == DeclarationCondition.ImplicitlyDeclared)
+            {
+                ssb.AppendLine($"this.PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(\"{link.Name}\"));");
+            }
+            else if (this.PropertyChangedDeclaration == DeclarationCondition.ExplicitlyDeclared)
+            {
+                ssb.AppendLine($"this.{this.ObjectAttribute!.ExplicitPropertyChanged}?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(\"{link.Name}\"));");
+            }
         }
 
         internal void Generate_AddLink(ScopingStringBuilder ssb, GeneratorInformation info, Linkage link, string prefix)
