@@ -7,6 +7,13 @@ Work in progress
 
 
 
+## Table of Contents
+
+- [Quick Start](#quick-start)
+- [Performance](#performance)
+
+
+
 ## Quick Start
 
 CrossLink uses Source Generator, so the Target Framework should be .NET 5 or later.
@@ -94,3 +101,10 @@ When it comes to modifying an object (remove/add), CrossLink is much faster than
 
 ## How it works
 
+
+
+
+
+## Features
+
+### AutoNotify (INotifyPropertyChanged)

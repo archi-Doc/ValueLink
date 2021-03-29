@@ -114,17 +114,6 @@ namespace Sandbox
         private int id;
     }
 
-    [CrossLinkObject]
-    public partial class TestNotifyPropertyChanged4 : BindableBase
-    {
-        [Link(AutoNotify = true)]
-        private int id;
-
-        public void Test()
-        {
-        }
-    }
-
     class Program
     {
         static void Main(string[] args)
@@ -135,6 +124,10 @@ namespace Sandbox
             // var g = new TestClass3<int>.GoshujinClass();
             // tc3.Goshujin = g;
 
+            var count = 0;
+            var t1 = new TestNotifyPropertyChanged();
+            t1.PropertyChanged += (s, e) => { if (e.PropertyName == "Id") count++; };
+            t1.Id = 1;
         }
     }
 }

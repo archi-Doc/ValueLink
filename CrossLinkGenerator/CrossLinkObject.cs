@@ -220,15 +220,15 @@ namespace CrossLink.Generator
 
             if (this.AllInterfaces.Any(x => x == "System.ComponentModel.INotifyPropertyChanged"))
             {// INotifyPropertyChanged implemented
-                this.PropertyChangedDeclaration = DeclarationCondition.ExplicitlyDeclared;
-                /*if (this.GetMembers(VisceralTarget.Event).Any(x => x.SimpleName == "INotifyPropertyChanged.PropertyChanged"))
-                {
+                if (this.symbol is INamedTypeSymbol nts && nts.Interfaces.Any(x => x.Name == "INotifyPropertyChanged" && x.ContainingNamespace.ToDisplayString() == "System.ComponentModel"))
+                {// INotifyPropertyChanged is directly implemented.
                     this.PropertyChangedDeclaration = DeclarationCondition.ExplicitlyDeclared;
                 }
                 else
-                {
-                    this.PropertyChangedDeclaration = DeclarationCondition.ImplicitlyDeclared;
-                }*/
+                {// Inherited from the parent's class.
+                    this.PropertyChangedDeclaration = DeclarationCondition.NotDeclared; // INotifyPropertyChanged
+                    this.Body.AddDiagnostic(CrossLinkBody.Warning_PropertyChanged, this.Location, this.SimpleName);
+                }
             }
             else if (this.ObjectFlag.HasFlag(CrossLinkObjectFlag.HasNotify))
             {// Generate INotifyPropertyChanged

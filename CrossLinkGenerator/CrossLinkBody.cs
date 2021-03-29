@@ -63,6 +63,10 @@ namespace CrossLink.Generator
             id: "CLG010", title: "Link error", messageFormat: "Link name is required",
             category: "CrossLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
+        public static readonly DiagnosticDescriptor Warning_PropertyChanged = new DiagnosticDescriptor(
+            id: "CLG011", title: "INotifyPropertyChanged implementation", messageFormat: "{0} must implement INotifyPropertyChanged directly (PropertyChanged.Invoke() is not allowed to be called from inherited classes)",
+            category: "CrossLinkGenerator", DiagnosticSeverity.Warning, isEnabledByDefault: true);
+
         public CrossLinkBody(GeneratorExecutionContext context)
             : base(context)
         {
