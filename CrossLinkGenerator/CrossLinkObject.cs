@@ -133,6 +133,7 @@ namespace CrossLink.Generator
                     // Goshujin Class / Instance
                     this.ObjectAttribute.GoshujinClass = (this.ObjectAttribute.GoshujinClass != string.Empty) ? this.ObjectAttribute.GoshujinClass : CrossLinkBody.DefaultGoshujinClass;
                     this.ObjectAttribute.GoshujinInstance = (this.ObjectAttribute.GoshujinInstance != string.Empty) ? this.ObjectAttribute.GoshujinInstance : CrossLinkBody.DefaultGoshujinInstance;
+                    this.ObjectAttribute.ExplicitPropertyChanged = (this.ObjectAttribute.ExplicitPropertyChanged != string.Empty) ? this.ObjectAttribute.ExplicitPropertyChanged : CrossLinkBody.ExplicitPropertyChanged;
                 }
                 catch (InvalidCastException)
                 {
@@ -219,14 +220,15 @@ namespace CrossLink.Generator
 
             if (this.AllInterfaces.Any(x => x == "System.ComponentModel.INotifyPropertyChanged"))
             {// INotifyPropertyChanged implemented
-                if (this.GetMembers(VisceralTarget.Event).Any(x => x.SimpleName == "INotifyPropertyChanged.PropertyChanged"))
+                this.PropertyChangedDeclaration = DeclarationCondition.ExplicitlyDeclared;
+                /*if (this.GetMembers(VisceralTarget.Event).Any(x => x.SimpleName == "INotifyPropertyChanged.PropertyChanged"))
                 {
                     this.PropertyChangedDeclaration = DeclarationCondition.ExplicitlyDeclared;
                 }
                 else
                 {
                     this.PropertyChangedDeclaration = DeclarationCondition.ImplicitlyDeclared;
-                }
+                }*/
             }
             else if (this.ObjectFlag.HasFlag(CrossLinkObjectFlag.HasNotify))
             {// Generate INotifyPropertyChanged
@@ -581,7 +583,7 @@ namespace CrossLink.Generator
             }
             else if (this.PropertyChangedDeclaration == DeclarationCondition.ExplicitlyDeclared)
             {
-                ssb.AppendLine($"((INotifyPropertyChanged)this).PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(\"{link.Name}\"));");
+                ssb.AppendLine($"this.{this.ObjectAttribute!.ExplicitPropertyChanged}?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(\"{link.Name}\"));");
             }
         }
 

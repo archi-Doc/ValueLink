@@ -74,7 +74,7 @@ namespace Sandbox
             [Link(Type = LinkType.Ordered)]
             private uint id { get; set; }
         }
-    }
+    }*/
 
     [CrossLinkObject]
     public partial class TestNotifyPropertyChanged : INotifyPropertyChanged
@@ -83,9 +83,9 @@ namespace Sandbox
         private int id;
 
         public event PropertyChangedEventHandler? PropertyChanged;
-    }*/
+    }
 
-    [CrossLinkObject]
+    [CrossLinkObject(ExplicitPropertyChanged = "propertyChanged")]
     public partial class TestNotifyPropertyChanged2 : INotifyPropertyChanged
     {
         [Link(AutoNotify = true)]
@@ -105,12 +105,6 @@ namespace Sandbox
                 this.propertyChanged -= value;
             }
         }
-
-        public void TEs()
-        {
-            ((INotifyPropertyChanged)this).propertyChanged?.Invoke(this, new PropertyChangedEventArgs("UserBool"));
-
-        }
     }
 
     [CrossLinkObject]
@@ -118,6 +112,17 @@ namespace Sandbox
     {
         [Link(AutoNotify = true)]
         private int id;
+    }
+
+    [CrossLinkObject]
+    public partial class TestNotifyPropertyChanged4 : BindableBase
+    {
+        [Link(AutoNotify = true)]
+        private int id;
+
+        public void Test()
+        {
+        }
     }
 
     class Program

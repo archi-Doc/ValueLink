@@ -21,6 +21,7 @@ namespace CrossLink.Generator
     {
         public static readonly string DefaultGoshujinClass = "GoshujinClass";
         public static readonly string DefaultGoshujinInstance = "Goshujin";
+        public static readonly string ExplicitPropertyChanged = "PropertyChanged";
 
         public static readonly DiagnosticDescriptor Error_NotPartial = new DiagnosticDescriptor(
             id: "CLG001", title: "Not a partial class/struct", messageFormat: "CrossLinkObject '{0}' is not a partial class/struct",
