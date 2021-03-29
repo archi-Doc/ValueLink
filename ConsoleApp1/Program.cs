@@ -4,8 +4,8 @@ using CrossLink;
 
 namespace ConsoleApp1
 {
-    [CrossLinkObject]
-    public partial class TestClass
+    [CrossLinkObject] // Annote a [CrossLinkObject] attribute.
+    public partial class TestClass // partial class is required for source generator.
     {
         [Link(Type = LinkType.Ordered)]// Sorted link associated with id.
         private int id;// Generated property name: Id, chain name: IdChain
@@ -114,7 +114,6 @@ namespace ConsoleApp1
                  ID: 1, A    ,  7
                 [Goshujin2]
                  ID: 1, Hoge , 27*/
-
 
             static void ConsoleWriteIEnumerable<T>(string? header, IEnumerable<T> e)
             {

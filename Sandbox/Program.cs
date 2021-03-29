@@ -76,44 +76,6 @@ namespace Sandbox
         }
     }*/
 
-    [CrossLinkObject]
-    public partial class TestNotifyPropertyChanged : INotifyPropertyChanged
-    {
-        [Link(AutoNotify = true)]
-        private int id;
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-    }
-
-    [CrossLinkObject(ExplicitPropertyChanged = "propertyChanged")]
-    public partial class TestNotifyPropertyChanged2 : INotifyPropertyChanged
-    {
-        [Link(AutoNotify = true)]
-        private int id;
-
-        public event PropertyChangedEventHandler? propertyChanged;
-
-        event PropertyChangedEventHandler? INotifyPropertyChanged.PropertyChanged
-        {
-            add
-            {
-                this.propertyChanged += value;
-            }
-
-            remove
-            {
-                this.propertyChanged -= value;
-            }
-        }
-    }
-
-    [CrossLinkObject]
-    public partial class TestNotifyPropertyChanged3
-    {
-        [Link(AutoNotify = true)]
-        private int id;
-    }
-
     class Program
     {
         static void Main(string[] args)
@@ -123,11 +85,6 @@ namespace Sandbox
             // var tc3 = new TestClass3<int>(1, "test");
             // var g = new TestClass3<int>.GoshujinClass();
             // tc3.Goshujin = g;
-
-            var count = 0;
-            var t1 = new TestNotifyPropertyChanged();
-            t1.PropertyChanged += (s, e) => { if (e.PropertyName == "Id") count++; };
-            t1.Id = 1;
         }
     }
 }
