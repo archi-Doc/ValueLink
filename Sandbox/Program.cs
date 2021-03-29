@@ -4,7 +4,7 @@ using CrossLink;
 
 namespace Sandbox
 {
-    /*[CrossLinkObject()]
+    [CrossLinkObject()]
     public partial class TestClass
     {
         [Link(Name = "Test", Type = LinkType.LinkedList)]
@@ -42,7 +42,7 @@ namespace Sandbox
         [Link(Type = LinkType.Ordered)]
         private T id { get; set; }
 
-        [Link(Type = LinkType.StackList, Name = "name2")]
+        [Link(Type = LinkType.StackList, Name = "name2", AutoLink = false)]
         private string name { get; set; }
 
         [Link(Type = LinkType.StackList, Name = "Stack")]
@@ -56,10 +56,10 @@ namespace Sandbox
 
     public partial class TestClass4
     {
-        // [Link(Type = LinkType.Ordered)]
+        [Link(Type = LinkType.Ordered)]
         private int id { get; set; }
 
-        // [Link(Type = LinkType.Ordered)]
+        [Link(Type = LinkType.Ordered)]
         private string name { get; set; }
 
         public TestClass4(int id, string name)
@@ -74,7 +74,7 @@ namespace Sandbox
             [Link(Type = LinkType.Ordered)]
             private uint id { get; set; }
         }
-    }*/
+    }
 
     class Program
     {
@@ -82,9 +82,9 @@ namespace Sandbox
         {
             Console.WriteLine("Hello World!");
 
-            // var tc3 = new TestClass3<int>(1, "test");
-            // var g = new TestClass3<int>.GoshujinClass();
-            // tc3.Goshujin = g;
+            var tc3 = new TestClass3<int>(1, "test");
+            var g = new TestClass3<int>.GoshujinClass();
+            tc3.Goshujin = g;
         }
     }
 }
