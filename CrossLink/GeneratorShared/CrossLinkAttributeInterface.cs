@@ -79,7 +79,7 @@ namespace CrossLink
         public bool AutoLink { get; set; } = true;
 
         /// <summary>
-        /// Gets or sets a value indicating whether or not to implement the INotifyPropertyChanged pattern. The class must inherit from <see cref="BindableBase" /> [Default value is false].
+        /// Gets or sets a value indicating whether or not to invoke PropertyChanged event when the value has changed. [Default value is false].
         /// </summary>
         public bool AutoNotify { get; set; } = false;
 
