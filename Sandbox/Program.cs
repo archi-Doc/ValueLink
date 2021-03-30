@@ -1,13 +1,16 @@
 ﻿using System;
 using System.ComponentModel;
 using CrossLink;
+using Tinyhand;
 
 namespace Sandbox
 {
-    [CrossLinkObject()]
+    [CrossLinkObject]
+    [TinyhandObject(KeyAsPropertyName = true)]
     public partial class TestClass
     {
         [Link(Name = "Test", Type = LinkType.LinkedList)]
+        [Key(0)]
         private int id;
 
         [Link(Type = LinkType.Ordered)]
@@ -18,9 +21,15 @@ namespace Sandbox
             this.id = id;
             this.name = name;
         }
+
+        public TestClass()
+        {
+            this.id = 0;
+            this.name = string.Empty;
+        }
     }
 
-    [CrossLinkObject(GoshujinClass = "Goshu", GoshujinInstance = "Instance")]
+    /*[CrossLinkObject(GoshujinClass = "Goshu", GoshujinInstance = "Instance")]
     public partial class TestClass2
     {
         [Link(Type = LinkType.Ordered)]
@@ -74,7 +83,7 @@ namespace Sandbox
             [Link(Type = LinkType.Ordered)]
             private uint id { get; set; }
         }
-    }
+    }*/
 
     class Program
     {
@@ -82,9 +91,9 @@ namespace Sandbox
         {
             Console.WriteLine("Hello World!");
 
-            var tc3 = new TestClass3<int>(1, "test");
+            /*var tc3 = new TestClass3<int>(1, "test");
             var g = new TestClass3<int>.GoshujinClass();
-            tc3.Goshujin = g;
+            tc3.Goshujin = g;*/
         }
     }
 }
