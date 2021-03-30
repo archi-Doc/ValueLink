@@ -37,6 +37,7 @@ namespace CrossLink.Generator
         HasNotify = 1 << 11, // Has AutoNotify
         CanCreateInstance = 1 << 12, // Can create an instance
         GenerateINotifyPropertyChanged = 1 << 13, // Generate INotifyPropertyChanged
+        TinyhandObject = 1 << 14, // Has TinyhandObjectAttribute
     }
 
     public class CrossLinkObject : VisceralObjectBase<CrossLinkObject>
@@ -66,6 +67,8 @@ namespace CrossLink.Generator
         public VisceralIdentifier Identifier { get; private set; } = VisceralIdentifier.Default;
 
         public string GoshujinInstanceName = string.Empty;
+
+        public string SerializeIndexName = string.Empty;
 
         public int GenericsNumber { get; private set; }
 
@@ -168,6 +171,12 @@ namespace CrossLink.Generator
                 }
             }
 
+            // TinyhandObjectAttribute
+            if (this.AllAttributes.Any(x => x.FullName == "Tinyhand.TinyhandObjectAttribute"))
+            {
+                this.ObjectFlag |= CrossLinkObjectFlag.TinyhandObject;
+            }
+
             if (this.ObjectAttribute != null)
             {// CrossLinkObject
                 this.ConfigureObject();
@@ -234,6 +243,11 @@ namespace CrossLink.Generator
             {// Generate INotifyPropertyChanged
                 this.ObjectFlag |= CrossLinkObjectFlag.GenerateINotifyPropertyChanged;
                 this.PropertyChangedDeclaration = DeclarationCondition.ImplicitlyDeclared;
+            }
+
+            if (this.ObjectFlag.HasFlag(CrossLinkObjectFlag.TinyhandObject))
+            {// TinyhandObject
+                this.SerializeIndexName = this.Identifier.GetIdentifier();
             }
         }
 
@@ -514,6 +528,12 @@ namespace CrossLink.Generator
                 ssb.AppendLine();
             }
 
+            if (this.ObjectFlag.HasFlag(CrossLinkObjectFlag.TinyhandObject))
+            {// Generate SerializeIndex
+                ssb.AppendLine($"private int {this.SerializeIndexName};");
+                ssb.AppendLine();
+            }
+
             if (this.Links != null)
             {// Generate Link
                 foreach (var x in this.Links)
@@ -636,7 +656,9 @@ namespace CrossLink.Generator
         internal void GenerateGoshujinClass(ScopingStringBuilder ssb, GeneratorInformation info)
         {
             var goshujinClass = this.ObjectAttribute!.GoshujinClass;
-            using (var scopeClass = ssb.ScopeBrace("public sealed class " + goshujinClass))
+            var tinyhandObject = this.ObjectFlag.HasFlag(CrossLinkObjectFlag.TinyhandObject);
+            var goshujinInterface = tinyhandObject ? " : ITinyhandSerialize" : string.Empty;
+            using (var scopeClass = ssb.ScopeBrace("public sealed class " + goshujinClass + goshujinInterface))
             {
                 // Constructor
                 // ssb.AppendLine("public " + goshujinClass + "() {}");
@@ -645,9 +667,30 @@ namespace CrossLink.Generator
                 this.GenerateGoshujin_Add(ssb, info);
                 this.GenerateGoshujin_Remove(ssb, info);
                 this.GenerateGoshujin_Chain(ssb, info);
+
+                if (tinyhandObject)
+                {
+                    this.GenerateGoshujin_Tinyhand(ssb, info);
+                }
             }
 
             ssb.AppendLine();
+        }
+
+        internal void GenerateGoshujin_Tinyhand(ScopingStringBuilder ssb, GeneratorInformation info)
+        {
+            ssb.AppendLine();
+            this.GenerateGoshujin_TinyhandSerialize(ssb, info);
+            ssb.AppendLine();
+            this.GenerateGoshujin_TinyhandDeserialize(ssb, info);
+        }
+
+        internal void GenerateGoshujin_TinyhandSerialize(ScopingStringBuilder ssb, GeneratorInformation info)
+        {// void Serialize(ref TinyhandWriter writer, TinyhandSerializerOptions options);
+        }
+
+        internal void GenerateGoshujin_TinyhandDeserialize(ScopingStringBuilder ssb, GeneratorInformation info)
+        {// void Deserialize(ref TinyhandReader reader, TinyhandSerializerOptions options);
         }
 
         internal void GenerateGoshujin_Add(ScopingStringBuilder ssb, GeneratorInformation info)

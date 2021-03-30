@@ -6,11 +6,11 @@ using Tinyhand;
 namespace Sandbox
 {
     [CrossLinkObject]
-    [TinyhandObject(KeyAsPropertyName = true)]
+    // [TinyhandObject]
     public partial class TestClass
     {
         [Link(Name = "Test", Type = LinkType.LinkedList)]
-        [Key(0)]
+        [KeyAsName]
         private int id;
 
         [Link(Type = LinkType.Ordered)]
@@ -94,6 +94,15 @@ namespace Sandbox
             /*var tc3 = new TestClass3<int>(1, "test");
             var g = new TestClass3<int>.GoshujinClass();
             tc3.Goshujin = g;*/
+
+            var g = new SentinelClass.SentinelGoshujin();
+            new SentinelClass(1, "a").Goshujin = g;
+            new SentinelClass(2, "b").Goshujin = g;
+            new SentinelClass(3, "0").Goshujin = g;
+
+            var b = TinyhandSerializer.Serialize(g);
+            var st = TinyhandSerializer.SerializeToString(g);
+            var g2 = TinyhandSerializer.Deserialize<SentinelClass.SentinelGoshujin>(b);
         }
     }
 }
