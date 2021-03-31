@@ -96,6 +96,9 @@ namespace Sandbox
 
                 writer.WriteString(SentinelClass.__gen_utf8_key_0001);
                 writer.WriteArrayHeader(this.NameChain.Count);
+                var list = this.NameChain.Select(x => x.serializeIndex).ToArray();
+                Tinyhand.Formatters.Builtin.SerializeInt32Array(ref writer, list);
+                // options.Resolver.GetFormatter<int[]>().Serialize(ref writer, list, options);
                 foreach (var x in this.NameChain)
                 {
                     writer.Write(x.serializeIndex);
