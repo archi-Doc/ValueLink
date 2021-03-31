@@ -70,11 +70,17 @@ namespace CrossLink.Generator
 
         public string GoshujinInstanceName = string.Empty;
 
+        public string GoshujinFullName = string.Empty;
+
         public string SerializeIndexIdentifier = string.Empty;
 
         public int GenericsNumber { get; private set; }
 
         public string GenericsNumberString => this.GenericsNumber > 1 ? this.GenericsNumber.ToString() : string.Empty;
+
+        public int FormatterNumber { get; private set; }
+
+        public int FormatterExtraNumber { get; private set; }
 
         internal Automata<CrossLinkObject, Linkage>? DeserializeChainAutomata { get; private set; }
 
@@ -356,6 +362,7 @@ namespace CrossLink.Generator
                 this.CheckKeyword(this.ObjectAttribute!.GoshujinClass, this.Location);
                 this.CheckKeyword(this.ObjectAttribute!.GoshujinInstance, this.Location);
                 this.GoshujinInstanceName = this.Identifier.GetIdentifier();
+                this.GoshujinFullName = this.FullName + "." + this.ObjectAttribute!.GoshujinClass;
             }
 
             // Check Links.
@@ -500,7 +507,8 @@ namespace CrossLink.Generator
 
         public static void GenerateLoader(ScopingStringBuilder ssb, GeneratorInformation info, List<CrossLinkObject> list)
         {
-            var list2 = list.SelectMany(x => x.ConstructedObjects).Where(x => x.ObjectAttribute != null);
+            var classFormat = "__gen__cf__{0:D4}";
+            var list2 = list.SelectMany(x => x.ConstructedObjects).Where(x => x.ObjectFlag.HasFlag(CrossLinkObjectFlag.TinyhandObject));
 
             if (list.Count > 0 && list[0].ContainingObject is { } containingObject)
             {
@@ -512,10 +520,14 @@ namespace CrossLink.Generator
                 }
             }
 
-            /* using (var m = ssb.ScopeBrace("internal static void __gen__load()"))
+            using (var m = ssb.ScopeBrace("internal static void __gen__cl()"))
             {
                 foreach (var x in list2)
                 {
+                    var name = string.Format(classFormat, x.FormatterNumber);
+                    ssb.AppendLine($"GeneratedResolver.Instance.SetFormatter<{x.GoshujinFullName}>(new {name}());");
+                    name = string.Format(classFormat, x.FormatterExtraNumber);
+                    ssb.AppendLine($"GeneratedResolver.Instance.SetFormatterExtra<{x.GoshujinFullName}>(new {name}());");
                 }
             }
 
@@ -523,7 +535,57 @@ namespace CrossLink.Generator
 
             foreach (var x in list2)
             {
-            }*/
+                var name = string.Format(classFormat, x.FormatterNumber);
+                using (var cls = ssb.ScopeBrace($"class {name}: ITinyhandFormatter<{x.GoshujinFullName}>"))
+                {
+                    // Serialize
+                    using (var s = ssb.ScopeBrace($"public void Serialize(ref TinyhandWriter writer, {x.GoshujinFullName + x.QuestionMarkIfReferenceType} v, TinyhandSerializerOptions options)"))
+                    {
+                        if (x.Kind.IsReferenceType())
+                        {// Reference type
+                            ssb.AppendLine($"if (v == null) {{ writer.WriteNil(); return; }}");
+                        }
+
+                        ssb.AppendLine($"v.Serialize(ref writer, options);");
+                    }
+
+                    // Deserialize
+                    using (var d = ssb.ScopeBrace($"public {x.GoshujinFullName + x.QuestionMarkIfReferenceType} Deserialize(ref TinyhandReader reader, TinyhandSerializerOptions options)"))
+                    {
+                        if (x.Kind.IsReferenceType())
+                        {// Reference type
+                            ssb.AppendLine("if (reader.TryReadNil()) return default;");
+                        }
+
+                        ssb.AppendLine($"var v = new {x.GoshujinFullName}();");
+                        ssb.AppendLine($"v.Deserialize(ref reader, options);");
+                        ssb.AppendLine("return v;");
+                    }
+
+                    // Reconstruct
+                    using (var r = ssb.ScopeBrace($"public {x.GoshujinFullName} Reconstruct(TinyhandSerializerOptions options)"))
+                    {
+                        ssb.AppendLine($"var v = new {x.GoshujinFullName}();");
+                        ssb.AppendLine("return v;");
+                    }
+                }
+
+                name = string.Format(classFormat, x.FormatterExtraNumber);
+                using (var cls = ssb.ScopeBrace($"class {name}: ITinyhandFormatterExtra<{x.GoshujinFullName}>"))
+                {
+                    // Deserialize
+                    using (var d = ssb.ScopeBrace($"public {x.GoshujinFullName + x.QuestionMarkIfReferenceType} Deserialize({x.GoshujinFullName} reuse, ref TinyhandReader reader, TinyhandSerializerOptions options)"))
+                    {
+                        if (x.Kind.IsReferenceType() && x.ObjectFlag.HasFlag(CrossLinkObjectFlag.CanCreateInstance))
+                        {// Reference type
+                            ssb.AppendLine($"reuse = reuse ?? new {x.GoshujinFullName}();");
+                        }
+
+                        ssb.AppendLine("reuse.Deserialize(ref reader, options);");
+                        ssb.AppendLine("return reuse;");
+                    }
+                }
+            }
         }
 
         internal void Generate(ScopingStringBuilder ssb, GeneratorInformation info)
@@ -735,7 +797,23 @@ namespace CrossLink.Generator
 
                 if (tinyhandObject)
                 {
+                    info.UseTinyhand = true;
+                    this.FormatterNumber = info.FormatterCount++;
+                    this.FormatterExtraNumber = info.FormatterCount++;
                     this.GenerateGoshujin_Tinyhand(ssb, info);
+
+                    if (this.ConstructedObjects != null)
+                    {
+                        foreach (var x in this.ConstructedObjects)
+                        {
+                            if (x != this)
+                            {// Set closed generic type information for formatter.
+                                x.FormatterNumber = info.FormatterCount++;
+                                x.FormatterExtraNumber = info.FormatterCount++;
+                                x.GoshujinFullName = x.FullName + "." + this.ObjectAttribute!.GoshujinClass;
+                            }
+                        }
+                    }
                 }
             }
 

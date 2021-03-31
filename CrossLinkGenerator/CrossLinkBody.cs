@@ -163,7 +163,11 @@ namespace CrossLink.Generator
                 }
             }
 
-            this.GenerateLoader(generator, info, rootObjects);
+            if (info.UseTinyhand)
+            {
+                this.GenerateLoader(generator, info, rootObjects);
+            }
+
             this.FlushDiagnostic();
         }
 
@@ -180,6 +184,7 @@ namespace CrossLink.Generator
             {
                 ssb.AddUsing("Tinyhand");
                 ssb.AddUsing("Tinyhand.IO");
+                ssb.AddUsing("Tinyhand.Resolvers");
             }
 
             ssb.AppendLine("#nullable enable", false);
@@ -191,10 +196,10 @@ namespace CrossLink.Generator
 
         private void GenerateLoader(CrossLinkGenerator generator, GeneratorInformation info, List<CrossLinkObject> rootObjects)
         {
-            /*var ssb = new ScopingStringBuilder();
-            this.GenerateHeader(ssb);
+            var ssb = new ScopingStringBuilder();
+            this.GenerateHeader(ssb, true);
 
-            using (var scopeFormatter = ssb.ScopeNamespace("Tinyhand.Formatters"))
+            using (var scopeFormatter = ssb.ScopeNamespace("CrossLink.Generator"))
             {
                 using (var methods = ssb.ScopeBrace("static class Generated"))
                 {
@@ -215,13 +220,13 @@ namespace CrossLink.Generator
             else
             {
                 this.Context?.AddSource($"gen.CrossLinkLoader", SourceText.From(result, Encoding.UTF8));
-            }*/
+            }
         }
 
         private void GenerateInitializer(CrossLinkGenerator generator, ScopingStringBuilder ssb, GeneratorInformation info)
         {
             // Namespace
-            /*var ns = "CrossLink";
+            var ns = "CrossLink";
             if (!string.IsNullOrEmpty(generator.CustomNamespace))
             {// Custom namespace.
                 ns = generator.CustomNamespace;
@@ -233,7 +238,7 @@ namespace CrossLink.Generator
                 ns = generator.AssemblyName;
             }
 
-            info.ModuleInitializerClass.Add("Tinyhand.Formatters.Generated");
+            info.ModuleInitializerClass.Add("CrossLink.Generator.Generated");
 
             ssb.AppendLine();
             using (var scopeCrossLink = ssb.ScopeNamespace(ns!))
@@ -255,10 +260,10 @@ namespace CrossLink.Generator
                     foreach (var x in info.ModuleInitializerClass)
                     {
                         ssb.Append(x, true);
-                        ssb.AppendLine(".__gen__load();", false);
+                        ssb.AppendLine(".__gen__cl();", false);
                     }
                 }
-            }*/
+            }
         }
     }
 }

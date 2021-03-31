@@ -14,9 +14,11 @@ namespace CrossLink.Generator
 
         // public Queue<TinyhandObject> FormatterGeneration { get; } = new();
 
-        // public int FormatterCount { get; set; } = 0;
+        public int FormatterCount { get; set; } = 1;
 
         public bool UseModuleInitializer { get; set; }
+
+        public bool UseTinyhand { get; set; }
 
         public List<string> ModuleInitializerClass { get; } = new();
 
