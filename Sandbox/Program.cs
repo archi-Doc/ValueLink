@@ -6,7 +6,7 @@ using Tinyhand;
 namespace Sandbox
 {
     [CrossLinkObject]
-    // [TinyhandObject]
+    [TinyhandObject]
     public partial class TestClass
     {
         [Link(Name = "Test", Type = LinkType.LinkedList)]
@@ -16,6 +16,7 @@ namespace Sandbox
         [Link(Type = LinkType.Ordered)]
         private string name;
 
+        [Link(Name = "Test11", Type = LinkType.LinkedList)]
         public TestClass(int id, string name)
         {
             this.id = id;

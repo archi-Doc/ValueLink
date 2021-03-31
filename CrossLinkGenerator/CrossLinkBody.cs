@@ -67,6 +67,18 @@ namespace CrossLink.Generator
             id: "CLG011", title: "INotifyPropertyChanged implementation", messageFormat: "{0} must implement INotifyPropertyChanged directly (PropertyChanged.Invoke() is not allowed to be called from inherited classes)",
             category: "CrossLinkGenerator", DiagnosticSeverity.Warning, isEnabledByDefault: true);
 
+        public static readonly DiagnosticDescriptor Warning_StringKeySizeLimit = new DiagnosticDescriptor(
+            id: "CLG012", title: "String key limit", messageFormat: "The size of the string key exceeds the limit {0}",
+            category: "CrossLinkGenerator", DiagnosticSeverity.Warning, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Error_StringKeyConflict = new DiagnosticDescriptor(
+            id: "CLG013", title: "String keys conflict", messageFormat: "String keys with the same name were detected",
+            category: "CrossLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Error_StringKeyNull = new DiagnosticDescriptor(
+            id: "CLG014", title: "String key null", messageFormat: "String key cannot contain null character",
+            category: "CrossLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
         public CrossLinkBody(GeneratorExecutionContext context)
             : base(context)
         {

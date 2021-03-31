@@ -4,91 +4,52 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Arc.Visceral;
+
+#pragma warning disable SA1602 // Enumeration items should be documented
 
 namespace Arc.Visceral
 {
-    internal class Automata<T>
-        where T : VisceralObjectBase<T>, new()
+    public enum AutomataAddNodeResult
     {
-        public Automata(VisceralObjectBase<T> obj)
+        Success,
+        KeyCollision,
+        NullKey,
+    }
+
+    internal class Automata<TObj, TMember>
+    {
+        public const int MaxStringKeySizeInBytes = 512;
+
+        public Automata(TObj obj, Action<TObj, ScopingStringBuilder, object?, TMember> generateMethod)
         {
             this.Object = obj;
+            this.GenerateMethod = generateMethod;
             this.root = new Node(this, 0);
         }
 
-        public VisceralObjectBase<T> Object { get; }
+        public TObj Object { get; }
 
-        public int ReconstructCount { get; private set; }
+        public Action<TObj, ScopingStringBuilder, object?, TMember> GenerateMethod { get; }
 
-        public void PrepareReconstruct()
+        public (Node? node, AutomataAddNodeResult result, bool keyResized) AddNode(string name, TMember member)
         {
-            var count = 0;
-            foreach (var x in this.NodeList)
-            {
-                x.ReconstructIndex = -1;
-                if (x.Member == null)
-                {
-                    continue;
-                }
+            var keyResized = false;
 
-                if (x.Member.NullableAnnotationIfReferenceType == NullableAnnotation.NotAnnotated ||
-                    x.Member.Kind.IsValueType() ||
-                    x.Member.IsDefaultable ||
-                    x.Member.ReconstructState == ReconstructState.Do)
-                {
-                    x.ReconstructIndex = count++;
-                }
-            }
-
-            this.ReconstructCount = count;
-        }
-
-        public void GenerateReconstruct(ScopingStringBuilder ssb, GeneratorInformation info)
-        {
-            if (this.ReconstructCount <= 0)
-            {
-                return;
-            }
-
-            ssb.AppendLine();
-            foreach (var x in this.NodeList)
-            {
-                if (x.ReconstructIndex < 0 || x.Member == null)
-                {
-                    continue;
-                }
-
-                using (var c = ssb.ScopeObject(x.Member.SimpleName))
-                {
-                    this.Object.GenerateReconstructCore2(ssb, info, x.Member, x.ReconstructIndex);
-                }
-            }
-        }
-
-        public Node AddNode(string name, VisceralObjectBase<T> member)
-        {
             var utf8 = Encoding.UTF8.GetBytes(name);
-            if (utf8.Length > TinyhandBody.MaxStringKeySizeInBytes)
+            if (utf8.Length > MaxStringKeySizeInBytes)
             {// String key size limit.
-                var location = member.KeyVisceralAttribute?.Location ?? member.Location;
-                this.Object.Body.AddDiagnostic(TinyhandBody.Warning_StringKeySizeLimit, location, TinyhandBody.MaxStringKeySizeInBytes);
-                Array.Resize(ref utf8, TinyhandBody.MaxStringKeySizeInBytes);
+                keyResized = true;
+                Array.Resize(ref utf8, MaxStringKeySizeInBytes);
             }
 
             if (this.NameToNode.TryGetValue(utf8, out var node))
-            {// String key collision.
-                var location = node.Member?.KeyVisceralAttribute?.Location ?? node.Member?.Location;
-                this.Object.Body.AddDiagnostic(TinyhandBody.Error_StringKeyConflict, location);
-                location = member.KeyVisceralAttribute?.Location ?? member.Location;
-                this.Object.Body.AddDiagnostic(TinyhandBody.Error_StringKeyConflict, location);
-                return node;
+            {// Key collision
+                return (node, AutomataAddNodeResult.KeyCollision, keyResized);
             }
 
             if (utf8.Any(x => x == 0))
-            {
-                var location = member.KeyVisceralAttribute?.Location ?? member.Location;
-                this.Object.Body.AddDiagnostic(TinyhandBody.Error_StringKeyNull, location);
+            {// Null key
+                return (null, AutomataAddNodeResult.NullKey, keyResized);
             }
 
             node = this.root;
@@ -113,10 +74,27 @@ namespace Arc.Visceral
 
             this.NameToNode[utf8] = node;
 
-            return node;
+            return (node, AutomataAddNodeResult.Success, keyResized);
         }
 
-        public void GenerateDeserialize(ScopingStringBuilder ssb, GeneratorInformation info, Node? node = null)
+        public void Generate(ScopingStringBuilder ssb, object? info)
+        {
+            ssb.AppendLine("var utf8 = reader.ReadStringSpan();");
+            using (var c = ssb.ScopeBrace("if (utf8.Length == 0)"))
+            {
+                ssb.AppendLine("goto SkipLabel;");
+            }
+
+            ssb.AppendLine("key = global::Arc.Visceral.AutomataKey.GetKey(ref utf8);");
+
+            this.GenerateCore(ssb, info);
+
+            ssb.AppendLine("continue;");
+            ssb.AppendLine("SkipLabel:", false);
+            ssb.AppendLine("reader.Skip();");
+        }
+
+        private void GenerateCore(ScopingStringBuilder ssb, object? info, Node? node = null)
         {
             if (node == null)
             {
@@ -125,21 +103,21 @@ namespace Arc.Visceral
 
             if (node.Nexts == null)
             {
-                ssb.GotoSkipLabel();
+                ssb.AppendLine("goto SkipLabel;");
                 return;
             }
 
-            this.GenerateDeserializeNode(ssb, info, node.Nexts.Values.ToArray());
+            this.GenerateNode(ssb, info, node.Nexts.Values.ToArray());
         }
 
-        public void GenerateDeserializeChildrenNexts(ScopingStringBuilder ssb, GeneratorInformation info, Node[] childrenNexts)
+        private void GenerateChildrenNexts(ScopingStringBuilder ssb, object? info, Node[] childrenNexts)
         {// childrenNexts.Length > 0
             if (childrenNexts.Length == 1)
             {
                 var x = childrenNexts[0];
                 ssb.AppendLine($"if (key != 0x{x.Key:X}) goto SkipLabel;");
-                ssb.AppendLine("key = global::Tinyhand.Generator.AutomataKey.GetKey(ref utf8);");
-                this.GenerateDeserialize(ssb, info, x);
+                ssb.AppendLine("key = global::Arc.Visceral.AutomataKey.GetKey(ref utf8);");
+                this.GenerateCore(ssb, info, x);
                 return;
             }
 
@@ -150,26 +128,21 @@ namespace Arc.Visceral
                 firstFlag = false;
                 using (var c = ssb.ScopeBrace(condition))
                 {
-                    ssb.AppendLine("key = global::Tinyhand.Generator.AutomataKey.GetKey(ref utf8);");
-                    this.GenerateDeserialize(ssb, info, x);
+                    ssb.AppendLine("key = global::Arc.Visceral.AutomataKey.GetKey(ref utf8);");
+                    this.GenerateCore(ssb, info, x);
                 }
             }
 
             // ssb.GotoSkipLabel();
         }
 
-        public void GenerateDeserializeValueNexts(ScopingStringBuilder ssb, GeneratorInformation info, Node[] valueNexts)
+        private void GenerateValueNexts(ScopingStringBuilder ssb, object? info, Node[] valueNexts)
         {// valueNexts.Length > 0
             if (valueNexts.Length == 1)
             {
                 var x = valueNexts[0];
                 ssb.AppendLine($"if (key != 0x{x.Key:X}) goto SkipLabel;");
-                if (x.ReconstructIndex >= 0)
-                {
-                    ssb.AppendLine($"deserializedFlag[{x.ReconstructIndex}] = true;");
-                }
-
-                this.Object.GenerateDeserializeCore2(ssb, info, x.Member);
+                this.GenerateMethod(this.Object, ssb, info, x.Member!);
                 return;
             }
 
@@ -180,19 +153,14 @@ namespace Arc.Visceral
                 firstFlag = false;
                 using (var c = ssb.ScopeBrace(condition))
                 {
-                    if (x.ReconstructIndex >= 0)
-                    {
-                        ssb.AppendLine($"deserializedFlag[{x.ReconstructIndex}] = true;");
-                    }
-
-                    this.Object.GenerateDeserializeCore2(ssb, info, x.Member);
+                    this.GenerateMethod(this.Object, ssb, info, x.Member!);
                 }
             }
 
             // ssb.GotoSkipLabel();
         }
 
-        public void GenerateDeserializeNode(ScopingStringBuilder ssb, GeneratorInformation info, Node[] nexts)
+        private void GenerateNode(ScopingStringBuilder ssb, object? info, Node[] nexts)
         {// ReadOnlySpan<byte> utf8, ulong key (assgined)
             if (nexts.Length < 4)
             {// linear-search
@@ -203,12 +171,12 @@ namespace Arc.Visceral
                 {
                     if (childrenNexts.Length == 0)
                     {
-                        ssb.GotoSkipLabel();
+                        ssb.AppendLine("goto SkipLabel;");
                     }
                     else
                     {// valueNexts = 0, childrenNexts > 0
                         ssb.AppendLine("if (utf8.Length == 0) goto SkipLabel;");
-                        this.GenerateDeserializeChildrenNexts(ssb, info, childrenNexts);
+                        this.GenerateChildrenNexts(ssb, info, childrenNexts);
                     }
                 }
                 else
@@ -216,18 +184,18 @@ namespace Arc.Visceral
                     if (childrenNexts.Length == 0)
                     {// valueNexts > 0, childrenNexts = 0
                         ssb.AppendLine("if (utf8.Length != 0) goto SkipLabel;");
-                        this.GenerateDeserializeValueNexts(ssb, info, valueNexts);
+                        this.GenerateValueNexts(ssb, info, valueNexts);
                     }
                     else
                     {// valueNexts > 0, childrenNexts > 0
                         using (var scopeLeaf = ssb.ScopeBrace("if (utf8.Length == 0)"))
                         {// Should be leaf node.
-                            this.GenerateDeserializeValueNexts(ssb, info, valueNexts);
+                            this.GenerateValueNexts(ssb, info, valueNexts);
                         }
 
                         using (var scopeBranch = ssb.ScopeBrace("else"))
                         {// Should be branch node.
-                            this.GenerateDeserializeChildrenNexts(ssb, info, childrenNexts);
+                            this.GenerateChildrenNexts(ssb, info, childrenNexts);
                         }
                     }
                 }
@@ -241,12 +209,12 @@ namespace Arc.Visceral
 
                 using (var scopeLeft = ssb.ScopeBrace($"if (key < 0x{mid:X})"))
                 {// left
-                    this.GenerateDeserializeNode(ssb, info, left);
+                    this.GenerateNode(ssb, info, left);
                 }
 
                 using (var scopeRight = ssb.ScopeBrace("else"))
                 {// right
-                    this.GenerateDeserializeNode(ssb, info, right);
+                    this.GenerateNode(ssb, info, right);
                 }
             }
         }
@@ -259,19 +227,19 @@ namespace Arc.Visceral
 
         internal class Node
         {
-            public Node(Automata<T> automata, ulong key)
+            public Node(Automata<TObj, TMember> automata, ulong key)
             {
                 this.Automata = automata;
                 this.Key = key;
             }
 
-            public Automata<T> Automata { get; }
+            public Automata<TObj, TMember> Automata { get; }
 
             public ulong Key { get; }
 
             public int Index { get; private set; } = -1;
 
-            public VisceralObjectBase<T>? Member { get; private set; }
+            public TMember? Member { get; private set; }
 
             public byte[]? Utf8Name { get; private set; }
 
@@ -280,8 +248,6 @@ namespace Arc.Visceral
             public bool HasValue => this.Index != -1;
 
             public bool HasChildren => this.Nexts != null;
-
-            public int ReconstructIndex { get; set; }
 
             public Node Add(ulong key)
             {
@@ -302,7 +268,7 @@ namespace Arc.Visceral
                 }
             }
 
-            public Node Add(ulong key, int index, VisceralObjectBase<T> member, byte[] utf8)
+            public Node Add(ulong key, int index, TMember member, byte[] utf8)
             {
                 var node = this.Add(key);
                 node.Index = index;

@@ -74,6 +74,8 @@ namespace CrossLink.Generator
 
         public string GenericsNumberString => this.GenericsNumber > 1 ? this.GenericsNumber.ToString() : string.Empty;
 
+        internal Automata<CrossLinkObject, Linkage>? DeserializeChainAutomata { get; private set; }
+
         public Arc.Visceral.NullableAnnotation NullableAnnotationIfReferenceType
         {
             get
@@ -431,6 +433,53 @@ namespace CrossLink.Generator
 
             this.Body.DebugAssert(this.ObjectAttribute != null, "this.ObjectAttribute != null");
             this.CheckObject();
+
+            this.PrepareAutomata();
+        }
+
+        public void PrepareAutomata()
+        {
+            if (this.Links == null)
+            {
+                return;
+            }
+
+            this.DeserializeChainAutomata = new(this, GenerateDeserializeChain);
+            foreach (var x in this.Links)
+            {
+                var ret = this.DeserializeChainAutomata.AddNode(x.ChainName, x);
+                if (ret.keyResized)
+                {// Key resized
+                    this.Body.AddDiagnostic(CrossLinkBody.Warning_StringKeySizeLimit, x.Location, Automata<CrossLinkObject, Linkage>.MaxStringKeySizeInBytes);
+                }
+
+                if (ret.result == AutomataAddNodeResult.KeyCollision)
+                {// Key collision
+                    this.Body.AddDiagnostic(CrossLinkBody.Error_StringKeyConflict, x.Location);
+                    if (ret.node != null && ret.node.Member != null)
+                    {
+                        this.Body.AddDiagnostic(CrossLinkBody.Error_StringKeyConflict, ret.node.Member.Location);
+                    }
+
+                    continue;
+                }
+                else if (ret.result == AutomataAddNodeResult.NullKey)
+                {// Null key
+                    this.Body.AddDiagnostic(CrossLinkBody.Error_StringKeyNull, x.Location);
+                    continue;
+                }
+                else if (ret.node == null)
+                {
+                    continue;
+                }
+
+                x.ChainNameUtf8 = ret.node.Utf8Name!;
+                x.ChainNameIdentifier = this.Identifier.GetIdentifier();
+            }
+        }
+
+        public static void GenerateDeserializeChain(CrossLinkObject obj, ScopingStringBuilder ssb, object? info, Linkage link)
+        {
         }
 
         public static void GenerateLoader(ScopingStringBuilder ssb, GeneratorInformation info, List<CrossLinkObject> list)
@@ -683,6 +732,27 @@ namespace CrossLink.Generator
             this.GenerateGoshujin_TinyhandSerialize(ssb, info);
             ssb.AppendLine();
             this.GenerateGoshujin_TinyhandDeserialize(ssb, info);
+            ssb.AppendLine();
+            this.GenerateGoshujin_TinyhandUtf8Name(ssb, info);
+        }
+
+        internal void GenerateGoshujin_TinyhandUtf8Name(ScopingStringBuilder ssb, GeneratorInformation info)
+        {
+            if (this.Links == null)
+            {
+                return;
+            }
+
+            foreach (var x in this.Links)
+            {
+                ssb.Append($"private static ReadOnlySpan<byte> {x.ChainNameIdentifier} => new byte[] {{ ");
+                foreach (var y in x.ChainNameUtf8)
+                {
+                    ssb.Append($"{y}, ", false);
+                }
+
+                ssb.Append("};\r\n", false);
+            }
         }
 
         internal void GenerateGoshujin_TinyhandSerialize(ScopingStringBuilder ssb, GeneratorInformation info)
@@ -691,6 +761,30 @@ namespace CrossLink.Generator
 
         internal void GenerateGoshujin_TinyhandDeserialize(ScopingStringBuilder ssb, GeneratorInformation info)
         {// void Deserialize(ref TinyhandReader reader, TinyhandSerializerOptions options);
+            using (var scopeMethod = ssb.ScopeBrace("public void Deserialize(ref TinyhandReader reader, TinyhandSerializerOptions options)"))
+            {
+                if (this.DeserializeChainAutomata == null)
+                {
+                    return;
+                }
+
+                if (this.Kind.IsValueType())
+                {// Value type
+                    ssb.AppendLine("if (reader.TryReadNil()) throw new TinyhandException(\"Data is Nil, struct can not be null.\");");
+                }
+
+                ssb.AppendLine("var numberOfData = reader.ReadMapHeader2();");
+
+                using (var security = ssb.ScopeSecurityDepth())
+                {
+                    using (var loop = ssb.ScopeBrace("while (numberOfData-- > 0)"))
+                    {
+                        this.DeserializeChainAutomata.Generate(ssb, info);
+                    }
+                }
+
+                ssb.RestoreSecurityDepth();
+            }
         }
 
         internal void GenerateGoshujin_Add(ScopingStringBuilder ssb, GeneratorInformation info)
