@@ -47,7 +47,7 @@ namespace Arc.Visceral
                 return (node, AutomataAddNodeResult.KeyCollision, keyResized);
             }
 
-            if (utf8.Any(x => x == 0))
+            if (utf8.Length == 0 || utf8.Any(x => x == 0))
             {// Null key
                 return (null, AutomataAddNodeResult.NullKey, keyResized);
             }
@@ -79,6 +79,7 @@ namespace Arc.Visceral
 
         public void Generate(ScopingStringBuilder ssb, object? info)
         {
+            ssb.AppendLine("ulong key;");
             ssb.AppendLine("var utf8 = reader.ReadStringSpan();");
             using (var c = ssb.ScopeBrace("if (utf8.Length == 0)"))
             {

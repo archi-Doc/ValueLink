@@ -16,6 +16,9 @@ namespace Sandbox
         [Link(Type = LinkType.Ordered)]
         private string name;
 
+        [Link(AutoNotify = true)]
+        private uint uid;
+
         [Link(Name = "Test11", Type = LinkType.LinkedList)]
         public TestClass(int id, string name)
         {

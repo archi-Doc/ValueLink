@@ -60,8 +60,11 @@ namespace CrossLink.Generator
                 }
 
                 linkage.Name = linkAttribute.Name;
-                linkage.LinkName = linkage.Name + "Link";
-                linkage.ChainName = linkage.Name + "Chain";
+                if (linkage.IsValidLink)
+                {
+                    linkage.LinkName = linkage.Name + "Link";
+                    linkage.ChainName = linkage.Name + "Chain";
+                }
             }
 
             return linkage;
