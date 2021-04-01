@@ -16,9 +16,9 @@ namespace Sandbox
         {
             public void Add(SentinelClass x)
             {
-                if (x.GoshujinInstance != null)
+                if (x.GoshujinInstance != null && x.GoshujinInstance != this)
                 {
-                    this.Remove(x);
+                    x.GoshujinInstance.Remove(x);
                 }
 
                 this.IdChain.Add(x);
@@ -26,13 +26,18 @@ namespace Sandbox
                 x.GoshujinInstance = this;
             }
 
-            public void Remove(SentinelClass x)
+            public bool Remove(SentinelClass x)
             {
-                if (x.GoshujinInstance != null)
+                if (x.GoshujinInstance == this)
                 {
                     this.IdChain.Remove(x);
                     this.NameChain.Remove(x);
                     x.GoshujinInstance = default!;
+                    return true;
+                }
+                else
+                {
+                    return false;
                 }
             }
 
@@ -192,13 +197,17 @@ namespace Sandbox
             get => this.GoshujinInstance;
             set
             {
-                if (this.GoshujinInstance != null)
+                if (value != this.GoshujinInstance)
                 {
-                    this.GoshujinInstance.Remove(this);
+                    if (value != null)
+                    {
+                        value.Add(this);
+                    }
+                    else if (this.GoshujinInstance != null)
+                    {
+                        this.GoshujinInstance.Remove(this);
+                    }
                 }
-
-                this.GoshujinInstance = value;
-                this.GoshujinInstance.Add(this);
             }
         }
 
