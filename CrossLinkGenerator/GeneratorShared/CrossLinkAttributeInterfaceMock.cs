@@ -51,17 +51,17 @@ namespace CrossLink
         public static readonly string FullName = "CrossLink." + StandardName;
 
         /// <summary>
-        /// Gets or sets a string value which represents the class name of Goshujin (Owner class) [Default value is "GoshujinClass"].
+        /// Gets or sets a string value which represents the class name of Goshujin (Owner class) [the default is "GoshujinClass"].
         /// </summary>
         public string GoshujinClass { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets a string value which represents the instance name of Goshujin (Owner class) [Default value is "Goshujin"].
+        /// Gets or sets a string value which represents the instance name of Goshujin (Owner class) [the default is "Goshujin"].
         /// </summary>
         public string GoshujinInstance { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets a string value which represents the explicit name of INotifyPropertyChanged.PropertyChanged event [Default value is "PropertyChanged"].
+        /// Gets or sets a string value which represents the explicit name of INotifyPropertyChanged.PropertyChanged event [the default is "PropertyChanged"].
         /// </summary>
         public string ExplicitPropertyChanged { get; set; } = string.Empty;
 
@@ -114,12 +114,12 @@ namespace CrossLink
         public string Name { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets a value indicating whether or not to create a link automatically [Default value is true].
+        /// Gets or sets a value indicating whether or not to create a link automatically [the default is true].
         /// </summary>
         public bool AutoLink { get; set; } = true;
 
         /// <summary>
-        /// Gets or sets a value indicating whether or not to invoke PropertyChanged event when the value has changed. [Default value is false].
+        /// Gets or sets a value indicating whether or not to invoke PropertyChanged event when the value has changed. [the default is false].
         /// </summary>
         public bool AutoNotify { get; set; } = false;
 

@@ -13,6 +13,7 @@ This document may be inaccurate. It would be greatly appreciated if anyone could
 
 - [Quick Start](#quick-start)
 - [Performance](#performance)
+- [How it works](#how-it-works)
 
 
 
@@ -26,7 +27,7 @@ Install CrossLink using Package Manager Console.
 Install-Package CrossLink
 ```
 
-This is a small sample code to use CrossLink.
+This is a sample code to use CrossLink.
 
 ```csharp
 using System;
@@ -40,6 +41,8 @@ namespace ConsoleApp1
     {
         [Link(Type = LinkType.Ordered)]// Sorted link associated with id.
         private int id;// Generated property name: Id, chain name: IdChain
+        // The generated property is for changing values and updating links.
+        // The generated link is for storing information between objects, similar to a node in a collection.
 
         [Link(Type = LinkType.Ordered)]// Sorted link associated with name.
         public string name { get; private set; } = string.Empty;// Generated property name: Id, chain name: IdChain
@@ -67,12 +70,12 @@ namespace ConsoleApp1
             Console.WriteLine();
 
             var g = new TestClass.GoshujinClass(); // Create a Goshujin (Owner) instance
-            new TestClass(1, "Hoge", 27).Goshujin = g; // Create TestClass and associate with the Goshujin (Owner)
+            new TestClass(1, "Hoge", 27).Goshujin = g; // Create a TestClass and associate with the Goshujin (Owner)
             new TestClass(2, "Fuga", 15).Goshujin = g;
             new TestClass(1, "A", 7).Goshujin = g;
             new TestClass(0, "Zero", 50).Goshujin = g;
 
-            ConsoleWriteIEnumerable("[List]", g.ListChain); // ListChain is virtually a List<TestClass>
+            ConsoleWriteIEnumerable("[List]", g.ListChain); // ListChain is virtually List<TestClass>
             /* Result;  displayed in the order in which they were created.
                  ID: 1, Hoge , 27
                  ID: 2, Fuga , 15
@@ -143,7 +146,7 @@ namespace ConsoleApp1
              * [Goshujin]
                  ID: 2, Fuga , 95
                  ID: 1, A    ,  7
-                [Goshujin2]
+               [Goshujin2]
                  ID: 1, Hoge , 27*/
 
             static void ConsoleWriteIEnumerable<T>(string? header, IEnumerable<T> e)
@@ -212,10 +215,20 @@ When it comes to modifying an object (remove/add), CrossLink is much faster than
 
 ## How it works
 
-CrossLink works by adding an inner class and some properties to an existing class.
+CrossLink works by adding an inner class and some properties to an existing class. 
 
-1. Add an inner class named "GoshujinClass" to the target class.
-2. Create a property which corresponds to the member with Link attribute. The first letter of the property will be capitalized. For example, "id" becomes "Id". 
+The actual behavior is
+
+1. Adds an inner class named "GoshujinClass" to the target object.
+2. Adds a property named "Goshujin" to the target object.
+3. Creates a property which corresponds to the member with Link attribute. The first letter of the property will be capitalized. For example, "id" becomes "Id". 
+4. Creates a "Link" field. The name of the field will the concatenation of the property name and "Link". For example, "Id" becomes "IdLink".
+
+
+
+The terms
+
+- Goshujin: A owner class of the objects.  It's for storing and manipulating objects.
 
 
 
@@ -248,7 +261,7 @@ public sealed class GoshujinClass
 }
 ```
 
-The following code adds a member of TinyClass that holds a Goshujin instance.
+The following code adds a field and a property that holds a Goshujin instance.
 
 ```csharp
 private GoshujinClass __gen_visceral_identifier__0001 = default!; // Actual Goshujin instance.
@@ -270,6 +283,25 @@ public GoshujinClass Goshujin
             {// Add TinyClass to new Goshujin.
                 this.__gen_visceral_identifier__0001.Add(this);
             }
+        }
+    }
+}
+```
+
+Finally, CrossLink adds a link and a property which is used to modify the collection and change the value.
+
+```csharp
+public OrderedChain<int, TinyClass>.Link IdLink;
+
+public int Id
+{
+    get => this.id;
+    set
+    {
+        if (value != this.id)
+        {
+            this.id = value;
+            this.Goshujin.IdChain.Add(this.id, this);
         }
     }
 }

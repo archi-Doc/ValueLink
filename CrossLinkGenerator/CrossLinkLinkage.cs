@@ -60,8 +60,11 @@ namespace CrossLink.Generator
                 }
 
                 linkage.Name = linkAttribute.Name;
-                linkage.LinkName = linkage.Name + "Link";
-                linkage.ChainName = linkage.Name + "Chain";
+                if (linkage.IsValidLink)
+                {
+                    linkage.LinkName = linkage.Name + "Link";
+                    linkage.ChainName = linkage.Name + "Chain";
+                }
             }
 
             return linkage;
@@ -84,6 +87,10 @@ namespace CrossLink.Generator
         public string LinkName { get; private set; } = string.Empty; // ListChain<int>.Link IdLink;
 
         public string ChainName { get; private set; } = string.Empty; // ListChain<int> IdChain
+
+        public byte[] ChainNameUtf8 { get; set; } = Array.Empty<byte>();
+
+        public string ChainNameIdentifier { get; set; } = string.Empty;
 
         public bool IsValidLink => this.Type != LinkType.None;
 
