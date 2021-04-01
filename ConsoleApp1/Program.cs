@@ -38,10 +38,10 @@ namespace ConsoleApp1
             Console.WriteLine();
 
             var g = new TestClass.GoshujinClass(); // Create a Goshujin (Owner) instance
-            new TestClass(1, "Hoge", 27).Goshujin = g; // Create a TestClass and associate with the Goshujin (Owner)
-            new TestClass(2, "Fuga", 15).Goshujin = g;
-            new TestClass(1, "A", 7).Goshujin = g;
-            new TestClass(0, "Zero", 50).Goshujin = g;
+            g.Add(new TestClass(1, "Hoge", 27)); // Create a TestClass and add to the Goshujin (Owner)
+            g.Add(new TestClass(2, "Fuga", 15));
+            g.Add(new TestClass(1, "A", 7));
+            g.Add(new TestClass(0, "Zero", 50));
 
             ConsoleWriteIEnumerable("[List]", g.ListChain); // ListChain is virtually List<TestClass>
             /* Result;  displayed in the order in which they were created.
@@ -107,7 +107,7 @@ namespace ConsoleApp1
             t = g.ListChain[0];
             Console.WriteLine($"{t.Name} Goshujin => Goshujin2");
             Console.WriteLine();
-            t.Goshujin = g2; // Change from Goshujin to Goshujin2.
+            g2.Add(t); // Change from Goshujin to Goshujin2.
             ConsoleWriteIEnumerable("[Goshujin]", g.ListChain);
             ConsoleWriteIEnumerable("[Goshujin2]", g2.ListChain);
             /*

@@ -69,7 +69,7 @@ namespace Benchmark
             for (var n = 0; n < this.IntArray.Length; n++)
             {
                 this.H2HList2[n] = new H2HClass2(this.IntArray[n]);
-                this.H2HList2[n].Goshujin = this.H2HGoshujin;
+                this.H2HGoshujin.Add(this.H2HList2[n]);
             }
 
             var node = this.H2HGoshujin.IdChain.First;
@@ -98,7 +98,7 @@ namespace Benchmark
             var g = new H2HClass2.GoshujinClass();
             foreach (var x in this.IntArray)
             {
-                new H2HClass2(x).Goshujin = g;
+                g.Add(new H2HClass2(x));
             }
 
             return g.IdChain.Count;

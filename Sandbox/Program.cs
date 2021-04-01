@@ -109,8 +109,7 @@ namespace Sandbox
 
             var tc3 = new TestClass3<int>(1, "test");
             var g3 = new TestClass3<int>.GoshujinClass();
-            tc3.Goshujin = g3;
-            new TestClass3<int>(2, "test2").Goshujin = g3;
+            g3.Add(new TestClass3<int>(2, "test2"));
 
             /*var g = new SentinelClass.SentinelGoshujin();
             new SentinelClass(1, "a").Goshujin = g;
@@ -118,9 +117,9 @@ namespace Sandbox
             new SentinelClass(3, "0").Goshujin = g;*/
 
             var g = new TestClass.GoshujinClass();
-            new TestClass(1, "a").Goshujin = g;
-            new TestClass(2, "b").Goshujin = g;
-            new TestClass(3, "0").Goshujin = g;
+            g.Add(new TestClass(1, "a"));
+            g.Add(new TestClass(2, "b"));
+            g.Add(new TestClass(3, "0"));
 
             var b = TinyhandSerializer.Serialize(g);
             var st = TinyhandSerializer.SerializeToString(g);
@@ -131,9 +130,9 @@ namespace Sandbox
             g3 = TinyhandSerializer.Deserialize<TestClass3<int>.GoshujinClass>(b);
 
             var g4 = new TestClass3<double>.GoshujinClass();
-            new TestClass3<double>(2, "test2").Goshujin = g4;
-            new TestClass3<double>(1.2, "test12").Goshujin = g4;
-            new TestClass3<double>(2.1, "test21").Goshujin = g4;
+            g4.Add(new TestClass3<double>(2, "test2"));
+            g4.Add(new TestClass3<double>(1.2, "test12"));
+            g4.Add(new TestClass3<double>(2.1, "test21"));
             b = TinyhandSerializer.Serialize(g4);
             st = TinyhandSerializer.SerializeToString(g4);
 

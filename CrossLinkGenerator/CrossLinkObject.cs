@@ -976,6 +976,11 @@ namespace CrossLink.Generator
             using (var scopeParameter = ssb.ScopeObject("x"))
             using (var scopeMethod = ssb.ScopeBrace($"public void Add({this.LocalName} {ssb.FullObject})"))
             {
+                using (var scopeIf = ssb.ScopeBrace($"if ({ssb.FullObject}.{this.GoshujinInstanceName} != null)"))
+                {
+                    ssb.AppendLine($"this.Remove({ssb.FullObject});");
+                }
+
                 if (this.Links != null)
                 {
                     foreach (var link in this.Links)
@@ -986,6 +991,8 @@ namespace CrossLink.Generator
                         }
                     }
                 }
+
+                ssb.AppendLine($"{ssb.FullObject}.{this.GoshujinInstanceName} = this;");
             }
 
             ssb.AppendLine();
@@ -996,19 +1003,24 @@ namespace CrossLink.Generator
             using (var scopeParameter = ssb.ScopeObject("x"))
             using (var scopeMethod = ssb.ScopeBrace($"public void Remove({this.LocalName} {ssb.FullObject})"))
             {
-                if (this.Links != null)
+                using (var scopeIf = ssb.ScopeBrace($"if ({ssb.FullObject}.{this.GoshujinInstanceName} != null)"))
                 {
-                    foreach (var link in this.Links)
+                    if (this.Links != null)
                     {
-                        if (link.Type == LinkType.None)
+                        foreach (var link in this.Links)
                         {
-                            continue;
-                        }
-                        else
-                        {
-                            ssb.AppendLine($"this.{link.ChainName}.Remove({ssb.FullObject});");
+                            if (link.Type == LinkType.None)
+                            {
+                                continue;
+                            }
+                            else
+                            {
+                                ssb.AppendLine($"this.{link.ChainName}.Remove({ssb.FullObject});");
+                            }
                         }
                     }
+
+                    ssb.AppendLine($"{ssb.FullObject}.{this.GoshujinInstanceName} = default!;");
                 }
             }
 
@@ -1044,7 +1056,9 @@ namespace CrossLink.Generator
             var goshujin = this.ObjectAttribute!.GoshujinInstance;
             var goshujinInstance = this.GoshujinInstanceName; // goshujin + "Instance";
 
-            using (var scopeProperty = ssb.ScopeBrace($"public {this.ObjectAttribute!.GoshujinClass} {goshujin}"))
+            ssb.AppendLine($"public {this.ObjectAttribute!.GoshujinClass} {goshujin} => this.{goshujinInstance};");
+
+            /*using (var scopeProperty = ssb.ScopeBrace($"public {this.ObjectAttribute!.GoshujinClass} {goshujin}"))
             {
                 ssb.AppendLine($"get => this.{goshujinInstance};");
                 using (var scopeSet = ssb.ScopeBrace("set"))
@@ -1067,7 +1081,7 @@ namespace CrossLink.Generator
                 }
             }
 
-            ssb.AppendLine();
+            ssb.AppendLine();*/
             ssb.AppendLine($"private {this.ObjectAttribute!.GoshujinClass} {goshujinInstance} = default!;");
             ssb.AppendLine();
         }

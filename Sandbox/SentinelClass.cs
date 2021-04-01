@@ -16,14 +16,24 @@ namespace Sandbox
         {
             public void Add(SentinelClass x)
             {
+                if (x.GoshujinInstance != null)
+                {
+                    this.Remove(x);
+                }
+
                 this.IdChain.Add(x);
                 this.NameChain.Add(x.Name, x);
+                x.GoshujinInstance = this;
             }
 
             public void Remove(SentinelClass x)
             {
-                this.IdChain.Remove(x);
-                this.NameChain.Remove(x);
+                if (x.GoshujinInstance != null)
+                {
+                    this.IdChain.Remove(x);
+                    this.NameChain.Remove(x);
+                    x.GoshujinInstance = default!;
+                }
             }
 
             public void Serialize(ref TinyhandWriter writer, TinyhandSerializerOptions options)
