@@ -17,14 +17,20 @@ namespace CrossLink
     /// <typeparam name="T">Specifies the type of elements in the stack.</typeparam>
     public class QueueListChain<T> : IReadOnlyCollection<T>, ICollection
     {
+        public delegate IGoshujin? ObjectToGoshujinDelegete(T obj);
+
         public delegate ref Link ObjectToLinkDelegete(T obj);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="QueueListChain{T}"/> class (Doubly linked list).
         /// </summary>
+        /// <param name="goshujin">The instance of Goshujin.</param>
+        /// <param name="objectToGoshujin">ObjectToGoshujinDelegete.</param>
         /// <param name="objectToLink">ObjectToLinkDelegete.</param>
-        public QueueListChain(ObjectToLinkDelegete objectToLink)
+        public QueueListChain(IGoshujin goshujin, ObjectToGoshujinDelegete objectToGoshujin, ObjectToLinkDelegete objectToLink)
         {
+            this.goshujin = goshujin;
+            this.objectToGoshujin = objectToGoshujin;
             this.objectToLink = objectToLink;
         }
 
@@ -113,6 +119,11 @@ namespace CrossLink
         /// <param name="obj">The object to add to the <see cref="QueueListChain{T}"/>. The value can be null for reference types.</param>
         public void Enqueue(T obj)
         {
+            if (this.objectToGoshujin(obj) != this.goshujin)
+            {// Check Goshujin
+                throw new UnmatchedGoshujinException();
+            }
+
             ref Link link = ref this.objectToLink(obj);
             if (link.Node != null)
             {
@@ -129,6 +140,11 @@ namespace CrossLink
         /// <returns>true if the object is successfully removed.</returns>
         public bool Remove(T obj)
         {
+            if (this.objectToGoshujin(obj) != this.goshujin)
+            {// Check Goshujin
+                throw new UnmatchedGoshujinException();
+            }
+
             ref Link link = ref this.objectToLink(obj);
             if (link.Node != null)
             {
@@ -142,6 +158,8 @@ namespace CrossLink
             }
         }
 
+        private IGoshujin goshujin;
+        private ObjectToGoshujinDelegete objectToGoshujin;
         private ObjectToLinkDelegete objectToLink;
         private UnorderedLinkedList<T> chain = new();
 

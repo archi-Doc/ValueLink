@@ -12,8 +12,13 @@ namespace Sandbox
     [TinyhandObject(ExplicitKeyOnly = true)]
     public partial class SentinelClass
     {
-        public sealed class SentinelGoshujin : ITinyhandSerialize
+        public sealed class SentinelGoshujin : IGoshujin, ITinyhandSerialize
         {
+            public SentinelGoshujin()
+            {
+                this.IdChain = new(this, static x => x.GoshujinInstance, x => ref x.IdLink);
+                this.NameChain = new(this, static x => x.GoshujinInstance, x => ref x.NameLink);
+            }
             public void Add(SentinelClass x)
             {
                 this.IdChain.Add(x);
@@ -158,9 +163,9 @@ namespace Sandbox
                 }
             }
 
-            public ListChain<SentinelClass> IdChain = new(static x => ref x.IdLink);
+            public ListChain<SentinelClass> IdChain { get; }
 
-            public OrderedChain<string, SentinelClass> NameChain = new(static x => ref x.NameLink);
+            public OrderedChain<string, SentinelClass> NameChain { get; }
 
             private static ReadOnlySpan<byte> __gen_utf8_key_0000 => new byte[] { 73, 100, };
 

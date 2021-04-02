@@ -196,7 +196,7 @@ namespace CrossLink.Generator
         private void ConfigureObject()
         {
             // Used keywords
-            this.Identifier = new VisceralIdentifier();
+            this.Identifier = new VisceralIdentifier("__gen_cl_identifier__");
             foreach (var x in this.AllMembers)
             {
                 this.Identifier.Add(x.SimpleName);
@@ -710,10 +710,7 @@ namespace CrossLink.Generator
                             {
                                 if (x.IsValidLink)
                                 {
-                                    using (var scopeIf = ssb.ScopeBrace($"if (this.{this.GoshujinInstanceIdentifier} != null)"))
-                                    {
-                                        this.Generate_AddLink(ssb, info, x, $"this.{this.GoshujinInstanceIdentifier}");
-                                    }
+                                    this.Generate_AddLink(ssb, info, x, $"this.{this.GoshujinInstanceIdentifier}?");
                                 }
 
                                 if (x.AutoNotify)
@@ -789,14 +786,18 @@ namespace CrossLink.Generator
 
         internal void GenerateGoshujinClass(ScopingStringBuilder ssb, GeneratorInformation info)
         {
-            var goshujinClass = this.ObjectAttribute!.GoshujinClass;
             var tinyhandObject = this.ObjectFlag.HasFlag(CrossLinkObjectFlag.TinyhandObject);
-            var goshujinInterface = tinyhandObject ? " : ITinyhandSerialize" : string.Empty;
-            using (var scopeClass = ssb.ScopeBrace("public sealed class " + goshujinClass + goshujinInterface))
+
+            var goshujinInterface = " : IGoshujin";
+            if (tinyhandObject)
+            {
+                goshujinInterface += ", ITinyhandSerialize";
+            }
+
+            using (var scopeClass = ssb.ScopeBrace("public sealed class " + this.ObjectAttribute!.GoshujinClass + goshujinInterface))
             {
                 // Constructor
-                // ssb.AppendLine("public " + goshujinClass + "() {}");
-                // ssb.AppendLine();
+                this.GenerateGoshujin_Constructor(ssb, info);
 
                 // this.GenerateGoshujin_Add(ssb, info);
                 // this.GenerateGoshujin_Remove(ssb, info);
@@ -821,6 +822,29 @@ namespace CrossLink.Generator
                             }
                         }
                     }
+                }
+            }
+
+            ssb.AppendLine();
+        }
+
+        internal void GenerateGoshujin_Constructor(ScopingStringBuilder ssb, GeneratorInformation info)
+        {
+            using (var scopeMethod = ssb.ScopeBrace($"public {this.ObjectAttribute!.GoshujinClass}()"))
+            {
+                if (this.Links == null)
+                {
+                    return;
+                }
+
+                foreach (var link in this.Links)
+                {
+                    if (link.Type == LinkType.None)
+                    {
+                        continue;
+                    }
+
+                    ssb.AppendLine($"this.{link.ChainName} = new(this, static x => x.{this.GoshujinInstanceIdentifier}, static x => ref x.{link.LinkName});");
                 }
             }
 
@@ -1054,11 +1078,11 @@ namespace CrossLink.Generator
                 }
                 else if (link.Type == LinkType.Ordered)
                 {
-                    ssb.AppendLine($"public {link.Type.LinkTypeToChain()}<{link.Target!.TypeObject!.FullName}, {this.LocalName}> {link.ChainName} {{ get; }} = new(static x => ref x.{link.LinkName});");
+                    ssb.AppendLine($"public {link.Type.LinkTypeToChain()}<{link.Target!.TypeObject!.FullName}, {this.LocalName}> {link.ChainName} {{ get; }}");
                 }
                 else
                 {
-                    ssb.AppendLine($"public {link.Type.LinkTypeToChain()}<{this.LocalName}> {link.ChainName} {{ get; }} = new(static x => ref x.{link.LinkName});");
+                    ssb.AppendLine($"public {link.Type.LinkTypeToChain()}<{this.LocalName}> {link.ChainName} {{ get; }}");
                 }
             }
         }

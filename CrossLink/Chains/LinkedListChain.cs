@@ -16,10 +16,20 @@ namespace CrossLink
     /// <typeparam name="T">The type of elements in the list.</typeparam>
     public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
     {
+        public delegate IGoshujin? ObjectToGoshujinDelegete(T obj);
+
         public delegate ref Link ObjectToLinkDelegete(T obj);
 
-        public LinkedListChain(ObjectToLinkDelegete objectToLink)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LinkedListChain{T}"/> class (Doubly linked list).
+        /// </summary>
+        /// <param name="goshujin">The instance of Goshujin.</param>
+        /// <param name="objectToGoshujin">ObjectToGoshujinDelegete.</param>
+        /// <param name="objectToLink">ObjectToLinkDelegete.</param>
+        public LinkedListChain(IGoshujin goshujin, ObjectToGoshujinDelegete objectToGoshujin, ObjectToLinkDelegete objectToLink)
         {
+            this.goshujin = goshujin;
+            this.objectToGoshujin = objectToGoshujin;
             this.objectToLink = objectToLink;
         }
 
@@ -29,6 +39,11 @@ namespace CrossLink
         /// <param name="obj">The new object to add at the start of the list.</param>
         public void AddFirst(T obj)
         {
+            if (this.objectToGoshujin(obj) != this.goshujin)
+            {// Check Goshujin
+                throw new UnmatchedGoshujinException();
+            }
+
             ref Link link = ref this.objectToLink(obj);
             if (link.Node != null)
             {
@@ -44,6 +59,11 @@ namespace CrossLink
         /// <param name="obj">The new object to add at the end of the list.</param>
         public void AddLast(T obj)
         {
+            if (this.objectToGoshujin(obj) != this.goshujin)
+            {// Check Goshujin
+                throw new UnmatchedGoshujinException();
+            }
+
             ref Link link = ref this.objectToLink(obj);
             if (link.Node != null)
             {
@@ -61,6 +81,11 @@ namespace CrossLink
         /// <returns>true if item is successfully removed.</returns>
         public bool Remove(T obj)
         {
+            if (this.objectToGoshujin(obj) != this.goshujin)
+            {// Check Goshujin
+                throw new UnmatchedGoshujinException();
+            }
+
             ref Link link = ref this.objectToLink(obj);
             if (link.Node != null)
             {
@@ -105,6 +130,8 @@ namespace CrossLink
             }
         }
 
+        private IGoshujin goshujin;
+        private ObjectToGoshujinDelegete objectToGoshujin;
         private ObjectToLinkDelegete objectToLink;
         private UnorderedLinkedList<T> chain = new();
 

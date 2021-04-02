@@ -19,15 +19,27 @@ namespace CrossLink
     /// <typeparam name="T">The type of elements in the list.</typeparam>
     public class ListChain<T> : IList<T>, IReadOnlyList<T>
     {
+        public delegate IGoshujin? ObjectToGoshujinDelegete(T obj);
+
         public delegate ref Link ObjectToLinkDelegete(T obj);
 
-        public ListChain(ObjectToLinkDelegete objectToLink)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ListChain{T}"/> class (List).
+        /// </summary>
+        /// <param name="goshujin">The instance of Goshujin.</param>
+        /// <param name="objectToGoshujin">ObjectToGoshujinDelegete.</param>
+        /// <param name="objectToLink">ObjectToLinkDelegete.</param>
+        public ListChain(IGoshujin goshujin, ObjectToGoshujinDelegete objectToGoshujin, ObjectToLinkDelegete objectToLink)
         {
+            this.goshujin = goshujin;
+            this.objectToGoshujin = objectToGoshujin;
             this.objectToLink = objectToLink;
         }
 
         public int Count => this.chain.Count;
 
+        private IGoshujin goshujin;
+        private ObjectToGoshujinDelegete objectToGoshujin;
         private ObjectToLinkDelegete objectToLink;
         private UnorderedList<T> chain = new();
 
@@ -47,6 +59,11 @@ namespace CrossLink
         /// <param name="obj">The object to be added to the end of the list.</param>
         public void Add(T obj)
         {
+            if (this.objectToGoshujin(obj) != this.goshujin)
+            {// Check Goshujin
+                throw new UnmatchedGoshujinException();
+            }
+
             ref Link link = ref this.objectToLink(obj);
             if (link.IsLinked)
             {
@@ -96,11 +113,16 @@ namespace CrossLink
         /// Removes the first occurrence of a specific object from the <see cref="UnorderedList{T}"/>.
         /// <br/>O(n) operation.
         /// </summary>
-        /// <param name="value">The object to remove from the <see cref="UnorderedList{T}"/>. </param>
+        /// <param name="obj">The object to remove from the <see cref="UnorderedList{T}"/>. </param>
         /// <returns>true if item is successfully removed.</returns>
-        public bool Remove(T value)
+        public bool Remove(T obj)
         {
-            var index = this.IndexOf(value);
+            if (this.objectToGoshujin(obj) != this.goshujin)
+            {// Check Goshujin
+                throw new UnmatchedGoshujinException();
+            }
+
+            var index = this.IndexOf(obj);
             if (index >= 0)
             {
                 this.RemoveAt(index);
@@ -123,6 +145,11 @@ namespace CrossLink
                 if ((uint)index >= (uint)this.chain.Count)
                 {
                     throw new ArgumentOutOfRangeException();
+                }
+
+                if (this.objectToGoshujin(value) != this.goshujin)
+                {// Check Goshujin
+                    throw new UnmatchedGoshujinException();
                 }
 
                 var t = this.chain[index];
@@ -151,6 +178,11 @@ namespace CrossLink
         /// <param name="obj">The object to insert.</param>
         public void Insert(int index, T obj)
         {
+            if (this.objectToGoshujin(obj) != this.goshujin)
+            {// Check Goshujin
+                throw new UnmatchedGoshujinException();
+            }
+
             ref Link link = ref this.objectToLink(obj);
             if (link.IsLinked)
             {

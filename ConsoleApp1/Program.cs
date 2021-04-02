@@ -103,7 +103,7 @@ namespace ConsoleApp1
                  ID: 2, Fuga , 95
                  ID: 1, A    ,  7 */
 
-            var g2 = new TestClass.GoshujinClass(); // New Goshujin
+            var g2 = new TestClass.GoshujinClass(); // New Goshujin2
             t = g.ListChain[0];
             Console.WriteLine($"{t.Name} Goshujin => Goshujin2");
             Console.WriteLine();
@@ -116,6 +116,9 @@ namespace ConsoleApp1
                  ID: 1, A    ,  7
                 [Goshujin2]
                  ID: 1, Hoge , 27*/
+
+            // g.IdChain.Remove(t); // Exception is thrown because this object belongs to Goshujin2.
+            // t.Goshujin.IdChain.Remove(t); // No exception.
 
             static void ConsoleWriteIEnumerable<T>(string? header, IEnumerable<T> e)
             {

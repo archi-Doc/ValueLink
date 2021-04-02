@@ -64,6 +64,7 @@ namespace Benchmark.Draft
     {
         public TestGoshujin3()
         {
+            this.IdChain = new(static x => x.IdLink);
         }
 
         public void Add(TestClass3 x)
@@ -76,7 +77,7 @@ namespace Benchmark.Draft
             this.IdChain.Remove(x);
         }
 
-        public ListChain3<TestClass3> IdChain = new(static x => x.IdLink);
+        public ListChain3<TestClass3> IdChain { get; }
     }
 
     public class TestClass3
@@ -112,10 +113,11 @@ namespace Benchmark.Draft
         public string Name { get; set; } = string.Empty;
     }
 
-    public sealed class TestGoshujin4
+    public sealed class TestGoshujin4 : IGoshujin
     {
         public TestGoshujin4()
         {
+            this.IdChain = new(this, static x => x.Goshujin, static x => ref x.IdLink);
         }
 
         public void Add(TestClass4 x)
@@ -128,7 +130,7 @@ namespace Benchmark.Draft
             this.IdChain.Remove(x);
         }
 
-        public LinkedListChain<TestClass4> IdChain = new(static x => ref x.IdLink);
+        public LinkedListChain<TestClass4> IdChain { get; }
     }
 
     public class TestClass4
