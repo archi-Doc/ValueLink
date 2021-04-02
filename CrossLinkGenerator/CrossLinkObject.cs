@@ -399,6 +399,17 @@ namespace CrossLink.Generator
                     }
                 }
             }
+
+            if (this.ObjectFlag.HasFlag(CrossLinkObjectFlag.TinyhandObject))
+            {// Check prime link
+                if (this.Links != null)
+                {
+                    if (!this.Links.Any(x => x.Prime))
+                    {
+                        this.Body.AddDiagnostic(CrossLinkBody.Info_NoPrimeLink, this.Location);
+                    }
+                }
+            }
         }
 
         public void CheckMember(CrossLinkObject parent)
@@ -501,7 +512,6 @@ namespace CrossLink.Generator
                 ssb.AppendLine("if (i >= max) throw new IndexOutOfRangeException();");
                 ssb.AppendLine("var x = array[i];");
                 obj.Generate_AddLink(ssb, (GeneratorInformation)info!, link, "this");
-                ssb.AppendLine();
             }
         }
 
@@ -889,10 +899,34 @@ namespace CrossLink.Generator
                     return;
                 }
 
-                this.GenerateGoshujin_TinyhandSerialize_ResetIndex(ssb, info);
-                this.GenerateGoshujin_TinyhandSerialize_SetIndex(ssb, info);
+                var primeLink = this.Links.FirstOrDefault(x => x.Prime);
+                if (primeLink != null)
+                {// Prime link
+                    this.GenerateGoshujin_TinyhandSerialize_PrimeIndex(ssb, info, primeLink);
+                }
+                else
+                {// No prime link
+                    this.GenerateGoshujin_TinyhandSerialize_ResetIndex(ssb, info);
+                    this.GenerateGoshujin_TinyhandSerialize_SetIndex(ssb, info);
+                }
+
                 this.GenerateGoshujin_TinyhandSerialize_ArrayAndChains(ssb, info);
             }
+        }
+
+        internal void GenerateGoshujin_TinyhandSerialize_PrimeIndex(ScopingStringBuilder ssb, GeneratorInformation info, Linkage link)
+        {
+            ssb.AppendLine($"var max = this.{link.ChainName}.Count;");
+            ssb.AppendLine("var number = 0;");
+            ssb.AppendLine($"var array = new {this.LocalName}[max];");
+
+            using (var scopeFor = ssb.ScopeBrace($"foreach (var x in this.{link.ChainName})"))
+            {
+                ssb.AppendLine("array[number] = x;");
+                ssb.AppendLine($"x.{this.SerializeIndexIdentifier} = number++;");
+            }
+
+            ssb.AppendLine();
         }
 
         internal void GenerateGoshujin_TinyhandSerialize_ResetIndex(ScopingStringBuilder ssb, GeneratorInformation info)
@@ -987,6 +1021,7 @@ namespace CrossLink.Generator
                     using (var scopeFor = ssb.ScopeBrace("for (var n = 0; n < max; n++)"))
                     {
                         ssb.AppendLine("array[n] = formatter.Deserialize(ref reader, options)!;");
+                        ssb.AppendLine($"array[n].{this.GoshujinInstanceIdentifier} = this;");
                     }
                 }
 
