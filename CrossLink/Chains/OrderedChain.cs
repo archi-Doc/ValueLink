@@ -127,7 +127,7 @@ namespace CrossLink
         public int Count => this.chain.Count;
 
         /// <summary>
-        /// Gets or sets the element with the specified key.
+        /// Gets the element with the specified key.
         /// <br/>O(log n) operation.
         /// </summary>
         /// <param name="key">The key of the element to get or set.</param>
@@ -140,6 +140,25 @@ namespace CrossLink
                 return node == null ? default : node.Value;
             }
         }
+
+        /// <summary>
+        /// Gets the first element with the specified key.
+        /// <br/>O(log n) operation.
+        /// </summary>
+        /// <param name="key">The key of the element to get or set.</param>
+        /// <returns>The first element with the specified key.</returns>
+        public TObj? FindFirst(TKey key)
+        {
+            var node = this.chain.FindFirstNode(key);
+            return node == null ? default : node.Value;
+        }
+
+        /// <summary>
+        /// Enumerates elements with the specified key.
+        /// </summary>
+        /// <param name="key">The key to search in a collection.</param>
+        /// <returns>The elements with the specified key.</returns>
+        public IEnumerable<TObj> Enumerate(TKey? key) => this.chain.EnumerateNode(key).Select(x => x.Value);
 
         public IEnumerable<TKey> Keys => this.chain.Keys;
 

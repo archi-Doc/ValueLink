@@ -121,6 +121,12 @@ namespace Sandbox
             new TestClass(1, "a").Goshujin = g;
             new TestClass(2, "b").Goshujin = g;
             new TestClass(3, "0").Goshujin = g;
+            new TestClass(29, "b").Goshujin = g;
+
+            foreach (var x in g.NameChain.Enumerate("b"))
+            {
+                Console.WriteLine(x.Test);
+            }
 
             var b = TinyhandSerializer.Serialize(g);
             var st = TinyhandSerializer.SerializeToString(g);
