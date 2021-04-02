@@ -26,7 +26,7 @@ namespace xUnitTest
         [KeyAsName]
         private byte age;
 
-        [Link(Type = LinkType.StackList, Prime = true, Name = "Stack")]
+        [Link(Type = LinkType.StackList, Primary = true, Name = "Stack")]
         public TestClass1()
         {
         }

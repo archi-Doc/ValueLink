@@ -153,6 +153,14 @@ namespace ConsoleApp1
 
             // g.IdChain.Remove(t); // Exception is thrown because this object belongs to Goshujin2.
             // t.Goshujin.IdChain.Remove(t); // No exception.
+            
+            Console.WriteLine("[IdChain First/Next]");
+            t = g.IdChain.First; // Enumerate objects using Link interface.
+            while (t != null)
+            {
+                Console.WriteLine(t);
+                t = t.IdLink.Next; // Note that Next is not a Link, but an object.
+            }
 
             static void ConsoleWriteIEnumerable<T>(string? header, IEnumerable<T> e)
             {
@@ -226,14 +234,17 @@ The actual behavior is
 
 1. Adds an inner class named "GoshujinClass" to the target object.
 2. Adds a property named "Goshujin" to the target object.
-3. Creates a property which corresponds to the member with Link attribute. The first letter of the property will be capitalized. For example, "id" becomes "Id". 
+3. Creates a property which corresponds to the member with a Link attribute. The first letter of the property will be capitalized. For example, "id" becomes "Id". 
 4. Creates a "Link" field. The name of the field will the concatenation of the property name and "Link". For example, "Id" becomes "IdLink".
 
 
 
 The terms
 
+- Object: An object that stores information and is the target to be connected.
 - Goshujin: A owner class of the objects.  It's for storing and manipulating objects.
+- Chain: Chain is like a generic collection. Goshujin can have multiple Chains that manage objects in various ways.
+- Link: Link is like a node. An object can have multiple Links that hold information about relationships between objects.
 
 
 
@@ -242,7 +253,7 @@ This is a tiny class to demonstrate how CrossLink works.
 ```csharp
 public partial class TinyClass // partial class is required for source generator.
 {
-    [Link(Type = LinkType.Ordered)] // Add Link attribute to a member.
+    [Link(Type = LinkType.Ordered)] // Add a Link attribute to a member.
     private int id;
 }
 ```
@@ -296,21 +307,19 @@ Finally, CrossLink adds a link and a property which is used to modify the collec
 public OrderedChain<int, TinyClass>.Link IdLink; // Link is like a Node.
 
 public int Id
-{// Generated property
+{// Property "Id" is created from a member "id".
     get => this.id;
     set
     {
         if (value != this.id)
         {
             this.id = value;
-            // IdChain will be updated automatically.
+            // IdChain will be updated when the value is changed.
             this.Goshujin.IdChain.Add(this.id, this);
         }
     }
 }
 ```
-
-
 
 
 

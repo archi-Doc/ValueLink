@@ -9,7 +9,7 @@
     <PackageId>CrossLink</PackageId>
     <Authors>archi-Doc</Authors>
     <Product>CrossLink</Product>
-    <Description>Multiple linkages for objects</Description>
+    <Description>CrossLink is a C# Library for creating and managing multiple links between objects.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/archi-Doc/CrossLink</PackageProjectUrl>
     <RepositoryUrl>https://github.com/archi-Doc/CrossLink</RepositoryUrl>
