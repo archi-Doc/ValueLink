@@ -186,7 +186,7 @@ namespace Benchmark.Draft
     }
 
     [Config(typeof(BenchmarkConfig))]
-    public class Benchmark1
+    public class DraftBenchmark
     {
         public TestGoshujinObsolete goshujin = default!;
 
@@ -210,7 +210,7 @@ namespace Benchmark.Draft
 
         public List<TestClass0> list = default!;
 
-        public Benchmark1()
+        public DraftBenchmark()
         {
         }
 

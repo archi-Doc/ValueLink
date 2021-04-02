@@ -242,46 +242,43 @@ public partial class TinyClass // partial class is required for source generator
 }
 ```
 
-When building a project, CrossLink first creates an inner class called ```GoshujinClass```. ```GoshujinClass``` is the owner class for managing multiple TinyClass instances.
+When building a project, CrossLink first creates an inner class called ```GoshujinClass```. ```GoshujinClass``` is the owner class for storing and manipulating multiple ```TinyClass``` instances.
 
 ```csharp
-public sealed class GoshujinClass
+public sealed class GoshujinClass : IGoshujin // A base interface for Goshujin
 {// Goshujin-sama means an owner in Japanese.
-    public void Add(TinyClass x)
-    {// Add TinyClass to Goshujin.
-        this.IdChain.Add(x.id, x);// IdChain
-    }
-    public void Remove(TinyClass x)
-    {// Remove TinyClass from Goshujin.
-        this.IdChain.Remove(x);
+    
+    public GoshujinClass()
+    {
+        // IdChain is a collection of TinyClass that are maintained in a sorted order.
+        this.IdChain = new(this, static x => x.__gen_cl_identifier__001, static x => ref x.IdLink);
     }
 
-    // IdChain is a collection of TinyClass that are maintained in a sorted order.
-    public OrderedChain<int, TinyClass> IdChain { get; } = new(static x => ref x.IdLink);
+    public OrderedChain<int, TinyClass> IdChain { get; }
 }
 ```
 
-The following code adds a field and a property that holds a Goshujin instance.
+The following code adds a field and a property that holds a ```Goshujin``` instance.
 
 ```csharp
-private GoshujinClass __gen_visceral_identifier__0001 = default!; // Actual Goshujin instance.
+private GoshujinClass? __gen_cl_identifier__001 = default!; // Actual Goshujin instance.
 
-public GoshujinClass Goshujin
+public GoshujinClass? Goshujin
 {
-    get => this.__gen_visceral_identifier__0001; // Getter
+    get => this.__gen_cl_identifier__001; // Getter
     set
     {// Set a Goshujin instance.
-        if (value != this.__gen_visceral_identifier__0001)
+        if (value != this.__gen_cl_identifier__001)
         {
-            if (this.__gen_visceral_identifier__0001 != null)
+            if (this.__gen_cl_identifier__001 != null)
             {// Remove TinyClass from previous Goshujin.
-                this.__gen_visceral_identifier__0001.Remove(this);
+                this.__gen_cl_identifier__001.IdChain.Remove(this);
             }
 
-            this.__gen_visceral_identifier__0001 = value;// Set a new value.
+            this.__gen_cl_identifier__001 = value;// Set a new value.
             if (value != null)
             {// Add TinyClass to new Goshujin.
-                this.__gen_visceral_identifier__0001.Add(this);
+                value.IdChain.Add(this.id, this);
             }
         }
     }
@@ -291,16 +288,17 @@ public GoshujinClass Goshujin
 Finally, CrossLink adds a link and a property which is used to modify the collection and change the value.
 
 ```csharp
-public OrderedChain<int, TinyClass>.Link IdLink;
+public OrderedChain<int, TinyClass>.Link IdLink; // Link is like a Node.
 
 public int Id
-{
+{// Generated property
     get => this.id;
     set
     {
         if (value != this.id)
         {
             this.id = value;
+            // IdChain will be updated automatically.
             this.Goshujin.IdChain.Add(this.id, this);
         }
     }
@@ -312,5 +310,9 @@ public int Id
 
 
 ## Features
+
+### Serialization
+
+
 
 ### AutoNotify (INotifyPropertyChanged)

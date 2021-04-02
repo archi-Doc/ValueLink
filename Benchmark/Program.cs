@@ -27,7 +27,7 @@ namespace Benchmark
             {
                 typeof(Serializer.SerializerBenchmark),
                 typeof(H2HBenchmark),
-                typeof(Draft.Benchmark1),
+                typeof(Draft.DraftBenchmark),
             });
 
             switcher.Run(args);

@@ -1,25 +1,29 @@
-﻿using System;
+﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
+
+using System;
 using System.Collections.Generic;
 using CrossLink;
+
+#pragma warning disable SA1300
 
 namespace ConsoleApp1
 {
     [CrossLinkObject] // Annote a [CrossLinkObject] attribute.
     public partial class TestClass // partial class is required for source generator.
     {
-        [Link(Type = LinkType.Ordered)]// Sorted link associated with id.
-        private int id;// Generated property name: Id, chain name: IdChain
+        [Link(Type = LinkType.Ordered)] // Sorted link associated with id.
+        private int id; // Generated property name: Id, chain name: IdChain
         // The generated property is for changing values and updating links.
         // The generated link is for storing information between objects, similar to a node in a collection.
 
-        [Link(Type = LinkType.Ordered)]// Sorted link associated with name.
-        public string name { get; private set; } = string.Empty;// Generated property name: Id, chain name: IdChain
+        [Link(Type = LinkType.Ordered)] // Sorted link associated with name.
+        public string name { get; private set; } = string.Empty; // Generated property name: Id, chain name: IdChain
 
         [Link(Type = LinkType.Ordered)]// Sorted link associated with age.
-        private int age;// Generated property name: Id, chain name: IdChain
+        private int age; // Generated property name: Id, chain name: IdChain
 
-        [Link(Type = LinkType.StackList, Name = "Stack")]// Stack (Constructor can have multiple Link attributes)
-        [Link(Type = LinkType.List, Name = "List")]// List
+        [Link(Type = LinkType.StackList, Name = "Stack")] // Stack (Constructor can have multiple Link attributes)
+        [Link(Type = LinkType.List, Name = "List")] // List
         public TestClass(int id, string name, int age)
         {
             this.id = id;
@@ -30,9 +34,9 @@ namespace ConsoleApp1
         public override string ToString() => $"ID:{this.id,2}, {this.name,-5}, {this.age,2}";
     }
 
-    class Program
+    public class Program
     {
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
             Console.WriteLine("CrossLink Quick Start.");
             Console.WriteLine();
@@ -86,7 +90,7 @@ namespace ConsoleApp1
                  ID: 2, Fuga , 95 */
 
             ConsoleWriteIEnumerable("[Stack]", g.StackChain);
-            /* Stack chain  
+            /* Stack chain
                  ID: 1, Hoge , 27
                  ID: 2, Fuga , 95
                  ID: 1, A    ,  7
@@ -94,7 +98,7 @@ namespace ConsoleApp1
 
             t = g.StackChain.Pop(); // Pop an object. Note that only StackChain is affected.
             Console.WriteLine($"{t.Name} => Pop");
-            t.Goshujin = null;// To remove the object from other chains, you need to set Goshujin to null.
+            t.Goshujin = null; // To remove the object from other chains, you need to set Goshujin to null.
             Console.WriteLine();
 
             ConsoleWriteIEnumerable("[Stack]", g.StackChain);
