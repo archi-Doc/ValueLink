@@ -68,7 +68,7 @@ namespace CrossLink.Generator
 
         public VisceralIdentifier Identifier { get; private set; } = VisceralIdentifier.Default;
 
-        public string GoshujinInstanceName = string.Empty;
+        public string GoshujinInstanceIdentifier = string.Empty;
 
         public string GoshujinFullName = string.Empty;
 
@@ -196,7 +196,7 @@ namespace CrossLink.Generator
         private void ConfigureObject()
         {
             // Used keywords
-            this.Identifier = new VisceralIdentifier();
+            this.Identifier = new VisceralIdentifier("__gen_cl_identifier__");
             foreach (var x in this.AllMembers)
             {
                 this.Identifier.Add(x.SimpleName);
@@ -361,7 +361,7 @@ namespace CrossLink.Generator
             {// Check Goshujin Class / Instance
                 this.CheckKeyword(this.ObjectAttribute!.GoshujinClass, this.Location);
                 this.CheckKeyword(this.ObjectAttribute!.GoshujinInstance, this.Location);
-                this.GoshujinInstanceName = this.Identifier.GetIdentifier();
+                this.GoshujinInstanceIdentifier = this.Identifier.GetIdentifier();
                 this.GoshujinFullName = this.FullName + "." + this.ObjectAttribute!.GoshujinClass;
             }
 
@@ -396,6 +396,17 @@ namespace CrossLink.Generator
                         {
                             this.Body.AddDiagnostic(CrossLinkBody.Error_NoNotifyTarget, x.Location);
                         }
+                    }
+                }
+            }
+
+            if (this.ObjectFlag.HasFlag(CrossLinkObjectFlag.TinyhandObject))
+            {// Check prime link
+                if (this.Links != null)
+                {
+                    if (!this.Links.Any(x => x.Prime))
+                    {
+                        this.Body.AddDiagnostic(CrossLinkBody.Info_NoPrimeLink, this.Location);
                     }
                 }
             }
@@ -501,7 +512,6 @@ namespace CrossLink.Generator
                 ssb.AppendLine("if (i >= max) throw new IndexOutOfRangeException();");
                 ssb.AppendLine("var x = array[i];");
                 obj.Generate_AddLink(ssb, (GeneratorInformation)info!, link, "this");
-                ssb.AppendLine();
             }
         }
 
@@ -708,7 +718,11 @@ namespace CrossLink.Generator
                         {
                             using (var obj = ssb.ScopeObject("this"))
                             {
-                                this.Generate_AddLink(ssb, info, x, $"this.{this.ObjectAttribute!.GoshujinInstance}");
+                                if (x.IsValidLink)
+                                {
+                                    this.Generate_AddLink(ssb, info, x, $"this.{this.GoshujinInstanceIdentifier}?");
+                                }
+
                                 if (x.AutoNotify)
                                 {
                                     this.Generate_Notify(ssb, info, x);
@@ -782,17 +796,21 @@ namespace CrossLink.Generator
 
         internal void GenerateGoshujinClass(ScopingStringBuilder ssb, GeneratorInformation info)
         {
-            var goshujinClass = this.ObjectAttribute!.GoshujinClass;
             var tinyhandObject = this.ObjectFlag.HasFlag(CrossLinkObjectFlag.TinyhandObject);
-            var goshujinInterface = tinyhandObject ? " : ITinyhandSerialize" : string.Empty;
-            using (var scopeClass = ssb.ScopeBrace("public sealed class " + goshujinClass + goshujinInterface))
+
+            var goshujinInterface = " : IGoshujin";
+            if (tinyhandObject)
+            {
+                goshujinInterface += ", ITinyhandSerialize";
+            }
+
+            using (var scopeClass = ssb.ScopeBrace("public sealed class " + this.ObjectAttribute!.GoshujinClass + goshujinInterface))
             {
                 // Constructor
-                // ssb.AppendLine("public " + goshujinClass + "() {}");
-                // ssb.AppendLine();
+                this.GenerateGoshujin_Constructor(ssb, info);
 
-                this.GenerateGoshujin_Add(ssb, info);
-                this.GenerateGoshujin_Remove(ssb, info);
+                // this.GenerateGoshujin_Add(ssb, info);
+                // this.GenerateGoshujin_Remove(ssb, info);
                 this.GenerateGoshujin_Chain(ssb, info);
 
                 if (tinyhandObject)
@@ -814,6 +832,29 @@ namespace CrossLink.Generator
                             }
                         }
                     }
+                }
+            }
+
+            ssb.AppendLine();
+        }
+
+        internal void GenerateGoshujin_Constructor(ScopingStringBuilder ssb, GeneratorInformation info)
+        {
+            using (var scopeMethod = ssb.ScopeBrace($"public {this.ObjectAttribute!.GoshujinClass}()"))
+            {
+                if (this.Links == null)
+                {
+                    return;
+                }
+
+                foreach (var link in this.Links)
+                {
+                    if (link.Type == LinkType.None)
+                    {
+                        continue;
+                    }
+
+                    ssb.AppendLine($"this.{link.ChainName} = new(this, static x => x.{this.GoshujinInstanceIdentifier}, static x => ref x.{link.LinkName});");
                 }
             }
 
@@ -858,10 +899,34 @@ namespace CrossLink.Generator
                     return;
                 }
 
-                this.GenerateGoshujin_TinyhandSerialize_ResetIndex(ssb, info);
-                this.GenerateGoshujin_TinyhandSerialize_SetIndex(ssb, info);
+                var primeLink = this.Links.FirstOrDefault(x => x.Prime);
+                if (primeLink != null)
+                {// Prime link
+                    this.GenerateGoshujin_TinyhandSerialize_PrimeIndex(ssb, info, primeLink);
+                }
+                else
+                {// No prime link
+                    this.GenerateGoshujin_TinyhandSerialize_ResetIndex(ssb, info);
+                    this.GenerateGoshujin_TinyhandSerialize_SetIndex(ssb, info);
+                }
+
                 this.GenerateGoshujin_TinyhandSerialize_ArrayAndChains(ssb, info);
             }
+        }
+
+        internal void GenerateGoshujin_TinyhandSerialize_PrimeIndex(ScopingStringBuilder ssb, GeneratorInformation info, Linkage link)
+        {
+            ssb.AppendLine($"var max = this.{link.ChainName}.Count;");
+            ssb.AppendLine("var number = 0;");
+            ssb.AppendLine($"var array = new {this.LocalName}[max];");
+
+            using (var scopeFor = ssb.ScopeBrace($"foreach (var x in this.{link.ChainName})"))
+            {
+                ssb.AppendLine("array[number] = x;");
+                ssb.AppendLine($"x.{this.SerializeIndexIdentifier} = number++;");
+            }
+
+            ssb.AppendLine();
         }
 
         internal void GenerateGoshujin_TinyhandSerialize_ResetIndex(ScopingStringBuilder ssb, GeneratorInformation info)
@@ -956,6 +1021,7 @@ namespace CrossLink.Generator
                     using (var scopeFor = ssb.ScopeBrace("for (var n = 0; n < max; n++)"))
                     {
                         ssb.AppendLine("array[n] = formatter.Deserialize(ref reader, options)!;");
+                        ssb.AppendLine($"array[n].{this.GoshujinInstanceIdentifier} = this;");
                     }
                 }
 
@@ -976,6 +1042,12 @@ namespace CrossLink.Generator
             using (var scopeParameter = ssb.ScopeObject("x"))
             using (var scopeMethod = ssb.ScopeBrace($"public void Add({this.LocalName} {ssb.FullObject})"))
             {
+                using (var scopeIf = ssb.ScopeBrace($"if ({ssb.FullObject}.{this.GoshujinInstanceIdentifier} != null && {ssb.FullObject}.{this.GoshujinInstanceIdentifier} != this)"))
+                {
+                    ssb.AppendLine($"{ssb.FullObject}.{this.GoshujinInstanceIdentifier}.Remove({ssb.FullObject});");
+                }
+
+                ssb.AppendLine($"{ssb.FullObject}.{this.GoshujinInstanceIdentifier} = this;");
                 if (this.Links != null)
                 {
                     foreach (var link in this.Links)
@@ -994,21 +1066,32 @@ namespace CrossLink.Generator
         internal void GenerateGoshujin_Remove(ScopingStringBuilder ssb, GeneratorInformation info)
         {
             using (var scopeParameter = ssb.ScopeObject("x"))
-            using (var scopeMethod = ssb.ScopeBrace($"public void Remove({this.LocalName} {ssb.FullObject})"))
+            using (var scopeMethod = ssb.ScopeBrace($"public bool Remove({this.LocalName} {ssb.FullObject})"))
             {
-                if (this.Links != null)
+                using (var scopeIf = ssb.ScopeBrace($"if ({ssb.FullObject}.{this.GoshujinInstanceIdentifier} == this)"))
                 {
-                    foreach (var link in this.Links)
+                    if (this.Links != null)
                     {
-                        if (link.Type == LinkType.None)
+                        foreach (var link in this.Links)
                         {
-                            continue;
-                        }
-                        else
-                        {
-                            ssb.AppendLine($"this.{link.ChainName}.Remove({ssb.FullObject});");
+                            if (link.Type == LinkType.None)
+                            {
+                                continue;
+                            }
+                            else
+                            {
+                                ssb.AppendLine($"this.{link.ChainName}.Remove({ssb.FullObject});");
+                            }
                         }
                     }
+
+                    ssb.AppendLine($"{ssb.FullObject}.{this.GoshujinInstanceIdentifier} = default!;");
+                    ssb.AppendLine("return true;");
+                }
+
+                using (var scopeElse = ssb.ScopeBrace($"else"))
+                {
+                    ssb.AppendLine("return false;");
                 }
             }
 
@@ -1030,11 +1113,11 @@ namespace CrossLink.Generator
                 }
                 else if (link.Type == LinkType.Ordered)
                 {
-                    ssb.AppendLine($"public {link.Type.LinkTypeToChain()}<{link.Target!.TypeObject!.FullName}, {this.LocalName}> {link.ChainName} {{ get; }} = new(static x => ref x.{link.LinkName});");
+                    ssb.AppendLine($"public {link.Type.LinkTypeToChain()}<{link.Target!.TypeObject!.FullName}, {this.LocalName}> {link.ChainName} {{ get; }}");
                 }
                 else
                 {
-                    ssb.AppendLine($"public {link.Type.LinkTypeToChain()}<{this.LocalName}> {link.ChainName} {{ get; }} = new(static x => ref x.{link.LinkName});");
+                    ssb.AppendLine($"public {link.Type.LinkTypeToChain()}<{this.LocalName}> {link.ChainName} {{ get; }}");
                 }
             }
         }
@@ -1042,33 +1125,52 @@ namespace CrossLink.Generator
         internal void GenerateGoshujinInstance(ScopingStringBuilder ssb, GeneratorInformation info)
         {
             var goshujin = this.ObjectAttribute!.GoshujinInstance;
-            var goshujinInstance = this.GoshujinInstanceName; // goshujin + "Instance";
+            var goshujinInstance = this.GoshujinInstanceIdentifier; // goshujin + "Instance";
 
-            using (var scopeProperty = ssb.ScopeBrace($"public {this.ObjectAttribute!.GoshujinClass} {goshujin}"))
+            using (var scopeProperty = ssb.ScopeBrace($"public {this.ObjectAttribute!.GoshujinClass}? {goshujin}"))
             {
                 ssb.AppendLine($"get => this.{goshujinInstance};");
                 using (var scopeSet = ssb.ScopeBrace("set"))
                 {
                     // using (var scopeEqual = ssb.ScopeBrace($"if (!EqualityComparer<{this.ObjectAttribute!.GoshujinClass}>.Default.Equals(value, this.{goshujinInstance}))"))
+                    using (var scopeParamter = ssb.ScopeObject("this"))
                     using (var scopeEqual = ssb.ScopeBrace($"if (value != this.{goshujinInstance})"))
                     {
                         using (var scopeIfNull = ssb.ScopeBrace($"if (this.{goshujinInstance} != null)"))
-                        {
-                            ssb.AppendLine($"this.{goshujinInstance}.Remove(this);");
+                        {// Remove Chains
+                            if (this.Links != null)
+                            {
+                                foreach (var link in this.Links)
+                                {
+                                    if (link.IsValidLink)
+                                    {
+                                        ssb.AppendLine($"this.{goshujinInstance}.{link.ChainName}.Remove({ssb.FullObject});");
+                                    }
+                                }
+                            }
                         }
 
                         ssb.AppendLine();
                         ssb.AppendLine($"this.{goshujinInstance} = value;");
                         using (var scopeIfNull2 = ssb.ScopeBrace($"if (value != null)"))
-                        {
-                            ssb.AppendLine($"this.{goshujinInstance}.Add(this);");
+                        {// Add Chains
+                            if (this.Links != null)
+                            {
+                                foreach (var link in this.Links)
+                                {
+                                    if (link.AutoLink)
+                                    {
+                                        this.Generate_AddLink(ssb, info, link, "value");
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
 
             ssb.AppendLine();
-            ssb.AppendLine($"private {this.ObjectAttribute!.GoshujinClass} {goshujinInstance} = default!;");
+            ssb.AppendLine($"private {this.ObjectAttribute!.GoshujinClass}? {goshujinInstance};");
             ssb.AppendLine();
         }
     }

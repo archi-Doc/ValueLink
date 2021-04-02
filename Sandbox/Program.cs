@@ -9,7 +9,7 @@ namespace Sandbox
     [TinyhandObject]
     public partial class TestClass
     {
-        [Link(Name = "Test", Type = LinkType.LinkedList)]
+        [Link(Name = "Test", Prime = true, Type = LinkType.LinkedList)]
         [KeyAsName]
         private int id;
 
@@ -63,7 +63,7 @@ namespace Sandbox
         [KeyAsName]
         private string name { get; set; }
 
-        [Link(Type = LinkType.StackList, Name = "Stack")]
+        [Link(Type = LinkType.StackList, Prime = true, Name = "Stack")]
         public TestClass3(T id, string name)
         {
             this.id = id;
@@ -95,7 +95,7 @@ namespace Sandbox
         [TinyhandObject]
         partial class NestedClass
         {
-            [Link(Type = LinkType.Ordered)]
+            [Link(Type = LinkType.Ordered, Prime = true)]
             [KeyAsName]
             private uint id { get; set; }
         }
@@ -138,10 +138,8 @@ namespace Sandbox
             st = TinyhandSerializer.SerializeToString(g4);
 
             var tc = new TestClass3<double>(2, "test2");
-            g4.Add(new TestClass3<double>(2, "test2"));
-            g4.IdChain.Remove(tc);
-            g4.Remove(tc);
-            tc.Goshujin.Remove(tc);
+            new TestClass3<double>(2, "test2").Goshujin = g4; ;
+            tc.Goshujin = null;
         }
     }
 }

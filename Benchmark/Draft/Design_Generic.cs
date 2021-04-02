@@ -9,10 +9,11 @@ namespace Benchmark.Draft
 {
     public class TestClassGeneric<T>
     {
-        public sealed class TestGoshujinGeneric
+        public sealed class TestGoshujinGeneric : IGoshujin
         {
             public TestGoshujinGeneric()
             {
+                this.IdChain = new(this, static x => x.Goshujin, static x => ref x.IdLink);
             }
 
             public void Add(TestClassGeneric<T> x)
@@ -26,7 +27,7 @@ namespace Benchmark.Draft
             }
 
             // public LinkedListChain6<TestClass6> IdChain = new(static x => x.IdLink, static (x, y) => { x.IdLink = y; });
-            public LinkedListChain<TestClassGeneric<T>> IdChain = new(static x => ref x.IdLink);
+            public LinkedListChain<TestClassGeneric<T>> IdChain { get; }
         }
 
         public TestClassGeneric(int id)

@@ -21,12 +21,13 @@ namespace Benchmark
 
         public static void Main(string[] args)
         {
-            DebugRun<H2HBenchmark>();
+            DebugRun<Serializer.SerializerBenchmark>();
 
             var switcher = new BenchmarkSwitcher(new[]
             {
+                typeof(Serializer.SerializerBenchmark),
                 typeof(H2HBenchmark),
-                typeof(Draft.Benchmark1),
+                typeof(Draft.DraftBenchmark),
             });
 
             switcher.Run(args);

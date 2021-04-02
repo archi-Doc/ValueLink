@@ -7,28 +7,18 @@ using CrossLink;
 using Tinyhand;
 using Tinyhand.IO;
 
-namespace Sandbox
+namespace Benchmark.Serializer
 {
     [TinyhandObject(ExplicitKeyOnly = true)]
-    public partial class SentinelClass
+    public partial class SerializerBaseClass
     {
-        public sealed class SentinelGoshujin : IGoshujin, ITinyhandSerialize
+        public sealed class GoshujinClass : IGoshujin, ITinyhandSerialize
         {
-            public SentinelGoshujin()
+            public GoshujinClass()
             {
+                this.StackChain = new(this, static x => x.GoshujinInstance, x => ref x.StackLink);
                 this.IdChain = new(this, static x => x.GoshujinInstance, x => ref x.IdLink);
                 this.NameChain = new(this, static x => x.GoshujinInstance, x => ref x.NameLink);
-            }
-            public void Add(SentinelClass x)
-            {
-                this.IdChain.Add(x);
-                this.NameChain.Add(x.Name, x);
-            }
-
-            public void Remove(SentinelClass x)
-            {
-                this.IdChain.Remove(x);
-                this.NameChain.Remove(x);
             }
 
             public void Serialize(ref TinyhandWriter writer, TinyhandSerializerOptions options)
@@ -36,6 +26,12 @@ namespace Sandbox
                 int max = 0;
 
                 // reset index
+                max = max > this.StackChain.Count ? max : this.StackChain.Count;
+                foreach (var x in this.StackChain)
+                {
+                    x.serializeIndex = -1;
+                }
+
                 max = max > this.IdChain.Count ? max : this.IdChain.Count;
                 foreach (var x in this.IdChain)
                 {
@@ -49,8 +45,23 @@ namespace Sandbox
                 }
 
                 // set index
-                var array = new SentinelClass[max];
+                var array = new SerializerBaseClass[max];
                 int number = 0;
+                foreach (var x in this.StackChain)
+                {
+                    if (x.serializeIndex == -1)
+                    {
+                        if (number >= max)
+                        {
+                            max <<= 1;
+                            Array.Resize(ref array, max);
+                        }
+
+                        array[number] = x;
+                        x.serializeIndex = number++;
+                    }
+                }
+
                 foreach (var x in this.IdChain)
                 {
                     if (x.serializeIndex == -1)
@@ -85,29 +96,37 @@ namespace Sandbox
                 writer.WriteArrayHeader(2);
 
                 writer.WriteArrayHeader(number);
-                var formatter = options.Resolver.GetFormatter<SentinelClass>();
+                var formatter = options.Resolver.GetFormatter<SerializerBaseClass>();
                 foreach (var x in array)
                 {
                     formatter.Serialize(ref writer, x, options);
                 }
 
-                writer.WriteMapHeader(2);
-                writer.WriteString(SentinelClass.__gen_utf8_key_0000);
+                writer.WriteMapHeader(3);
+
+                writer.WriteString(GoshujinClass.__gen_utf8_key_0000);
+                writer.WriteArrayHeader(this.StackChain.Count);
+                foreach (var x in this.StackChain)
+                {
+                    writer.Write(x.serializeIndex);
+                }
+
+                writer.WriteString(GoshujinClass.__gen_utf8_key_0001);
                 writer.WriteArrayHeader(this.IdChain.Count);
                 foreach (var x in this.IdChain)
                 {
                     writer.Write(x.serializeIndex);
                 }
 
-                writer.WriteString(SentinelClass.__gen_utf8_key_0001);
+                writer.WriteString(GoshujinClass.__gen_utf8_key_0002);
                 writer.WriteArrayHeader(this.NameChain.Count);
-                var list = this.NameChain.Select(x => x.serializeIndex).ToArray();
-                Tinyhand.Formatters.Builtin.SerializeInt32Array(ref writer, list);
-                // options.Resolver.GetFormatter<int[]>().Serialize(ref writer, list, options);
                 foreach (var x in this.NameChain)
                 {
                     writer.Write(x.serializeIndex);
                 }
+
+                /*var list = this.NameChain.Select(x => x.serializeIndex).ToArray();
+                Tinyhand.Formatters.Builtin.SerializeInt32Array(ref writer, list); // options.Resolver.GetFormatter<int[]>().Serialize(ref writer, list, options);*/
             }
 
             public void Deserialize(ref TinyhandReader reader, TinyhandSerializerOptions options)
@@ -121,11 +140,12 @@ namespace Sandbox
                 // array
                 length--;
                 var max = reader.ReadArrayHeader();
-                var array = new SentinelClass[max];
-                var formatter = options.Resolver.GetFormatter<SentinelClass>();
+                var array = new SerializerBaseClass[max];
+                var formatter = options.Resolver.GetFormatter<SerializerBaseClass>();
                 for (var n = 0; n < max; n++)
                 {
                     array[n] = formatter.Deserialize(ref reader, options)!;
+                    array[n].GoshujinInstance = this;
                 }
 
                 if (length == 0)
@@ -139,13 +159,26 @@ namespace Sandbox
                 {
                     var name = reader.ReadStringSpan();
                     var number = reader.ReadArrayHeader();
+                    this.StackChain.Clear();
+                    for (var n = 0; n < number; n++)
+                    {
+                        var i = reader.ReadInt32();
+                        if (i >= max) throw new TinyhandException("Invalid index");
+                        var x = array[i];
+                        this.StackChain.Push(x);
+                    }
+                }
+
+                {
+                    var name = reader.ReadStringSpan();
+                    var number = reader.ReadArrayHeader();
                     this.IdChain.Clear();
                     for (var n = 0; n < number; n++)
                     {
                         var i = reader.ReadInt32();
                         if (i >= max) throw new TinyhandException("Invalid index");
                         var x = array[i];
-                        this.IdChain.Add(x);
+                        this.IdChain.Add(x.Id, x);
                     }
                 }
 
@@ -163,41 +196,47 @@ namespace Sandbox
                 }
             }
 
-            public ListChain<SentinelClass> IdChain { get; }
+            public StackListChain<SerializerBaseClass> StackChain { get; }
 
-            public OrderedChain<string, SentinelClass> NameChain { get; }
+            public OrderedChain<int, SerializerBaseClass> IdChain { get; }
 
-            private static ReadOnlySpan<byte> __gen_utf8_key_0000 => new byte[] { 73, 100, };
+            public OrderedChain<string, SerializerBaseClass> NameChain { get; }
 
-            private static ReadOnlySpan<byte> __gen_utf8_key_0001 => new byte[] { 78, 97, 109, 101, };
+            private static ReadOnlySpan<byte> __gen_utf8_key_0000 => new byte[] { 83, 116, 97, 99, 107, 67, 104, 97, 105, 110, };
+            private static ReadOnlySpan<byte> __gen_utf8_key_0001 => new byte[] { 73, 100, 67, 104, 97, 105, 110, };
+            private static ReadOnlySpan<byte> __gen_utf8_key_0002 => new byte[] { 78, 97, 109, 101, 67, 104, 97, 105, 110, };
         }
 
-        public SentinelClass()
+        public SerializerBaseClass()
         {
         }
 
-        public SentinelClass(int id, string name)
+        public SerializerBaseClass(int id, string name)
         {
             this.Id = id;
             this.Name = name;
         }
 
-        public SentinelGoshujin Goshujin
+        public GoshujinClass Goshujin
         {
             get => this.GoshujinInstance;
             set
             {
                 if (this.GoshujinInstance != null)
                 {
-                    this.GoshujinInstance.Remove(this);
+                    this.GoshujinInstance.StackChain.Remove(this);
+                    this.GoshujinInstance.IdChain.Remove(this);
+                    this.GoshujinInstance.NameChain.Remove(this);
                 }
 
                 this.GoshujinInstance = value;
-                this.GoshujinInstance.Add(this);
+                this.GoshujinInstance.StackChain.Push(this);
+                this.GoshujinInstance.IdChain.Add(this.Id, this);
+                this.GoshujinInstance.NameChain.Add(this.Name, this);
             }
         }
 
-        private SentinelGoshujin GoshujinInstance = default!;
+        private GoshujinClass GoshujinInstance = default!;
 
         private int serializeIndex;
 
@@ -207,8 +246,10 @@ namespace Sandbox
         [KeyAsName]
         public string Name { get; set; } = string.Empty;
 
-        public ListChain<SentinelClass>.Link IdLink;
+        public StackListChain<SerializerBaseClass>.Link StackLink;
 
-        public OrderedChain<string, SentinelClass>.Link NameLink;
+        public OrderedChain<int, SerializerBaseClass>.Link IdLink;
+
+        public OrderedChain<string, SerializerBaseClass>.Link NameLink;
     }
 }

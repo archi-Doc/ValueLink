@@ -45,17 +45,6 @@ namespace xUnitTest
         private int id;
     }
 
-    /*[CrossLinkObject]
-    public partial class TestNotifyPropertyChanged4 : BindableBase
-    {
-        [Link(AutoNotify = true)]
-        private int id;
-
-        public void Test()
-        {
-        }
-    }*/
-
     public class NotifyPropertyChangedTest
     {
         [Fact]

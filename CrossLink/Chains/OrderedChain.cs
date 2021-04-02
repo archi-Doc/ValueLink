@@ -18,23 +18,47 @@ namespace CrossLink
 {
     public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     {
+        public delegate IGoshujin? ObjectToGoshujinDelegete(TObj obj);
+
         public delegate ref Link ObjectToLinkDelegete(TObj obj);
 
         public delegate ref TKey ObjectToKeyDelegete(TObj obj);
 
-        public OrderedChain(ObjectToKeyDelegete objectToKey, ObjectToLinkDelegete objectToLink)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="OrderedChain{TKey, TObj}"/> class (OrderedMultiMap).
+        /// </summary>
+        /// <param name="goshujin">The instance of Goshujin.</param>
+        /// <param name="objectToGoshujin">ObjectToGoshujinDelegete.</param>
+        /// <param name="objectToKey">ObjectToKeyDelegete.</param>
+        /// <param name="objectToLink">ObjectToLinkDelegete.</param>
+        public OrderedChain(IGoshujin goshujin, ObjectToGoshujinDelegete objectToGoshujin, ObjectToKeyDelegete objectToKey, ObjectToLinkDelegete objectToLink)
         {
+            this.goshujin = goshujin;
+            this.objectToGoshujin = objectToGoshujin;
             this.objectToLink = objectToLink;
             this.objectToKey = objectToKey;
         }
 
-        public OrderedChain(ObjectToLinkDelegete objectToLink)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="OrderedChain{TKey, TObj}"/> class (OrderedMultiMap).
+        /// </summary>
+        /// <param name="goshujin">The instance of Goshujin.</param>
+        /// <param name="objectToGoshujin">ObjectToGoshujinDelegete.</param>
+        /// <param name="objectToLink">ObjectToLinkDelegete.</param>
+        public OrderedChain(IGoshujin goshujin, ObjectToGoshujinDelegete objectToGoshujin, ObjectToLinkDelegete objectToLink)
         {
+            this.goshujin = goshujin;
+            this.objectToGoshujin = objectToGoshujin;
             this.objectToLink = objectToLink;
         }
 
         /*public void Add(TObj obj)
         {
+            if (this.objectToGoshujin(obj) != this.goshujin)
+            {// Check Goshujin
+                throw new UnmatchedGoshujinException();
+            }
+
             if (this.objectToKey == null)
             {
                 throw new InvalidOperationException();
@@ -56,6 +80,11 @@ namespace CrossLink
 
         public void Add(TKey key, TObj obj)
         {
+            if (this.objectToGoshujin(obj) != this.goshujin)
+            {// Check Goshujin
+                throw new UnmatchedGoshujinException();
+            }
+
             ref Link link = ref this.objectToLink(obj);
 
             if (link.Node != null)
@@ -77,6 +106,11 @@ namespace CrossLink
         /// <returns>true if item is successfully removed.</returns>
         public bool Remove(TObj obj)
         {
+            if (this.objectToGoshujin(obj) != this.goshujin)
+            {// Check Goshujin
+                throw new UnmatchedGoshujinException();
+            }
+
             ref Link link = ref this.objectToLink(obj);
             if (link.Node != null)
             {
@@ -139,6 +173,8 @@ namespace CrossLink
         /// </summary>
         public TObj? Last => this.chain.Last == null ? default(TObj) : this.chain.Last.Value;
 
+        private IGoshujin goshujin;
+        private ObjectToGoshujinDelegete objectToGoshujin;
         private ObjectToLinkDelegete objectToLink;
         private ObjectToKeyDelegete? objectToKey;
         private OrderedMultiMap<TKey, TObj> chain = new();
