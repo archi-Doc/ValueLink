@@ -69,9 +69,9 @@ namespace CrossLink
         public LinkType Type { get; set; } = LinkType.None;
 
         /// <summary>
-        /// Gets or sets a value indicating whether or not the link is a prime link that is guaranteed to holds all objects in the collection [the default is false].
+        /// Gets or sets a value indicating whether or not the link is a primary link that is guaranteed to holds all objects in the collection [the default is false].
         /// </summary>
-        public bool Prime { get; set; } = false;
+        public bool Primary { get; set; } = false;
 
         /// <summary>
         /// Gets or sets a string value which represents the name used for the linkage interface.

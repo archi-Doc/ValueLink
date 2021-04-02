@@ -124,6 +124,14 @@ namespace ConsoleApp1
             // g.IdChain.Remove(t); // Exception is thrown because this object belongs to Goshujin2.
             // t.Goshujin.IdChain.Remove(t); // No exception.
 
+            Console.WriteLine("[IdChain First/Next]");
+            t = g.IdChain.First; // Enumerate objects using Link interface.
+            while (t != null)
+            {
+                Console.WriteLine(t);
+                t = t.IdLink.Next; // Note that Next is not a Link, but an object.
+            }
+
             static void ConsoleWriteIEnumerable<T>(string? header, IEnumerable<T> e)
             {
                 if (header != null)

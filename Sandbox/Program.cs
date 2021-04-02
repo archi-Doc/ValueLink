@@ -9,7 +9,7 @@ namespace Sandbox
     [TinyhandObject]
     public partial class TestClass
     {
-        [Link(Name = "Test", Prime = true, Type = LinkType.LinkedList)]
+        [Link(Name = "Test", Primary = true, Type = LinkType.LinkedList)]
         [KeyAsName]
         private int id;
 
@@ -63,7 +63,7 @@ namespace Sandbox
         [KeyAsName]
         private string name { get; set; }
 
-        [Link(Type = LinkType.StackList, Prime = true, Name = "Stack")]
+        [Link(Type = LinkType.StackList, Primary = true, Name = "Stack")]
         public TestClass3(T id, string name)
         {
             this.id = id;
@@ -95,7 +95,7 @@ namespace Sandbox
         [TinyhandObject]
         partial class NestedClass
         {
-            [Link(Type = LinkType.Ordered, Prime = true)]
+            [Link(Type = LinkType.Ordered, Primary = true)]
             [KeyAsName]
             private uint id { get; set; }
         }

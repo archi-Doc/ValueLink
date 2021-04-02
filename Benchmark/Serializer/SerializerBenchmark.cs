@@ -15,7 +15,7 @@ namespace Benchmark.Serializer
     [TinyhandObject]
     public partial class TestClass
     {
-        [Link(Name = "Stack", Prime = true, Type = LinkType.StackList)]
+        [Link(Name = "Stack", Primary = true, Type = LinkType.StackList)]
         public TestClass(int id, string name)
         {
             this.id = id;

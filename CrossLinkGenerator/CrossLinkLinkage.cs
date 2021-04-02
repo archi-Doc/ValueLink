@@ -26,7 +26,7 @@ namespace CrossLink.Generator
             var linkage = new Linkage();
             linkage.Location = attribute.Location;
             linkage.Type = linkAttribute.Type;
-            linkage.Prime = linkAttribute.Prime;
+            linkage.Primary = linkAttribute.Primary;
             if (obj.Kind.IsValue())
             {
                 linkage.Target = obj;
@@ -75,7 +75,7 @@ namespace CrossLink.Generator
 
         public LinkType Type { get; private set; }
 
-        public bool Prime { get; private set; }
+        public bool Primary { get; private set; }
 
         public bool AutoLink { get; private set; }
 

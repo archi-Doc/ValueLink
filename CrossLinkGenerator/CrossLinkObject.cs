@@ -401,12 +401,12 @@ namespace CrossLink.Generator
             }
 
             if (this.ObjectFlag.HasFlag(CrossLinkObjectFlag.TinyhandObject))
-            {// Check prime link
+            {// Check primary link
                 if (this.Links != null)
                 {
-                    if (!this.Links.Any(x => x.Prime))
+                    if (!this.Links.Any(x => x.Primary))
                     {
-                        this.Body.AddDiagnostic(CrossLinkBody.Info_NoPrimeLink, this.Location);
+                        this.Body.AddDiagnostic(CrossLinkBody.Info_NoPrimaryLink, this.Location);
                     }
                 }
             }
@@ -899,13 +899,13 @@ namespace CrossLink.Generator
                     return;
                 }
 
-                var primeLink = this.Links.FirstOrDefault(x => x.Prime);
-                if (primeLink != null)
-                {// Prime link
-                    this.GenerateGoshujin_TinyhandSerialize_PrimeIndex(ssb, info, primeLink);
+                var primaryLink = this.Links.FirstOrDefault(x => x.Primary);
+                if (primaryLink != null)
+                {// Primary link
+                    this.GenerateGoshujin_TinyhandSerialize_PrimaryIndex(ssb, info, primaryLink);
                 }
                 else
-                {// No prime link
+                {// No primary link
                     this.GenerateGoshujin_TinyhandSerialize_ResetIndex(ssb, info);
                     this.GenerateGoshujin_TinyhandSerialize_SetIndex(ssb, info);
                 }
@@ -914,7 +914,7 @@ namespace CrossLink.Generator
             }
         }
 
-        internal void GenerateGoshujin_TinyhandSerialize_PrimeIndex(ScopingStringBuilder ssb, GeneratorInformation info, Linkage link)
+        internal void GenerateGoshujin_TinyhandSerialize_PrimaryIndex(ScopingStringBuilder ssb, GeneratorInformation info, Linkage link)
         {
             ssb.AppendLine($"var max = this.{link.ChainName}.Count;");
             ssb.AppendLine("var number = 0;");
