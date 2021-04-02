@@ -139,7 +139,6 @@ namespace Sandbox
 
             var tc = new TestClass3<double>(2, "test2");
             new TestClass3<double>(2, "test2").Goshujin = g4; ;
-            g4.IdChain.Remove(tc);
             tc.Goshujin = null;
         }
     }
