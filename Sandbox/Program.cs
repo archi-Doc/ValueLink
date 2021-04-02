@@ -138,10 +138,9 @@ namespace Sandbox
             st = TinyhandSerializer.SerializeToString(g4);
 
             var tc = new TestClass3<double>(2, "test2");
-            g4.Add(new TestClass3<double>(2, "test2"));
+            new TestClass3<double>(2, "test2").Goshujin = g4; ;
             g4.IdChain.Remove(tc);
-            g4.Remove(tc);
-            tc.Goshujin.Remove(tc);
+            tc.Goshujin = null;
         }
     }
 }

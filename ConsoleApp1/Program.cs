@@ -94,7 +94,7 @@ namespace ConsoleApp1
 
             t = g.StackChain.Pop(); // Pop an object. Note that only StackChain is affected.
             Console.WriteLine($"{t.Name} => Pop");
-            g.Remove(t);// To remove an object from other chains, you need to call Goshujin's Remove().
+            t.Goshujin = null;// To remove the object from other chains, you need to set Goshujin to null.
             Console.WriteLine();
 
             ConsoleWriteIEnumerable("[Stack]", g.StackChain);

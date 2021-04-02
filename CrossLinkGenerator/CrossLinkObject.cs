@@ -708,7 +708,14 @@ namespace CrossLink.Generator
                         {
                             using (var obj = ssb.ScopeObject("this"))
                             {
-                                this.Generate_AddLink(ssb, info, x, $"this.{this.ObjectAttribute!.GoshujinInstance}");
+                                if (x.IsValidLink)
+                                {
+                                    using (var scopeIf = ssb.ScopeBrace($"if (this.{this.GoshujinInstanceIdentifier} != null)"))
+                                    {
+                                        this.Generate_AddLink(ssb, info, x, $"this.{this.GoshujinInstanceIdentifier}");
+                                    }
+                                }
+
                                 if (x.AutoNotify)
                                 {
                                     this.Generate_Notify(ssb, info, x);
@@ -791,8 +798,8 @@ namespace CrossLink.Generator
                 // ssb.AppendLine("public " + goshujinClass + "() {}");
                 // ssb.AppendLine();
 
-                this.GenerateGoshujin_Add(ssb, info);
-                this.GenerateGoshujin_Remove(ssb, info);
+                // this.GenerateGoshujin_Add(ssb, info);
+                // this.GenerateGoshujin_Remove(ssb, info);
                 this.GenerateGoshujin_Chain(ssb, info);
 
                 if (tinyhandObject)
@@ -981,6 +988,7 @@ namespace CrossLink.Generator
                     ssb.AppendLine($"{ssb.FullObject}.{this.GoshujinInstanceIdentifier}.Remove({ssb.FullObject});");
                 }
 
+                ssb.AppendLine($"{ssb.FullObject}.{this.GoshujinInstanceIdentifier} = this;");
                 if (this.Links != null)
                 {
                     foreach (var link in this.Links)
@@ -991,8 +999,6 @@ namespace CrossLink.Generator
                         }
                     }
                 }
-
-                ssb.AppendLine($"{ssb.FullObject}.{this.GoshujinInstanceIdentifier} = this;");
             }
 
             ssb.AppendLine();
@@ -1062,31 +1068,50 @@ namespace CrossLink.Generator
             var goshujin = this.ObjectAttribute!.GoshujinInstance;
             var goshujinInstance = this.GoshujinInstanceIdentifier; // goshujin + "Instance";
 
-            using (var scopeProperty = ssb.ScopeBrace($"public {this.ObjectAttribute!.GoshujinClass} {goshujin}"))
+            using (var scopeProperty = ssb.ScopeBrace($"public {this.ObjectAttribute!.GoshujinClass}? {goshujin}"))
             {
                 ssb.AppendLine($"get => this.{goshujinInstance};");
                 using (var scopeSet = ssb.ScopeBrace("set"))
                 {
                     // using (var scopeEqual = ssb.ScopeBrace($"if (!EqualityComparer<{this.ObjectAttribute!.GoshujinClass}>.Default.Equals(value, this.{goshujinInstance}))"))
+                    using (var scopeParamter = ssb.ScopeObject("this"))
                     using (var scopeEqual = ssb.ScopeBrace($"if (value != this.{goshujinInstance})"))
                     {
                         using (var scopeIfNull = ssb.ScopeBrace($"if (this.{goshujinInstance} != null)"))
-                        {
-                            ssb.AppendLine($"this.{goshujinInstance}.Remove(this);");
+                        {// Remove Chains
+                            if (this.Links != null)
+                            {
+                                foreach (var link in this.Links)
+                                {
+                                    if (link.IsValidLink)
+                                    {
+                                        ssb.AppendLine($"this.{goshujinInstance}.{link.ChainName}.Remove({ssb.FullObject});");
+                                    }
+                                }
+                            }
                         }
 
                         ssb.AppendLine();
                         ssb.AppendLine($"this.{goshujinInstance} = value;");
                         using (var scopeIfNull2 = ssb.ScopeBrace($"if (value != null)"))
-                        {
-                            ssb.AppendLine($"this.{goshujinInstance}.Add(this);");
+                        {// Add Chains
+                            if (this.Links != null)
+                            {
+                                foreach (var link in this.Links)
+                                {
+                                    if (link.AutoLink)
+                                    {
+                                        this.Generate_AddLink(ssb, info, link, "value");
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
 
             ssb.AppendLine();
-            ssb.AppendLine($"private {this.ObjectAttribute!.GoshujinClass} {goshujinInstance} = default!;");
+            ssb.AppendLine($"private {this.ObjectAttribute!.GoshujinClass}? {goshujinInstance};");
             ssb.AppendLine();
         }
     }
