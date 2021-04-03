@@ -19,7 +19,7 @@ namespace xUnitTest
         private int id;
 
         [Link(Type = LinkType.Ordered)]
-        [KeyAsName]
+        [Key("NM")]
         private string name = default!;
 
         [Link(Type = LinkType.Ordered)]
@@ -66,18 +66,18 @@ namespace xUnitTest
             new TestClass1(1, "Z", 12).Goshujin = g;
             new TestClass1(2, "1", 15).Goshujin = g;
 
-            g.StackChain.Select(x => x.Id).SequenceEqual(new int[] { 0, 1, 2 });
-            g.IdChain.Select(x => x.Id).SequenceEqual(new int[] { 0, 1, 2 });
-            g.NameChain.Select(x => x.Id).SequenceEqual(new int[] { 2, 0, 1 });
-            g.AgeChain.Select(x => x.Id).SequenceEqual(new int[] { 1, 2, 0 });
+            g.StackChain.Select(x => x.Id).SequenceEqual(new int[] { 0, 1, 2 }).IsTrue();
+            g.IdChain.Select(x => x.Id).SequenceEqual(new int[] { 0, 1, 2 }).IsTrue();
+            g.NameChain.Select(x => x.Id).SequenceEqual(new int[] { 2, 0, 1 }).IsTrue();
+            g.AgeChain.Select(x => x.Id).SequenceEqual(new int[] { 1, 2, 0 }).IsTrue();
 
             var st = TinyhandSerializer.SerializeToString(g);
             var g2 = TinyhandSerializer.Deserialize<TestClass1.GoshujinClass>(TinyhandSerializer.Serialize(g));
 
-            g2!.StackChain.SequenceEqual(g.StackChain);
-            g2!.IdChain.SequenceEqual(g.StackChain);
-            g2!.NameChain.SequenceEqual(g.StackChain);
-            g2!.AgeChain.SequenceEqual(g.StackChain);
+            g2!.StackChain.SequenceEqual(g.StackChain).IsTrue();
+            g2!.IdChain.SequenceEqual(g.IdChain).IsTrue();
+            g2!.NameChain.SequenceEqual(g.NameChain).IsTrue();
+            g2!.AgeChain.SequenceEqual(g.AgeChain).IsTrue();
         }
     }
 }
