@@ -79,8 +79,12 @@ namespace CrossLink.Generator
             id: "CLG014", title: "String key null", messageFormat: "String key cannot contain null character",
             category: "CrossLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
-        public static readonly DiagnosticDescriptor Info_NoPrimaryLink = new DiagnosticDescriptor(
+        public static readonly DiagnosticDescriptor Warning_NoPrimaryLink = new DiagnosticDescriptor(
             id: "CLG015", title: "No primary link", messageFormat: "Consider specifying a primary link that holds all objects in the collection in order to maximize the performance of serialization",
+            category: "CrossLinkGenerator", DiagnosticSeverity.Warning, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Warning_NoKeyAttribute = new DiagnosticDescriptor(
+            id: "CLG016", title: "No Key attribute", messageFormat: "Consider adding Key or KeyAsName attribute in order to add this member to the serialization target",
             category: "CrossLinkGenerator", DiagnosticSeverity.Warning, isEnabledByDefault: true);
 
         public CrossLinkBody(GeneratorExecutionContext context)

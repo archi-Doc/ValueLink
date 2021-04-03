@@ -55,7 +55,7 @@ namespace CrossLink.Generator
 
         public DeclarationCondition PropertyChangedDeclaration { get; private set; }
 
-        public LinkAttributeMock? LinkAttribute { get; private set; }
+        public Linkage? Linkage { get; private set; }
 
         public List<Linkage>? Links { get; private set; } = null;
 
@@ -171,6 +171,7 @@ namespace CrossLink.Generator
                     continue;
                 }
 
+                this.Linkage = linkage;
                 if (this.ContainingObject is { } parent)
                 {// Add to parent's list
                     if (parent.Links == null)
@@ -434,7 +435,7 @@ namespace CrossLink.Generator
                 {
                     if (!this.Links.Any(x => x.Primary))
                     {
-                        this.Body.AddDiagnostic(CrossLinkBody.Info_NoPrimaryLink, this.Location);
+                        this.Body.AddDiagnostic(CrossLinkBody.Warning_NoPrimaryLink, this.Location);
                     }
                 }
             }
@@ -448,12 +449,22 @@ namespace CrossLink.Generator
                 return;
             }
 
-            if (this.LinkAttribute != null)
+            if (this.Linkage != null)
             {
                 /*if (this.Kind != VisceralObjectKind.Field)
                 {// Link target must be a field
                     this.Body.AddDiagnostic(CrossLinkBody.Error_LinkTargetNotField, this.Location, this.SimpleName);
                 }*/
+
+                if (parent.ObjectFlag.HasFlag(CrossLinkObjectFlag.TinyhandObject))
+                {// TinyhandObject
+                    if (!this.AllAttributes.Any(x =>
+                    x.FullName == "Tinyhand.KeyAttribute" ||
+                    x.FullName == "Tinyhand.KeyAsNameAttribute"))
+                    {
+                        this.Body.AddDiagnostic(CrossLinkBody.Warning_NoKeyAttribute, this.Location);
+                    }
+                }
             }
         }
 
