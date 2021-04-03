@@ -37,7 +37,8 @@ namespace CrossLink.Generator
         HasNotify = 1 << 11, // Has AutoNotify
         CanCreateInstance = 1 << 12, // Can create an instance
         GenerateINotifyPropertyChanged = 1 << 13, // Generate INotifyPropertyChanged
-        TinyhandObject = 1 << 14, // Has TinyhandObjectAttribute
+        GenerateSetProperty = 1 << 14, // Generate SetProperty()
+        TinyhandObject = 1 << 15, // Has TinyhandObjectAttribute
     }
 
     public class CrossLinkObject : VisceralObjectBase<CrossLinkObject>
@@ -255,10 +256,37 @@ namespace CrossLink.Generator
                 this.PropertyChangedDeclaration = DeclarationCondition.ImplicitlyDeclared;
             }
 
+            if (this.ObjectFlag.HasFlag(CrossLinkObjectFlag.GenerateINotifyPropertyChanged))
+            {
+                if (!this.Has_SetProperty())
+                {
+                    this.ObjectFlag |= CrossLinkObjectFlag.GenerateSetProperty;
+                }
+            }
+
             if (this.ObjectFlag.HasFlag(CrossLinkObjectFlag.TinyhandObject))
             {// TinyhandObject
                 this.SerializeIndexIdentifier = this.Identifier.GetIdentifier();
             }
+        }
+
+        public bool Has_SetProperty()
+        {
+            foreach (var x in this.GetMembers(VisceralTarget.Method).Where(x => x.SimpleName == "SetProperty"))
+            {
+                var p = x.Method_Parameters;
+                if (p.Length != 3)
+                {
+                    continue;
+                }
+
+                if (p[0] == p[1] && p[2] == "string")
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public void ConfigureRelation()
@@ -662,6 +690,11 @@ namespace CrossLink.Generator
             if (this.ObjectFlag.HasFlag(CrossLinkObjectFlag.GenerateINotifyPropertyChanged))
             {// Generate PropertyChanged
                 ssb.AppendLine("public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;");
+                if (this.ObjectFlag.HasFlag(CrossLinkObjectFlag.GenerateSetProperty))
+                {
+                    this.Generate_SetProperty(ssb, info);
+                }
+
                 ssb.AppendLine();
             }
 
@@ -680,6 +713,21 @@ namespace CrossLink.Generator
             }
 
             return;
+        }
+
+        internal void Generate_SetProperty(ScopingStringBuilder ssb, GeneratorInformation info)
+        {
+            using (var scopeMethod = ssb.ScopeBrace("protected virtual bool SetProperty<T>(ref T storage, T value, [CallerMemberName] string? propertyName = null)"))
+            {
+                using (var scopeIf = ssb.ScopeBrace("if (EqualityComparer<T>.Default.Equals(storage, value))"))
+                {
+                    ssb.AppendLine("return false;");
+                }
+
+                ssb.AppendLine("storage = value;");
+                ssb.AppendLine("this.PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(propertyName));");
+                ssb.AppendLine("return true;");
+            }
         }
 
         internal void GenerateLink(ScopingStringBuilder ssb, GeneratorInformation info, Linkage x)

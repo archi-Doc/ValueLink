@@ -43,6 +43,26 @@ namespace xUnitTest
     {
         [Link(AutoNotify = true)]
         private int id;
+
+        public void Test()
+        {
+            this.SetProperty(ref id, 3);
+        }
+
+        public void SetProperty()
+        {
+            return;
+        }
+
+        public void SetProperty<T>(T a, T b, int name)
+        {
+            return;
+        }
+
+        public void SetProperty<U>(int a, U b, string name)
+        {
+            return;
+        }
     }
 
     public class NotifyPropertyChangedTest
