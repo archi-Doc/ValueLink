@@ -14,6 +14,9 @@ This document may be inaccurate. It would be greatly appreciated if anyone could
 - [Quick Start](#quick-start)
 - [Performance](#performance)
 - [How it works](#how-it-works)
+- [Features](#features)
+  - [Serialization](#serialization)
+  - [AutoNotify](#autonotify)
 
 
 
@@ -242,7 +245,7 @@ The actual behavior is
 The terms
 
 - Object: An object that stores information and is the target to be connected.
-- Goshujin: A owner class of the objects.  It's for storing and manipulating objects.
+- Goshujin: An owner class of the objects.  It's for storing and manipulating objects.
 - Chain: Chain is like a generic collection. Goshujin can have multiple Chains that manage objects in various ways.
 - Link: Link is like a node. An object can have multiple Links that hold information about relationships between objects.
 
@@ -329,4 +332,7 @@ public int Id
 
 
 
-### AutoNotify (INotifyPropertyChanged)
+### AutoNotify
+
+(INotifyPropertyChanged)
+
