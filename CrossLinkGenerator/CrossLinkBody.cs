@@ -84,7 +84,7 @@ namespace CrossLink.Generator
             category: "CrossLinkGenerator", DiagnosticSeverity.Warning, isEnabledByDefault: true);
 
         public static readonly DiagnosticDescriptor Warning_NoKeyAttribute = new DiagnosticDescriptor(
-            id: "CLG016", title: "No Key attribute", messageFormat: "Consider adding Key or KeyAsName attribute in order to add this member to the serialization target",
+            id: "CLG016", title: "No Key attribute", messageFormat: "Consider adding Key or KeyAsName attribute to this member so that CrossLink can serialize it properly",
             category: "CrossLinkGenerator", DiagnosticSeverity.Warning, isEnabledByDefault: true);
 
         public CrossLinkBody(GeneratorExecutionContext context)

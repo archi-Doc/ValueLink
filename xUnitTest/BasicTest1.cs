@@ -55,11 +55,21 @@ namespace xUnitTest
         }
     }
 
+    [TinyhandObject(ImplicitKeyAsName = true)]
+    public partial class TestClass2
+    {
+        public int N { get; set; }
+
+        [KeyAsName]
+        public TestClass1.GoshujinClass G { get; set; } = default!;
+    }
+
     public class BasicTest1
     {
         [Fact]
         public void Test1()
         {
+            CrossLinkModule.Initialize();
             var g = new TestClass1.GoshujinClass();
 
             new TestClass1(0, "A", 100).Goshujin = g;
@@ -74,10 +84,22 @@ namespace xUnitTest
             var st = TinyhandSerializer.SerializeToString(g);
             var g2 = TinyhandSerializer.Deserialize<TestClass1.GoshujinClass>(TinyhandSerializer.Serialize(g));
 
+            var tc2 = new TestClass2();
+            tc2.N = 100;
+            tc2.G = g;
+            st = TinyhandSerializer.SerializeToString(tc2);
+            var tc2a = TinyhandSerializer.Deserialize<TestClass2>(TinyhandSerializer.Serialize(tc2))!;
+            var tc2b = TinyhandSerializer.Reconstruct<TestClass2>();
+
             g2!.StackChain.SequenceEqual(g.StackChain).IsTrue();
             g2!.IdChain.SequenceEqual(g.IdChain).IsTrue();
             g2!.NameChain.SequenceEqual(g.NameChain).IsTrue();
             g2!.AgeChain.SequenceEqual(g.AgeChain).IsTrue();
+
+            tc2a.G.StackChain.SequenceEqual(g.StackChain).IsTrue();
+            tc2a.G.IdChain.SequenceEqual(g.IdChain).IsTrue();
+            tc2a.G.NameChain.SequenceEqual(g.NameChain).IsTrue();
+            tc2a.G.AgeChain.SequenceEqual(g.AgeChain).IsTrue();
         }
     }
 }
