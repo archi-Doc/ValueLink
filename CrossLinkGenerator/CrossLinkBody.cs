@@ -144,7 +144,7 @@ namespace CrossLink.Generator
                 this.GenerateHeader(ssb, tinyhandFlag);
                 var ns = ssb.ScopeNamespace(x.Key);
 
-                rootObjects.AddRange(x.Value);
+                rootObjects.AddRange(x.Value); // For loader generation
 
                 var firstFlag = true;
                 foreach (var y in x.Value)
@@ -156,7 +156,7 @@ namespace CrossLink.Generator
 
                     firstFlag = false;
 
-                    y.Generate(ssb, info);
+                    y.Generate(ssb, info); // Primary TinyhandObject
                 }
 
                 var result = ssb.Finalize();

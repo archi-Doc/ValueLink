@@ -12,7 +12,7 @@ namespace xUnitTest
 {
     [CrossLinkObject]
     [TinyhandObject]
-    public partial class TestClass1
+    public partial class TestClass1 : IComparable<TestClass1>
     {
         [Link(Type = LinkType.Ordered)]
         [KeyAsName]
@@ -36,6 +36,25 @@ namespace xUnitTest
             this.id = id;
             this.name = name;
             this.age = age;
+        }
+
+        public int CompareTo(TestClass1? other)
+        {
+            if (other == null)
+            {
+                return 1;
+            }
+
+            if (this.id < other.id)
+            {
+                return -1;
+            }
+            else if (this.id > other.id)
+            {
+                return 1;
+            }
+
+            return 0;
         }
 
         public override bool Equals(object? obj)
@@ -62,6 +81,122 @@ namespace xUnitTest
 
         [KeyAsName]
         public TestClass1.GoshujinClass G { get; set; } = default!;
+    }
+
+    [CrossLinkObject]
+    [TinyhandObject]
+    public partial class GenericTestClass<T>
+    {
+        [Link(Type = LinkType.Ordered, Primary = true)]
+        [KeyAsName]
+        private int id;
+
+        [Link(Type = LinkType.Ordered)]
+        [KeyAsName]
+        private T value = default!;
+
+        public GenericTestClass()
+        {
+        }
+
+        public GenericTestClass(int id, T value)
+        {
+            this.id = id;
+            this.value = value;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            var t = obj as GenericTestClass<T>;
+            if (t == null)
+            {
+                return false;
+            }
+
+            return this.id == t.id && EqualityComparer<T>.Default.Equals(this.value, t.value);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(this.id, this.value);
+        }
+    }
+
+    [CrossLinkObject]
+    [TinyhandObject]
+    public partial class GenericTestClass2<T>
+    {
+        [Link(Type = LinkType.Ordered, Primary = true)]
+        [KeyAsName]
+        private int id;
+
+        [Link(Type = LinkType.Ordered)]
+        [KeyAsName]
+        private T value = default!;
+
+        [Link(Type = LinkType.Ordered)]
+        [KeyAsName]
+        private NestedClass<double> nested = default!;
+
+        public GenericTestClass2()
+        {
+        }
+
+        public GenericTestClass2(int id, T value, NestedClass<double> nested)
+        {
+            this.id = id;
+            this.value = value;
+            this.nested = nested;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            var t = obj as GenericTestClass2<T>;
+            if (t == null)
+            {
+                return false;
+            }
+
+            return this.id == t.id && EqualityComparer<T>.Default.Equals(this.value, t.value);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(this.id, this.value);
+        }
+
+        [CrossLinkObject]
+        [TinyhandObject]
+        public partial class NestedClass<X> : IComparable<NestedClass<X>>
+        {
+            [Link(Type = LinkType.Ordered, Primary = true)]
+            [KeyAsName]
+            private string name = default!;
+
+            [Link(Type = LinkType.Ordered)]
+            [KeyAsName]
+            private X value = default!;
+
+            public NestedClass()
+            {
+            }
+
+            public NestedClass(string name, X value)
+            {
+                this.name = name;
+                this.value = value;
+            }
+
+            public int CompareTo(NestedClass<X>? other)
+            {
+                if (other == null)
+                {
+                    return 1;
+                }
+
+                return this.name.CompareTo(other.name);
+            }
+        }
     }
 
     public class BasicTest1
@@ -100,6 +235,42 @@ namespace xUnitTest
             tc2a.G.IdChain.SequenceEqual(g.IdChain).IsTrue();
             tc2a.G.NameChain.SequenceEqual(g.NameChain).IsTrue();
             tc2a.G.AgeChain.SequenceEqual(g.AgeChain).IsTrue();
+        }
+
+        [Fact]
+        public void TestGeneric()
+        {
+            string st;
+
+            var g = new GenericTestClass<int>.GoshujinClass();
+            new GenericTestClass<int>(0, 1).Goshujin = g;
+            new GenericTestClass<int>(2, 3).Goshujin = g;
+
+            st = TinyhandSerializer.SerializeToString(g);
+            g = TinyhandSerializer.Deserialize<GenericTestClass<int>.GoshujinClass>(TinyhandSerializer.Serialize(g));
+
+            var g2 = new GenericTestClass<TestClass1>.GoshujinClass();
+            new GenericTestClass<TestClass1>(0, new TestClass1(1, "1", 10)).Goshujin = g2;
+            new GenericTestClass<TestClass1>(2, new TestClass1(2, "2", 20)).Goshujin = g2;
+
+            st = TinyhandSerializer.SerializeToString(g2);
+            g2 = TinyhandSerializer.Deserialize<GenericTestClass<TestClass1>.GoshujinClass>(TinyhandSerializer.Serialize(g2));
+
+            var g3 = new GenericTestClass2<TestClass1>.GoshujinClass();
+            new GenericTestClass2<TestClass1>(0, new TestClass1(1, "1", 10), new GenericTestClass2<TestClass1>.NestedClass<double>("a", 1.2)).Goshujin = g3;
+            new GenericTestClass2<TestClass1>(2, new TestClass1(2, "2", 20), new GenericTestClass2<TestClass1>.NestedClass<double>("1", 1)).Goshujin = g3;
+
+            st = TinyhandSerializer.SerializeToString(g3);
+            g3 = TinyhandSerializer.Deserialize<GenericTestClass2<TestClass1>.GoshujinClass>(TinyhandSerializer.Serialize(g3));
+
+            var gg = new GenericTestClass2<TestClass1>.NestedClass<double>.GoshujinClass();
+            foreach (var x in g3!.IdChain)
+            {
+                x.Nested.Goshujin = gg;
+            }
+
+            st = TinyhandSerializer.SerializeToString(gg);
+            gg = TinyhandSerializer.Deserialize<GenericTestClass2<TestClass1>.NestedClass<double>.GoshujinClass>(TinyhandSerializer.Serialize(gg));
         }
     }
 }

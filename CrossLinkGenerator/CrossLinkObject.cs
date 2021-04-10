@@ -136,6 +136,12 @@ namespace CrossLink.Generator
                 return;
             }*/
 
+            // Closed generic type is not supported.
+            if (this.Generics_Kind == VisceralGenericsKind.CloseGeneric)
+            {
+                return;
+            }
+
             // CrossLinkObjectAttribute
             if (this.AllAttributes.FirstOrDefault(x => x.FullName == CrossLinkObjectAttributeMock.FullName) is { } objectAttribute)
             {
@@ -343,18 +349,15 @@ namespace CrossLink.Generator
                 }
             }
 
-            if (this.Generics_Kind != VisceralGenericsKind.OpenGeneric)
+            if (cf.ConstructedObjects == null)
             {
-                if (cf.ConstructedObjects == null)
-                {
-                    cf.ConstructedObjects = new();
-                }
+                cf.ConstructedObjects = new();
+            }
 
-                if (!cf.ConstructedObjects.Contains(this))
-                {
-                    cf.ConstructedObjects.Add(this);
-                    this.GenericsNumber = cf.ConstructedObjects.Count;
-                }
+            if (!cf.ConstructedObjects.Contains(this))
+            {
+                cf.ConstructedObjects.Add(this);
+                this.GenericsNumber = cf.ConstructedObjects.Count;
             }
         }
 
@@ -561,11 +564,24 @@ namespace CrossLink.Generator
 
             if (list.Count > 0 && list[0].ContainingObject is { } containingObject)
             {
-                // info.ModuleInitializerClass.Add(containingObject.FullName);
+                var initializerAdded = false;
                 var constructedList = containingObject.ConstructedObjects;
-                if (constructedList != null && constructedList.Count > 0)
+                if (constructedList != null)
                 {
-                    info.ModuleInitializerClass.Add(constructedList[0].FullName);
+                    for (var n = 0; n < constructedList.Count; n++)
+                    {
+                        if (constructedList[n].Generics_Kind != VisceralGenericsKind.OpenGeneric)
+                        {
+                            info.ModuleInitializerClass.Add(constructedList[n].FullName);
+                            initializerAdded = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!initializerAdded)
+                {
+                    info.ModuleInitializerClass.Add(containingObject.GetClosedGenericName("object"));
                 }
             }
 
@@ -573,10 +589,27 @@ namespace CrossLink.Generator
             {
                 foreach (var x in list2)
                 {
-                    var name = string.Format(classFormat, x.FormatterNumber);
-                    ssb.AppendLine($"GeneratedResolver.Instance.SetFormatter<{x.GoshujinFullName}>(new {name}());");
-                    name = string.Format(classFormat, x.FormatterExtraNumber);
-                    ssb.AppendLine($"GeneratedResolver.Instance.SetFormatterExtra<{x.GoshujinFullName}>(new {name}());");
+                    if (x.Generics_Kind != VisceralGenericsKind.OpenGeneric)
+                    {// Formatter
+                        var name = string.Format(classFormat, x.FormatterNumber);
+                        ssb.AppendLine($"GeneratedResolver.Instance.SetFormatter<{x.GoshujinFullName}>(new {name}());");
+                        name = string.Format(classFormat, x.FormatterExtraNumber);
+                        ssb.AppendLine($"GeneratedResolver.Instance.SetFormatterExtra<{x.GoshujinFullName}>(new {name}());");
+                    }
+                    else
+                    {// Formatter generator
+                        ssb.AppendLine($"GeneratedResolver.Instance.SetFormatterGenerator(typeof({x.GoshujinFullName.ToUnboundTypeName()}), x =>");
+                        ssb.AppendLine("{");
+                        ssb.IncrementIndent();
+                        // ssb.AppendLine($"if (x.Length != {x.CountGenericsArguments()}) return (null!, null!);");
+                        var name = string.Format(classFormat, x.FormatterNumber);
+                        ssb.AppendLine($"var formatter = Activator.CreateInstance(typeof({name}<>).MakeGenericType(x));");
+                        name = string.Format(classFormat, x.FormatterExtraNumber);
+                        ssb.AppendLine($"var formatterExtra = Activator.CreateInstance(typeof({name}<>).MakeGenericType(x));");
+                        ssb.AppendLine($"return ((ITinyhandFormatter)formatter!, (ITinyhandFormatterExtra)formatterExtra!);");
+                        ssb.DecrementIndent();
+                        ssb.AppendLine("});");
+                    }
                 }
             }
 
@@ -584,7 +617,26 @@ namespace CrossLink.Generator
 
             foreach (var x in list2)
             {
-                var name = string.Format(classFormat, x.FormatterNumber);
+                var genericArguments = string.Empty;
+                if (x.Generics_Kind == VisceralGenericsKind.OpenGeneric)
+                {
+                    var sb = new StringBuilder();
+                    sb.Append("<");
+                    for (var n = 0; n < x.Generics_Arguments.Length; n++)
+                    {
+                        if (n > 0)
+                        {
+                            sb.Append(", ");
+                        }
+
+                        sb.Append(x.Generics_Arguments[n]);
+                    }
+
+                    sb.Append(">");
+                    genericArguments = sb.ToString();
+                }
+
+                var name = string.Format(classFormat, x.FormatterNumber) + genericArguments;
                 using (var cls = ssb.ScopeBrace($"class {name}: ITinyhandFormatter<{x.GoshujinFullName}>"))
                 {
                     // Serialize
@@ -619,7 +671,7 @@ namespace CrossLink.Generator
                     }
                 }
 
-                name = string.Format(classFormat, x.FormatterExtraNumber);
+                name = string.Format(classFormat, x.FormatterExtraNumber) + genericArguments;
                 using (var cls = ssb.ScopeBrace($"class {name}: ITinyhandFormatterExtra<{x.GoshujinFullName}>"))
                 {
                     // Deserialize
