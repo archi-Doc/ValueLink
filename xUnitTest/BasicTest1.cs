@@ -64,6 +64,46 @@ namespace xUnitTest
         public TestClass1.GoshujinClass G { get; set; } = default!;
     }
 
+    [CrossLinkObject]
+    [TinyhandObject]
+    public partial class TestGenericClass<T>
+    {
+        [Link(Type = LinkType.Ordered)]
+        [KeyAsName]
+        private int id;
+
+        [Link(Type = LinkType.Ordered)]
+        [KeyAsName]
+        private T value = default!;
+
+        [Link(Type = LinkType.StackList, Primary = true, Name = "Stack")]
+        public TestGenericClass()
+        {
+        }
+
+        public TestGenericClass(int id, T value)
+        {
+            this.id = id;
+            this.value = value;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            var t = obj as TestGenericClass<T>;
+            if (t == null)
+            {
+                return false;
+            }
+
+            return this.id == t.id && EqualityComparer<T>.Default.Equals(this.value, t.value);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(this.id, this.value);
+        }
+    }
+
     public class BasicTest1
     {
         [Fact]

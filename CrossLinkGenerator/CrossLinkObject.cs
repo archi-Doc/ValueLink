@@ -343,18 +343,15 @@ namespace CrossLink.Generator
                 }
             }
 
-            if (this.Generics_Kind != VisceralGenericsKind.OpenGeneric)
+            if (cf.ConstructedObjects == null)
             {
-                if (cf.ConstructedObjects == null)
-                {
-                    cf.ConstructedObjects = new();
-                }
+                cf.ConstructedObjects = new();
+            }
 
-                if (!cf.ConstructedObjects.Contains(this))
-                {
-                    cf.ConstructedObjects.Add(this);
-                    this.GenericsNumber = cf.ConstructedObjects.Count;
-                }
+            if (!cf.ConstructedObjects.Contains(this))
+            {
+                cf.ConstructedObjects.Add(this);
+                this.GenericsNumber = cf.ConstructedObjects.Count;
             }
         }
 
@@ -563,9 +560,16 @@ namespace CrossLink.Generator
             {
                 // info.ModuleInitializerClass.Add(containingObject.FullName);
                 var constructedList = containingObject.ConstructedObjects;
-                if (constructedList != null && constructedList.Count > 0)
+                if (constructedList != null)
                 {
-                    info.ModuleInitializerClass.Add(constructedList[0].FullName);
+                    for (var n = 0; n < constructedList.Count; n++)
+                    {
+                        if (constructedList[n].Generics_Kind != VisceralGenericsKind.OpenGeneric)
+                        {
+                            info.ModuleInitializerClass.Add(constructedList[n].FullName);
+                            break;
+                        }
+                    }
                 }
             }
 
@@ -584,7 +588,26 @@ namespace CrossLink.Generator
 
             foreach (var x in list2)
             {
-                var name = string.Format(classFormat, x.FormatterNumber);
+                var genericArguments = string.Empty;
+                if (x.Generics_Kind == VisceralGenericsKind.OpenGeneric)
+                {
+                    var sb = new StringBuilder();
+                    sb.Append("<");
+                    for (var n = 0; n < x.Generics_Arguments.Length; n++)
+                    {
+                        if (n > 0)
+                        {
+                            sb.Append(", ");
+                        }
+
+                        sb.Append(x.Generics_Arguments[n]);
+                    }
+
+                    sb.Append(">");
+                    genericArguments = sb.ToString();
+                }
+
+                var name = string.Format(classFormat, x.FormatterNumber) + genericArguments;
                 using (var cls = ssb.ScopeBrace($"class {name}: ITinyhandFormatter<{x.GoshujinFullName}>"))
                 {
                     // Serialize
@@ -619,7 +642,7 @@ namespace CrossLink.Generator
                     }
                 }
 
-                name = string.Format(classFormat, x.FormatterExtraNumber);
+                name = string.Format(classFormat, x.FormatterExtraNumber) + genericArguments;
                 using (var cls = ssb.ScopeBrace($"class {name}: ITinyhandFormatterExtra<{x.GoshujinFullName}>"))
                 {
                     // Deserialize
