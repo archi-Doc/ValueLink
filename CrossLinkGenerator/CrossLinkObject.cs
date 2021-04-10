@@ -83,6 +83,8 @@ namespace CrossLink.Generator
 
         public int FormatterExtraNumber { get; private set; }
 
+        public CrossLinkObject? ClosedGenericHint { get; private set; }
+
         internal Automata<CrossLinkObject, Linkage>? DeserializeChainAutomata { get; private set; }
 
         public Arc.Visceral.NullableAnnotation NullableAnnotationIfReferenceType
@@ -139,6 +141,11 @@ namespace CrossLink.Generator
             // Closed generic type is not supported.
             if (this.Generics_Kind == VisceralGenericsKind.CloseGeneric)
             {
+                if (this.OriginalDefinition != null && this.OriginalDefinition.ClosedGenericHint == null)
+                {
+                    this.OriginalDefinition.ClosedGenericHint = this;
+                }
+
                 return;
             }
 
@@ -563,8 +570,13 @@ namespace CrossLink.Generator
             var list2 = list.SelectMany(x => x.ConstructedObjects).Where(x => x.ObjectFlag.HasFlag(CrossLinkObjectFlag.TinyhandObject));
 
             if (list.Count > 0 && list[0].ContainingObject is { } containingObject)
-            {
-                var initializerAdded = false;
+            {// ClosedGenericHint
+                if (containingObject.ClosedGenericHint != null)
+                {
+                    info.ModuleInitializerClass.Add(containingObject.ClosedGenericHint.FullName);
+                }
+
+                /* var initializerAdded = false;
                 var constructedList = containingObject.ConstructedObjects;
                 if (constructedList != null)
                 {
@@ -582,7 +594,7 @@ namespace CrossLink.Generator
                 if (!initializerAdded)
                 {
                     info.ModuleInitializerClass.Add(containingObject.GetClosedGenericName("object"));
-                }
+                }*/
             }
 
             using (var m = ssb.ScopeBrace("internal static void __gen__cl()"))
