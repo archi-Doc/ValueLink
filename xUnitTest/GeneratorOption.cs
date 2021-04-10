@@ -5,7 +5,7 @@ using CrossLink;
 
 namespace xUnitTest
 {
-    [CrossLinkGeneratorOption(AttachDebugger = false, GenerateToFile = true)]
+    [CrossLinkGeneratorOption(AttachDebugger = false, GenerateToFile = false)]
     internal class GeneratorOption
     {
     }
