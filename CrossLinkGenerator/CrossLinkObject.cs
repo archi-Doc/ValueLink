@@ -601,7 +601,7 @@ namespace CrossLink.Generator
             {
                 foreach (var x in list2)
                 {
-                    if (x.Generics_Kind != VisceralGenericsKind.OpenGeneric)
+                    if (x.Generics_Kind != VisceralGenericsKind.OpenGeneric || x.Generics_Arguments.Length == 0)
                     {// Formatter
                         var name = string.Format(classFormat, x.FormatterNumber);
                         ssb.AppendLine($"GeneratedResolver.Instance.SetFormatter<{x.GoshujinFullName}>(new {name}());");
@@ -633,7 +633,7 @@ namespace CrossLink.Generator
             foreach (var x in list2)
             {
                 var genericArguments = string.Empty;
-                if (x.Generics_Kind == VisceralGenericsKind.OpenGeneric)
+                if (x.Generics_Kind == VisceralGenericsKind.OpenGeneric && x.Generics_Arguments.Length != 0)
                 {
                     var sb = new StringBuilder("<");
                     for (var n = 0; n < x.Generics_Arguments.Length; n++)
