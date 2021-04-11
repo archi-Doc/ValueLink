@@ -136,13 +136,13 @@ namespace xUnitTest
 
         [Link(Type = LinkType.Ordered)]
         [KeyAsName]
-        private NestedClass<double> nested = default!;
+        private NestedClass<double, int> nested = default!;
 
         public GenericTestClass2()
         {
         }
 
-        public GenericTestClass2(int id, T value, NestedClass<double> nested)
+        public GenericTestClass2(int id, T value, NestedClass<double, int> nested)
         {
             this.id = id;
             this.value = value;
@@ -167,7 +167,7 @@ namespace xUnitTest
 
         [CrossLinkObject]
         [TinyhandObject]
-        public partial class NestedClass<X> : IComparable<NestedClass<X>>
+        public partial class NestedClass<X, Y> : IComparable<NestedClass<X, Y>>
         {
             [Link(Type = LinkType.Ordered, Primary = true)]
             [KeyAsName]
@@ -175,19 +175,23 @@ namespace xUnitTest
 
             [Link(Type = LinkType.Ordered)]
             [KeyAsName]
-            private X value = default!;
+            private X xvalue = default!;
+
+            [KeyAsName]
+            private Y yvalue = default!;
 
             public NestedClass()
             {
             }
 
-            public NestedClass(string name, X value)
+            public NestedClass(string name, X xvalue, Y yvalue)
             {
                 this.name = name;
-                this.value = value;
+                this.xvalue = xvalue;
+                this.yvalue = yvalue;
             }
 
-            public int CompareTo(NestedClass<X>? other)
+            public int CompareTo(NestedClass<X, Y>? other)
             {
                 if (other == null)
                 {
@@ -257,20 +261,20 @@ namespace xUnitTest
             g2 = TinyhandSerializer.Deserialize<GenericTestClass<TestClass1>.GoshujinClass>(TinyhandSerializer.Serialize(g2));
 
             var g3 = new GenericTestClass2<TestClass1>.GoshujinClass();
-            new GenericTestClass2<TestClass1>(0, new TestClass1(1, "1", 10), new GenericTestClass2<TestClass1>.NestedClass<double>("a", 1.2)).Goshujin = g3;
-            new GenericTestClass2<TestClass1>(2, new TestClass1(2, "2", 20), new GenericTestClass2<TestClass1>.NestedClass<double>("1", 1)).Goshujin = g3;
+            new GenericTestClass2<TestClass1>(0, new TestClass1(1, "1", 10), new GenericTestClass2<TestClass1>.NestedClass<double, int>("a", 1.2, 100)).Goshujin = g3;
+            new GenericTestClass2<TestClass1>(2, new TestClass1(2, "2", 20), new GenericTestClass2<TestClass1>.NestedClass<double, int>("1", 1, 2)).Goshujin = g3;
 
             st = TinyhandSerializer.SerializeToString(g3);
             g3 = TinyhandSerializer.Deserialize<GenericTestClass2<TestClass1>.GoshujinClass>(TinyhandSerializer.Serialize(g3));
 
-            var gg = new GenericTestClass2<TestClass1>.NestedClass<double>.GoshujinClass();
+            var gg = new GenericTestClass2<TestClass1>.NestedClass<double, int>.GoshujinClass();
             foreach (var x in g3!.IdChain)
             {
                 x.Nested.Goshujin = gg;
             }
 
             st = TinyhandSerializer.SerializeToString(gg);
-            gg = TinyhandSerializer.Deserialize<GenericTestClass2<TestClass1>.NestedClass<double>.GoshujinClass>(TinyhandSerializer.Serialize(gg));
+            gg = TinyhandSerializer.Deserialize<GenericTestClass2<TestClass1>.NestedClass<double, int>.GoshujinClass>(TinyhandSerializer.Serialize(gg));
         }
     }
 }
