@@ -41,8 +41,8 @@ using CrossLink;
 
 namespace ConsoleApp1
 {
-    [CrossLinkObject] // Annote a [CrossLinkObject] attribute.
-    public partial class TestClass // partial class is required for source generator.
+    [CrossLinkObject] // Annote a CrossLinkObject attribute.
+    public partial class TestClass // Partial class is required for source generator.
     {
         [Link(Type = LinkType.Ordered)] // Sorted link associated with id.
         private int id; // Generated property name: Id, chain name: IdChain
@@ -280,7 +280,7 @@ public sealed class GoshujinClass : IGoshujin // A base interface for Goshujin
 The following code adds a field and a property that holds a ```Goshujin``` instance.
 
 ```csharp
-private GoshujinClass? __gen_cl_identifier__001 = default!; // Actual Goshujin instance.
+private GoshujinClass? __gen_cl_identifier__001; // Actual Goshujin instance.
 
 public GoshujinClass? Goshujin
 {
@@ -290,13 +290,13 @@ public GoshujinClass? Goshujin
         if (value != this.__gen_cl_identifier__001)
         {
             if (this.__gen_cl_identifier__001 != null)
-            {// Remove TinyClass from previous Goshujin.
+            {// Remove the TinyClass from a previous Goshujin.
                 this.__gen_cl_identifier__001.IdChain.Remove(this);
             }
 
             this.__gen_cl_identifier__001 = value;// Set a new value.
             if (value != null)
-            {// Add TinyClass to new Goshujin.
+            {// Add the TinyClass to a new Goshujin.
                 value.IdChain.Add(this.id, this);
             }
         }
