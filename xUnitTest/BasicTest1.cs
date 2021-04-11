@@ -201,6 +201,24 @@ namespace xUnitTest
                 return this.name.CompareTo(other.name);
             }
         }
+
+        [CrossLinkObject]
+        [TinyhandObject]
+        public partial class NestedClass2
+        {
+            [Link(Type = LinkType.Ordered, Primary = true)]
+            [KeyAsName]
+            private double height;
+
+            public NestedClass2()
+            {
+            }
+
+            public NestedClass2(double height)
+            {
+                this.height = height;
+            }
+        }
     }
 
     public class BasicTest1
