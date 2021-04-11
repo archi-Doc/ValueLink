@@ -6,6 +6,7 @@ using CrossLink;
 namespace xUnitTest
 {
     [CrossLinkGeneratorOption(AttachDebugger = false, GenerateToFile = false)]
+    [Tinyhand.TinyhandGeneratorOption(AttachDebugger = false, GenerateToFile = false)]
     internal class GeneratorOption
     {
     }

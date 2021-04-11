@@ -610,14 +610,17 @@ namespace CrossLink.Generator
                     }
                     else
                     {// Formatter generator
-                        ssb.AppendLine($"GeneratedResolver.Instance.SetFormatterGenerator(typeof({x.GoshujinFullName.ToUnboundTypeName()}), x =>");
+                        var generic = x.GetClosedGenericName(null);
+                        generic.count = x.Generics_Arguments.Length;
+                        var genericComma = generic.count <= 1 ? string.Empty : new string(',', generic.count - 1);
+                        ssb.AppendLine($"GeneratedResolver.Instance.SetFormatterGenerator(typeof({generic.name + "." + x.ObjectAttribute!.GoshujinClass}), x =>");
                         ssb.AppendLine("{");
                         ssb.IncrementIndent();
                         // ssb.AppendLine($"if (x.Length != {x.CountGenericsArguments()}) return (null!, null!);");
                         var name = string.Format(classFormat, x.FormatterNumber);
-                        ssb.AppendLine($"var formatter = Activator.CreateInstance(typeof({name}<>).MakeGenericType(x));");
+                        ssb.AppendLine($"var formatter = Activator.CreateInstance(typeof({name}<{genericComma}>).MakeGenericType(x));");
                         name = string.Format(classFormat, x.FormatterExtraNumber);
-                        ssb.AppendLine($"var formatterExtra = Activator.CreateInstance(typeof({name}<>).MakeGenericType(x));");
+                        ssb.AppendLine($"var formatterExtra = Activator.CreateInstance(typeof({name}<{genericComma}>).MakeGenericType(x));");
                         ssb.AppendLine($"return ((ITinyhandFormatter)formatter!, (ITinyhandFormatterExtra)formatterExtra!);");
                         ssb.DecrementIndent();
                         ssb.AppendLine("});");
@@ -632,8 +635,7 @@ namespace CrossLink.Generator
                 var genericArguments = string.Empty;
                 if (x.Generics_Kind == VisceralGenericsKind.OpenGeneric)
                 {
-                    var sb = new StringBuilder();
-                    sb.Append("<");
+                    var sb = new StringBuilder("<");
                     for (var n = 0; n < x.Generics_Arguments.Length; n++)
                     {
                         if (n > 0)
