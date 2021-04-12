@@ -570,31 +570,35 @@ namespace CrossLink.Generator
             var list2 = list.SelectMany(x => x.ConstructedObjects).Where(x => x.ObjectFlag.HasFlag(CrossLinkObjectFlag.TinyhandObject));
 
             if (list.Count > 0 && list[0].ContainingObject is { } containingObject)
-            {// ClosedGenericHint
+            {// Add ModuleInitializerClass
+                string? initializerClassName = null;
                 if (containingObject.ClosedGenericHint != null)
-                {
-                    info.ModuleInitializerClass.Add(containingObject.ClosedGenericHint.FullName);
+                {// ClosedGenericHint
+                    initializerClassName = containingObject.ClosedGenericHint.FullName;
+                    goto ModuleInitializerClass_Added;
                 }
 
-                /* var initializerAdded = false;
                 var constructedList = containingObject.ConstructedObjects;
                 if (constructedList != null)
-                {
+                {// Closed generic
                     for (var n = 0; n < constructedList.Count; n++)
                     {
                         if (constructedList[n].Generics_Kind != VisceralGenericsKind.OpenGeneric)
                         {
-                            info.ModuleInitializerClass.Add(constructedList[n].FullName);
-                            initializerAdded = true;
-                            break;
+                            initializerClassName = constructedList[n].FullName;
+                            goto ModuleInitializerClass_Added;
                         }
                     }
                 }
 
-                if (!initializerAdded)
+                // Open generic
+                (initializerClassName, _) = containingObject.GetClosedGenericName("object");
+
+ModuleInitializerClass_Added:
+                if (initializerClassName != null)
                 {
-                    info.ModuleInitializerClass.Add(containingObject.GetClosedGenericName("object"));
-                }*/
+                    info.ModuleInitializerClass.Add(initializerClassName);
+                }
             }
 
             using (var m = ssb.ScopeBrace("internal static void __gen__cl()"))
