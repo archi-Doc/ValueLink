@@ -139,7 +139,7 @@ namespace CrossLink.Generator
             }*/
 
             // Closed generic type is not supported.
-            if (this.Generics_Kind == VisceralGenericsKind.CloseGeneric)
+            if (this.Generics_Kind == VisceralGenericsKind.ClosedGeneric)
             {
                 if (this.OriginalDefinition != null && this.OriginalDefinition.ClosedGenericHint == null)
                 {
@@ -496,7 +496,7 @@ namespace CrossLink.Generator
                 return;
             }
 
-            if (this.Generics_Kind == VisceralGenericsKind.CloseGeneric)
+            if (this.Generics_Kind == VisceralGenericsKind.ClosedGeneric)
             {// Close generic is not necessary.
                 return;
             }
