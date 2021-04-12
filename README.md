@@ -3,7 +3,9 @@
 
 CrossLink is a C# Library for creating and managing multiple links between objects.
 
-It's like generic collection for objects, like ```List<T>``` for ```T```, but CrossLink is more flexible and faster than generic collections.
+It's like generic collections for objects, like ```List<T>``` for ```T```, but CrossLink is more flexible and faster than generic collections.
+
+
 
 This document may be inaccurate. It would be greatly appreciated if anyone could make additions and corrections.
 
@@ -24,7 +26,7 @@ This document may be inaccurate. It would be greatly appreciated if anyone could
 
 CrossLink uses Source Generator, so the Target Framework should be .NET 5 or later.
 
-Install CrossLink using Package Manager Console.
+First, install CrossLink using Package Manager Console.
 
 ```
 Install-Package CrossLink
@@ -190,10 +192,10 @@ namespace ConsoleApp1
 
 Performance is the top priority.
 
-Although CrossLink do a little bit complex process than generic collection classes, CrossLink is faster than generic collection classes.
+Although CrossLink do a little bit complex process than generic collections, CrossLink works faster than generic collections.
 
-This is a benchmark with generic collection ```SortedDictionary<TKey, TValue>```.
-The following code creates an instance of a collection, creates H2HClass and adds to the collection in sorted order.
+This is a benchmark with the generic collection ```SortedDictionary<TKey, TValue>```.
+The following code creates an instance of a collection, creates a H2HClass and adds to the collection in sorted order.
 
 ```csharp
 var g = new SortedDictionary<int, H2HClass>();
@@ -220,7 +222,7 @@ The result; CrossLink is faster than plain ```SortedDictionary<TKey, TValue>```.
 | NewAndAdd_SortedDictionary | 100    | 7,209.8 ns | 53.98 ns | 77.42 ns | 1.9379 |      - |     - |    8112 B |
 | NewAndAdd_CrossLink        | 100    | 4,942.6 ns | 12.28 ns | 17.99 ns | 2.7084 | 0.0076 |     - |   11328 B |
 
-When it comes to modifying an object (remove/add), CrossLink is much faster than the collection class.
+When it comes to modifying an object (remove/add), CrossLink is much faster than the generic collection.
 
 | Method                        | Length |       Mean |    Error |   StdDev |  Gen 0 | Gen 1 | Gen 2 | Allocated |
 | ----------------------------- | ------ | ---------: | -------: | -------: | -----: | ----: | ----: | --------: |
@@ -231,40 +233,40 @@ When it comes to modifying an object (remove/add), CrossLink is much faster than
 
 ## How it works
 
-CrossLink works by adding an inner class and some properties to an existing class. 
+CrossLink works by adding an inner class and some properties to the existing class. 
 
 The actual behavior is
 
-1. Adds an inner class named "GoshujinClass" to the target object.
-2. Adds a property named "Goshujin" to the target object.
-3. Creates a property which corresponds to the member with a Link attribute. The first letter of the property will be capitalized. For example, "id" becomes "Id". 
-4. Creates a "Link" field. The name of the field will the concatenation of the property name and "Link". For example, "Id" becomes "IdLink".
+1. Adds an inner class named "```GoshujinClass``` to the target object.
+2. Adds a property named ```Goshujin``` to the target object.
+3. Creates a property which corresponds to the member with a Link attribute. The first letter of the property will be capitalized. For example, ```id``` becomes ```Id```. 
+4. Creates a ```Link``` field. The name of the field will the concatenation of the property name and ```Link```. For example, ```Id``` becomes ```IdLink```.
 
 
 
 The terms
 
-- Object: An object that stores information and is the target to be connected.
-- Goshujin: An owner class of the objects.  It's for storing and manipulating objects.
-- Chain: Chain is like a generic collection. Goshujin can have multiple Chains that manage objects in various ways.
-- Link: Link is like a node. An object can have multiple Links that hold information about relationships between objects.
+- ```Object```: An object that stores information and is the target to be connected.
+- ```Goshujin```: An owner class of the objects.  It's for storing and manipulating objects.
+- ```Chain```: Chain is like a generic collection. Goshujin can have multiple Chains that manage objects in various ways.
+- ```Link```: Link is like a node. An object can have multiple Links that hold information about relationships between objects.
 
 
 
 This is a tiny class to demonstrate how CrossLink works.
 
 ```csharp
-public partial class TinyClass // partial class is required for source generator.
+public partial class TinyClass // Partial class is required for source generator.
 {
     [Link(Type = LinkType.Ordered)] // Add a Link attribute to a member.
     private int id;
 }
 ```
 
-When building a project, CrossLink first creates an inner class called ```GoshujinClass```. ```GoshujinClass``` is the owner class for storing and manipulating multiple ```TinyClass``` instances.
+When building a project, CrossLink first creates an inner class called ```GoshujinClass```. ```GoshujinClass``` is an owner class for storing and manipulating multiple ```TinyClass``` instances.
 
 ```csharp
-public sealed class GoshujinClass : IGoshujin // A base interface for Goshujin
+public sealed class GoshujinClass : IGoshujin // IGoshujin is a base interface for Goshujin
 {// Goshujin-sama means an owner in Japanese.
     
     public GoshujinClass()
@@ -290,13 +292,13 @@ public GoshujinClass? Goshujin
         if (value != this.__gen_cl_identifier__001)
         {
             if (this.__gen_cl_identifier__001 != null)
-            {// Remove the TinyClass from a previous Goshujin.
+            {// Remove the TinyClass from the previous Goshujin.
                 this.__gen_cl_identifier__001.IdChain.Remove(this);
             }
 
             this.__gen_cl_identifier__001 = value;// Set a new value.
             if (value != null)
-            {// Add the TinyClass to a new Goshujin.
+            {// Add the TinyClass to the new Goshujin.
                 value.IdChain.Add(this.id, this);
             }
         }
@@ -332,7 +334,64 @@ public int Id
 
 
 
+
+
 ### AutoNotify
 
-(INotifyPropertyChanged)
+By adding a ```Link``` attribute and setting ```AutoNotify``` to true, CrossLink can implement the `INotifyPropertyChanged` pattern automatically.
+
+```csharp
+[CrossLinkObject]
+public partial class AutoNotifyClass
+{
+    [Link(AutoNotify = true)] // Set AutoNotify to true.
+    private int id;
+
+    public void Reset()
+    {
+        this.SetProperty(ref this.id, 0); // Change the value manually and invoke PropertyChanged.
+    }
+}
+```
+
+```csharp
+var c = new AutoNotifyClass();
+c.PropertyChanged += (s, e) => { Console.WriteLine($"Id changed: {((AutoNotifyClass)s!).Id}"); };
+c.Id = 1; // Change the value and automatically invoke PropertyChange.
+c.Reset(); // Reset the value.
+```
+
+Generated code is
+
+```csharp
+public partial class AutoNotifyClass : System.ComponentModel.INotifyPropertyChanged
+{
+    public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+
+    protected virtual bool SetProperty<T>(ref T storage, T value, [CallerMemberName] string? propertyName = null)
+    {
+        if (EqualityComparer<T>.Default.Equals(storage, value))
+        {
+            return false;
+        }
+        
+        storage = value;
+        this.PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(propertyName));
+        return true;
+    }
+
+    public int Id
+    {
+        get => this.id;
+        set
+        {
+            if (value != this.id)
+            {
+                this.id = value;
+                this.PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs("Id"));
+            }
+        }
+    }
+}
+```
 
