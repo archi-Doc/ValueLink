@@ -8,8 +8,8 @@ using CrossLink;
 
 namespace ConsoleApp1
 {
-    [CrossLinkObject] // Annote a [CrossLinkObject] attribute.
-    public partial class TestClass // partial class is required for source generator.
+    [CrossLinkObject] // Annote a CrossLinkObject attribute.
+    public partial class TestClass // Partial class is required for source generator.
     {
         [Link(Type = LinkType.Ordered)] // Sorted link associated with id.
         private int id; // Generated property name: Id, chain name: IdChain
@@ -19,7 +19,7 @@ namespace ConsoleApp1
         [Link(Type = LinkType.Ordered)] // Sorted link associated with name.
         public string name { get; private set; } = string.Empty; // Generated property name: Id, chain name: IdChain
 
-        [Link(Type = LinkType.Ordered)]// Sorted link associated with age.
+        [Link(Type = LinkType.Ordered)] // Sorted link associated with age.
         private int age; // Generated property name: Id, chain name: IdChain
 
         [Link(Type = LinkType.StackList, Name = "Stack")] // Stack (Constructor can have multiple Link attributes)
@@ -40,6 +40,8 @@ namespace ConsoleApp1
         {
             Console.WriteLine("CrossLink Quick Start.");
             Console.WriteLine();
+
+            AutoNotifyClass.Test();
 
             var g = new TestClass.GoshujinClass(); // Create a Goshujin (Owner) instance
             new TestClass(1, "Hoge", 27).Goshujin = g; // Create a TestClass and associate with the Goshujin (Owner)
