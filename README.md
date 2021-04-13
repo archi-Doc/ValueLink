@@ -237,7 +237,7 @@ CrossLink works by adding an inner class and some properties to the existing cla
 
 The actual behavior is
 
-1. Adds an inner class named "```GoshujinClass``` to the target object.
+1. Adds an inner class named ```GoshujinClass``` to the target object.
 2. Adds a property named ```Goshujin``` to the target object.
 3. Creates a property which corresponds to the member with a Link attribute. The first letter of the property will be capitalized. For example, ```id``` becomes ```Id```. 
 4. Creates a ```Link``` field. The name of the field will the concatenation of the property name and ```Link```. For example, ```Id``` becomes ```IdLink```.
