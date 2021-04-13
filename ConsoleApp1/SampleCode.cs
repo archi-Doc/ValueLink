@@ -29,8 +29,8 @@ namespace ConsoleApp1
     [TinyhandObject] // Add a TinyhandObject attribute to use TinyhandSerializer.
     public partial class SerializeClass
     {
-        [Link(Type = LinkType.Ordered, Primary = true)] // Set primary link that is guaranteed to holds all objects in the collection to maximize the performance of serialization.
-        [Key(0)]
+        [Link(Type = LinkType.Ordered, Primary = true)] // Set primary link that is guaranteed to holds all objects in the collection in order to maximize the performance of serialization.
+        [Key(0)] // Add a Key attribute to specify the key for serialization as a number or string.
         private int id;
 
         [Link(Type = LinkType.Ordered)]
@@ -49,12 +49,12 @@ namespace ConsoleApp1
 
         public static void Test()
         {
-            var g = new SerializeClass.GoshujinClass();
-            new SerializeClass(1, "Hoge").Goshujin = g;
+            var g = new SerializeClass.GoshujinClass(); // Create a new Goshujin.
+            new SerializeClass(1, "Hoge").Goshujin = g; // Add an object.
             new SerializeClass(2, "Fuga").Goshujin = g;
 
-            var st = TinyhandSerializer.SerializeToString(g);
-            var g2 = TinyhandSerializer.Deserialize<SerializeClass.GoshujinClass>(TinyhandSerializer.Serialize(g));
+            var st = TinyhandSerializer.SerializeToString(g); // Serialize to string.
+            var g2 = TinyhandSerializer.Deserialize<SerializeClass.GoshujinClass>(TinyhandSerializer.Serialize(g)); // Serialize to a byte array and deserialize it.
         }
     }
 
