@@ -41,8 +41,6 @@ namespace ConsoleApp1
             Console.WriteLine("CrossLink Quick Start.");
             Console.WriteLine();
 
-            AutoNotifyClass.Test();
-
             var g = new TestClass.GoshujinClass(); // Create a Goshujin (Owner) instance
             new TestClass(1, "Hoge", 27).Goshujin = g; // Create a TestClass and associate with the Goshujin (Owner)
             new TestClass(2, "Fuga", 15).Goshujin = g;
