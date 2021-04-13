@@ -332,7 +332,49 @@ public int Id
 
 ### Serialization
 
+Serializing multiple linked objects is a complicated task. However, with [Tinyhand](https://github.com/archi-Doc/Tinyhand), you can easily serialize/deserialize objects.
 
+All you need to do is install ```Tinyhand``` package and add a ```TinyhandObject``` attribute and ```Key``` attributes to the existing objects.
+
+```
+Install-Package Tinyhand
+```
+
+```csharp
+[CrossLinkObject]
+[TinyhandObject] // Add a TinyhandObject attribute to use TinyhandSerializer.
+public partial class SerializeClass
+{
+    [Link(Type = LinkType.Ordered, Primary = true)] // Set primary link that is guaranteed to holds all objects in the collection in order to maximize the performance of serialization.
+    [Key(0)] // Add a Key attribute to specify the key for serialization as a number or string.
+    private int id;
+
+    [Link(Type = LinkType.Ordered)]
+    [Key(1)]
+    private string name = default!;
+
+    public SerializeClass()
+    {// Default constructor is required for Tinyhand.
+    }
+
+    public SerializeClass(int id, string name)
+    {
+        this.id = id;
+        this.name = name;
+    }
+}
+```
+
+Test code:
+
+```csharp
+var g = new SerializeClass.GoshujinClass(); // Create a new Goshujin.
+new SerializeClass(1, "Hoge").Goshujin = g; // Add an object.
+new SerializeClass(2, "Fuga").Goshujin = g;
+
+var st = TinyhandSerializer.SerializeToString(g); // Serialize the Goshujin to string.
+var g2 = TinyhandSerializer.Deserialize<SerializeClass.GoshujinClass>(TinyhandSerializer.Serialize(g)); // Serialize to a byte array and deserialize it.
+```
 
 
 
@@ -354,6 +396,8 @@ public partial class AutoNotifyClass
 }
 ```
 
+Test code:
+
 ```csharp
 var c = new AutoNotifyClass();
 c.PropertyChanged += (s, e) => { Console.WriteLine($"Id changed: {((AutoNotifyClass)s!).Id}"); };
@@ -361,7 +405,7 @@ c.Id = 1; // Change the value and automatically invoke PropertyChange.
 c.Reset(); // Reset the value.
 ```
 
-Generated code is
+Generated code:
 
 ```csharp
 public partial class AutoNotifyClass : System.ComponentModel.INotifyPropertyChanged
