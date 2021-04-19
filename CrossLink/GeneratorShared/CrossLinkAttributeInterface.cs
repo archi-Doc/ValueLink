@@ -35,6 +35,16 @@ namespace CrossLink
         /// Represents a collection of sorted objects (<see cref="OrderedChain{TKey, TValue}"/>).
         /// </summary>
         Ordered,
+
+        /// <summary>
+        /// Represents a collection of objects sorted in reverse order (<see cref="OrderedChain{TKey, TValue}"/>).
+        /// </summary>
+        ReverseOrdered,
+
+        /// <summary>
+        /// Represents a collection of objects stored in a hash table (<see cref="UnorderedChain{TKey, TValue}"/>).
+        /// </summary>
+        Unordered,
     }
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = true)]

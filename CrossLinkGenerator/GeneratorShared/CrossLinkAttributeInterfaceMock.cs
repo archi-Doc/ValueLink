@@ -16,6 +16,8 @@ namespace CrossLink
         StackList,
         QueueList,
         Ordered,
+        ReverseOrdered,
+        Unordered,
     }
 
     public static class AttributeHelper

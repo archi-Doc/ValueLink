@@ -5,18 +5,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Arc.Collection;
-using CrossLink;
 
 #pragma warning disable SA1124 // Do not use regions
-#pragma warning disable SA1306 // Field names should begin with lower-case letter
-#pragma warning disable SA1401 // Fields should be private
 
 namespace CrossLink
 {
-    public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
+    public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     {
         public delegate IGoshujin? ObjectToGoshujinDelegete(TObj obj);
 
@@ -25,63 +20,32 @@ namespace CrossLink
         public delegate ref TKey ObjectToKeyDelegete(TObj obj);
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="OrderedChain{TKey, TObj}"/> class (OrderedMultiMap).
+        /// Initializes a new instance of the <see cref="UnorderedChain{TKey, TObj}"/> class (UnorderedMultiMap).
         /// </summary>
         /// <param name="goshujin">The instance of Goshujin.</param>
         /// <param name="objectToGoshujin">ObjectToGoshujinDelegete.</param>
         /// <param name="objectToKey">ObjectToKeyDelegete.</param>
         /// <param name="objectToLink">ObjectToLinkDelegete.</param>
-        /// <param name="reverse">true to reverses the order.</param>
-        public OrderedChain(IGoshujin goshujin, ObjectToGoshujinDelegete objectToGoshujin, ObjectToKeyDelegete objectToKey, ObjectToLinkDelegete objectToLink, bool reverse = false)
+        public UnorderedChain(IGoshujin goshujin, ObjectToGoshujinDelegete objectToGoshujin, ObjectToKeyDelegete objectToKey, ObjectToLinkDelegete objectToLink)
         {
-            this.chain = new(reverse);
             this.goshujin = goshujin;
             this.objectToGoshujin = objectToGoshujin;
             this.objectToLink = objectToLink;
             this.objectToKey = objectToKey;
-            this.Reverse = reverse;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="OrderedChain{TKey, TObj}"/> class (OrderedMultiMap).
+        /// Initializes a new instance of the <see cref="UnorderedChain{TKey, TObj}"/> class (OrderedMultiMap).
         /// </summary>
         /// <param name="goshujin">The instance of Goshujin.</param>
         /// <param name="objectToGoshujin">ObjectToGoshujinDelegete.</param>
         /// <param name="objectToLink">ObjectToLinkDelegete.</param>
-        /// <param name="reverse">true to reverses the order.</param>
-        public OrderedChain(IGoshujin goshujin, ObjectToGoshujinDelegete objectToGoshujin, ObjectToLinkDelegete objectToLink, bool reverse = false)
+        public UnorderedChain(IGoshujin goshujin, ObjectToGoshujinDelegete objectToGoshujin, ObjectToLinkDelegete objectToLink)
         {
-            this.chain = new(reverse);
             this.goshujin = goshujin;
             this.objectToGoshujin = objectToGoshujin;
             this.objectToLink = objectToLink;
         }
-
-        /*public void Add(TObj obj)
-        {
-            if (this.objectToGoshujin(obj) != this.goshujin)
-            {// Check Goshujin
-                throw new UnmatchedGoshujinException();
-            }
-
-            if (this.objectToKey == null)
-            {
-                throw new InvalidOperationException();
-            }
-
-            ref Link link = ref this.objectToLink(obj);
-            ref TKey key = ref this.objectToKey(obj);
-
-            if (link.Node != null)
-            {
-                this.chain.ReplaceNode(link.Node, key);
-            }
-            else
-            {
-                var result = this.chain.Add(key, obj);
-                link.Node = result.node;
-            }
-        }*/
 
         public void Add(TKey key, TObj obj)
         {
@@ -92,14 +56,14 @@ namespace CrossLink
 
             ref Link link = ref this.objectToLink(obj);
 
-            if (link.Node != null)
+            if (link.IsLinked)
             {
-                this.chain.SetNodeKey(link.Node, key);
+                this.chain.SetNodeKey(link.NodeIndex, key);
             }
             else
             {
                 var result = this.chain.Add(key, obj);
-                link.Node = result.node;
+                link.NodeIndex = result.nodeIndex;
             }
         }
 
@@ -117,10 +81,10 @@ namespace CrossLink
             }
 
             ref Link link = ref this.objectToLink(obj);
-            if (link.Node != null)
+            if (link.IsLinked)
             {
-                this.chain.RemoveNode(link.Node);
-                link.Node = null;
+                this.chain.RemoveNode(link.NodeIndex);
+                link.RawIndex = 0;
                 return true;
             }
             else
@@ -141,21 +105,21 @@ namespace CrossLink
         {
             get
             {
-                var node = this.chain.FindFirstNode(key);
-                return node == null ? default : node.Value;
+                this.chain.TryGetValue(key, out var value);
+                return value;
             }
         }
 
         /// <summary>
         /// Gets the first element with the specified key.
-        /// <br/>O(log n) operation.
+        /// <br/>O(1) operation.
         /// </summary>
         /// <param name="key">The key of the element to get or set.</param>
         /// <returns>The first element with the specified key.</returns>
         public TObj? FindFirst(TKey key)
         {
-            var node = this.chain.FindFirstNode(key);
-            return node == null ? default : node.Value;
+            this.chain.TryGetValue(key, out var value);
+            return value;
         }
 
         /// <summary>
@@ -187,39 +151,26 @@ namespace CrossLink
         /// <returns>true if the chain contains an element with the key; otherwise, false.</returns>
         public bool TryGetValue(TKey key, [MaybeNullWhen(false)] out TObj obj) => this.chain.TryGetValue(key, out obj);
 
-        /// <summary>
-        /// Gets the first object.
-        /// </summary>
-        public TObj? First => this.chain.First == null ? default(TObj) : this.chain.First.Value;
-
-        /// <summary>
-        /// Gets the last object.
-        /// </summary>
-        public TObj? Last => this.chain.Last == null ? default(TObj) : this.chain.Last.Value;
-
-        public bool Reverse { get; }
-
         private IGoshujin goshujin;
         private ObjectToGoshujinDelegete objectToGoshujin;
         private ObjectToLinkDelegete objectToLink;
         private ObjectToKeyDelegete? objectToKey;
-        private OrderedMultiMap<TKey, TObj> chain;
+        private UnorderedMultiMap<TKey, TObj> chain = new();
 
         public struct Link : ILink<TObj>
         {
-            public bool IsLinked => this.Node != null;
+            public bool IsLinked => this.RawIndex > 0;
 
-            /// <summary>
-            /// Gets the previous object.
-            /// </summary>
-            public TObj? Previous => this.Node == null || this.Node.Previous == null ? default(TObj) : this.Node.Previous.Value;
+            public int NodeIndex
+            {
+                get => this.RawIndex - 1;
+                internal set
+                {
+                    this.RawIndex = value + 1;
+                }
+            }
 
-            /// <summary>
-            /// Gets the next object.
-            /// </summary>
-            public TObj? Next => this.Node == null || this.Node.Next == null ? default(TObj) : this.Node.Next.Value;
-
-            internal OrderedMultiMap<TKey, TObj>.Node? Node { get; set; }
+            internal int RawIndex { get; set; }
         }
 
         #region ICollection
@@ -231,18 +182,13 @@ namespace CrossLink
         /// </summary>
         public void Clear()
         {
-            while (true)
+            foreach (var x in this.chain.Values)
             {
-                var node = this.chain.Last;
-                if (node == null)
-                {
-                    break;
-                }
-
-                ref Link link = ref this.objectToLink(node.Value);
-                this.chain.RemoveNode(link.Node!);
-                link.Node = null;
+                ref Link link = ref this.objectToLink(x);
+                link.RawIndex = 0;
             }
+
+            this.chain.Clear();
         }
 
         void ICollection.CopyTo(Array array, int index) => ((ICollection)this.chain).CopyTo(array, index);
@@ -253,7 +199,7 @@ namespace CrossLink
 
         #endregion
 
-        public OrderedMultiMap<TKey, TObj>.ValueCollection.Enumerator GetEnumerator() => this.chain.Values.GetEnumerator();
+        public UnorderedMultiMap<TKey, TObj>.ValueCollection.Enumerator GetEnumerator() => this.chain.Values.GetEnumerator();
 
         IEnumerator<TObj> IEnumerable<TObj>.GetEnumerator() => this.chain.Values.GetEnumerator();
 
