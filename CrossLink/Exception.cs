@@ -6,7 +6,7 @@ namespace CrossLink
 {
     public class UnmatchedGoshujinException : System.Exception
     {
-        private const string ExceptionMessage = "This object is the property of different Goshujin-sama.";
+        private const string ExceptionMessage = "This object is the property of the different Goshujin-sama.";
 
         public UnmatchedGoshujinException()
             : base(ExceptionMessage)
