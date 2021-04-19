@@ -19,6 +19,8 @@ namespace CrossLink.Generator
             LinkType.StackList => "StackListChain",
             LinkType.QueueList => "QueueListChain",
             LinkType.Ordered => "OrderedChain",
+            LinkType.ReverseOrdered => "OrderedChain",
+            LinkType.Unordered => "UnorderedChain",
             _ => string.Empty,
         };
     }

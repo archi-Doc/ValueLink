@@ -13,7 +13,7 @@ namespace Sandbox
         [KeyAsName]
         private int id;
 
-        [Link(Type = LinkType.Ordered)]
+        [Link(Type = LinkType.ReverseOrdered)]
         [KeyAsName]
         private string name;
 
@@ -101,11 +101,60 @@ namespace Sandbox
         }
     }
 
+    [CrossLinkObject]
+    public partial class ReverseTestClass
+    {
+        [Link(Primary = true, Type = LinkType.ReverseOrdered)]
+        [KeyAsName]
+        private int id;
+
+        [Link(Type = LinkType.Unordered)]
+        [KeyAsName]
+        private string name;
+
+        public ReverseTestClass(int id, string name)
+        {
+            this.id = id;
+            this.name = name;
+        }
+
+        public ReverseTestClass()
+        {
+            this.id = 0;
+            this.name = string.Empty;
+        }
+
+        public override string ToString() => $"{this.id} : {this.name}";
+    }
+
     class Program
     {
         static void Main(string[] args)
         {
             Console.WriteLine("Hello World!");
+
+            var gr = new ReverseTestClass.GoshujinClass();
+            new ReverseTestClass(1, "1").Goshujin = gr;
+            new ReverseTestClass(2, "2").Goshujin = gr;
+            new ReverseTestClass(3, "3").Goshujin = gr;
+            new ReverseTestClass(0, "0").Goshujin = gr;
+
+            foreach (var x in gr.IdChain)
+            {
+                Console.WriteLine(x);
+            }
+
+            Console.WriteLine();
+
+            foreach (var x in gr.NameChain.Enumerate("2"))
+            {
+                Console.WriteLine(x);
+            }
+
+            var rc = gr.NameChain.FindFirst("6");
+            rc = gr.NameChain.FindFirst("3");
+
+            Console.WriteLine();
 
             var tc3 = new TestClass3<int>(1, "test");
             var g3 = new TestClass3<int>.GoshujinClass();
@@ -123,7 +172,7 @@ namespace Sandbox
             new TestClass(3, "0").Goshujin = g;
             new TestClass(29, "b").Goshujin = g;
 
-            foreach (var x in g.NameChain.Enumerate("b"))
+            foreach (var x in g.NameChain)
             {
                 Console.WriteLine(x.Test);
             }

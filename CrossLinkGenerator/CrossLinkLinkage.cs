@@ -97,6 +97,6 @@ namespace CrossLink.Generator
 
         public bool IsValidLink => this.Type != LinkType.None;
 
-        public bool RequiresTarget => this.Type == LinkType.Ordered;
+        public bool RequiresTarget => this.Type == LinkType.Ordered || this.Type == LinkType.ReverseOrdered || this.Type == LinkType.Unordered;
     }
 }

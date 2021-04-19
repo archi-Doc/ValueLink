@@ -5,14 +5,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Arc.Collection;
-using CrossLink;
 
 #pragma warning disable SA1124 // Do not use regions
-#pragma warning disable SA1306 // Field names should begin with lower-case letter
-#pragma warning disable SA1401 // Fields should be private
 
 namespace CrossLink
 {
@@ -89,7 +84,7 @@ namespace CrossLink
             if (link.IsLinked)
             {
                 this.chain.RemoveNode(link.NodeIndex);
-                link.NodeIndex = -1;
+                link.RawIndex = 0;
                 return true;
             }
             else
@@ -164,9 +159,18 @@ namespace CrossLink
 
         public struct Link : ILink<TObj>
         {
-            public bool IsLinked => this.NodeIndex >= 0;
+            public bool IsLinked => this.RawIndex > 0;
 
-            internal int NodeIndex { get; set; } = -1;
+            public int NodeIndex
+            {
+                get => this.RawIndex - 1;
+                internal set
+                {
+                    this.RawIndex = value + 1;
+                }
+            }
+
+            internal int RawIndex { get; set; }
         }
 
         #region ICollection
@@ -178,18 +182,13 @@ namespace CrossLink
         /// </summary>
         public void Clear()
         {
-            while (true)
+            foreach (var x in this.chain.Values)
             {
-                var node = this.chain.Last;
-                if (node == null)
-                {
-                    break;
-                }
-
-                ref Link link = ref this.objectToLink(node.Value);
-                this.chain.RemoveNode(link.Node!);
-                link.Node = null;
+                ref Link link = ref this.objectToLink(x);
+                link.RawIndex = 0;
             }
+
+            this.chain.Clear();
         }
 
         void ICollection.CopyTo(Array array, int index) => ((ICollection)this.chain).CopyTo(array, index);
@@ -200,7 +199,7 @@ namespace CrossLink
 
         #endregion
 
-        public OrderedMultiMap<TKey, TObj>.ValueCollection.Enumerator GetEnumerator() => this.chain.Values.GetEnumerator();
+        public UnorderedMultiMap<TKey, TObj>.ValueCollection.Enumerator GetEnumerator() => this.chain.Values.GetEnumerator();
 
         IEnumerator<TObj> IEnumerable<TObj>.GetEnumerator() => this.chain.Values.GetEnumerator();
 

@@ -426,7 +426,7 @@ namespace CrossLink.Generator
                     // Check
                     if (x.Target == null)
                     {
-                        if (x.Type == LinkType.Ordered)
+                        if (x.RequiresTarget)
                         {
                             this.Body.AddDiagnostic(CrossLinkBody.Error_NoLinkTarget, x.Location);
                         }
@@ -883,7 +883,7 @@ ModuleInitializerClass_Added:
             {// Invalid link
                 return;
             }
-            else if (link.Type == LinkType.Ordered)
+            else if (link.Type == LinkType.Ordered || link.Type == LinkType.ReverseOrdered || link.Type == LinkType.Unordered)
             {
                 ssb.AppendLine($"{prefix}.{link.ChainName}.Add({ssb.FullObject}.{link.Target!.SimpleName}, {ssb.FullObject});");
             }
@@ -911,7 +911,7 @@ ModuleInitializerClass_Added:
             {
                 return;
             }
-            else if (x.Type == LinkType.Ordered && x.Target != null && x.Target.TypeObject != null)
+            else if (x.RequiresTarget && x.Target != null && x.Target.TypeObject != null)
             {
                 ssb.AppendLine($"public {x.Type.LinkTypeToChain()}<{x.Target!.TypeObject!.FullName}, {this.LocalName}>.Link {x.LinkName};");
             }
@@ -983,7 +983,14 @@ ModuleInitializerClass_Added:
                         continue;
                     }
 
-                    ssb.AppendLine($"this.{link.ChainName} = new(this, static x => x.{this.GoshujinInstanceIdentifier}, static x => ref x.{link.LinkName});");
+                    if (link.Type == LinkType.ReverseOrdered)
+                    {
+                        ssb.AppendLine($"this.{link.ChainName} = new(this, static x => x.{this.GoshujinInstanceIdentifier}, static x => ref x.{link.LinkName}, true);");
+                    }
+                    else
+                    {
+                        ssb.AppendLine($"this.{link.ChainName} = new(this, static x => x.{this.GoshujinInstanceIdentifier}, static x => ref x.{link.LinkName});");
+                    }
                 }
             }
 
@@ -1240,7 +1247,7 @@ ModuleInitializerClass_Added:
                 {
                     continue;
                 }
-                else if (link.Type == LinkType.Ordered)
+                else if (link.Type == LinkType.Ordered || link.Type == LinkType.ReverseOrdered || link.Type == LinkType.Unordered)
                 {
                     ssb.AppendLine($"public {link.Type.LinkTypeToChain()}<{link.Target!.TypeObject!.FullName}, {this.LocalName}> {link.ChainName} {{ get; }}");
                 }

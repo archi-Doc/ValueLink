@@ -31,12 +31,15 @@ namespace CrossLink
         /// <param name="objectToGoshujin">ObjectToGoshujinDelegete.</param>
         /// <param name="objectToKey">ObjectToKeyDelegete.</param>
         /// <param name="objectToLink">ObjectToLinkDelegete.</param>
-        public OrderedChain(IGoshujin goshujin, ObjectToGoshujinDelegete objectToGoshujin, ObjectToKeyDelegete objectToKey, ObjectToLinkDelegete objectToLink)
+        /// <param name="reverse">true to reverses the order.</param>
+        public OrderedChain(IGoshujin goshujin, ObjectToGoshujinDelegete objectToGoshujin, ObjectToKeyDelegete objectToKey, ObjectToLinkDelegete objectToLink, bool reverse = false)
         {
+            this.chain = new(reverse);
             this.goshujin = goshujin;
             this.objectToGoshujin = objectToGoshujin;
             this.objectToLink = objectToLink;
             this.objectToKey = objectToKey;
+            this.Reverse = reverse;
         }
 
         /// <summary>
@@ -45,8 +48,10 @@ namespace CrossLink
         /// <param name="goshujin">The instance of Goshujin.</param>
         /// <param name="objectToGoshujin">ObjectToGoshujinDelegete.</param>
         /// <param name="objectToLink">ObjectToLinkDelegete.</param>
-        public OrderedChain(IGoshujin goshujin, ObjectToGoshujinDelegete objectToGoshujin, ObjectToLinkDelegete objectToLink)
+        /// <param name="reverse">true to reverses the order.</param>
+        public OrderedChain(IGoshujin goshujin, ObjectToGoshujinDelegete objectToGoshujin, ObjectToLinkDelegete objectToLink, bool reverse = false)
         {
+            this.chain = new(reverse);
             this.goshujin = goshujin;
             this.objectToGoshujin = objectToGoshujin;
             this.objectToLink = objectToLink;
@@ -89,7 +94,7 @@ namespace CrossLink
 
             if (link.Node != null)
             {
-                this.chain.ReplaceNode(link.Node, key);
+                this.chain.SetNodeKey(link.Node, key);
             }
             else
             {
@@ -158,7 +163,7 @@ namespace CrossLink
         /// </summary>
         /// <param name="key">The key to search in a collection.</param>
         /// <returns>The elements with the specified key.</returns>
-        public IEnumerable<TObj> Enumerate(TKey? key) => this.chain.EnumerateNode(key).Select(x => x.Value);
+        public IEnumerable<TObj> Enumerate(TKey? key) => this.chain.EnumerateValue(key);
 
         public IEnumerable<TKey> Keys => this.chain.Keys;
 
@@ -192,11 +197,13 @@ namespace CrossLink
         /// </summary>
         public TObj? Last => this.chain.Last == null ? default(TObj) : this.chain.Last.Value;
 
+        public bool Reverse { get; }
+
         private IGoshujin goshujin;
         private ObjectToGoshujinDelegete objectToGoshujin;
         private ObjectToLinkDelegete objectToLink;
         private ObjectToKeyDelegete? objectToKey;
-        private OrderedMultiMap<TKey, TObj> chain = new();
+        private OrderedMultiMap<TKey, TObj> chain;
 
         public struct Link : ILink<TObj>
         {
