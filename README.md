@@ -328,6 +328,21 @@ public int Id
 
 
 
+## Chains
+
+Chain is like a generic collection. CrossLink provides several kinds of chains.
+
+| Name                  | Structure   | Access | Add      | Remove   | Search   | Sort       | Enum.    |
+| --------------------- | ----------- | ------ | -------- | -------- | -------- | ---------- | -------- |
+| ```ListChain```       | Array       | Index  | O(1)     | O(n)     | O(n)     | O(n log n) | O(1)     |
+| ```LinkedListChain``` | Linked list | Node   | O(1)     | O(1)     | O(n)     | O(n log n) | O(1)     |
+| ```QueueListChain```  | Linked list | Node   | O(1)     | O(1)     | O(n)     | O(n log n) | O(1)     |
+| ```StackListChain```  | Linked list | Node   | O(1)     | O(1)     | O(n)     | O(n log n) | O(1)     |
+| ```OrderedChain```    | RB Tree     | Node   | O(log n) | O(log n) | O(log n) | Sorted     | O(log n) |
+| ```UnorderedChain```  | Hash table  | Node   | O(1)     | O(1)     | O(1)     | -          | O(1)     |
+
+
+
 ## Features
 
 ### Serialization
