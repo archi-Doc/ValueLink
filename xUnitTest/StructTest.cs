@@ -14,19 +14,19 @@ namespace xUnitTest
     [TinyhandObject]
     public partial record TestStruct : IEquatable<TestStruct>
     {
-        [Link(Type = LinkType.Ordered)]
+        [Link(Type = ChainType.Ordered)]
         [KeyAsName]
         private int id;
 
-        [Link(Type = LinkType.Ordered)]
+        [Link(Type = ChainType.Ordered)]
         [KeyAsName]
         private string name = default!;
 
-        [Link(Type = LinkType.Ordered)]
+        [Link(Type = ChainType.Ordered)]
         [KeyAsName]
         private byte age;
 
-        [Link(Type = LinkType.StackList, Primary = true, Name = "Stack")]
+        [Link(Type = ChainType.StackList, Primary = true, Name = "Stack")]
         public TestStruct(int id, string name, byte age)
         {
             this.id = id;

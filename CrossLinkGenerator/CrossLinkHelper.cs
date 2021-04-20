@@ -11,16 +11,16 @@ namespace CrossLink.Generator
 {
     public static class GeneratorHelper
     {
-        public static string LinkTypeToChain(this LinkType type) => type switch
+        public static string ChainTypeToName(this ChainType type) => type switch
         {
-            LinkType.None => string.Empty,
-            LinkType.List => "ListChain",
-            LinkType.LinkedList => "LinkedListChain",
-            LinkType.StackList => "StackListChain",
-            LinkType.QueueList => "QueueListChain",
-            LinkType.Ordered => "OrderedChain",
-            LinkType.ReverseOrdered => "OrderedChain",
-            LinkType.Unordered => "UnorderedChain",
+            ChainType.None => string.Empty,
+            ChainType.List => "ListChain",
+            ChainType.LinkedList => "LinkedListChain",
+            ChainType.StackList => "StackListChain",
+            ChainType.QueueList => "QueueListChain",
+            ChainType.Ordered => "OrderedChain",
+            ChainType.ReverseOrdered => "OrderedChain",
+            ChainType.Unordered => "UnorderedChain",
             _ => string.Empty,
         };
     }

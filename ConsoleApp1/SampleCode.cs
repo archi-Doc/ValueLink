@@ -16,7 +16,7 @@ namespace ConsoleApp1
     [CrossLinkObject]
     public partial class TinyClass
     {// Tiny class to demonstrate how CrossLink works.
-        [Link(Type = LinkType.Ordered)]
+        [Link(Type = ChainType.Ordered)]
         private int id;
 
         public static void Test()
@@ -30,11 +30,11 @@ namespace ConsoleApp1
     [TinyhandObject] // Add a TinyhandObject attribute to use TinyhandSerializer.
     public partial class SerializeClass
     {
-        [Link(Type = LinkType.Ordered, Primary = true)] // Set primary link that is guaranteed to holds all objects in the collection in order to maximize the performance of serialization.
+        [Link(Type = ChainType.Ordered, Primary = true)] // Set primary link that is guaranteed to holds all objects in the collection in order to maximize the performance of serialization.
         [Key(0)] // Add a Key attribute to specify the key for serialization as a number or string.
         private int id;
 
-        [Link(Type = LinkType.Ordered)]
+        [Link(Type = ChainType.Ordered)]
         [Key(1)]
         private string name = default!;
 
@@ -83,7 +83,7 @@ namespace ConsoleApp1
     [CrossLinkObject]
     public partial class ManualLinkClass
     {
-        [Link(Type = LinkType.Ordered, AutoLink = false)] // Set AutoLink to false.
+        [Link(Type = ChainType.Ordered, AutoLink = false)] // Set AutoLink to false.
         private int id;
 
         public ManualLinkClass(int id)

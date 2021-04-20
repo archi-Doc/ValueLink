@@ -47,19 +47,19 @@ namespace ConsoleApp1
     [CrossLinkObject] // Annote a CrossLinkObject attribute.
     public partial class TestClass // Partial class is required for source generator.
     {
-        [Link(Type = LinkType.Ordered)] // Sorted link associated with id.
+        [Link(Type = ChainType.Ordered)] // Sorted link associated with id.
         private int id; // Generated property name: Id, chain name: IdChain
         // The generated property is for changing values and updating links.
         // The generated link is for storing information between objects, similar to a node in a collection.
 
-        [Link(Type = LinkType.Ordered)] // Sorted link associated with name.
+        [Link(Type = ChainType.Ordered)] // Sorted link associated with name.
         public string name { get; private set; } = string.Empty; // Generated property name: Id, chain name: IdChain
 
-        [Link(Type = LinkType.Ordered)]// Sorted link associated with age.
+        [Link(Type = ChainType.Ordered)]// Sorted link associated with age.
         private int age; // Generated property name: Id, chain name: IdChain
 
-        [Link(Type = LinkType.StackList, Name = "Stack")] // Stack (Constructor can have multiple Link attributes)
-        [Link(Type = LinkType.List, Name = "List")] // List
+        [Link(Type = ChainType.StackList, Name = "Stack")] // Stack (Constructor can have multiple Link attributes)
+        [Link(Type = ChainType.List, Name = "List")] // List
         public TestClass(int id, string name, int age)
         {
             this.id = id;
@@ -259,7 +259,7 @@ This is a tiny class to demonstrate how CrossLink works.
 ```csharp
 public partial class TinyClass // Partial class is required for source generator.
 {
-    [Link(Type = LinkType.Ordered)] // Add a Link attribute to a member.
+    [Link(Type = ChainType.Ordered)] // Add a Link attribute to a member.
     private int id;
 }
 ```
@@ -361,11 +361,11 @@ Install-Package Tinyhand
 [TinyhandObject] // Add a TinyhandObject attribute to use TinyhandSerializer.
 public partial class SerializeClass
 {
-    [Link(Type = LinkType.Ordered, Primary = true)] // Set primary link that is guaranteed to holds all objects in the collection in order to maximize the performance of serialization.
+    [Link(Type = ChainType.Ordered, Primary = true)] // Set primary link that is guaranteed to holds all objects in the collection in order to maximize the performance of serialization.
     [Key(0)] // Add a Key attribute to specify the key for serialization as a number or string.
     private int id;
 
-    [Link(Type = LinkType.Ordered)]
+    [Link(Type = ChainType.Ordered)]
     [Key(1)]
     private string name = default!;
 
@@ -454,4 +454,38 @@ public partial class AutoNotifyClass : System.ComponentModel.INotifyPropertyChan
     }
 }
 ```
+
+
+
+### AutoLink
+
+By default, CrossLink will automatically link the object when a goshujin is set or changed.
+
+You can change this behavior by setting AutoLink to false.
+
+ ```csharp
+[CrossLinkObject]
+public partial class ManualLinkClass
+{
+    [Link(Type = ChainType.Ordered, AutoLink = false)] // Set AutoLink to false.
+    private int id;
+
+    public ManualLinkClass(int id)
+    {
+        this.id = id;
+    }
+
+    public static void Test()
+    {
+        var g = new ManualLinkClass.GoshujinClass();
+
+        var c = new ManualLinkClass(1);
+        c.Goshujin = g;
+        Debug.Assert(g.IdChain.Count == 0, "Chain is empty.");
+
+        g.IdChain.Add(c.id, c); // Link the object manually.
+        Debug.Assert(g.IdChain.Count == 1, "Object is linked.");
+    }
+}
+ ```
 

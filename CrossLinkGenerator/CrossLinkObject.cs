@@ -33,7 +33,7 @@ namespace CrossLink.Generator
         Checked = 1 << 2,
 
         // Link object
-        HasLink = 1 << 10, // Has valid link (not LinkType.None)
+        HasLink = 1 << 10, // Has valid link (not ChainType.None)
         HasNotify = 1 << 11, // Has AutoNotify
         CanCreateInstance = 1 << 12, // Can create an instance
         GenerateINotifyPropertyChanged = 1 << 13, // Generate INotifyPropertyChanged
@@ -883,19 +883,19 @@ ModuleInitializerClass_Added:
             {// Invalid link
                 return;
             }
-            else if (link.Type == LinkType.Ordered || link.Type == LinkType.ReverseOrdered || link.Type == LinkType.Unordered)
+            else if (link.Type == ChainType.Ordered || link.Type == ChainType.ReverseOrdered || link.Type == ChainType.Unordered)
             {
                 ssb.AppendLine($"{prefix}.{link.ChainName}.Add({ssb.FullObject}.{link.Target!.SimpleName}, {ssb.FullObject});");
             }
-            else if (link.Type == LinkType.LinkedList)
+            else if (link.Type == ChainType.LinkedList)
             {
                 ssb.AppendLine($"{prefix}.{link.ChainName}.AddLast({ssb.FullObject});");
             }
-            else if (link.Type == LinkType.StackList)
+            else if (link.Type == ChainType.StackList)
             {
                 ssb.AppendLine($"{prefix}.{link.ChainName}.Push({ssb.FullObject});");
             }
-            else if (link.Type == LinkType.QueueList)
+            else if (link.Type == ChainType.QueueList)
             {
                 ssb.AppendLine($"{prefix}.{link.ChainName}.Enqueue({ssb.FullObject});");
             }
@@ -907,17 +907,17 @@ ModuleInitializerClass_Added:
 
         internal void GenerateLink_Link(ScopingStringBuilder ssb, GeneratorInformation info, Linkage x)
         {
-            if (x.Type == LinkType.None)
+            if (x.Type == ChainType.None)
             {
                 return;
             }
             else if (x.RequiresTarget && x.Target != null && x.Target.TypeObject != null)
             {
-                ssb.AppendLine($"public {x.Type.LinkTypeToChain()}<{x.Target!.TypeObject!.FullName}, {this.LocalName}>.Link {x.LinkName};");
+                ssb.AppendLine($"public {x.Type.ChainTypeToName()}<{x.Target!.TypeObject!.FullName}, {this.LocalName}>.Link {x.LinkName};");
             }
             else
             {
-                ssb.AppendLine($"public {x.Type.LinkTypeToChain()}<{this.LocalName}>.Link {x.LinkName};");
+                ssb.AppendLine($"public {x.Type.ChainTypeToName()}<{this.LocalName}>.Link {x.LinkName};");
             }
 
             ssb.AppendLine();
@@ -978,12 +978,12 @@ ModuleInitializerClass_Added:
 
                 foreach (var link in this.Links)
                 {
-                    if (link.Type == LinkType.None)
+                    if (link.Type == ChainType.None)
                     {
                         continue;
                     }
 
-                    if (link.Type == LinkType.ReverseOrdered)
+                    if (link.Type == ChainType.ReverseOrdered)
                     {
                         ssb.AppendLine($"this.{link.ChainName} = new(this, static x => x.{this.GoshujinInstanceIdentifier}, static x => ref x.{link.LinkName}, true);");
                     }
@@ -1210,7 +1210,7 @@ ModuleInitializerClass_Added:
                     {
                         foreach (var link in this.Links)
                         {
-                            if (link.Type == LinkType.None)
+                            if (link.Type == ChainType.None)
                             {
                                 continue;
                             }
@@ -1243,17 +1243,17 @@ ModuleInitializerClass_Added:
 
             foreach (var link in this.Links)
             {
-                if (link.Type == LinkType.None)
+                if (link.Type == ChainType.None)
                 {
                     continue;
                 }
-                else if (link.Type == LinkType.Ordered || link.Type == LinkType.ReverseOrdered || link.Type == LinkType.Unordered)
+                else if (link.Type == ChainType.Ordered || link.Type == ChainType.ReverseOrdered || link.Type == ChainType.Unordered)
                 {
-                    ssb.AppendLine($"public {link.Type.LinkTypeToChain()}<{link.Target!.TypeObject!.FullName}, {this.LocalName}> {link.ChainName} {{ get; }}");
+                    ssb.AppendLine($"public {link.Type.ChainTypeToName()}<{link.Target!.TypeObject!.FullName}, {this.LocalName}> {link.ChainName} {{ get; }}");
                 }
                 else
                 {
-                    ssb.AppendLine($"public {link.Type.LinkTypeToChain()}<{this.LocalName}> {link.ChainName} {{ get; }}");
+                    ssb.AppendLine($"public {link.Type.ChainTypeToName()}<{this.LocalName}> {link.ChainName} {{ get; }}");
                 }
             }
         }

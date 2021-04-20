@@ -28,7 +28,7 @@ namespace Benchmark
             this.id = id;
         }
 
-        [Link(Type = LinkType.Ordered)]
+        [Link(Type = ChainType.Ordered)]
         private int id;
     }
 

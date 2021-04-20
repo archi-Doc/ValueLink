@@ -13,19 +13,19 @@ namespace xUnitTest
     [TinyhandObject]
     public partial class TestClass1 : IComparable<TestClass1>
     {
-        [Link(Type = LinkType.Ordered)]
+        [Link(Type = ChainType.Ordered)]
         [KeyAsName]
         private int id;
 
-        [Link(Type = LinkType.Ordered)]
+        [Link(Type = ChainType.Ordered)]
         [Key("NM")]
         private string name = default!;
 
-        [Link(Type = LinkType.Ordered)]
+        [Link(Type = ChainType.Ordered)]
         [KeyAsName]
         private byte age;
 
-        [Link(Type = LinkType.StackList, Primary = true, Name = "Stack")]
+        [Link(Type = ChainType.StackList, Primary = true, Name = "Stack")]
         public TestClass1()
         {
         }
@@ -86,11 +86,11 @@ namespace xUnitTest
     [TinyhandObject]
     public partial class GenericTestClass<T>
     {
-        [Link(Type = LinkType.Ordered, Primary = true)]
+        [Link(Type = ChainType.Ordered, Primary = true)]
         [KeyAsName]
         private int id;
 
-        [Link(Type = LinkType.Ordered)]
+        [Link(Type = ChainType.Ordered)]
         [KeyAsName]
         private T value = default!;
 
@@ -125,15 +125,15 @@ namespace xUnitTest
     [TinyhandObject]
     public partial class GenericTestClass2<T>
     {
-        [Link(Type = LinkType.Ordered, Primary = true)]
+        [Link(Type = ChainType.Ordered, Primary = true)]
         [KeyAsName]
         private int id;
 
-        [Link(Type = LinkType.Ordered)]
+        [Link(Type = ChainType.Ordered)]
         [KeyAsName]
         private T value = default!;
 
-        [Link(Type = LinkType.Ordered)]
+        [Link(Type = ChainType.Ordered)]
         [KeyAsName]
         private NestedClass<double, int> nested = default!;
 
@@ -168,11 +168,11 @@ namespace xUnitTest
         [TinyhandObject]
         public partial class NestedClass<X, Y> : IComparable<NestedClass<X, Y>>
         {
-            [Link(Type = LinkType.Ordered, Primary = true)]
+            [Link(Type = ChainType.Ordered, Primary = true)]
             [KeyAsName]
             private string name = default!;
 
-            [Link(Type = LinkType.Ordered)]
+            [Link(Type = ChainType.Ordered)]
             [KeyAsName]
             private X xvalue = default!;
 
@@ -205,7 +205,7 @@ namespace xUnitTest
         [TinyhandObject]
         public partial class NestedClass2
         {
-            [Link(Type = LinkType.Ordered, Primary = true)]
+            [Link(Type = ChainType.Ordered, Primary = true)]
             [KeyAsName]
             private double height;
 
