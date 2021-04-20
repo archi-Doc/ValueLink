@@ -13,36 +13,43 @@ namespace CrossLink
 
         /// <summary>
         /// Represents a list of objects (<see cref="ListChain{T}"/>).
+        /// <br/>Structure: Array.
         /// </summary>
         List,
 
         /// <summary>
-        /// Represents a doubly linked list (<see cref="LinkedListChain{T}"/>).
+        /// Represents a doubly linked list of objects (<see cref="LinkedListChain{T}"/>).
+        /// <br/>Structure: Doubly linked list.
         /// </summary>
         LinkedList,
 
         /// <summary>
         /// Represents a stack list (<see cref="StackListChain{T}"/>).
+        /// <br/>Structure: Doubly linked list.
         /// </summary>
         StackList,
 
         /// <summary>
         /// Represents a queue list (<see cref="QueueListChain{T}"/>).
+        /// <br/>Structure: Doubly linked list.
         /// </summary>
         QueueList,
 
         /// <summary>
         /// Represents a collection of sorted objects (<see cref="OrderedChain{TKey, TValue}"/>).
+        /// <br/>Structure: Red-Black Tree + Linked List.
         /// </summary>
         Ordered,
 
         /// <summary>
         /// Represents a collection of objects sorted in reverse order (<see cref="OrderedChain{TKey, TValue}"/>).
+        /// <br/>Structure: Red-Black Tree + Linked List.
         /// </summary>
         ReverseOrdered,
 
         /// <summary>
         /// Represents a collection of objects stored in a hash table (<see cref="UnorderedChain{TKey, TValue}"/>).
+        /// <br/>Structure: Hash table.
         /// </summary>
         Unordered,
     }

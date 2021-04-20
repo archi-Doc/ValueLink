@@ -13,7 +13,7 @@ namespace Sandbox
         [KeyAsName]
         private int id;
 
-        [Link(Type = LinkType.ReverseOrdered)]
+        [Link(Type = LinkType.Unordered)]
         [KeyAsName]
         private string name;
 
@@ -146,11 +146,6 @@ namespace Sandbox
 
             Console.WriteLine();
 
-            foreach (var x in gr.NameChain.Enumerate("2"))
-            {
-                Console.WriteLine(x);
-            }
-
             var rc = gr.NameChain.FindFirst("6");
             rc = gr.NameChain.FindFirst("3");
 
@@ -176,6 +171,8 @@ namespace Sandbox
             {
                 Console.WriteLine(x.Test);
             }
+
+            var f = g.NameChain.FindFirst("0");
 
             var b = TinyhandSerializer.Serialize(g);
             var st = TinyhandSerializer.SerializeToString(g);

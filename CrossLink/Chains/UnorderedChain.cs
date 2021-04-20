@@ -12,7 +12,7 @@ using Arc.Collection;
 namespace CrossLink
 {
     /// <summary>
-    /// Represents a collection of objects that is maintained without sorting.
+    /// Represents a collection of objects stored in a hash table.
     /// <br/>Structure: Hash table.
     /// </summary>
     /// <typeparam name="TKey">The type of keys in the collection.</typeparam>
