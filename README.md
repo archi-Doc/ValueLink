@@ -20,6 +20,7 @@ This document may be inaccurate. It would be greatly appreciated if anyone could
 - [Features](#features)
   - [Serialization](#serialization)
   - [AutoNotify](#autonotify)
+  - [AutoLink](#autolink)
 
 
 
