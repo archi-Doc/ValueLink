@@ -4,7 +4,7 @@ using System;
 
 namespace CrossLink
 {
-    public enum LinkType
+    public enum ChainType
     {
         /// <summary>
         /// No link. In case you want to use AutoNotify only.
@@ -81,9 +81,9 @@ namespace CrossLink
     public sealed class LinkAttribute : Attribute
     {
         /// <summary>
-        /// Gets or sets a value indicating the type of object linkage.
+        /// Gets or sets a value indicating the type of object linkage (chain).
         /// </summary>
-        public LinkType Type { get; set; } = LinkType.None;
+        public ChainType Type { get; set; } = ChainType.None;
 
         /// <summary>
         /// Gets or sets a value indicating whether or not the link is a primary link that is guaranteed to holds all objects in the collection [the default is false].
@@ -96,12 +96,12 @@ namespace CrossLink
         public string Name { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets a value indicating whether or not to create a link automatically [the default is true].
+        /// Gets or sets a value indicating whether or not to link the object automatically when the goshujin is set or changed [the default is true].
         /// </summary>
         public bool AutoLink { get; set; } = true;
 
         /// <summary>
-        /// Gets or sets a value indicating whether or not to invoke PropertyChanged event when the value has changed. [the default is false].
+        /// Gets or sets a value indicating whether or not to invoke PropertyChanged event when the value has changed [the default is false].
         /// </summary>
         public bool AutoNotify { get; set; } = false;
 

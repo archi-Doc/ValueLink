@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace CrossLink
 {
-    public enum LinkType
+    public enum ChainType
     {
         None,
         List,
@@ -108,7 +108,7 @@ namespace CrossLink
         /// <summary>
         /// Gets or sets a value indicating the type of object linkage.
         /// </summary>
-        public LinkType Type { get; set; }
+        public ChainType Type { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether or not the link is a primary link that is guaranteed to holds all objects in the collection [the default is false].
@@ -121,12 +121,12 @@ namespace CrossLink
         public string Name { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets a value indicating whether or not to create a link automatically [the default is true].
+        /// Gets or sets a value indicating whether or not to link the object automatically when the goshujin is set or changed [the default is true].
         /// </summary>
         public bool AutoLink { get; set; } = true;
 
         /// <summary>
-        /// Gets or sets a value indicating whether or not to invoke PropertyChanged event when the value has changed. [the default is false].
+        /// Gets or sets a value indicating whether or not to invoke PropertyChanged event when the value has changed [the default is false].
         /// </summary>
         public bool AutoNotify { get; set; } = false;
 
@@ -142,7 +142,7 @@ namespace CrossLink
             val = AttributeHelper.GetValue(-1, nameof(Type), constructorArguments, namedArguments);
             if (val != null)
             {
-                attribute.Type = (LinkType)val;
+                attribute.Type = (ChainType)val;
             }
 
             val = AttributeHelper.GetValue(-1, nameof(Primary), constructorArguments, namedArguments);

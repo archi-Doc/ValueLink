@@ -12,10 +12,10 @@ namespace xUnitTest
     [CrossLinkObject]
     public partial class ListChainTestClass
     {
-        [Link(Type = LinkType.Ordered)]
+        [Link(Type = ChainType.Ordered)]
         private int id;
 
-        [Link(Type = LinkType.List, Name = "List")]
+        [Link(Type = ChainType.List, Name = "List")]
         public ListChainTestClass(int id)
         {
             this.id = id;

@@ -15,7 +15,7 @@ namespace Benchmark.Serializer
     [TinyhandObject]
     public partial class TestClass
     {
-        [Link(Name = "Stack", Primary = true, Type = LinkType.StackList)]
+        [Link(Name = "Stack", Primary = true, Type = ChainType.StackList)]
         public TestClass(int id, string name)
         {
             this.id = id;
@@ -26,11 +26,11 @@ namespace Benchmark.Serializer
         {
         }
 
-        [Link(Type = LinkType.Ordered)]
+        [Link(Type = ChainType.Ordered)]
         [KeyAsName]
         private int id;
 
-        [Link(Type = LinkType.Ordered)]
+        [Link(Type = ChainType.Ordered)]
         [KeyAsName]
         private string name = default!;
     }

@@ -73,7 +73,7 @@ namespace CrossLink.Generator
 
         public Location Location { get; private set; } = Location.None;
 
-        public LinkType Type { get; private set; }
+        public ChainType Type { get; private set; }
 
         public bool Primary { get; private set; }
 
@@ -81,7 +81,7 @@ namespace CrossLink.Generator
 
         public bool AutoNotify { get; private set; }
 
-        public CrossLinkObject? Target { get; private set; } // Must be non-null if LinkType is LinkType.Ordered.
+        public CrossLinkObject? Target { get; private set; } // Must be non-null if ChainType is ChainType.Ordered.
 
         public string TargetName { get; private set; } = string.Empty; // int id;
 
@@ -95,8 +95,8 @@ namespace CrossLink.Generator
 
         public string ChainNameIdentifier { get; set; } = string.Empty;
 
-        public bool IsValidLink => this.Type != LinkType.None;
+        public bool IsValidLink => this.Type != ChainType.None;
 
-        public bool RequiresTarget => this.Type == LinkType.Ordered || this.Type == LinkType.ReverseOrdered || this.Type == LinkType.Unordered;
+        public bool RequiresTarget => this.Type == ChainType.Ordered || this.Type == ChainType.ReverseOrdered || this.Type == ChainType.Unordered;
     }
 }

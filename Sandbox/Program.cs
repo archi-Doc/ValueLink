@@ -9,11 +9,11 @@ namespace Sandbox
     [TinyhandObject]
     public partial class TestClass
     {
-        [Link(Name = "Test", Primary = true, Type = LinkType.LinkedList)]
+        [Link(Name = "Test", Primary = true, Type = ChainType.LinkedList)]
         [KeyAsName]
         private int id;
 
-        [Link(Type = LinkType.Unordered)]
+        [Link(Type = ChainType.Unordered)]
         [KeyAsName]
         private string name;
 
@@ -21,7 +21,7 @@ namespace Sandbox
         [KeyAsName]
         private uint uid;
 
-        [Link(Name = "Test11", Type = LinkType.LinkedList)]
+        [Link(Name = "Test11", Type = ChainType.LinkedList)]
         public TestClass(int id, string name)
         {
             this.id = id;
@@ -38,10 +38,10 @@ namespace Sandbox
     /*[CrossLinkObject(GoshujinClass = "Goshu", GoshujinInstance = "Instance")]
     public partial class TestClass2
     {
-        [Link(Type = LinkType.Ordered)]
+        [Link(Type = ChainType.Ordered)]
         private int id;
 
-        [Link(Type = LinkType.Ordered, Name = "Name2")]
+        [Link(Type = ChainType.Ordered, Name = "Name2")]
         private string Name { get; set; }
 
         public TestClass2(int id, string name)
@@ -55,15 +55,15 @@ namespace Sandbox
     [TinyhandObject]
     public partial class TestClass3<T>
     {
-        [Link(Type = LinkType.Ordered)]
+        [Link(Type = ChainType.Ordered)]
         [KeyAsName]
         private T id { get; set; }
 
-        [Link(Type = LinkType.StackList, Name = "name2", AutoLink = false)]
+        [Link(Type = ChainType.StackList, Name = "name2", AutoLink = false)]
         [KeyAsName]
         private string name { get; set; }
 
-        [Link(Type = LinkType.StackList, Primary = true, Name = "Stack")]
+        [Link(Type = ChainType.StackList, Primary = true, Name = "Stack")]
         public TestClass3(T id, string name)
         {
             this.id = id;
@@ -79,10 +79,10 @@ namespace Sandbox
 
     public partial class TestClass4
     {
-        [Link(Type = LinkType.Ordered)]
+        [Link(Type = ChainType.Ordered)]
         private int id { get; set; }
 
-        [Link(Type = LinkType.Ordered)]
+        [Link(Type = ChainType.Ordered)]
         private string name { get; set; }
 
         public TestClass4(int id, string name)
@@ -95,7 +95,7 @@ namespace Sandbox
         [TinyhandObject]
         partial class NestedClass
         {
-            [Link(Type = LinkType.Ordered, Primary = true)]
+            [Link(Type = ChainType.Ordered, Primary = true)]
             [KeyAsName]
             private uint id { get; set; }
         }
@@ -104,11 +104,11 @@ namespace Sandbox
     [CrossLinkObject]
     public partial class ReverseTestClass
     {
-        [Link(Primary = true, Type = LinkType.ReverseOrdered)]
+        [Link(Primary = true, Type = ChainType.ReverseOrdered)]
         [KeyAsName]
         private int id;
 
-        [Link(Type = LinkType.Unordered)]
+        [Link(Type = ChainType.Unordered)]
         [KeyAsName]
         private string name;
 
