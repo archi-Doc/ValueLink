@@ -1,15 +1,10 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using Arc.Collection;
 
 #pragma warning disable SA1124 // Do not use regions
-#pragma warning disable SA1307 // Accessible fields should begin with upper-case letter
-#pragma warning disable SA1401 // Fields should be private
-#pragma warning disable SA1615 // Element return value should be documented
 
 namespace CrossLink
 {
@@ -136,11 +131,16 @@ namespace CrossLink
 
         #region IList
 
+        /// <summary>
+        /// Gets or sets the element at the specified index.
+        /// </summary>
+        /// <param name="index">The zero-based index of the element to get or set.</param>
+        /// <returns>The element at the specified index.</returns>
         public T this[int index]
         {
             get => this.chain[index];
 
-            set
+            /* set
             {
                 if ((uint)index >= (uint)this.chain.Count)
                 {
@@ -159,7 +159,7 @@ namespace CrossLink
                 this.chain[index] = value;
                 link = ref this.objectToLink(value);
                 link.IsLinked = true;
-            }
+            }*/
         }
 
         /// <summary>
