@@ -16,6 +16,7 @@ This document may be inaccurate. It would be greatly appreciated if anyone could
 - [Quick Start](#quick-start)
 - [Performance](#performance)
 - [How it works](#how-it-works)
+- [Chains](#chains)
 - [Features](#features)
   - [Serialization](#serialization)
   - [AutoNotify](#autonotify)
