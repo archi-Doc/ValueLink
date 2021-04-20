@@ -96,12 +96,12 @@ namespace CrossLink
         public string Name { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets a value indicating whether or not to create a link automatically [the default is true].
+        /// Gets or sets a value indicating whether or not to link the object automatically when the goshujin is set or changed [the default is true].
         /// </summary>
         public bool AutoLink { get; set; } = true;
 
         /// <summary>
-        /// Gets or sets a value indicating whether or not to invoke PropertyChanged event when the value has changed. [the default is false].
+        /// Gets or sets a value indicating whether or not to invoke PropertyChanged event when the value has changed [the default is false].
         /// </summary>
         public bool AutoNotify { get; set; } = false;
 

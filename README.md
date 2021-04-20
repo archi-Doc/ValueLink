@@ -350,7 +350,7 @@ Chain is like a generic collection. CrossLink provides several kinds of chains.
 
 Serializing multiple linked objects is a complicated task. However, with [Tinyhand](https://github.com/archi-Doc/Tinyhand), you can easily serialize/deserialize objects.
 
-All you need to do is install ```Tinyhand``` package and add a ```TinyhandObject``` attribute and ```Key``` attributes to the existing objects.
+All you need to do is install ```Tinyhand``` package and add a ```TinyhandObject``` attribute and ```Key``` attributes to the existing object.
 
 ```
 Install-Package Tinyhand

@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -76,6 +77,30 @@ namespace ConsoleApp1
 
             c.Id = 1; // Change the value and automatically invoke PropertyChange.
             c.Reset(); // Reset the value.
+        }
+    }
+
+    [CrossLinkObject]
+    public partial class ManualLinkClass
+    {
+        [Link(Type = LinkType.Ordered, AutoLink = false)] // Set AutoLink to false.
+        private int id;
+
+        public ManualLinkClass(int id)
+        {
+            this.id = id;
+        }
+
+        public static void Test()
+        {
+            var g = new ManualLinkClass.GoshujinClass();
+
+            var c = new ManualLinkClass(1);
+            c.Goshujin = g;
+            Debug.Assert(g.IdChain.Count == 0, "Chain is empty.");
+
+            g.IdChain.Add(c.id, c); // Link the object manually.
+            Debug.Assert(g.IdChain.Count == 1, "Object is linked.");
         }
     }
 }
