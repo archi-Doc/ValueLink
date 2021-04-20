@@ -1,20 +1,16 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using Arc.Collection;
 
 #pragma warning disable SA1124 // Do not use regions
-#pragma warning disable SA1307 // Accessible fields should begin with upper-case letter
-#pragma warning disable SA1401 // Fields should be private
-#pragma warning disable SA1615 // Element return value should be documented
 
 namespace CrossLink
 {
     /// <summary>
     /// Represents a list of objects that can be accessed by index.
+    /// <br/>Structure: Array.
     /// </summary>
     /// <typeparam name="T">The type of elements in the list.</typeparam>
     public class ListChain<T> : IList<T>, IReadOnlyList<T>
@@ -50,6 +46,9 @@ namespace CrossLink
 
         #region ICollection
 
+        /// <summary>
+        /// Gets a value indicating whether the collection is read-only.
+        /// </summary>
         public bool IsReadOnly => false;
 
         /// <summary>
@@ -75,7 +74,7 @@ namespace CrossLink
         }
 
         /// <summary>
-        /// Removes all elements from the list.
+        /// Removes all objects from the collection.
         /// </summary>
         public void Clear()
         {
@@ -136,29 +135,19 @@ namespace CrossLink
 
         #region IList
 
+        /// <summary>
+        /// Gets or sets the element at the specified index.
+        /// </summary>
+        /// <param name="index">The zero-based index of the element to get or set.</param>
+        /// <returns>The element at the specified index.</returns>
         public T this[int index]
         {
             get => this.chain[index];
 
             set
             {
-                if ((uint)index >= (uint)this.chain.Count)
-                {
-                    throw new ArgumentOutOfRangeException();
-                }
-
-                if (this.objectToGoshujin(value) != this.goshujin)
-                {// Check Goshujin
-                    throw new UnmatchedGoshujinException();
-                }
-
-                var t = this.chain[index];
-                ref Link link = ref this.objectToLink(t);
-                link.IsLinked = false;
-
-                this.chain[index] = value;
-                link = ref this.objectToLink(value);
-                link.IsLinked = true;
+                this.Insert(index, value);
+                // throw new InvalidOperationException();
             }
         }
 

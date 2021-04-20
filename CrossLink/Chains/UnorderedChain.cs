@@ -11,6 +11,12 @@ using Arc.Collection;
 
 namespace CrossLink
 {
+    /// <summary>
+    /// Represents a collection of objects that is maintained without sorting.
+    /// <br/>Structure: Hash table.
+    /// </summary>
+    /// <typeparam name="TKey">The type of keys in the collection.</typeparam>
+    /// <typeparam name="TObj">The type of objects in the collection.</typeparam>
     public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     {
         public delegate IGoshujin? ObjectToGoshujinDelegete(TObj obj);
@@ -47,6 +53,12 @@ namespace CrossLink
             this.objectToLink = objectToLink;
         }
 
+        /// <summary>
+        /// Adds a new object to the collection.
+        /// <br/>O(1) operation.
+        /// </summary>
+        /// <param name="key">The key of the object to add.</param>
+        /// <param name="obj">The object to add.</param>
         public void Add(TKey key, TObj obj)
         {
             if (this.objectToGoshujin(obj) != this.goshujin)
@@ -175,10 +187,13 @@ namespace CrossLink
 
         #region ICollection
 
+        /// <summary>
+        /// Gets a value indicating whether the collection is read-only.
+        /// </summary>
         public bool IsReadOnly => false;
 
         /// <summary>
-        /// Removes all elements from the list.
+        /// Removes all objects from the collection.
         /// </summary>
         public void Clear()
         {

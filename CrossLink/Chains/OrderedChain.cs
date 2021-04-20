@@ -4,18 +4,18 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Arc.Collection;
-using CrossLink;
 
 #pragma warning disable SA1124 // Do not use regions
-#pragma warning disable SA1306 // Field names should begin with lower-case letter
-#pragma warning disable SA1401 // Fields should be private
 
 namespace CrossLink
 {
+    /// <summary>
+    /// Represents a collection of objects that is maintained in sorted order.
+    /// <br/>Structure: Red-Black Tree + Linked List.
+    /// </summary>
+    /// <typeparam name="TKey">The type of keys in the collection.</typeparam>
+    /// <typeparam name="TObj">The type of objects in the collection.</typeparam>
     public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     {
         public delegate IGoshujin? ObjectToGoshujinDelegete(TObj obj);
@@ -83,6 +83,12 @@ namespace CrossLink
             }
         }*/
 
+        /// <summary>
+        /// Adds a new object to the collection.
+        /// <br/>O(log n) operation.
+        /// </summary>
+        /// <param name="key">The key of the object to add.</param>
+        /// <param name="obj">The object to add.</param>
         public void Add(TKey key, TObj obj)
         {
             if (this.objectToGoshujin(obj) != this.goshujin)
@@ -105,7 +111,7 @@ namespace CrossLink
 
         /// <summary>
         /// Removes the specific object from the chain.
-        /// <br/>O(1) operation.
+        /// <br/>O(log n) operation.
         /// </summary>
         /// <param name="obj">The object to remove from the chain. </param>
         /// <returns>true if item is successfully removed.</returns>
@@ -197,6 +203,9 @@ namespace CrossLink
         /// </summary>
         public TObj? Last => this.chain.Last == null ? default(TObj) : this.chain.Last.Value;
 
+        /// <summary>
+        /// Gets a value indicating whether or not the collection is in reverse order.
+        /// </summary>
         public bool Reverse { get; }
 
         private IGoshujin goshujin;
@@ -224,10 +233,13 @@ namespace CrossLink
 
         #region ICollection
 
+        /// <summary>
+        /// Gets a value indicating whether the collection is read-only.
+        /// </summary>
         public bool IsReadOnly => false;
 
         /// <summary>
-        /// Removes all elements from the list.
+        /// Removes all objects from the collection.
         /// </summary>
         public void Clear()
         {
