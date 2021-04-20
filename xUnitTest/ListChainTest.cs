@@ -48,8 +48,12 @@ namespace xUnitTest
             g.ListChain.Select(x => x.Id).SequenceEqual(new int[] { 0, 2, 4 }).IsTrue();
             g.ListChain.Add(t);
             g.ListChain.Select(x => x.Id).SequenceEqual(new int[] { 0, 2, 4, 3 }).IsTrue();
-            // g.ListChain[0] = g.ListChain[2];
-            // g.ListChain.Select(x => x.Id).SequenceEqual(new int[] { 4, 2, 4, 3 }).IsTrue();
+
+            t = g.ListChain[2];
+            g.ListChain.Insert(1, t);
+            g.ListChain.Select(x => x.Id).SequenceEqual(new int[] { 0, 4, 2, 3 }).IsTrue();
+            g.ListChain[0] = g.ListChain[3];
+            g.ListChain.Select(x => x.Id).SequenceEqual(new int[] { 3, 0, 4, 2 }).IsTrue();
         }
     }
 }

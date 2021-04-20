@@ -11,9 +11,10 @@ using Arc.Collection;
 namespace CrossLink
 {
     /// <summary>
-    /// Represents a doubly linked list.
+    /// Represents a doubly linked list of objects.
+    /// <br/>Structure: Doubly linked list.
     /// </summary>
-    /// <typeparam name="T">The type of elements in the list.</typeparam>
+    /// <typeparam name="T">The type of objects in the list.</typeparam>
     public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
     {
         public delegate IGoshujin? ObjectToGoshujinDelegete(T obj);
@@ -154,10 +155,13 @@ namespace CrossLink
 
         #region ICollection
 
+        /// <summary>
+        /// Gets a value indicating whether the collection is read-only.
+        /// </summary>
         public bool IsReadOnly => false;
 
         /// <summary>
-        /// Removes all elements from the list.
+        /// Removes all objects from the collection.
         /// </summary>
         public void Clear()
         {

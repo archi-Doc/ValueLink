@@ -10,6 +10,7 @@ namespace CrossLink
 {
     /// <summary>
     /// Represents a list of objects that can be accessed by index.
+    /// <br/>Structure: Array.
     /// </summary>
     /// <typeparam name="T">The type of elements in the list.</typeparam>
     public class ListChain<T> : IList<T>, IReadOnlyList<T>
@@ -45,6 +46,9 @@ namespace CrossLink
 
         #region ICollection
 
+        /// <summary>
+        /// Gets a value indicating whether the collection is read-only.
+        /// </summary>
         public bool IsReadOnly => false;
 
         /// <summary>
@@ -70,7 +74,7 @@ namespace CrossLink
         }
 
         /// <summary>
-        /// Removes all elements from the list.
+        /// Removes all objects from the collection.
         /// </summary>
         public void Clear()
         {
@@ -140,26 +144,11 @@ namespace CrossLink
         {
             get => this.chain[index];
 
-            /* set
+            set
             {
-                if ((uint)index >= (uint)this.chain.Count)
-                {
-                    throw new ArgumentOutOfRangeException();
-                }
-
-                if (this.objectToGoshujin(value) != this.goshujin)
-                {// Check Goshujin
-                    throw new UnmatchedGoshujinException();
-                }
-
-                var t = this.chain[index];
-                ref Link link = ref this.objectToLink(t);
-                link.IsLinked = false;
-
-                this.chain[index] = value;
-                link = ref this.objectToLink(value);
-                link.IsLinked = true;
-            }*/
+                this.Insert(index, value);
+                // throw new InvalidOperationException();
+            }
         }
 
         /// <summary>

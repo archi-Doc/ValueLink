@@ -11,7 +11,8 @@ using Arc.Collection;
 namespace CrossLink
 {
     /// <summary>
-    /// Represents a collection of objects that is maintained in sorted order (Red-Black Tree + Linked List structure).
+    /// Represents a collection of objects that is maintained in sorted order.
+    /// <br/>Structure: Red-Black Tree + Linked List.
     /// </summary>
     /// <typeparam name="TKey">The type of keys in the collection.</typeparam>
     /// <typeparam name="TObj">The type of objects in the collection.</typeparam>
@@ -202,6 +203,9 @@ namespace CrossLink
         /// </summary>
         public TObj? Last => this.chain.Last == null ? default(TObj) : this.chain.Last.Value;
 
+        /// <summary>
+        /// Gets a value indicating whether or not the collection is in reverse order.
+        /// </summary>
         public bool Reverse { get; }
 
         private IGoshujin goshujin;
@@ -229,10 +233,13 @@ namespace CrossLink
 
         #region ICollection
 
+        /// <summary>
+        /// Gets a value indicating whether the collection is read-only.
+        /// </summary>
         public bool IsReadOnly => false;
 
         /// <summary>
-        /// Removes all elements from the list.
+        /// Removes all objects from the collection.
         /// </summary>
         public void Clear()
         {

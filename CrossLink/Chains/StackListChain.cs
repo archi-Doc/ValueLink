@@ -12,9 +12,10 @@ using Arc.Collection;
 namespace CrossLink
 {
     /// <summary>
-    /// Represents a variable size last-in-first-out (LIFO) collection of instances of the same specified type.
+    /// Represents a variable size last-in-first-out (LIFO) collection of objects of the same specified type.
+    /// <br/>Structure: Doubly linked list.
     /// </summary>
-    /// <typeparam name="T">Specifies the type of elements in the stack.</typeparam>
+    /// <typeparam name="T">Specifies the type of objects in the stack.</typeparam>
     public class StackListChain<T> : IReadOnlyCollection<T>, ICollection
     {
         public delegate IGoshujin? ObjectToGoshujinDelegete(T obj);
@@ -179,10 +180,13 @@ namespace CrossLink
 
         #region ICollection
 
+        /// <summary>
+        /// Gets a value indicating whether the collection is read-only.
+        /// </summary>
         public bool IsReadOnly => false;
 
         /// <summary>
-        /// Removes all elements from the list.
+        /// Removes all objects from the collection.
         /// </summary>
         public void Clear()
         {
