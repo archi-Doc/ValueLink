@@ -103,6 +103,18 @@ namespace Sandbox
     }
 
     [CrossLinkObject]
+    public partial class ObservableClass
+    {
+        [Link(Type = ChainType.Ordered, AutoNotify = true)]
+        private int id { get; set; }
+
+        [Link(Type = ChainType.Observable, Name = "Observable")]
+        public ObservableClass()
+        {
+        }
+    }
+
+    [CrossLinkObject]
     public partial class ReverseTestClass
     {
         [Link(Primary = true, Type = ChainType.ReverseOrdered)]
@@ -134,13 +146,6 @@ namespace Sandbox
         static void Main(string[] args)
         {
             Console.WriteLine("Hello World!");
-
-            var co = new ObservableCollection<int>();
-            co.Add(1);
-            co.Add(2);
-            co.Add(3);
-            co.Add(4);
-            co.Move(0, 2);
 
             var gr = new ReverseTestClass.GoshujinClass();
             new ReverseTestClass(1, "1").Goshujin = gr;

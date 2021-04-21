@@ -21,6 +21,7 @@ This document may be inaccurate. It would be greatly appreciated if anyone could
   - [Serialization](#serialization)
   - [AutoNotify](#autonotify)
   - [AutoLink](#autolink)
+  - [ObservableCollection](#observablecollection)
 
 
 
@@ -490,4 +491,35 @@ public partial class ManualLinkClass
     }
 }
  ```
+
+
+
+### ObservableCollection
+
+You can make the collection available for binding by adding ```ObservableChain```.
+
+```ObservableChain``` is actually a wrapper class of ```ObservableCollection<T>```.
+
+```csharp
+[CrossLinkObject]
+public partial class ObservableClass
+{
+    [Link(Type = ChainType.Ordered, AutoNotify = true)]
+    private int id { get; set; }
+
+    [Link(Type = ChainType.Observable, Name = "Observable")]
+    public ObservableClass(int id)
+    {
+        this.id = id;
+    }
+}
+```
+
+Test code:
+
+```csharp
+var g = new ObservableClass.GoshujinClass();
+ListView.ItemSource = g.ObservableChain;// You can use ObservableChain as ObservableCollection.
+new ObservableClass(1).Goshujin = g;// ListView will be updated.
+```
 
