@@ -21,6 +21,7 @@ namespace CrossLink.Generator
             ChainType.Ordered => "OrderedChain",
             ChainType.ReverseOrdered => "OrderedChain",
             ChainType.Unordered => "UnorderedChain",
+            ChainType.Observable => "ObservableChain",
             _ => string.Empty,
         };
     }

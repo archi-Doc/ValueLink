@@ -18,6 +18,7 @@ namespace CrossLink
         Ordered,
         ReverseOrdered,
         Unordered,
+        Observable,
     }
 
     public static class AttributeHelper

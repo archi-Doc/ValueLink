@@ -342,6 +342,7 @@ Chain is like a generic collection. CrossLink provides several kinds of chains.
 | ```StackListChain```  | Linked list | Node   | O(1)     | O(1)     | O(n)     | O(n log n) | O(1)     |
 | ```OrderedChain```    | RB Tree     | Node   | O(log n) | O(log n) | O(log n) | Sorted     | O(log n) |
 | ```UnorderedChain```  | Hash table  | Node   | O(1)     | O(1)     | O(1)     | -          | O(1)     |
+| ```ObservableChain``` | Array       | Index  | O(1)     | O(n)     | O(n)     | O(n log n) | O(1)     |
 
 
 

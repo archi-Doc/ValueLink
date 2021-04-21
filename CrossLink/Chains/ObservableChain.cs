@@ -1,11 +1,15 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using Arc.Collection;
 
 #pragma warning disable SA1124 // Do not use regions
+#pragma warning disable SA1300 // Element should begin with upper-case letter
 
 namespace CrossLink
 {
@@ -14,7 +18,7 @@ namespace CrossLink
     /// <br/>Structure: ObservableCollection (Array).
     /// </summary>
     /// <typeparam name="T">The type of elements in the list.</typeparam>
-    public class ObservableChain<T> : IList<T>, IReadOnlyList<T>
+    public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCollectionChanged, INotifyPropertyChanged
     {
         public delegate IGoshujin? ObjectToGoshujinDelegete(T obj);
 
@@ -40,6 +44,18 @@ namespace CrossLink
         private ObjectToLinkDelegete objectToLink;
         private ObservableCollection<T> chain = new();
 
+        event NotifyCollectionChangedEventHandler INotifyCollectionChanged.CollectionChanged
+        {
+            add => this.chain.CollectionChanged += value;
+            remove => this.chain.CollectionChanged -= value;
+        }
+
+        event PropertyChangedEventHandler INotifyPropertyChanged.PropertyChanged
+        {
+            add => ((INotifyPropertyChanged)this.chain).PropertyChanged += value;
+            remove => ((INotifyPropertyChanged)this.chain).PropertyChanged -= value;
+        }
+
         public struct Link : ILink<T>
         {
             public bool IsLinked { get; internal set; }
@@ -52,8 +68,12 @@ namespace CrossLink
         /// </summary>
         public bool IsReadOnly => false;
 
+        bool ICollection.IsSynchronized => false;
+
+        object ICollection.SyncRoot => this;
+
         /// <summary>
-        /// Adds an object to the end of the list.
+        /// Adds an object to the end of the collection.
         /// <br/>O(1) operation.
         /// </summary>
         /// <param name="obj">The object to be added to the end of the list.</param>
@@ -197,15 +217,27 @@ namespace CrossLink
             link.IsLinked = false;
         }
 
+        /// <summary>
+        /// Moves the object at the specified index to a new location in the collection.
+        /// </summary>
+        /// <param name="oldIndex">The zero-based index specifying the location of the object to be moved.</param>
+        /// <param name="newIndex">The zero-based index specifying the new location of the object.</param>
+        public void Move(int oldIndex, int newIndex) => this.chain.Move(oldIndex, newIndex);
+
         #endregion
 
         #region Enumerator
 
-        public UnorderedList<T>.Enumerator GetEnumerator() => this.chain.GetEnumerator();
+        public IEnumerator<T> GetEnumerator() => this.chain.GetEnumerator();
 
         IEnumerator<T> IEnumerable<T>.GetEnumerator() => this.chain.GetEnumerator();
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => this.chain.GetEnumerator();
+
+        void ICollection.CopyTo(Array array, int index)
+        {
+            throw new NotImplementedException();
+        }
 
         #endregion
     }

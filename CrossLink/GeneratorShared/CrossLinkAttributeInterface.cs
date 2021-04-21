@@ -52,6 +52,12 @@ namespace CrossLink
         /// <br/>Structure: Hash table.
         /// </summary>
         Unordered,
+
+        /// <summary>
+        /// Represents an observable collection of objects. (<see cref="ObservableChain{T}"/>).
+        /// <br/>Structure: Collection (Array).
+        /// </summary>
+        Observable,
     }
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = true)]

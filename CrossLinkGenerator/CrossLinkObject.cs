@@ -940,6 +940,7 @@ ModuleInitializerClass_Added:
 
                 // this.GenerateGoshujin_Add(ssb, info);
                 // this.GenerateGoshujin_Remove(ssb, info);
+                this.GenerateGoshujin_Clear(ssb, info);
                 this.GenerateGoshujin_Chain(ssb, info);
 
                 if (tinyhandObject)
@@ -1228,6 +1229,29 @@ ModuleInitializerClass_Added:
                 using (var scopeElse = ssb.ScopeBrace($"else"))
                 {
                     ssb.AppendLine("return false;");
+                }
+            }
+
+            ssb.AppendLine();
+        }
+
+        internal void GenerateGoshujin_Clear(ScopingStringBuilder ssb, GeneratorInformation info)
+        {
+            using (var scopeMethod = ssb.ScopeBrace($"public void Clear()"))
+            {
+                if (this.Links != null)
+                {
+                    foreach (var link in this.Links)
+                    {
+                        if (link.Type == ChainType.None)
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            ssb.AppendLine($"this.{link.ChainName}.Clear();");
+                        }
+                    }
                 }
             }
 
