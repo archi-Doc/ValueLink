@@ -50,15 +50,15 @@ namespace ConsoleApp1
     public partial class TestClass // Partial class is required for source generator.
     {
         [Link(Type = ChainType.Ordered)] // Sorted link associated with id.
-        private int id; // Generated property name: Id, chain name: IdChain
-        // The generated property is for changing values and updating links.
-        // The generated link is for storing information between objects, similar to a node in a collection.
+        private int id; // Generated property name: Id, link name: IdLink
+        // The generated property Id is for changing values and updating links.
+        // The generated property IdLink is for storing information between objects, similar to a node in a collection.
 
         [Link(Type = ChainType.Ordered)] // Sorted link associated with name.
-        public string name { get; private set; } = string.Empty; // Generated property name: Id, chain name: IdChain
+        public string name { get; private set; } = string.Empty; // Generated property Name and NameLink.
 
         [Link(Type = ChainType.Ordered)]// Sorted link associated with age.
-        private int age; // Generated property name: Id, chain name: IdChain
+        private int age; // Generated property name: Age, link name: AgeLink
 
         [Link(Type = ChainType.StackList, Name = "Stack")] // Stack (Constructor can have multiple Link attributes)
         [Link(Type = ChainType.List, Name = "List")] // List
