@@ -1,7 +1,7 @@
 ## CrossLink
 ![Nuget](https://img.shields.io/nuget/v/CrossLink) ![Build and Test](https://github.com/archi-Doc/CrossLink/workflows/Build%20and%20Test/badge.svg)
 
-ソースジェネレーターを使用したC#ライブラリです。
+ソースジェネレーターと [Arc.Collection](https://github.com/archi-Doc/Arc.Collection) を使用したC#ライブラリです。
 
 オブジェクト間に複数のリンクを張って、柔軟に管理したり検索したり出来ます。
 
@@ -9,7 +9,7 @@
 
 要するに オブジェクト`T` に対して、カスタム`List<T>` を作成します。しかも、普通のジェネリックコレクションより柔軟で拡張性があり、なおかつ高速です。
 
-一言で言えば、速くて便利！オブジェクトを扱うプログラムでは必須です。
+一言で言えば、速くて便利！オブジェクトを扱うプログラムでは必須です！
 
 ええ、こんな説明じゃ分からないでしょう。
 
@@ -140,7 +140,7 @@ namespace ConsoleApp1
                  ID: 1, A    ,  7
                  ID: 0, Zero , 50 */
 
-            t = g.StackChain.Pop(); // Stackの先頭のオブジェクトを取得し、リストから削除します。影響するのはStackChainだけなのでご注意ください。
+            t = g.StackChain.Pop(); // Stackの先頭のオブジェクトを取得し、Stackから削除します。影響するのはStackChainだけなのでご注意ください。
             Console.WriteLine($"{t.Name} => Pop");
             t.Goshujin = null; // 他のChainから削除するには、Goshujinをnullにします。
             Console.WriteLine();
@@ -201,7 +201,7 @@ namespace ConsoleApp1
 
 パフォーマンスは最優先事項です。
 
-CrossLinkは、ジェネリックコレクションより込み入った処置を行っていますが、実際はジェネリックコレクションより高速に動作します。
+CrossLinkは、ジェネリックコレクションより込み入った処置を行っていますが、実際はジェネリックコレクションより高速に動作します（主に[Arc.Collection](https://github.com/archi-Doc/Arc.Collection)のおかげです）。
 
 `SortedDictionary<TKey, TValue>` と比べてみましょう。
 
@@ -372,6 +372,8 @@ Chainはオブジェクトのコレクションクラスのようなもので、
 | ```UnorderedChain```  | Hash table  | Node   | O(1)     | O(1)     | O(1)     | -          | O(1)     |
 | ```ObservableChain``` | Array       | Index  | O(1)     | O(n)     | O(n)     | O(n log n) | O(1)     |
 
+こーゆーのが欲しい的な要望ありましたらご連絡ください。
+
 
 
 ## Features
@@ -499,7 +501,7 @@ public partial class AutoNotifyClass : System.ComponentModel.INotifyPropertyChan
 [CrossLinkObject]
 public partial class ManualLinkClass
 {
-    [Link(Type = ChainType.Ordered, AutoLink = false)] // Set AutoLink to false.
+    [Link(Type = ChainType.Ordered, AutoLink = false)] // AutoLinkをfalse
     private int id;
 
     public ManualLinkClass(int id)
