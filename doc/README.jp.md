@@ -7,7 +7,7 @@
 
 よく分からない？
 
-要するに オブジェクト`T` に対して、カスタム`List<T>` を作成します。しかも、普通のジェネリックコレクションより柔軟で拡張性があり、なおかつ高速です。
+オブジェクト`T` に対して、カスタム`List<T>` を作成します。しかも、普通のジェネリックコレクションより柔軟で拡張性があり、なおかつ高速です。
 
 一言で言えば、速くて便利！オブジェクトを扱うプログラムでは必須です！
 
@@ -279,7 +279,7 @@ CrossLinkは既存のクラスに、Goshujinという内部クラスと、いく
 - ```Object```: 情報を保持する、一般的なオブジェクト。
 - ```Goshujin```: オブジェクトのオーナークラス。このクラスを介して、オブジェクトの管理・操作を行います。
 - ```Chain```: コレクションのようなもの。`Goshujin` は複数の `Chain` を保持し、オブジェクトを様々な形式で管理できます。
-- ```Link```: コレクションにおけるNodeのようなもの。オブジェクトは内部に複数のLinkを持ち、オブジェクト間の情報を保持します。
+- ```Link```: コレクションにおけるNodeのようなもの。オブジェクトは内部に複数の`Link`を持ち、オブジェクト間の情報を保持します。
 
 
 
@@ -309,7 +309,7 @@ public sealed class GoshujinClass : IGoshujin
 }
 ```
 
-The following code adds a field and a property that holds a ```Goshujin``` instance.
+次のコードでは `Goshujin` インスタンス/プロパティを追加します。
 
 ```csharp
 private GoshujinClass? __gen_cl_identifier__001; // 実際の Goshujinインスタンス
@@ -336,20 +336,22 @@ public GoshujinClass? Goshujin
 }
 ```
 
-Finally, CrossLink adds a link and a property which is used to modify the collection and change the value.
+最後に、メンバーに対応する `Link` と プロパティを追加します。
+
+inally, CrossLink adds a link and a property which is used to modify the collection and change the value.
 
 ```csharp
 public OrderedChain<int, TinyClass>.Link IdLink; // Link is like a Node.
 
 public int Id
-{// Property "Id" is created from a member "id".
+{// プロパティ "Id" は、メンバー "id" から作成されました
     get => this.id;
     set
     {
         if (value != this.id)
         {
             this.id = value;
-            // IdChain will be updated when the value is changed.
+            // 値が更新されると、IdChainも更新されます
             this.Goshujin.IdChain.Add(this.id, this);
         }
     }
@@ -368,11 +370,12 @@ Chainはオブジェクトのコレクションクラスのようなもので、
 | ```LinkedListChain``` | Linked list | Node   | O(1)     | O(1)     | O(n)     | O(n log n) | O(1)     |
 | ```QueueListChain```  | Linked list | Node   | O(1)     | O(1)     | O(n)     | O(n log n) | O(1)     |
 | ```StackListChain```  | Linked list | Node   | O(1)     | O(1)     | O(n)     | O(n log n) | O(1)     |
-| ```OrderedChain```    | RB Tree     | Node   | O(log n) | O(log n) | O(log n) | Sorted     | O(log n) |
+| `OrderedChain`        | RB Tree     | Node   | O(log n) | O(log n) | O(log n) | Sorted     | O(log n) |
+| `ReverseOrderedChain` | RB Tree     | Node   | O(log n) | O(log n) | O(log n) | Sorted     | O(log n) |
 | ```UnorderedChain```  | Hash table  | Node   | O(1)     | O(1)     | O(1)     | -          | O(1)     |
 | ```ObservableChain``` | Array       | Index  | O(1)     | O(n)     | O(n)     | O(n log n) | O(1)     |
 
-こーゆーのが欲しい的な要望ありましたらご連絡ください。
+こーゆーChainが欲しい的な要望ありましたらご連絡ください。
 
 
 
