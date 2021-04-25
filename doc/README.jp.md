@@ -86,7 +86,7 @@ namespace ConsoleApp1
             Console.WriteLine();
 
             var g = new TestClass.GoshujinClass(); // まずは、オブジェクト管理のクラス Goshujin を作成
-            new TestClass(1, "Hoge", 27).Goshujin = g; // TestClassを作成し、Goshujinを設定します（Goshujin側にもTestClassが登録されます）
+            new TestClass(1, "Hoge", 27).Goshujin = g; // TestClassを作成し、Goshujinを設定します。Goshujin側にもTestClassが登録されます。
             new TestClass(2, "Fuga", 15).Goshujin = g;
             new TestClass(1, "A", 7).Goshujin = g;
             new TestClass(0, "Zero", 50).Goshujin = g;
@@ -169,11 +169,11 @@ namespace ConsoleApp1
             // t.Goshujin.IdChain.Remove(t); // こちらはOK（t.GosjujinはGoshujin2）
             
             Console.WriteLine("[IdChain First/Next]");
-            t = g.IdChain.First; // Link interface を使って、オブジェクトを列挙します
+            t = g.IdChain.First; // Link interfaceを使って、オブジェクトを列挙します
             while (t != null)
             {
                 Console.WriteLine(t);
-                t = t.IdLink.Next; // Next は Link ではなく、Objectそのものなのでご注意ください
+                t = t.IdLink.Next; // Nextの型はLinkではなく、Objectそのものなのでご注意ください
             }
 
             static void ConsoleWriteIEnumerable<T>(string? header, IEnumerable<T> e)
@@ -250,7 +250,7 @@ foreach (var x in this.IntArray)
 
 `Id` を変更すると、当然コレクションの更新（値の削除・追加）が必要です。
 
-CrossLinkは断然高速で、`SortedDictionary` の約3倍のパフォーマンスです（CrossLinkは内部でNode管理をしているので、当然と言えば当然ですが）。
+CrossLinkは断然高速で、`SortedDictionary` の約3倍のパフォーマンスです（CrossLinkは内部でNodeを保持しているので、当然と言えば当然ですが）。
 
 | Method                        | Length |       Mean |    Error |   StdDev |  Gen 0 | Gen 1 | Gen 2 | Allocated |
 | ----------------------------- | ------ | ---------: | -------: | -------: | -----: | ----: | ----: | --------: |
@@ -261,7 +261,7 @@ CrossLinkは断然高速で、`SortedDictionary` の約3倍のパフォーマン
 
 ## How it works
 
-CrossLinkは既存のクラスに、Goshujinという内部クラスと、いくつかのプロパティを追加することで動作します。
+CrossLinkは既存のクラスに、`GoshujinClass`という内部クラスと、いくつかのプロパティを追加することで動作します。
 
 実際には、
 
@@ -285,6 +285,8 @@ CrossLinkは既存のクラスに、Goshujinという内部クラスと、いく
 
 実際に、ソースジェネレーターでどのようなコードが生成され、どのようにCrossLinkが動作するのか見てみましょう。
 
+まずは `TinyClass` という非常にシンプルなクラスを作成します。メンバーは `id` 一つだけです。
+
 ```csharp
 public partial class TinyClass // partial class が必須
 {
@@ -305,7 +307,7 @@ public sealed class GoshujinClass : IGoshujin
         this.IdChain = new(this, static x => x.__gen_cl_identifier__001, static x => ref x.IdLink);
     }
 
-    public OrderedChain<int, TinyClass> IdChain { get; }
+    public OrderedChain<int, TinyClass> IdChain { get; } // 内部では Arc.Collection のコレクションクラスを使用しています
 }
 ```
 
@@ -398,7 +400,7 @@ Install-Package Tinyhand
 [TinyhandObject] // TinyhandObject属性を追加
 public partial class SerializeClass // partial class を忘れずに
 {
-    [Link(Type = ChainType.Ordered, Primary = true)] // Primary Link（すべてのオブジェクトが登録されるLink）を指定すると、さらにシリアライズのパフォーマンスが改善します
+    [Link(Type = ChainType.Ordered, Primary = true)] // Primary Link（すべてのオブジェクトが登録されるLink）を指定すると、さらにシリアライズのパフォーマンスが向上します
     [Key(0)] // Key属性（シリアライズの識別子。stringかint）を追加
     private int id;
 
@@ -407,7 +409,7 @@ public partial class SerializeClass // partial class を忘れずに
     private string name = default!;
 
     public SerializeClass()
-    {// Tinyhandのため、デフォルトコンストラクタ（引数のないコンストラクタ）が必要です
+    {// Tinyhandのデシリアライズ処理のため、デフォルトコンストラクタ（引数のないコンストラクタ）が必要です
     }
 
     public SerializeClass(int id, string name)
@@ -458,7 +460,7 @@ c.Id = 1; // 値を変更すると、自動的に PropertyChange が呼ばれま
 c.Reset(); // 手動で
 ```
 
-自動生成コード：
+生成コード：
 
 ```csharp
 public partial class AutoNotifyClass : System.ComponentModel.INotifyPropertyChanged
