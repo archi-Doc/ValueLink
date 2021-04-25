@@ -9,6 +9,8 @@ It's like generic collections for objects, like ```List<T>``` for ```T```, but C
 
 This document may be inaccurate. It would be greatly appreciated if anyone could make additions and corrections.
 
+日本語ドキュメントは[こちら](/doc/README.jp.md)
+
 
 
 ## Table of Contents
