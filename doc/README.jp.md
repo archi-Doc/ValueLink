@@ -19,6 +19,7 @@
 
 ## Table of Contents
 
+- [Requirements](#requirements)
 - [Quick Start](#quick-start)
 - [Performance](#performance)
 - [How it works](#how-it-works)
@@ -31,9 +32,15 @@
 
 
 
-## Quick Start
+## Requirements
 
-ソースジェネレーターなので、ターゲットフレームワークは .NET 5 以降です。
+**C# 9.0** 以降：生成コードが使用
+
+**.NET 5** 世代以降のコンパイラ：ソースジェネレーターが使用
+
+
+
+## Quick Start
 
 まずはPackage Manager Consoleでインストール。
 

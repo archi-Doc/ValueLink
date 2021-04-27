@@ -15,6 +15,7 @@ This document may be inaccurate. It would be greatly appreciated if anyone could
 
 ## Table of Contents
 
+- [Requirements](#requirements)
 - [Quick Start](#quick-start)
 - [Performance](#performance)
 - [How it works](#how-it-works)
@@ -27,9 +28,15 @@ This document may be inaccurate. It would be greatly appreciated if anyone could
 
 
 
-## Quick Start
+## Requirements
 
-CrossLink uses Source Generator, so the Target Framework should be .NET 5 or later.
+**C# 9.0** or later for generated codes.
+
+Source generators need **.NET 5** generation or later **compiler**.
+
+
+
+## Quick Start
 
 First, install CrossLink using Package Manager Console.
 
