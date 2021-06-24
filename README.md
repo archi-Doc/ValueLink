@@ -15,6 +15,7 @@ This document may be inaccurate. It would be greatly appreciated if anyone could
 
 ## Table of Contents
 
+- [Requirements](#requirements)
 - [Quick Start](#quick-start)
 - [Performance](#performance)
 - [How it works](#how-it-works)
@@ -27,9 +28,15 @@ This document may be inaccurate. It would be greatly appreciated if anyone could
 
 
 
-## Quick Start
+## Requirements
 
-CrossLink uses Source Generator, so the Target Framework should be .NET 5 or later.
+**C# 9.0** or later for generated codes.
+
+**.NET 5** or later **compiler** for source generators.
+
+
+
+## Quick Start
 
 First, install CrossLink using Package Manager Console.
 
@@ -335,7 +342,9 @@ public int Id
 
 ## Chains
 
-Chain is like a generic collection. CrossLink provides several kinds of chains.
+Chain is like a generic collection. `Goshujin` can have multiple chains corresponding to the Link attributes.
+
+CrossLink provides several kinds of chains.
 
 | Name                  | Structure   | Access | Add      | Remove   | Search   | Sort       | Enum.    |
 | --------------------- | ----------- | ------ | -------- | -------- | -------- | ---------- | -------- |
@@ -347,6 +356,16 @@ Chain is like a generic collection. CrossLink provides several kinds of chains.
 | `ReverseOrderedChain` | RB Tree     | Node   | O(log n) | O(log n) | O(log n) | Sorted     | O(log n) |
 | ```UnorderedChain```  | Hash table  | Node   | O(1)     | O(1)     | O(1)     | -          | O(1)     |
 | ```ObservableChain``` | Array       | Index  | O(1)     | O(n)     | O(n)     | O(n log n) | O(1)     |
+
+If you want a new chain to be implemented, please let me know in the new issue.
+
+
+
+## Link
+
+Link is like a node. An object can have multiple Links that hold information about relationships between objects.
+
+Each link corresponds to a chain.
 
 
 
