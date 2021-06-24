@@ -32,7 +32,7 @@ This document may be inaccurate. It would be greatly appreciated if anyone could
 
 **C# 9.0** or later for generated codes.
 
-Source generators need **.NET 5** generation or later **compiler**.
+**.NET 5** or later **compiler** for source generators.
 
 
 
@@ -342,7 +342,9 @@ public int Id
 
 ## Chains
 
-Chain is like a generic collection. CrossLink provides several kinds of chains.
+Chain is like a generic collection. `Goshujin` can have multiple chains corresponding to the Link attributes.
+
+CrossLink provides several kinds of chains.
 
 | Name                  | Structure   | Access | Add      | Remove   | Search   | Sort       | Enum.    |
 | --------------------- | ----------- | ------ | -------- | -------- | -------- | ---------- | -------- |
@@ -354,6 +356,16 @@ Chain is like a generic collection. CrossLink provides several kinds of chains.
 | `ReverseOrderedChain` | RB Tree     | Node   | O(log n) | O(log n) | O(log n) | Sorted     | O(log n) |
 | ```UnorderedChain```  | Hash table  | Node   | O(1)     | O(1)     | O(1)     | -          | O(1)     |
 | ```ObservableChain``` | Array       | Index  | O(1)     | O(n)     | O(n)     | O(n log n) | O(1)     |
+
+If you want a new chain to be implemented, please let me know in the new issue.
+
+
+
+## Link
+
+Link is like a node. An object can have multiple Links that hold information about relationships between objects.
+
+Each link corresponds to a chain.
 
 
 
