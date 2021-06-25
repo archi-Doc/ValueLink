@@ -684,8 +684,13 @@ ModuleInitializerClass_Added:
                     // Reconstruct
                     using (var r = ssb.ScopeBrace($"public {x.GoshujinFullName} Reconstruct(TinyhandSerializerOptions options)"))
                     {
-                        ssb.AppendLine($"var v = new {x.GoshujinFullName}();");
-                        ssb.AppendLine("return v;");
+                        ssb.AppendLine($"return new {x.GoshujinFullName}();");
+                    }
+
+                    // Clone
+                    using (var r = ssb.ScopeBrace($"public {x.GoshujinFullName}? Clone({x.GoshujinFullName}? value, TinyhandSerializerOptions options)"))
+                    {
+                        ssb.AppendLine($"return value?.Clone(options);");
                     }
                 }
 
@@ -930,7 +935,7 @@ ModuleInitializerClass_Added:
             var goshujinInterface = " : IGoshujin";
             if (tinyhandObject)
             {
-                goshujinInterface += ", ITinyhandSerialize";
+                goshujinInterface += $", ITinyhandSerialize"; // ", ITinyhandReconstruct, ITinyhandClone<{this.GoshujinFullName}>";
             }
 
             using (var scopeClass = ssb.ScopeBrace("public sealed class " + this.ObjectAttribute!.GoshujinClass + goshujinInterface))
@@ -1004,6 +1009,8 @@ ModuleInitializerClass_Added:
             this.GenerateGoshujin_TinyhandSerialize(ssb, info);
             ssb.AppendLine();
             this.GenerateGoshujin_TinyhandDeserialize(ssb, info);
+            ssb.AppendLine();
+            this.GenerateGoshujin_TinyhandClone(ssb, info);
             ssb.AppendLine();
             this.GenerateGoshujin_TinyhandUtf8Name(ssb, info);
         }
@@ -1171,6 +1178,14 @@ ModuleInitializerClass_Added:
                 {
                     this.DeserializeChainAutomata.Generate(ssb, info);
                 }
+            }
+        }
+
+        internal void GenerateGoshujin_TinyhandClone(ScopingStringBuilder ssb, GeneratorInformation info)
+        {// this.GoshujinFullName? Clone(TinyhandSerializerOptions options);
+            using (var scopeMethod = ssb.ScopeBrace($"public {this.GoshujinFullName}? Clone(TinyhandSerializerOptions options)"))
+            {
+                ssb.AppendLine("return null;");
             }
         }
 
