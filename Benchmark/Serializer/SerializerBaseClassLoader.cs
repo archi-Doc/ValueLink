@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using Benchmark.Serializer;
 using CrossLink;
 using Tinyhand;
 using Tinyhand.IO;
@@ -51,6 +52,11 @@ namespace Sandbox
             {
                 var v = new Benchmark.Serializer.SerializerBaseClass.GoshujinClass();
                 return v;
+            }
+
+            public SerializerBaseClass.GoshujinClass? Clone(SerializerBaseClass.GoshujinClass? value, TinyhandSerializerOptions options)
+            {
+                throw new NotImplementedException();
             }
         }
         class __gen__tf__0001 : ITinyhandFormatterExtra<Benchmark.Serializer.SerializerBaseClass.GoshujinClass>

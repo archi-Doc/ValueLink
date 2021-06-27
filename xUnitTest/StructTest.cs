@@ -64,12 +64,12 @@ namespace xUnitTest
             g.AgeChain.Select(x => x.Id).SequenceEqual(new int[] { 1, 2, 0 }).IsTrue();
 
             var st = TinyhandSerializer.SerializeToString(g);
-            var g2 = TinyhandSerializer.Deserialize<TestStruct.GoshujinClass>(TinyhandSerializer.Serialize(g));
+            var g2 = TinyhandSerializer.Deserialize<TestStruct.GoshujinClass>(TinyhandSerializer.Serialize(g))!;
 
-            g2!.StackChain.SequenceEqual(g.StackChain).IsTrue();
-            g2!.IdChain.SequenceEqual(g.IdChain).IsTrue();
-            g2!.NameChain.SequenceEqual(g.NameChain).IsTrue();
-            g2!.AgeChain.SequenceEqual(g.AgeChain).IsTrue();
+            g2.StackChain.SequenceEqual(g.StackChain).IsTrue();
+            g2.IdChain.SequenceEqual(g.IdChain).IsTrue();
+            g2.NameChain.SequenceEqual(g.NameChain).IsTrue();
+            g2.AgeChain.SequenceEqual(g.AgeChain).IsTrue();
 
         }
     }

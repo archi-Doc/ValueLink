@@ -690,7 +690,7 @@ ModuleInitializerClass_Added:
                     // Clone
                     using (var r = ssb.ScopeBrace($"public {x.GoshujinFullName}? Clone({x.GoshujinFullName}? value, TinyhandSerializerOptions options)"))
                     {
-                        ssb.AppendLine($"return value?.Clone(options);");
+                        ssb.AppendLine($"return value?.DeepClone(options);");
                     }
                 }
 
@@ -935,7 +935,7 @@ ModuleInitializerClass_Added:
             var goshujinInterface = " : IGoshujin";
             if (tinyhandObject)
             {
-                goshujinInterface += $", ITinyhandSerialize"; // ", ITinyhandReconstruct, ITinyhandClone<{this.GoshujinFullName}>";
+                goshujinInterface += $", ITinyhandSerialize, ITinyhandClone<{this.GoshujinFullName}>";
             }
 
             using (var scopeClass = ssb.ScopeBrace("public sealed class " + this.ObjectAttribute!.GoshujinClass + goshujinInterface))
@@ -1183,9 +1183,9 @@ ModuleInitializerClass_Added:
 
         internal void GenerateGoshujin_TinyhandClone(ScopingStringBuilder ssb, GeneratorInformation info)
         {// this.GoshujinFullName? Clone(TinyhandSerializerOptions options);
-            using (var scopeMethod = ssb.ScopeBrace($"public {this.GoshujinFullName}? Clone(TinyhandSerializerOptions options)"))
+            using (var scopeMethod = ssb.ScopeBrace($"public {this.GoshujinFullName} DeepClone(TinyhandSerializerOptions options)"))
             {
-                ssb.AppendLine("return null;");
+                ssb.AppendLine($"return TinyhandSerializer.Deserialize<{this.GoshujinFullName}>(TinyhandSerializer.Serialize(this))!;");
             }
         }
 

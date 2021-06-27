@@ -256,6 +256,13 @@ namespace xUnitTest
             tc2a.G.IdChain.SequenceEqual(g.IdChain).IsTrue();
             tc2a.G.NameChain.SequenceEqual(g.NameChain).IsTrue();
             tc2a.G.AgeChain.SequenceEqual(g.AgeChain).IsTrue();
+
+            tc2a = TinyhandSerializer.Clone(tc2);
+
+            tc2a.G.StackChain.SequenceEqual(g.StackChain).IsTrue();
+            tc2a.G.IdChain.SequenceEqual(g.IdChain).IsTrue();
+            tc2a.G.NameChain.SequenceEqual(g.NameChain).IsTrue();
+            tc2a.G.AgeChain.SequenceEqual(g.AgeChain).IsTrue();
         }
 
         [Fact]
