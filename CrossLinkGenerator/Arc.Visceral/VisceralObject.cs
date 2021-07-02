@@ -1883,6 +1883,28 @@ namespace Arc.Visceral
             }
         }
 
+        /// <summary>
+        /// Gets a value indicating whether the symbol is the original definition (not derived).
+        /// </summary>
+        public bool IsDefinition
+        {
+            get
+            {
+                if (this.symbol is { } s)
+                {
+                    return s.IsDefinition;
+                }
+                else if (this.memberInfo is { } mi)
+                {
+                    return false;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+
         public string KindName
         {
             get
@@ -2398,7 +2420,8 @@ namespace Arc.Visceral
             }
             else
             {// Other
-                T? t = (T)this;
+                var t = (T?)this.OriginalDefinition;
+                target = target.OriginalDefinition ?? target;
                 while (t != null)
                 {
                     if (t == target)
@@ -2406,7 +2429,7 @@ namespace Arc.Visceral
                         return true;
                     }
 
-                    t = t.BaseObject;
+                    t = t.BaseObject?.OriginalDefinition;
                 }
 
                 return false;
