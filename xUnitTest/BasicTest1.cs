@@ -225,7 +225,7 @@ namespace xUnitTest
         [Fact]
         public void Test1()
         {
-            CrossLinkModule.Initialize();
+            // CrossLinkModule.Initialize();
             var g = new TestClass1.GoshujinClass();
 
             new TestClass1(0, "A", 100).Goshujin = g;
