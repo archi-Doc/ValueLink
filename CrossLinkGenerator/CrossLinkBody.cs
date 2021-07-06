@@ -235,6 +235,7 @@ namespace CrossLink.Generator
         {
             // Namespace
             var ns = "CrossLink";
+            var assemblyId = string.Empty; // Assembly ID
             if (!string.IsNullOrEmpty(generator.CustomNamespace))
             {// Custom namespace.
                 ns = generator.CustomNamespace;
@@ -245,12 +246,16 @@ namespace CrossLink.Generator
             {// To avoid namespace conflicts, use assembly name for namespace.
                 ns = generator.AssemblyName;
             }
+            else
+            {// Other (Apps)
+                assemblyId = "_" + generator.AssemblyId.ToString("x");
+            }
 
             info.ModuleInitializerClass.Add("CrossLink.Generator.Generated");
 
             ssb.AppendLine();
             using (var scopeCrossLink = ssb.ScopeNamespace(ns!))
-            using (var scopeClass = ssb.ScopeBrace("public static class CrossLinkModule"))
+            using (var scopeClass = ssb.ScopeBrace("public static class CrossLinkModule" + assemblyId))
             {
                 ssb.AppendLine("private static bool Initialized;");
                 ssb.AppendLine();
@@ -261,8 +266,8 @@ namespace CrossLink.Generator
 
                 using (var scopeMethod = ssb.ScopeBrace("public static void Initialize()"))
                 {
-                    ssb.AppendLine("if (CrossLinkModule.Initialized) return;");
-                    ssb.AppendLine("CrossLinkModule.Initialized = true;");
+                    ssb.AppendLine("if (Initialized) return;");
+                    ssb.AppendLine("Initialized = true;");
                     ssb.AppendLine();
 
                     foreach (var x in info.ModuleInitializerClass)
