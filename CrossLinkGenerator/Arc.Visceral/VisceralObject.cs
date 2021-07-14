@@ -1115,6 +1115,61 @@ namespace Arc.Visceral
             }
         }
 
+        private ImmutableArray<string> interfaces;
+
+        public ImmutableArray<string> Interfaces
+        {
+            get
+            {
+                if (this.interfaces.IsDefault)
+                {
+                    if (this.IsSystem)
+                    {
+                        this.interfaces = ImmutableArray<string>.Empty;
+                    }
+                    else
+                    if (this.symbol is ITypeSymbol typeSymbol)
+                    {
+                        var builder = ImmutableArray.CreateBuilder<string>();
+                        if (typeSymbol.BaseType is INamedTypeSymbol baseType &&
+                            baseType.TypeKind == TypeKind.Error &&
+                            baseType.ToString() == "INotifyPropertyChanged")
+                        {
+                            builder.Add("System.ComponentModel.INotifyPropertyChanged");
+                        }
+
+                        foreach (var x in typeSymbol.Interfaces)
+                        {
+                            builder.Add(this.Body.SymbolToFullName(x));
+                        }
+
+                        this.interfaces = builder.ToImmutable();
+                    }
+                    else if (this.type != null)
+                    {
+                        var builder = ImmutableArray.CreateBuilder<string>();
+                        foreach (var x in this.type.GetInterfaces())
+                        {
+                            builder.Add(VisceralHelper.TypeToFullName(x));
+                        }
+
+                        this.interfaces = builder.ToImmutable();
+                    }
+                    else
+                    {
+                        this.interfaces = ImmutableArray<string>.Empty;
+                    }
+                }
+
+                return this.interfaces;
+            }
+
+            protected set
+            {
+                this.interfaces = value;
+            }
+        }
+
         private bool baseObjectFlag;
         private T? baseObject;
 
@@ -1756,6 +1811,52 @@ namespace Arc.Visceral
             }
         }
 
+        public bool IsInternal
+        {
+            get
+            {
+                if (this.symbol is IPropertySymbol ps)
+                {
+                    var flag = false;
+                    if (ps.SetMethod is { } setMethod)
+                    {
+                        flag |= setMethod.DeclaredAccessibility.IsInternal();
+                    }
+
+                    if (ps.GetMethod is { } getMethod)
+                    {
+                        flag |= getMethod.DeclaredAccessibility.IsInternal();
+                    }
+
+                    return flag;
+                }
+                else if (this.symbol != null)
+                {
+                    return this.symbol.DeclaredAccessibility.IsInternal();
+                }
+
+                return false;
+            }
+        }
+
+        public bool IsSameAssembly(VisceralObjectBase<T> target)
+        {
+            if (this.symbol != null && target.symbol != null)
+            {
+#pragma warning disable RS1024
+                return this.symbol.ContainingAssembly == target.symbol.ContainingAssembly;
+#pragma warning restore RS1024
+            }
+            else if (this.type != null && target.type != null)
+            {
+                return this.type.Assembly == this.type.Assembly;
+            }
+            else
+            {
+                return true;
+            }
+        }
+
         private bool? isReadable;
 
         public bool IsReadable
@@ -2384,6 +2485,57 @@ namespace Arc.Visceral
             }
 
             return null;
+        }
+
+        public bool Field_IsPrivate
+        {
+            get
+            {
+                if (this.symbol is IFieldSymbol fs)
+                {
+                    return fs.DeclaredAccessibility == Accessibility.Private;
+                }
+                else if (this.memberInfo is FieldInfo fi)
+                {
+                    return fi.IsPrivate;
+                }
+
+                return false;
+            }
+        }
+
+        public bool Property_IsPrivateGetter
+        {
+            get
+            {
+                if (this.symbol is IPropertySymbol ps)
+                {
+                    return ps.GetMethod?.DeclaredAccessibility == Accessibility.Private;
+                }
+                else if (this.memberInfo is PropertyInfo pi)
+                {
+                    return pi.GetMethod.IsPrivate;
+                }
+
+                return false;
+            }
+        }
+
+        public bool Property_IsPrivateSetter
+        {
+            get
+            {
+                if (this.symbol is IPropertySymbol ps)
+                {
+                    return ps.SetMethod?.DeclaredAccessibility == Accessibility.Private;
+                }
+                else if (this.memberInfo is PropertyInfo pi)
+                {
+                    return pi.SetMethod.IsPrivate;
+                }
+
+                return false;
+            }
         }
 
         public WithNullable<T>? CreateWithNullable(NullableAnnotation nullableAnnotation)
