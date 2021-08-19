@@ -44,13 +44,13 @@ namespace CrossLink
         private ObjectToLinkDelegete objectToLink;
         private ObservableCollection<T> chain = new();
 
-        event NotifyCollectionChangedEventHandler INotifyCollectionChanged.CollectionChanged
+        event NotifyCollectionChangedEventHandler? INotifyCollectionChanged.CollectionChanged
         {
             add => this.chain.CollectionChanged += value;
             remove => this.chain.CollectionChanged -= value;
         }
 
-        event PropertyChangedEventHandler INotifyPropertyChanged.PropertyChanged
+        event PropertyChangedEventHandler? INotifyPropertyChanged.PropertyChanged
         {
             add => ((INotifyPropertyChanged)this.chain).PropertyChanged += value;
             remove => ((INotifyPropertyChanged)this.chain).PropertyChanged -= value;
