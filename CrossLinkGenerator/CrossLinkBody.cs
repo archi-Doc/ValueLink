@@ -248,7 +248,11 @@ namespace CrossLink.Generator
             }
             else
             {// Other (Apps)
-                assemblyId = "_" + generator.AssemblyId.ToString("x");
+                // assemblyId = "_" + generator.AssemblyId.ToString("x");
+                if (!string.IsNullOrEmpty(generator.AssemblyName))
+                {
+                    assemblyId = "_" + generator.AssemblyName;
+                }
             }
 
             info.ModuleInitializerClass.Add("CrossLink.Generator.Generated");
