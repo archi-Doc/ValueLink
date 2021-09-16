@@ -244,11 +244,15 @@ namespace CrossLink.Generator
                 generator.OutputKind != OutputKind.ConsoleApplication &&
                 generator.OutputKind != OutputKind.WindowsApplication)
             {// To avoid namespace conflicts, use assembly name for namespace.
-                ns = generator.AssemblyName;
+                ns = VisceralHelper.AssemblyNameToIdentifier(generator.AssemblyName!);
             }
             else
             {// Other (Apps)
-                assemblyId = "_" + generator.AssemblyId.ToString("x");
+                // assemblyId = "_" + generator.AssemblyId.ToString("x");
+                if (!string.IsNullOrEmpty(generator.AssemblyName))
+                {
+                    assemblyId = VisceralHelper.AssemblyNameToIdentifier("_" + generator.AssemblyName);
+                }
             }
 
             info.ModuleInitializerClass.Add("CrossLink.Generator.Generated");
