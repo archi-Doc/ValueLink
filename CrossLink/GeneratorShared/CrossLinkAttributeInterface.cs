@@ -125,6 +125,8 @@ namespace CrossLink
 
         public string? CustomNamespace { get; set; }
 
+        public bool UseModuleInitializer { get; set; } = true;
+
         public CrossLinkGeneratorOptionAttribute()
         {
         }

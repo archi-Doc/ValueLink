@@ -187,6 +187,8 @@ namespace CrossLink
 
         public string? CustomNamespace { get; set; }
 
+        public bool UseModuleInitializer { get; set; } = true;
+
         public CrossLinkGeneratorOptionAttributeMock()
         {
         }
@@ -212,6 +214,12 @@ namespace CrossLink
             if (val != null)
             {
                 attribute.CustomNamespace = (string)val;
+            }
+
+            val = AttributeHelper.GetValue(-1, nameof(UseModuleInitializer), constructorArguments, namedArguments);
+            if (val != null)
+            {
+                attribute.UseModuleInitializer = (bool)val;
             }
 
             return attribute;

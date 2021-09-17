@@ -133,7 +133,7 @@ namespace CrossLink.Generator
             ScopingStringBuilder ssb = new();
             GeneratorInformation info = new()
             {
-                UseModuleInitializer = generator.ModuleInitializerIsAvailable,
+                UseModuleInitializer = generator.ModuleInitializerIsAvailable && generator.UseModuleInitializer,
             };
             List<CrossLinkObject> rootObjects = new();
 
