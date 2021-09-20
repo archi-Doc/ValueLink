@@ -5,7 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Arc.Collection;
+using Arc.Collections;
 
 #pragma warning disable SA1124 // Do not use regions
 
