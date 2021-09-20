@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using Arc.Collection;
+using Arc.Collections;
 
 #pragma warning disable SA1124 // Do not use regions
 #pragma warning disable SA1300 // Element should begin with upper-case letter

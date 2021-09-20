@@ -2,7 +2,7 @@
 
 using System;
 using System.Collections.Generic;
-using Arc.Collection;
+using Arc.Collections;
 
 #pragma warning disable SA1124 // Do not use regions
 

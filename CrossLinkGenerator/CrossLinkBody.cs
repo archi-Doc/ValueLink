@@ -186,7 +186,7 @@ namespace CrossLink.Generator
             ssb.AddUsing("System.Collections.Generic");
             ssb.AddUsing("System.Diagnostics.CodeAnalysis");
             ssb.AddUsing("System.Runtime.CompilerServices");
-            ssb.AddUsing("Arc.Collection");
+            ssb.AddUsing("Arc.Collections");
             ssb.AddUsing("CrossLink");
             if (tinyhandFlag)
             {
