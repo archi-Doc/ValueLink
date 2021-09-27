@@ -118,6 +118,10 @@ namespace ConsoleApp1
         [Link(Type = ChainType.ReverseOrdered)]
         protected int id2;
 
+        [Link(Type = ChainType.QueueList, Name = "Queue")]
+        public DerivedClass()
+        {
+        }
     }
 
     /*[CrossLinkObject] // Error! Derivation from other CrossLink objects is not supported.
