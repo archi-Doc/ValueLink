@@ -87,6 +87,10 @@ namespace CrossLink.Generator
             id: "CLG016", title: "No Key attribute", messageFormat: "Consider adding Key or KeyAsName attribute to this member so that CrossLink can serialize it properly",
             category: "CrossLinkGenerator", DiagnosticSeverity.Warning, isEnabledByDefault: true);
 
+        public static readonly DiagnosticDescriptor Error_DerivedClass = new DiagnosticDescriptor(
+            id: "CLG017", title: "Derived class", messageFormat: "CrossLinkObject '{0}' cannot be derived from another CrossLinkObject '{1}'",
+            category: "CrossLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
         public CrossLinkBody(GeneratorExecutionContext context)
             : base(context)
         {

@@ -10,6 +10,7 @@ using CrossLink;
 using Tinyhand;
 
 #pragma warning disable SA1204 // Static elements should appear before instance elements
+#pragma warning disable SA1401 // Fields should be private
 
 namespace ConsoleApp1
 {
@@ -103,4 +104,26 @@ namespace ConsoleApp1
             Debug.Assert(g.IdChain.Count == 1, "Object is linked.");
         }
     }
+
+    public class BaseClass
+    {
+        protected int id;
+
+        protected string name = string.Empty;
+    }
+
+    [CrossLinkObject]
+    public partial class DerivedClass : BaseClass
+    {
+        [Link(Type = ChainType.ReverseOrdered)]
+        protected int id2;
+
+    }
+
+    /*[CrossLinkObject] // Error! Derivation from other CrossLink objects is not supported.
+    public partial class DerivedClass2 : DerivedClass
+    {
+        [Link(Type = ChainType.Ordered)]
+        protected string name2 = string.Empty;
+    }*/
 }

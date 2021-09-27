@@ -396,6 +396,18 @@ namespace CrossLink.Generator
                 }
             }
 
+            // Check base class.
+            var baseObject = this.BaseObject;
+            while (baseObject != null)
+            {
+                if (baseObject.ObjectAttribute != null)
+                {
+                    this.Body.ReportDiagnostic(CrossLinkBody.Error_DerivedClass, this.Location, this.FullName, baseObject.FullName);
+                }
+
+                baseObject = baseObject.BaseObject;
+            }
+
             if (this.ObjectFlag.HasFlag(CrossLinkObjectFlag.HasLink))
             {// Check Goshujin Class / Instance
                 this.CheckKeyword(this.ObjectAttribute!.GoshujinClass, this.Location);
