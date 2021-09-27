@@ -99,6 +99,10 @@ namespace CrossLink.Generator
             id: "CLG019", title: "No target member", messageFormat: "'{0}' does not contain a class member named '{1}'",
             category: "CrossLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
+        public static readonly DiagnosticDescriptor Error_MultipleLink2 = new DiagnosticDescriptor(
+            id: "CLG020", title: "Multiple links", messageFormat: "Multiple links per member are not allowed",
+            category: "CrossLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
         public CrossLinkBody(GeneratorExecutionContext context)
             : base(context)
         {

@@ -50,7 +50,7 @@ namespace Sandbox
         protected int id2;
 
         [Link(Type = ChainType.QueueList, Name = "Queue")]
-        [Link(Type = ChainType.QueueList, TargetMember = nameof(id2))]
+        [Link(Type = ChainType.QueueList, TargetMember = nameof(id))]
         public DerivedClass()
         {
         }

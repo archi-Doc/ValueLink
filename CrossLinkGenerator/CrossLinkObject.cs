@@ -192,6 +192,12 @@ namespace CrossLink.Generator
                         parent.Links = new();
                     }
 
+                    if (linkage.Target != null && parent.Links.Any(x => x.Target == linkage.Target))
+                    {
+                        this.Body.AddDiagnostic(CrossLinkBody.Error_MultipleLink2, linkAttribute.Location);
+                        continue;
+                    }
+
                     parent.Links.Add(linkage);
                 }
             }
