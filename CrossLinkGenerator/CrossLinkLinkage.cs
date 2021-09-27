@@ -52,9 +52,37 @@ namespace CrossLink.Generator
                 if (target == null)
                 {// 'obj.FullName' does not contain a class member named 'linkAttribute.TargetMember'.
                     obj.Body.AddDiagnostic(CrossLinkBody.Error_NoTargetMember, attribute.Location, parent.FullName, linkAttribute.TargetMember);
+                    return null;
                 }
 
-                // else if (target.IsPublic)
+                var inaccessible = false;
+                if (target.IsInitOnly)
+                {
+                    inaccessible = true;
+                }
+                else if (target.ContainingObject != parent)
+                {
+                    if (target.Kind == VisceralObjectKind.Field)
+                    {
+                        if (target.Field_IsPrivate)
+                        {
+                            inaccessible = true;
+                        }
+                    }
+                    else if (target.Kind == VisceralObjectKind.Property)
+                    {
+                        if (target.Property_IsPrivateGetter || target.Property_IsPrivateSetter)
+                        {
+                            inaccessible = true;
+                        }
+                    }
+                }
+
+                if (inaccessible)
+                {
+                    obj.Body.AddDiagnostic(CrossLinkBody.Error_InaccessibleMember, attribute.Location, target.FullName);
+                    return null;
+                }
 
                 linkage.Target = target;
                 linkage.TargetName = linkAttribute.TargetMember;

@@ -22,6 +22,7 @@ This document may be inaccurate. It would be greatly appreciated if anyone could
 - [Chains](#chains)
 - [Features](#features)
   - [Serialization](#serialization)
+  - [TargetMember](#targetmember)
   - [AutoNotify](#autonotify)
   - [AutoLink](#autolink)
   - [ObservableCollection](#observablecollection)
@@ -417,6 +418,51 @@ new SerializeClass(2, "Fuga").Goshujin = g;
 
 var st = TinyhandSerializer.SerializeToString(g); // Serialize the Goshujin to string.
 var g2 = TinyhandSerializer.Deserialize<SerializeClass.GoshujinClass>(TinyhandSerializer.Serialize(g)); // Serialize to a byte array and deserialize it.
+```
+
+
+
+### TargetMember
+
+If you want to create multiple goshujins from a single class, use `TargetMember` property.
+
+```csharp
+public class BaseClass
+{// Base class is not CrossLinkObject.
+    protected int id;
+
+    protected string name = string.Empty;
+}
+
+[CrossLinkObject]
+public partial class DerivedClass : BaseClass
+{
+    // Add Link attribute to constructor and set TargetMember.
+    [Link(TargetMember = nameof(id), Type = ChainType.Ordered)]
+    [Link(TargetMember = nameof(name), Type = ChainType.Ordered)]
+    public DerivedClass()
+    {
+    }
+}
+
+[CrossLinkObject]
+public partial class DerivedClass2 : BaseClass
+{
+    // Multiple CrossLinkObject can be created from the same base class.
+    [Link(TargetMember = nameof(id), Type = ChainType.Unordered)]
+    [Link(TargetMember = nameof(name), Type = ChainType.ReverseOrdered)]
+    public DerivedClass2()
+    {
+    }
+}
+
+/*[CrossLinkObject] // Error! Derivation from other CrossLink objects is not supported.
+public partial class DerivedClass3 : DerivedClass
+{
+    [Link(Type = ChainType.Ordered)]
+    protected string name2 = string.Empty;
+}*/
+
 ```
 
 

@@ -103,6 +103,10 @@ namespace CrossLink.Generator
             id: "CLG020", title: "Multiple links", messageFormat: "Multiple links per member are not allowed",
             category: "CrossLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
+        public static readonly DiagnosticDescriptor Error_InaccessibleMember = new DiagnosticDescriptor(
+            id: "CLG021", title: "Inaccessible member", messageFormat: "'{0}' is inaccessible due to its protection level",
+            category: "CrossLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
         public CrossLinkBody(GeneratorExecutionContext context)
             : base(context)
         {

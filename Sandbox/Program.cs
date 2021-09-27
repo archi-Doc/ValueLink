@@ -49,8 +49,11 @@ namespace Sandbox
         [Link(Type = ChainType.ReverseOrdered)]
         protected int id2;
 
+        private int id3;
+
         [Link(Type = ChainType.QueueList, Name = "Queue")]
-        [Link(Type = ChainType.QueueList, TargetMember = nameof(id))]
+        [Link(Type = ChainType.QueueList, TargetMember = "id")]
+        [Link(Type = ChainType.ReverseOrdered, TargetMember = "id3")]
         public DerivedClass()
         {
         }
