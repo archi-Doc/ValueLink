@@ -56,13 +56,9 @@ namespace CrossLink.Generator
 
                 // else if (target.IsPublic)
 
-                if (linkAttribute.Name == string.Empty)
-                {
-                    linkAttribute.Name = linkAttribute.TargetMember;
-                }
-
                 linkage.Target = target;
-                linkage.TargetName = linkAttribute.Name;
+                linkage.TargetName = linkAttribute.TargetMember;
+                obj = target!;
             }
 
             linkage.AutoNotify = linkAttribute.AutoNotify;
@@ -73,7 +69,7 @@ namespace CrossLink.Generator
                 if (linkAttribute.Name == string.Empty)
                 {
                     if (!obj.Kind.IsValue())
-                    {// Link name required
+                    {// Link name required (Constructor && No target member)
                         obj.Body.AddDiagnostic(CrossLinkBody.Error_LinkNameRequired, attribute.Location);
                         return null;
                     }
