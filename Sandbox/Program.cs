@@ -36,6 +36,29 @@ namespace Sandbox
         }
     }
 
+    public class BaseClass
+    {
+        protected int id;
+
+        protected string name = string.Empty;
+    }
+
+    [CrossLinkObject]
+    public partial class DerivedClass : BaseClass
+    {
+        [Link(Type = ChainType.ReverseOrdered)]
+        protected int id2;
+
+        private int id3;
+
+        [Link(Type = ChainType.QueueList, Name = "Queue")]
+        [Link(Type = ChainType.QueueList, TargetMember = "id")]
+        [Link(Type = ChainType.ReverseOrdered, TargetMember = "id3")]
+        public DerivedClass()
+        {
+        }
+    }
+
     /*[CrossLinkObject(GoshujinClass = "Goshu", GoshujinInstance = "Instance")]
     public partial class TestClass2
     {

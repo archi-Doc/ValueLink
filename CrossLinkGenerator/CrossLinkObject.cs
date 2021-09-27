@@ -192,6 +192,12 @@ namespace CrossLink.Generator
                         parent.Links = new();
                     }
 
+                    if (linkage.Target != null && parent.Links.Any(x => x.Target == linkage.Target))
+                    {
+                        this.Body.AddDiagnostic(CrossLinkBody.Error_MultipleLink2, linkAttribute.Location);
+                        continue;
+                    }
+
                     parent.Links.Add(linkage);
                 }
             }
@@ -394,6 +400,18 @@ namespace CrossLink.Generator
 
                     parent = parent.ContainingObject;
                 }
+            }
+
+            // Check base class.
+            var baseObject = this.BaseObject;
+            while (baseObject != null)
+            {
+                if (baseObject.ObjectAttribute != null)
+                {
+                    this.Body.ReportDiagnostic(CrossLinkBody.Error_DerivedClass, this.Location, this.FullName, baseObject.FullName);
+                }
+
+                baseObject = baseObject.BaseObject;
             }
 
             if (this.ObjectFlag.HasFlag(CrossLinkObjectFlag.HasLink))

@@ -87,6 +87,26 @@ namespace CrossLink.Generator
             id: "CLG016", title: "No Key attribute", messageFormat: "Consider adding Key or KeyAsName attribute to this member so that CrossLink can serialize it properly",
             category: "CrossLinkGenerator", DiagnosticSeverity.Warning, isEnabledByDefault: true);
 
+        public static readonly DiagnosticDescriptor Error_DerivedClass = new DiagnosticDescriptor(
+            id: "CLG017", title: "Derived class", messageFormat: "CrossLinkObject '{0}' cannot be derived from another CrossLinkObject '{1}'",
+            category: "CrossLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Error_LinkMember = new DiagnosticDescriptor(
+            id: "CLG018", title: "Link error", messageFormat: "Target member is only supported for LinkAttributes annotated in the constructor",
+            category: "CrossLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Error_NoTargetMember = new DiagnosticDescriptor(
+            id: "CLG019", title: "No target member", messageFormat: "'{0}' does not contain a class member named '{1}'",
+            category: "CrossLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Error_MultipleLink2 = new DiagnosticDescriptor(
+            id: "CLG020", title: "Multiple links", messageFormat: "Multiple links per member are not allowed",
+            category: "CrossLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Error_InaccessibleMember = new DiagnosticDescriptor(
+            id: "CLG021", title: "Inaccessible member", messageFormat: "'{0}' is inaccessible due to its protection level",
+            category: "CrossLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
         public CrossLinkBody(GeneratorExecutionContext context)
             : base(context)
         {
