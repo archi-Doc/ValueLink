@@ -131,6 +131,12 @@ namespace CrossLink
         /// </summary>
         public bool AutoNotify { get; set; } = false;
 
+        /// <summary>
+        /// Gets or sets a string value which represents the target member(property or field) name of the linkage.<br/>
+        /// Only LinkAttribute annotated to constructor is supported.
+        /// </summary>
+        public string TargetMember { get; set; } = string.Empty;
+
         public LinkAttributeMock()
         {
         }
@@ -168,6 +174,12 @@ namespace CrossLink
             if (val != null)
             {
                 attribute.AutoNotify = (bool)val;
+            }
+
+            val = AttributeHelper.GetValue(-1, nameof(TargetMember), constructorArguments, namedArguments);
+            if (val != null)
+            {
+                attribute.TargetMember = (string)val;
             }
 
             return attribute;

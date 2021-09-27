@@ -91,6 +91,14 @@ namespace CrossLink.Generator
             id: "CLG017", title: "Derived class", messageFormat: "CrossLinkObject '{0}' cannot be derived from another CrossLinkObject '{1}'",
             category: "CrossLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
+        public static readonly DiagnosticDescriptor Error_LinkMember = new DiagnosticDescriptor(
+            id: "CLG018", title: "Link error", messageFormat: "Target member is only supported for LinkAttributes annotated in the constructor",
+            category: "CrossLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Error_NoTargetMember = new DiagnosticDescriptor(
+            id: "CLG019", title: "No target member", messageFormat: "'{0}' does not contain a class member named '{1}'",
+            category: "CrossLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
         public CrossLinkBody(GeneratorExecutionContext context)
             : base(context)
         {

@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Arc.Visceral;
 using Microsoft.CodeAnalysis;
@@ -11,7 +12,7 @@ namespace CrossLink.Generator
     public class Linkage
     {
         public static Linkage? Create(CrossLinkObject obj, VisceralAttribute attribute)
-        {
+        {// obj: Member(field/property) or Class constructor
             LinkAttributeMock linkAttribute;
             try
             {
@@ -31,6 +32,37 @@ namespace CrossLink.Generator
             {
                 linkage.Target = obj;
                 linkage.TargetName = obj.SimpleName;
+
+                if (linkAttribute.TargetMember != string.Empty)
+                {// Target member is only supported for LinkAttribute annotated to the constructor.
+                    obj.Body.AddDiagnostic(CrossLinkBody.Error_LinkMember, attribute.Location);
+                    return null;
+                }
+            }
+
+            if (linkAttribute.TargetMember != string.Empty)
+            {// Check target member
+                var parent = obj.ContainingObject;
+                if (parent == null)
+                {
+                    return null;
+                }
+
+                var target = parent.GetMembers(VisceralTarget.FieldProperty).FirstOrDefault(x => x.SimpleName == linkAttribute.TargetMember);
+                if (target == null)
+                {// 'obj.FullName' does not contain a class member named 'linkAttribute.TargetMember'.
+                    obj.Body.AddDiagnostic(CrossLinkBody.Error_NoTargetMember, attribute.Location, parent.FullName, linkAttribute.TargetMember);
+                }
+
+                // else if (target.IsPublic)
+
+                if (linkAttribute.Name == string.Empty)
+                {
+                    linkAttribute.Name = linkAttribute.TargetMember;
+                }
+
+                linkage.Target = target;
+                linkage.TargetName = linkAttribute.Name;
             }
 
             linkage.AutoNotify = linkAttribute.AutoNotify;

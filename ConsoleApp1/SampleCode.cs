@@ -119,6 +119,7 @@ namespace ConsoleApp1
         protected int id2;
 
         [Link(Type = ChainType.QueueList, Name = "Queue")]
+        [Link(Type = ChainType.QueueList, TargetMember = "id")]
         public DerivedClass()
         {
         }
