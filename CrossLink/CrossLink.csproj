@@ -6,10 +6,10 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <PackageId>CrossLink</PackageId>
+    <PackageId>ValueLink</PackageId>
     <Authors>archi-Doc</Authors>
-    <Product>CrossLink</Product>
-    <Description>CrossLink is a C# Library for creating and managing multiple links between objects.</Description>
+    <Product>ValueLink</Product>
+    <Description>ValueLink is a C# Library for creating and managing multiple links between objects.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/archi-Doc/CrossLink</PackageProjectUrl>
     <RepositoryUrl>https://github.com/archi-Doc/CrossLink</RepositoryUrl>
