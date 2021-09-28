@@ -36,45 +36,6 @@ namespace Sandbox
         }
     }
 
-    public class BaseClass
-    {
-        protected int id;
-
-        protected string name = string.Empty;
-    }
-
-    [ValueLinkObject]
-    public partial class DerivedClass : BaseClass
-    {
-        [Link(Type = ChainType.ReverseOrdered)]
-        protected int id2;
-
-        private int id3;
-
-        [Link(Type = ChainType.QueueList, Name = "Queue")]
-        [Link(Type = ChainType.QueueList, TargetMember = "id")]
-        [Link(Type = ChainType.ReverseOrdered, TargetMember = "id3")]
-        public DerivedClass()
-        {
-        }
-    }
-
-    /*[ValueLinkObject(GoshujinClass = "Goshu", GoshujinInstance = "Instance")]
-    public partial class TestClass2
-    {
-        [Link(Type = ChainType.Ordered)]
-        private int id;
-
-        [Link(Type = ChainType.Ordered, Name = "Name2")]
-        private string Name { get; set; }
-
-        public TestClass2(int id, string name)
-        {
-            this.id = id;
-            this.Name = name;
-        }
-    }*/
-
     [ValueLinkObject]
     [TinyhandObject]
     public partial class TestClass3<T>
@@ -176,15 +137,15 @@ namespace Sandbox
             new ReverseTestClass(3, "3").Goshujin = gr;
             new ReverseTestClass(0, "0").Goshujin = gr;
 
-            foreach (var x in gr.IdChain)
+            foreach (var x in gr.idChain)
             {
                 Console.WriteLine(x);
             }
 
             Console.WriteLine();
 
-            var rc = gr.NameChain.FindFirst("6");
-            rc = gr.NameChain.FindFirst("3");
+            var rc = gr.nameChain.FindFirst("6");
+            rc = gr.nameChain.FindFirst("3");
 
             Console.WriteLine();
 
@@ -204,12 +165,12 @@ namespace Sandbox
             new TestClass(3, "0").Goshujin = g;
             new TestClass(29, "b").Goshujin = g;
 
-            foreach (var x in g.NameChain)
+            foreach (var x in g.nameChain)
             {
-                Console.WriteLine(x.Test);
+                Console.WriteLine(x.TestValue);
             }
 
-            var f = g.NameChain.FindFirst("0");
+            var f = g.nameChain.FindFirst("0");
 
             var b = TinyhandSerializer.Serialize(g);
             var st = TinyhandSerializer.SerializeToString(g);

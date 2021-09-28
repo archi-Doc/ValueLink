@@ -16,15 +16,15 @@ namespace xUnitTest
     {
         [Link(Type = ChainType.Ordered)]
         [KeyAsName]
-        private int id;
+        private int Id;
 
         [Link(Type = ChainType.Ordered)]
         [KeyAsName]
-        private string name = default!;
+        private string Name = default!;
 
         [Link(Type = ChainType.Ordered)]
         [KeyAsName]
-        private byte age;
+        private byte Age;
 
         [Link(Type = ChainType.StackList, Primary = true, Name = "Stack")]
         public TestRecord()
@@ -33,9 +33,9 @@ namespace xUnitTest
 
         public TestRecord(int id, string name, byte age)
         {
-            this.id = id;
-            this.name = name;
-            this.age = age;
+            this.Id = id;
+            this.Name = name;
+            this.Age = age;
         }
 
         public virtual bool Equals(TestRecord? obj)
@@ -45,10 +45,10 @@ namespace xUnitTest
                 return false;
             }
 
-            return this.id == obj.id && this.name == obj.name && this.age == obj.age;
+            return this.Id == obj.Id && this.Name == obj.Name && this.Age == obj.Age;
         }
 
-        public override int GetHashCode() => HashCode.Combine(this.id, this, name, this.age);
+        public override int GetHashCode() => HashCode.Combine(this.Id, this, Name, this.Age);
     }
 
     public class RecordTest
@@ -62,10 +62,10 @@ namespace xUnitTest
             new TestRecord(1, "Z", 12).Goshujin = g;
             new TestRecord(2, "1", 15).Goshujin = g;
 
-            g.StackChain.Select(x => x.Id).SequenceEqual(new int[] { 0, 1, 2 }).IsTrue();
-            g.IdChain.Select(x => x.Id).SequenceEqual(new int[] { 0, 1, 2 }).IsTrue();
-            g.NameChain.Select(x => x.Id).SequenceEqual(new int[] { 2, 0, 1 }).IsTrue();
-            g.AgeChain.Select(x => x.Id).SequenceEqual(new int[] { 1, 2, 0 }).IsTrue();
+            g.StackChain.Select(x => x.IdValue).SequenceEqual(new int[] { 0, 1, 2 }).IsTrue();
+            g.IdChain.Select(x => x.IdValue).SequenceEqual(new int[] { 0, 1, 2 }).IsTrue();
+            g.NameChain.Select(x => x.IdValue).SequenceEqual(new int[] { 2, 0, 1 }).IsTrue();
+            g.AgeChain.Select(x => x.IdValue).SequenceEqual(new int[] { 1, 2, 0 }).IsTrue();
 
             var st = TinyhandSerializer.SerializeToString(g);
             var g2 = TinyhandSerializer.Deserialize<TestRecord.GoshujinClass>(TinyhandSerializer.Serialize(g));

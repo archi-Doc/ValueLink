@@ -15,15 +15,15 @@ namespace xUnitTest
     {
         [Link(Type = ChainType.Ordered)]
         [KeyAsName]
-        private int id;
+        private int Id;
 
         [Link(Type = ChainType.Ordered)]
         [Key("NM")]
-        private string name = default!;
+        private string Name = default!;
 
         [Link(Type = ChainType.Ordered)]
         [KeyAsName]
-        private byte age;
+        private byte Age;
 
         [Link(Type = ChainType.StackList, Primary = true, Name = "Stack")]
         public TestClass1()
@@ -32,9 +32,9 @@ namespace xUnitTest
 
         public TestClass1(int id, string name, byte age)
         {
-            this.id = id;
-            this.name = name;
-            this.age = age;
+            this.Id = id;
+            this.Name = name;
+            this.Age = age;
         }
 
         public int CompareTo(TestClass1? other)
@@ -44,11 +44,11 @@ namespace xUnitTest
                 return 1;
             }
 
-            if (this.id < other.id)
+            if (this.Id < other.Id)
             {
                 return -1;
             }
-            else if (this.id > other.id)
+            else if (this.Id > other.Id)
             {
                 return 1;
             }
@@ -64,12 +64,12 @@ namespace xUnitTest
                 return false;
             }
 
-            return this.id == t.id && this.name == t.name && this.age == t.age;
+            return this.Id == t.Id && this.Name == t.Name && this.Age == t.Age;
         }
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(this.id, this.name, this.age);
+            return HashCode.Combine(this.Id, this.Name, this.Age);
         }
     }
 
@@ -127,15 +127,15 @@ namespace xUnitTest
     {
         [Link(Type = ChainType.Ordered, Primary = true)]
         [KeyAsName]
-        private int id;
+        private int Id;
 
         [Link(Type = ChainType.Ordered)]
         [KeyAsName]
-        private T value = default!;
+        private T Value = default!;
 
         [Link(Type = ChainType.Ordered)]
         [KeyAsName]
-        private NestedClass<double, int> nested = default!;
+        private NestedClass<double, int> Nested = default!;
 
         public GenericTestClass2()
         {
@@ -143,9 +143,9 @@ namespace xUnitTest
 
         public GenericTestClass2(int id, T value, NestedClass<double, int> nested)
         {
-            this.id = id;
-            this.value = value;
-            this.nested = nested;
+            this.Id = id;
+            this.Value = value;
+            this.Nested = nested;
         }
 
         public override bool Equals(object? obj)
@@ -156,12 +156,12 @@ namespace xUnitTest
                 return false;
             }
 
-            return this.id == t.id && EqualityComparer<T>.Default.Equals(this.value, t.value);
+            return this.Id == t.Id && EqualityComparer<T>.Default.Equals(this.Value, t.Value);
         }
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(this.id, this.value);
+            return HashCode.Combine(this.Id, this.Value);
         }
 
         [ValueLinkObject]
@@ -232,10 +232,10 @@ namespace xUnitTest
             new TestClass1(1, "Z", 12).Goshujin = g;
             new TestClass1(2, "1", 15).Goshujin = g;
 
-            g.StackChain.Select(x => x.Id).SequenceEqual(new int[] { 0, 1, 2 }).IsTrue();
-            g.IdChain.Select(x => x.Id).SequenceEqual(new int[] { 0, 1, 2 }).IsTrue();
-            g.NameChain.Select(x => x.Id).SequenceEqual(new int[] { 2, 0, 1 }).IsTrue();
-            g.AgeChain.Select(x => x.Id).SequenceEqual(new int[] { 1, 2, 0 }).IsTrue();
+            g.StackChain.Select(x => x.IdValue).SequenceEqual(new int[] { 0, 1, 2 }).IsTrue();
+            g.IdChain.Select(x => x.IdValue).SequenceEqual(new int[] { 0, 1, 2 }).IsTrue();
+            g.NameChain.Select(x => x.IdValue).SequenceEqual(new int[] { 2, 0, 1 }).IsTrue();
+            g.AgeChain.Select(x => x.IdValue).SequenceEqual(new int[] { 1, 2, 0 }).IsTrue();
 
             var st = TinyhandSerializer.SerializeToString(g);
             var g2 = TinyhandSerializer.Deserialize<TestClass1.GoshujinClass>(TinyhandSerializer.Serialize(g));
@@ -294,7 +294,7 @@ namespace xUnitTest
             var gg = new GenericTestClass2<TestClass1>.NestedClass<double, int>.GoshujinClass();
             foreach (var x in g3!.IdChain)
             {
-                x.Nested.Goshujin = gg;
+                x.NestedValue.Goshujin = gg;
             }
 
             st = TinyhandSerializer.SerializeToString(gg);
