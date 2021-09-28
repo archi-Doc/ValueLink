@@ -961,8 +961,8 @@ ModuleInitializerClass_Added:
                 // Constructor
                 this.GenerateGoshujin_Constructor(ssb, info);
 
-                // this.GenerateGoshujin_Add(ssb, info);
-                // this.GenerateGoshujin_Remove(ssb, info);
+                this.GenerateGoshujin_Add(ssb, info);
+                this.GenerateGoshujin_Remove(ssb, info);
                 this.GenerateGoshujin_Clear(ssb, info);
                 this.GenerateGoshujin_Chain(ssb, info);
 
@@ -1208,8 +1208,17 @@ ModuleInitializerClass_Added:
         }
 
         internal void GenerateGoshujin_Add(ScopingStringBuilder ssb, GeneratorInformation info)
-        {
+        {// I've implemented this feature, but I'm wondering if I should enable it due to my coding philosophy.
             using (var scopeParameter = ssb.ScopeObject("x"))
+            using (var scopeMethod = ssb.ScopeBrace($"public void Add({this.LocalName} {ssb.FullObject})"))
+            {
+                ssb.AppendLine($"{ssb.FullObject}.{this.ObjectAttribute!.GoshujinInstance} = this;");
+            }
+
+            ssb.AppendLine();
+
+            // Obsolete
+            /* using (var scopeParameter = ssb.ScopeObject("x"))
             using (var scopeMethod = ssb.ScopeBrace($"public void Add({this.LocalName} {ssb.FullObject})"))
             {
                 using (var scopeIf = ssb.ScopeBrace($"if ({ssb.FullObject}.{this.GoshujinInstanceIdentifier} != null && {ssb.FullObject}.{this.GoshujinInstanceIdentifier} != this)"))
@@ -1230,12 +1239,30 @@ ModuleInitializerClass_Added:
                 }
             }
 
-            ssb.AppendLine();
+            ssb.AppendLine();*/
         }
 
         internal void GenerateGoshujin_Remove(ScopingStringBuilder ssb, GeneratorInformation info)
-        {
+        {// I've implemented this feature, but I'm wondering if I should enable it due to my coding philosophy.
             using (var scopeParameter = ssb.ScopeObject("x"))
+            using (var scopeMethod = ssb.ScopeBrace($"public bool Remove({this.LocalName} {ssb.FullObject})"))
+            {
+                using (var scopeIf = ssb.ScopeBrace($"if ({ssb.FullObject}.{this.GoshujinInstanceIdentifier} == this)"))
+                {
+                    ssb.AppendLine($"{ssb.FullObject}.{this.ObjectAttribute!.GoshujinInstance} = null;");
+                    ssb.AppendLine("return true;");
+                }
+
+                using (var scopeElse = ssb.ScopeBrace($"else"))
+                {
+                    ssb.AppendLine("return false;");
+                }
+            }
+
+            ssb.AppendLine();
+
+            // Obsolete
+            /* using (var scopeParameter = ssb.ScopeObject("x"))
             using (var scopeMethod = ssb.ScopeBrace($"public bool Remove({this.LocalName} {ssb.FullObject})"))
             {
                 using (var scopeIf = ssb.ScopeBrace($"if ({ssb.FullObject}.{this.GoshujinInstanceIdentifier} == this)"))
@@ -1265,7 +1292,7 @@ ModuleInitializerClass_Added:
                 }
             }
 
-            ssb.AppendLine();
+            ssb.AppendLine();*/
         }
 
         internal void GenerateGoshujin_Clear(ScopingStringBuilder ssb, GeneratorInformation info)
