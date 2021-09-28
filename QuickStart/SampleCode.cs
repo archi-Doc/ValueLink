@@ -74,9 +74,9 @@ public partial class AutoNotifyClass
     public static void Test()
     {
         var c = new AutoNotifyClass();
-        c.PropertyChanged += (s, e) => { Console.WriteLine($"Id changed: {((AutoNotifyClass)s!).Id}"); };
+        c.PropertyChanged += (s, e) => { Console.WriteLine($"Id changed: {((AutoNotifyClass)s!).idValue}"); };
 
-        c.Id = 1; // Change the value and automatically invoke PropertyChange.
+        c.idValue = 1; // Change the value and automatically invoke PropertyChange.
         c.Reset(); // Reset the value.
     }
 }
@@ -98,10 +98,23 @@ public partial class ManualLinkClass
 
         var c = new ManualLinkClass(1);
         c.Goshujin = g;
-        Debug.Assert(g.IdChain.Count == 0, "Chain is empty.");
+        Debug.Assert(g.idChain.Count == 0, "Chain is empty.");
 
-        g.IdChain.Add(c.id, c); // Link the object manually.
-        Debug.Assert(g.IdChain.Count == 1, "Object is linked.");
+        g.idChain.Add(c.id, c); // Link the object manually.
+        Debug.Assert(g.idChain.Count == 1, "Object is linked.");
+    }
+}
+
+[ValueLinkObject]
+public partial class ObservableClass
+{
+    [Link(Type = ChainType.Ordered, AutoNotify = true)]
+    private int Id { get; set; }
+
+    [Link(Type = ChainType.Observable, Name = "Observable")]
+    public ObservableClass(int id)
+    {
+        this.Id = id;
     }
 }
 

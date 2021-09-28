@@ -8,6 +8,8 @@ using System.Linq;
 
 namespace ValueLink
 {
+    // To add chain : Add ChainType, GeneratorHelper.ChainTypeToName
+    // If necessary: Generate_AddLink(), GenerateGoshujin_Chain()
     public enum ChainType
     {
         None,

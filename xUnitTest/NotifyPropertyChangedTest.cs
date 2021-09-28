@@ -11,7 +11,7 @@ namespace xUnitTest
     public partial class TestNotifyPropertyChanged : INotifyPropertyChanged
     {
         [Link(AutoNotify = true)]
-        private int id;
+        private int Id;
 
         public event PropertyChangedEventHandler? PropertyChanged;
     }
@@ -20,7 +20,7 @@ namespace xUnitTest
     public partial class TestNotifyPropertyChanged2 : INotifyPropertyChanged
     {
         [Link(AutoNotify = true)]
-        private int id;
+        private int Id;
 
         public event PropertyChangedEventHandler? propertyChanged;
 
@@ -42,11 +42,11 @@ namespace xUnitTest
     public partial class TestNotifyPropertyChanged3
     {
         [Link(AutoNotify = true)]
-        private int id;
+        private int Id;
 
         public void Test()
         {
-            this.SetProperty(ref id, 3);
+            this.SetProperty(ref Id, 3);
         }
 
         public void SetProperty()
@@ -73,18 +73,18 @@ namespace xUnitTest
             var count = 0;
 
             var t1 = new TestNotifyPropertyChanged();
-            t1.PropertyChanged += (s, e) => { if (e.PropertyName == "Id") count++; };
-            t1.Id = 1;
+            t1.PropertyChanged += (s, e) => { if (e.PropertyName == "IdValue") count++; };
+            t1.IdValue = 1;
             count.Is(1);
 
             var t2 = new TestNotifyPropertyChanged2();
-            ((INotifyPropertyChanged)t2).PropertyChanged += (s, e) => { if (e.PropertyName == "Id") count++; };
-            t2.Id = 1;
+            ((INotifyPropertyChanged)t2).PropertyChanged += (s, e) => { if (e.PropertyName == "IdValue") count++; };
+            t2.IdValue = 1;
             count.Is(2);
 
             var t3 = new TestNotifyPropertyChanged3();
-            t3.PropertyChanged += (s, e) => { if (e.PropertyName == "Id") count++; };
-            t3.Id = 1;
+            t3.PropertyChanged += (s, e) => { if (e.PropertyName == "IdValue") count++; };
+            t3.IdValue = 1;
             count.Is(3);
         }
     }

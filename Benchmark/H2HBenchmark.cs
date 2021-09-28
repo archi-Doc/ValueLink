@@ -25,11 +25,11 @@ namespace Benchmark
     {
         public H2HClass2(int id)
         {
-            this.id = id;
+            this.Id = id;
         }
 
         [Link(Type = ChainType.Ordered)]
-        private int id;
+        private int Id;
     }
 
     [Config(typeof(BenchmarkConfig))]
@@ -75,7 +75,7 @@ namespace Benchmark
             var node = this.H2HGoshujin.IdChain.First;
             foreach (var x in this.H2HSortedDictionary.Values)
             {
-                Debug.Assert(x.Id == node!.Id);
+                Debug.Assert(x.Id == node!.IdValue);
                 node = node.IdLink.Next;
             }
         }
@@ -142,7 +142,7 @@ namespace Benchmark
 
             for (var n = 0; n < N; n++)
             {
-                this.H2HGoshujin.IdChain.Add(this.H2HList2[n].Id, this.H2HList2[n]);
+                this.H2HGoshujin.IdChain.Add(this.H2HList2[n].IdValue, this.H2HList2[n]);
             }
 
             return this.H2HGoshujin.IdChain.Count;

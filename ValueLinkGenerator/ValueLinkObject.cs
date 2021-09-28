@@ -217,7 +217,7 @@ namespace ValueLink.Generator
         private void ConfigureObject()
         {
             // Used keywords
-            this.Identifier = new VisceralIdentifier("__gen_cl_identifier__");
+            this.Identifier = new VisceralIdentifier("__gen_cl_identifier__"); // Don't forget CrossLink!
             foreach (var x in this.AllMembers)
             {
                 this.Identifier.Add(x.SimpleName);
@@ -1245,9 +1245,9 @@ ModuleInitializerClass_Added:
         internal void GenerateGoshujin_Remove(ScopingStringBuilder ssb, GeneratorInformation info)
         {// I've implemented this feature, but I'm wondering if I should enable it due to my coding philosophy.
             using (var scopeParameter = ssb.ScopeObject("x"))
-            using (var scopeMethod = ssb.ScopeBrace($"public bool Remove({this.LocalName} {ssb.FullObject})"))
+            using (var scopeMethod = ssb.ScopeBrace($"public bool Remove({this.LocalName}? {ssb.FullObject})"))
             {
-                using (var scopeIf = ssb.ScopeBrace($"if ({ssb.FullObject}.{this.GoshujinInstanceIdentifier} == this)"))
+                using (var scopeIf = ssb.ScopeBrace($"if ({ssb.FullObject}?.{this.GoshujinInstanceIdentifier} == this)"))
                 {
                     ssb.AppendLine($"{ssb.FullObject}.{this.ObjectAttribute!.GoshujinInstance} = null;");
                     ssb.AppendLine("return true;");

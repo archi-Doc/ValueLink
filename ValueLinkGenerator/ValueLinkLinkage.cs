@@ -103,7 +103,10 @@ namespace ValueLink.Generator
                     }
                     else
                     {
-                        var name = obj.SimpleName.ToCharArray();
+                        linkAttribute.Name = obj.SimpleName;
+
+                        // Obsolete (id -> Id)
+                        /*var name = obj.SimpleName.ToCharArray();
                         if (!char.IsLower(name[0]))
                         {// Link name must start with a lowercase letter.
                             obj.Body.AddDiagnostic(ValueLinkBody.Error_LinkTargetNameError, obj.Location, obj.SimpleName);
@@ -112,15 +115,15 @@ namespace ValueLink.Generator
                         {
                             name[0] = char.ToUpperInvariant(name[0]);
                             linkAttribute.Name = new string(name);
-                        }
+                        }*/
                     }
                 }
 
-                linkage.Name = linkAttribute.Name;
+                linkage.Name = linkAttribute.Name + "Value";
                 if (linkage.IsValidLink)
                 {
-                    linkage.LinkName = linkage.Name + "Link";
-                    linkage.ChainName = linkage.Name + "Chain";
+                    linkage.LinkName = linkAttribute.Name + "Link";
+                    linkage.ChainName = linkAttribute.Name + "Chain";
                 }
             }
 
