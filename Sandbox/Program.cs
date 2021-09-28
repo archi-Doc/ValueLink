@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using CrossLink;
+using ValueLink;
 using Tinyhand;
 
 namespace Sandbox
 {
-    [CrossLinkObject]
+    [ValueLinkObject]
     [TinyhandObject]
     public partial class TestClass
     {
@@ -43,7 +43,7 @@ namespace Sandbox
         protected string name = string.Empty;
     }
 
-    [CrossLinkObject]
+    [ValueLinkObject]
     public partial class DerivedClass : BaseClass
     {
         [Link(Type = ChainType.ReverseOrdered)]
@@ -59,7 +59,7 @@ namespace Sandbox
         }
     }
 
-    /*[CrossLinkObject(GoshujinClass = "Goshu", GoshujinInstance = "Instance")]
+    /*[ValueLinkObject(GoshujinClass = "Goshu", GoshujinInstance = "Instance")]
     public partial class TestClass2
     {
         [Link(Type = ChainType.Ordered)]
@@ -75,7 +75,7 @@ namespace Sandbox
         }
     }*/
 
-    [CrossLinkObject]
+    [ValueLinkObject]
     [TinyhandObject]
     public partial class TestClass3<T>
     {
@@ -115,7 +115,7 @@ namespace Sandbox
             this.name = name;
         }
 
-        [CrossLinkObject]
+        [ValueLinkObject]
         [TinyhandObject]
         partial class NestedClass
         {
@@ -125,7 +125,7 @@ namespace Sandbox
         }
     }
 
-    [CrossLinkObject]
+    [ValueLinkObject]
     public partial class ObservableClass
     {
         [Link(Type = ChainType.Ordered, AutoNotify = true)]
@@ -137,7 +137,7 @@ namespace Sandbox
         }
     }
 
-    [CrossLinkObject]
+    [ValueLinkObject]
     public partial class ReverseTestClass
     {
         [Link(Primary = true, Type = ChainType.ReverseOrdered)]

@@ -4,13 +4,13 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using CrossLink;
+using ValueLink;
 using Tinyhand;
 using Xunit;
 
 namespace xUnitTest
 {
-    [CrossLinkObject]
+    [ValueLinkObject]
     [TinyhandObject]
     public partial record TestStruct : IEquatable<TestStruct>
     {

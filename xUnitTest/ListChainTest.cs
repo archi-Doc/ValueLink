@@ -3,13 +3,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using CrossLink;
+using ValueLink;
 using Tinyhand;
 using Xunit;
 
 namespace xUnitTest
 {
-    [CrossLinkObject]
+    [ValueLinkObject]
     public partial class ListChainTestClass
     {
         [Link(Type = ChainType.Ordered)]

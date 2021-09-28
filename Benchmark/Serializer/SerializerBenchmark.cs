@@ -6,12 +6,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using BenchmarkDotNet.Attributes;
-using CrossLink;
+using ValueLink;
 using Tinyhand;
 
 namespace Benchmark.Serializer
 {
-    [CrossLinkObject]
+    [ValueLinkObject]
     [TinyhandObject]
     public partial class TestClass
     {
@@ -82,7 +82,7 @@ namespace Benchmark.Serializer
         }
 
         [Benchmark]
-        public byte[] Serialize_CrossLink()
+        public byte[] Serialize_ValueLink()
         {
             return TinyhandSerializer.Serialize(this.TestGoshujin);
         }
@@ -94,7 +94,7 @@ namespace Benchmark.Serializer
         }
 
         [Benchmark]
-        public TestClass.GoshujinClass? Deserialize_CrossLink()
+        public TestClass.GoshujinClass? Deserialize_ValueLink()
         {
             return TinyhandSerializer.Deserialize<TestClass.GoshujinClass>(this.TestByte);
         }

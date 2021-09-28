@@ -11,12 +11,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Tinyhand" Version="0.23.0" />
+    <ProjectReference Include="..\ValueLinkGenerator\ValueLinkGenerator.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
+    <ProjectReference Include="..\ValueLink\ValueLink.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CrossLinkGenerator\CrossLinkGenerator.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
-    <ProjectReference Include="..\CrossLink\CrossLink.csproj" />
+    <PackageReference Include="Tinyhand" Version="0.23.0" />
   </ItemGroup>
 
 </Project>
