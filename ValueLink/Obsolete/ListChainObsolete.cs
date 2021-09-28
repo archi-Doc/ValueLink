@@ -8,9 +8,9 @@ using System.Collections.Generic;
 #pragma warning disable SA1401 // Fields should be private
 #pragma warning disable SA1615 // Element return value should be documented
 
-namespace ValueLink
+namespace ValueLink.Obsolete
 {
-    public sealed class ListChain2<T> : IEnumerable<T>
+    public sealed class ListChainObsolete<T> : IEnumerable<T>
     {
         private const int MaxArrayLength = 0X7FEFFFFF;
         private const int DefaultCapacity = 4;
@@ -19,13 +19,10 @@ namespace ValueLink
         private int size;
         private int version;
 
-        public ListChain2(Func<T, Link> f)
+        public ListChainObsolete()
         {
             this.items = Array.Empty<T>();
-            this.ObjectToLink = f;
         }
-
-        public Func<T, Link> ObjectToLink;
 
         public T this[int index]
         {
@@ -53,10 +50,6 @@ namespace ValueLink
         }
 
         public int Count => this.size;
-
-        public bool Add(T t) => this.Add(this.ObjectToLink(t));
-
-        public bool Remove(T t) => this.Remove(this.ObjectToLink(t));
 
         public bool Add(Link link)
         {
@@ -188,7 +181,6 @@ namespace ValueLink
             public bool IsLinked => this.index >= 0;
 
             public int Index => this.index;
-
         }
 
         /*public struct Link : ILink
@@ -222,12 +214,12 @@ namespace ValueLink
 
         public struct Enumerator : IEnumerator<T>, IEnumerator
         {
-            private ListChain2<T> list;
+            private ListChainObsolete<T> list;
             private int index;
             private int version;
             private T? current;
 
-            internal Enumerator(ListChain2<T> list)
+            internal Enumerator(ListChainObsolete<T> list)
             {
                 this.list = list;
                 this.index = 0;

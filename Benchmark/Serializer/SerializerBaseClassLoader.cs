@@ -5,22 +5,22 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using Benchmark.Serializer;
-using CrossLink;
+using ValueLink;
 using Tinyhand;
 using Tinyhand.IO;
 using Tinyhand.Resolvers;
 
 namespace Sandbox
 {
-    public static class CrossLinkModule
+    public static class ValueLinkModule
     {
         private static bool Initialized;
 
         [ModuleInitializer]
         public static void Initialize()
         {
-            if (CrossLinkModule.Initialized) return;
-            CrossLinkModule.Initialized = true;
+            if (ValueLinkModule.Initialized) return;
+            ValueLinkModule.Initialized = true;
 
             Generated.__gen__load();
         }

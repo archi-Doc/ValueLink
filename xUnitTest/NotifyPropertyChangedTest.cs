@@ -2,12 +2,12 @@
 
 using System;
 using System.ComponentModel;
-using CrossLink;
+using ValueLink;
 using Xunit;
 
 namespace xUnitTest
 {
-    [CrossLinkObject]
+    [ValueLinkObject]
     public partial class TestNotifyPropertyChanged : INotifyPropertyChanged
     {
         [Link(AutoNotify = true)]
@@ -16,7 +16,7 @@ namespace xUnitTest
         public event PropertyChangedEventHandler? PropertyChanged;
     }
 
-    [CrossLinkObject(ExplicitPropertyChanged = "propertyChanged")]
+    [ValueLinkObject(ExplicitPropertyChanged = "propertyChanged")]
     public partial class TestNotifyPropertyChanged2 : INotifyPropertyChanged
     {
         [Link(AutoNotify = true)]
@@ -38,7 +38,7 @@ namespace xUnitTest
         }
     }
 
-    [CrossLinkObject]
+    [ValueLinkObject]
     public partial class TestNotifyPropertyChanged3
     {
         [Link(AutoNotify = true)]

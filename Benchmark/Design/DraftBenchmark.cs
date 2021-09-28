@@ -6,8 +6,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using BenchmarkDotNet.Attributes;
-using CrossLink;
-using CrossLink.Obsolete;
+using ValueLink;
+using ValueLink.Obsolete;
 
 namespace Benchmark.Draft
 {
@@ -291,7 +291,7 @@ namespace Benchmark.Draft
         }
 
         [Benchmark]
-        public TestGoshujinObsolete Initialize_CrossLinkObsolete()
+        public TestGoshujinObsolete Initialize_ValueLinkObsolete()
         {
             var g = new TestGoshujinObsolete();
             new TestClassObsolete(10).Goshujin = g;
@@ -304,7 +304,7 @@ namespace Benchmark.Draft
         }
 
         [Benchmark]
-        public TestGoshujin Initialize_CrossLink1()
+        public TestGoshujin Initialize_ValueLink1()
         {
             var g = new TestGoshujin();
             new TestClass(10).Goshujin = g;
@@ -317,7 +317,7 @@ namespace Benchmark.Draft
         }
 
         [Benchmark]
-        public TestGoshujin2 Initialize_CrossLink2()
+        public TestGoshujin2 Initialize_ValueLink2()
         {
             var g = new TestGoshujin2();
             new TestClass2(10).Goshujin = g;
@@ -330,7 +330,7 @@ namespace Benchmark.Draft
         }
 
         [Benchmark]
-        public TestGoshujin3 Initialize_CrossLink3()
+        public TestGoshujin3 Initialize_ValueLink3()
         {
             var g = new TestGoshujin3();
             new TestClass3(10).Goshujin = g;
@@ -400,7 +400,7 @@ namespace Benchmark.Draft
         }
 
         [Benchmark]
-        public int RemoveAdd_CrossLinkObsolete()
+        public int RemoveAdd_ValueLinkObsolete()
         {
             var c = this.goshujin.IdChain[4];
             this.goshujin.IdChain.Remove(c.IdLink);
@@ -409,7 +409,7 @@ namespace Benchmark.Draft
         }
 
         [Benchmark]
-        public int RemoveAdd_CrossLink1()
+        public int RemoveAdd_ValueLink1()
         {
             var c = this.goshujin1.IdChain[4];
             this.goshujin1.IdChain.Remove(c);
@@ -418,7 +418,7 @@ namespace Benchmark.Draft
         }
 
         [Benchmark]
-        public int RemoveAdd_CrossLink2()
+        public int RemoveAdd_ValueLink2()
         {
             var c = this.goshujin2.IdChain[4];
             this.goshujin2.IdChain.Remove(c);
@@ -427,7 +427,7 @@ namespace Benchmark.Draft
         }
 
         [Benchmark]
-        public int RemoveAdd_CrossLink3()
+        public int RemoveAdd_ValueLink3()
         {
             var c = this.goshujin3.IdChain[3];
             this.goshujin3.IdChain.Remove(c);
@@ -475,7 +475,7 @@ namespace Benchmark.Draft
         }
 
         [Benchmark]
-        public int Enumerate_CrossLink()
+        public int Enumerate_ValueLink()
         {
             int n = 0;
             foreach (var x in this.goshujin.IdChain)

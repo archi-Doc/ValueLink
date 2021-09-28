@@ -9,7 +9,7 @@ using System.Linq;
 using System.Reflection;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
-using CrossLink;
+using ValueLink;
 
 #pragma warning disable SA1401 // Fields should be private
 

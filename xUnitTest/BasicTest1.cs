@@ -3,13 +3,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using CrossLink;
+using ValueLink;
 using Tinyhand;
 using Xunit;
 
 namespace xUnitTest
 {
-    [CrossLinkObject]
+    [ValueLinkObject]
     [TinyhandObject]
     public partial class TestClass1 : IComparable<TestClass1>
     {
@@ -82,7 +82,7 @@ namespace xUnitTest
         public TestClass1.GoshujinClass G { get; set; } = default!;
     }
 
-    [CrossLinkObject]
+    [ValueLinkObject]
     [TinyhandObject]
     public partial class GenericTestClass<T>
     {
@@ -121,7 +121,7 @@ namespace xUnitTest
         }
     }
 
-    [CrossLinkObject]
+    [ValueLinkObject]
     [TinyhandObject]
     public partial class GenericTestClass2<T>
     {
@@ -164,7 +164,7 @@ namespace xUnitTest
             return HashCode.Combine(this.id, this.value);
         }
 
-        [CrossLinkObject]
+        [ValueLinkObject]
         [TinyhandObject]
         public partial class NestedClass<X, Y> : IComparable<NestedClass<X, Y>>
         {
@@ -201,7 +201,7 @@ namespace xUnitTest
             }
         }
 
-        [CrossLinkObject]
+        [ValueLinkObject]
         [TinyhandObject]
         public partial class NestedClass2
         {
@@ -225,7 +225,7 @@ namespace xUnitTest
         [Fact]
         public void Test1()
         {
-            // CrossLinkModule.Initialize();
+            // ValueLinkModule.Initialize();
             var g = new TestClass1.GoshujinClass();
 
             new TestClass1(0, "A", 100).Goshujin = g;

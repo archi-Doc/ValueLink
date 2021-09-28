@@ -1,5 +1,5 @@
-## CrossLink
-![Nuget](https://img.shields.io/nuget/v/CrossLink) ![Build and Test](https://github.com/archi-Doc/CrossLink/workflows/Build%20and%20Test/badge.svg)
+## ValueLink
+![Nuget](https://img.shields.io/nuget/v/ValueLink) ![Build and Test](https://github.com/archi-Doc/ValueLink/workflows/Build%20and%20Test/badge.svg)
 
 ソースジェネレーターと [Arc.Collection](https://github.com/archi-Doc/Arc.Collection) を使用したC#ライブラリです。
 
@@ -45,7 +45,7 @@
 まずはPackage Manager Consoleでインストール。
 
 ```
-Install-Package CrossLink
+Install-Package ValueLink
 ```
 
 サンプルコードです。
@@ -53,13 +53,13 @@ Install-Package CrossLink
 ```csharp
 using System;
 using System.Collections.Generic;
-using CrossLink;
+using ValueLink;
 
 #pragma warning disable SA1300
 
 namespace ConsoleApp1
 {
-    [CrossLinkObject] // 対象のクラスに CrossLinkObject属性を追加します
+    [ValueLinkObject] // 対象のクラスに ValueLinkObject属性を追加します
     public partial class TestClass // ソースジェネレーターでコード追加するので、partial classが必須
     {
         [Link(Type = ChainType.Ordered)] // 対象のメンバーにLink属性を追加します。TypeにChainType（Collectionの種類のようなもの）を指定します。
@@ -89,7 +89,7 @@ namespace ConsoleApp1
     {
         public static void Main(string[] args)
         {
-            Console.WriteLine("CrossLink Quick Start.");
+            Console.WriteLine("ValueLink Quick Start.");
             Console.WriteLine();
 
             var g = new TestClass.GoshujinClass(); // まずは、オブジェクト管理のクラス Goshujin を作成
@@ -208,14 +208,14 @@ namespace ConsoleApp1
 
 パフォーマンスは最優先事項です。
 
-CrossLinkは、ジェネリックコレクションより込み入った処置を行っていますが、実際はジェネリックコレクションより高速に動作します（主に[Arc.Collection](https://github.com/archi-Doc/Arc.Collection)のおかげです）。
+ValueLinkは、ジェネリックコレクションより込み入った処置を行っていますが、実際はジェネリックコレクションより高速に動作します（主に[Arc.Collection](https://github.com/archi-Doc/Arc.Collection)のおかげです）。
 
 `SortedDictionary<TKey, TValue>` と比べてみましょう。
 
 `H2HClass` という簡単なクラスを作成します。
 
 ```csharp
-[CrossLinkObject]
+[ValueLinkObject]
 public partial class H2HClass2
 {
     public H2HClass2(int id)
@@ -238,7 +238,7 @@ foreach (var x in this.IntArray)
 }
 ```
 
-こちらはCrossLink版。同じような処理をしています。
+こちらはValueLink版。同じような処理をしています。
 
 ```csharp
 var g = new H2HClass2.GoshujinClass();
@@ -253,22 +253,22 @@ foreach (var x in this.IntArray)
 | Method                     | Length |       Mean |    Error |   StdDev |  Gen 0 |  Gen 1 | Gen 2 | Allocated |
 | -------------------------- | ------ | ---------: | -------: | -------: | -----: | -----: | ----: | --------: |
 | NewAndAdd_SortedDictionary | 100    | 7,209.8 ns | 53.98 ns | 77.42 ns | 1.9379 |      - |     - |    8112 B |
-| NewAndAdd_CrossLink        | 100    | 4,942.6 ns | 12.28 ns | 17.99 ns | 2.7084 | 0.0076 |     - |   11328 B |
+| NewAndAdd_ValueLink        | 100    | 4,942.6 ns | 12.28 ns | 17.99 ns | 2.7084 | 0.0076 |     - |   11328 B |
 
 `Id` を変更すると、当然コレクションの更新（値の削除・追加）が必要です。
 
-CrossLinkは断然高速で、`SortedDictionary` の約3倍のパフォーマンスです（CrossLinkは内部でNodeを保持しているので、当然と言えば当然ですが）。
+ValueLinkは断然高速で、`SortedDictionary` の約3倍のパフォーマンスです（ValueLinkは内部でNodeを保持しているので、当然と言えば当然ですが）。
 
 | Method                        | Length |       Mean |    Error |   StdDev |  Gen 0 | Gen 1 | Gen 2 | Allocated |
 | ----------------------------- | ------ | ---------: | -------: | -------: | -----: | ----: | ----: | --------: |
 | RemoveAndAdd_SortedDictionary | 100    | 1,491.1 ns | 13.01 ns | 18.24 ns | 0.1335 |     - |     - |     560 B |
-| RemoveAndAdd_CrossLink        | 100    |   524.1 ns |  3.76 ns |  5.63 ns | 0.1717 |     - |     - |     720 B |
+| RemoveAndAdd_ValueLink        | 100    |   524.1 ns |  3.76 ns |  5.63 ns | 0.1717 |     - |     - |     720 B |
 
 
 
 ## How it works
 
-CrossLinkは既存のクラスに、`GoshujinClass`という内部クラスと、いくつかのプロパティを追加することで動作します。
+ValueLinkは既存のクラスに、`GoshujinClass`という内部クラスと、いくつかのプロパティを追加することで動作します。
 
 実際には、
 
@@ -290,7 +290,7 @@ CrossLinkは既存のクラスに、`GoshujinClass`という内部クラスと�
 
 
 
-実際に、ソースジェネレーターでどのようなコードが生成され、どのようにCrossLinkが動作するのか見てみましょう。
+実際に、ソースジェネレーターでどのようなコードが生成され、どのようにValueLinkが動作するのか見てみましょう。
 
 まずは `TinyClass` という非常にシンプルなクラスを作成します。メンバーは `id` 一つだけです。
 
@@ -302,7 +302,7 @@ public partial class TinyClass // partial class が必須
 }
 ```
 
-プロジェクトをビルドすると、CrossLinkはまず `GoshujinClass`という内部クラスを作成します。`GoshujinClass` は `TinyClass` を操作・管理するクラスです。
+プロジェクトをビルドすると、ValueLinkはまず `GoshujinClass`という内部クラスを作成します。`GoshujinClass` は `TinyClass` を操作・管理するクラスです。
 
 ```csharp
 public sealed class GoshujinClass : IGoshujin
@@ -347,7 +347,7 @@ public GoshujinClass? Goshujin
 
 最後に、メンバーに対応する `Link` と プロパティを追加します。
 
-inally, CrossLink adds a link and a property which is used to modify the collection and change the value.
+inally, ValueLink adds a link and a property which is used to modify the collection and change the value.
 
 ```csharp
 public OrderedChain<int, TinyClass>.Link IdLink; // Link is like a Node.
@@ -371,7 +371,7 @@ public int Id
 
 ## Chains
 
-Chainはオブジェクトのコレクションクラスのようなもので、CrossLinkでは以下のChainを実装しています。
+Chainはオブジェクトのコレクションクラスのようなもので、ValueLinkでは以下のChainを実装しています。
 
 | Name                  | Structure   | Access | Add      | Remove   | Search   | Sort       | Enum.    |
 | --------------------- | ----------- | ------ | -------- | -------- | -------- | ---------- | -------- |
@@ -403,7 +403,7 @@ Install-Package Tinyhand
 ```
 
 ```csharp
-[CrossLinkObject]
+[ValueLinkObject]
 [TinyhandObject] // TinyhandObject属性を追加
 public partial class SerializeClass // partial class を忘れずに
 {
@@ -442,10 +442,10 @@ var g2 = TinyhandSerializer.Deserialize<SerializeClass.GoshujinClass>(TinyhandSe
 
 ### AutoNotify
 
-`Link` 属性の `AutoNotify`プロパティを `true` にすると、CrossLinkは `INotifyPropertyChanged` を自動で実装します。
+`Link` 属性の `AutoNotify`プロパティを `true` にすると、ValueLinkは `INotifyPropertyChanged` を自動で実装します。
 
 ```csharp
-[CrossLinkObject]
+[ValueLinkObject]
 public partial class AutoNotifyClass
 {
     [Link(AutoNotify = true)] // AutoNotifyをtrueに
@@ -510,7 +510,7 @@ public partial class AutoNotifyClass : System.ComponentModel.INotifyPropertyChan
 自動でリンクしたくない場合は、`AutoLink` プロパティを `false` に設定してください。
 
  ```csharp
-[CrossLinkObject]
+[ValueLinkObject]
 public partial class ManualLinkClass
 {
     [Link(Type = ChainType.Ordered, AutoLink = false)] // AutoLinkをfalse
@@ -548,7 +548,7 @@ MVVM？バインディング？
 コンストラクタに `[Link(Type = ChainType.Observable, Name = "Observable")]` を追加するだけです。
 
 ```csharp
-[CrossLinkObject]
+[ValueLinkObject]
 public partial class ObservableClass
 {
     [Link(Type = ChainType.Ordered, AutoNotify = true)] // もちAutoNotify

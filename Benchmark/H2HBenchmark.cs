@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Arc.Collections;
 using BenchmarkDotNet.Attributes;
-using CrossLink;
+using ValueLink;
 
 namespace Benchmark
 {
@@ -20,7 +20,7 @@ namespace Benchmark
         public int Id { get; }
     }
 
-    [CrossLinkObject]
+    [ValueLinkObject]
     public partial class H2HClass2
     {
         public H2HClass2(int id)
@@ -93,7 +93,7 @@ namespace Benchmark
         }
 
         [Benchmark]
-        public int NewAndAdd_CrossLink()
+        public int NewAndAdd_ValueLink()
         {
             var g = new H2HClass2.GoshujinClass();
             foreach (var x in this.IntArray)
@@ -133,7 +133,7 @@ namespace Benchmark
         }
 
         [Benchmark]
-        public int RemoveAndAdd_CrossLink()
+        public int RemoveAndAdd_ValueLink()
         {
             for (var n = 0; n < N; n++)
             {

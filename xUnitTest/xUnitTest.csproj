@@ -7,6 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ValueLinkGenerator\ValueLinkGenerator.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
+    <ProjectReference Include="..\ValueLink\ValueLink.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Remove="Generated\*" />
   </ItemGroup>
 
@@ -26,11 +31,6 @@
 
   <ItemGroup>
     <AdditionalFiles Include="..\stylecop.json" Link="stylecop.json" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\CrossLinkGenerator\CrossLinkGenerator.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
-    <ProjectReference Include="..\CrossLink\CrossLink.csproj" />
   </ItemGroup>
 
 </Project>
