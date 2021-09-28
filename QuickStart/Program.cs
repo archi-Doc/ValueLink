@@ -135,6 +135,11 @@ public class Program
             t = t.IdLink.Next; // Note that Next is not a Link, but an object.
         }
 
+        Console.WriteLine();
+        Console.WriteLine("Goshujin.Remove");
+        g.Remove(g.ListChain[0]); // You can use Remove() instead of 'g.ListChain[0].Goshujin = null;'
+        ConsoleWriteIEnumerable("[Goshujin]", g.ListChain);
+
         static void ConsoleWriteIEnumerable<T>(string? header, IEnumerable<T> e)
         {
             if (header != null)
