@@ -87,18 +87,6 @@ namespace Sandbox
     }
 
     [ValueLinkObject]
-    public partial class ObservableClass
-    {
-        [Link(Type = ChainType.Ordered, AutoNotify = true)]
-        private int id { get; set; }
-
-        [Link(Type = ChainType.Observable, Name = "Observable")]
-        public ObservableClass()
-        {
-        }
-    }
-
-    [ValueLinkObject]
     public partial class ReverseTestClass
     {
         [Link(Primary = true, Type = ChainType.ReverseOrdered)]
