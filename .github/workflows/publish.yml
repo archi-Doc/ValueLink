@@ -25,10 +25,10 @@ jobs:
       uses: rohith/publish-nuget@v2
       with:
         # Filepath of the project to be packaged, relative to root of repository
-        PROJECT_FILE_PATH: CrossLink/CrossLink.csproj
+        PROJECT_FILE_PATH: ValueLink/ValueLink.csproj
         
         # NuGet package id, used for version detection & defaults to project name
-        PACKAGE_NAME: CrossLink
+        PACKAGE_NAME: ValueLink
         
         # Filepath with version info, relative to root of repository & defaults to PROJECT_FILE_PATH
         VERSION_FILE_PATH: Directory.Build.props
