@@ -126,6 +126,17 @@ namespace Arc.Visceral
             _ => string.Empty,
         };
 
+        public static (string property, string getter, string setter) GetterSetterAccessibilityToPropertyString(Accessibility getter, Accessibility setter)
+        {
+            var max = getter;
+            max = max > setter ? max : setter;
+
+            var p = max.AccessibilityToString();
+            return (p,
+                getter == max ? string.Empty : getter.AccessibilityToString(),
+                setter == max ? string.Empty : setter.AccessibilityToString());
+        }
+
         public static bool IsInternal(this Accessibility accessibility) => accessibility switch
         {
             Accessibility.ProtectedAndInternal => true,
@@ -133,6 +144,42 @@ namespace Arc.Visceral
             Accessibility.ProtectedOrInternal => false,
             _ => false,
         };
+
+        public static Accessibility FieldInfoToAccessibility(FieldInfo? fi)
+        {
+            if (fi == null)
+            {
+                return Accessibility.NotApplicable;
+            }
+            else if (fi.IsPrivate)
+            {
+                return Accessibility.Private;
+            }
+            else if (fi.IsFamilyAndAssembly)
+            {
+                return Accessibility.ProtectedAndInternal;
+            }
+            else if (fi.IsFamily)
+            {
+                return Accessibility.Protected;
+            }
+            else if (fi.IsAssembly)
+            {
+                return Accessibility.Internal;
+            }
+            else if (fi.IsFamilyOrAssembly)
+            {
+                return Accessibility.ProtectedOrInternal;
+            }
+            else if (fi.IsPublic)
+            {
+                return Accessibility.Public;
+            }
+            else
+            {
+                return Accessibility.NotApplicable;
+            }
+        }
 
         public static Accessibility MethodBaseToAccessibility(MethodBase? mb)
         {

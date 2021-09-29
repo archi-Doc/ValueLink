@@ -33,7 +33,7 @@ public partial class SimpleClass
 [ValueLinkObject]
 public partial class SimpleClass2
 {
-    [Link(Type = ChainType.Ordered, Name = "X")]
+    [Link(Type = ChainType.Ordered, Name = "X", Accessibility = ValueLinkAccessibility.Public)]
     private int x;
 
     [Link(Type = ChainType.Unordered, Name = "Name")]
@@ -50,7 +50,7 @@ public partial class SimpleClass2
 public partial class SimpleClass3
 {
     [Link(Type = ChainType.Ordered, Name = "X")]
-    public int X { get; private set; }
+    public int X { get; set; }
 
     [Link(Type = ChainType.Unordered, Name = "Name")]
     public string Name { get; private set; } = string.Empty;
@@ -72,7 +72,7 @@ public class ProtectedBaseClass
 [ValueLinkObject]
 public partial class ProtectedDerivedClass : ProtectedBaseClass
 {
-    [Link(TargetMember = nameof(X), Type = ChainType.Ordered)]
+    [Link(TargetMember = nameof(X), Type = ChainType.Ordered, Accessibility = ValueLinkAccessibility.Public)]
     public ProtectedDerivedClass()
     {
     }

@@ -848,10 +848,11 @@ ModuleInitializerClass_Added:
                 return;
             }
 
-            using (var scopeProperty = ssb.ScopeBrace($"public {target.TypeObject.FullName} {x.Name}"))
+            var accessibility = VisceralHelper.GetterSetterAccessibilityToPropertyString(x.GetterAccessibility, x.SetterAccessibility);
+            using (var scopeProperty = ssb.ScopeBrace($"{accessibility.property} {target.TypeObject.FullName} {x.Name}"))
             {
-                ssb.AppendLine($"get => this.{x.TargetName};");
-                using (var scopeSet = ssb.ScopeBrace("set"))
+                ssb.AppendLine($"{accessibility.getter} get => this.{x.TargetName};");
+                using (var scopeSet = ssb.ScopeBrace($"{accessibility.setter} set"))
                 {
                     string compare;
                     if (target.TypeObject.IsPrimitive)
@@ -883,6 +884,24 @@ ModuleInitializerClass_Added:
                         }
                     }
                 }
+            }
+
+            ssb.AppendLine();
+        }
+
+        internal void GenerateLink_Link(ScopingStringBuilder ssb, GeneratorInformation info, Linkage x)
+        {
+            if (x.Type == ChainType.None)
+            {
+                return;
+            }
+            else if (x.RequiresTarget && x.Target != null && x.Target.TypeObject != null)
+            {
+                ssb.AppendLine($"{x.GetterAccessibility.AccessibilityToString()} {x.Type.ChainTypeToName()}<{x.Target!.TypeObject!.FullName}, {this.LocalName}>.Link {x.LinkName};");
+            }
+            else
+            {
+                ssb.AppendLine($"{x.GetterAccessibility.AccessibilityToString()} {x.Type.ChainTypeToName()}<{this.LocalName}>.Link {x.LinkName};");
             }
 
             ssb.AppendLine();
@@ -926,24 +945,6 @@ ModuleInitializerClass_Added:
             {
                 ssb.AppendLine($"{prefix}.{link.ChainName}.Add({ssb.FullObject});");
             }
-        }
-
-        internal void GenerateLink_Link(ScopingStringBuilder ssb, GeneratorInformation info, Linkage x)
-        {
-            if (x.Type == ChainType.None)
-            {
-                return;
-            }
-            else if (x.RequiresTarget && x.Target != null && x.Target.TypeObject != null)
-            {
-                ssb.AppendLine($"public {x.Type.ChainTypeToName()}<{x.Target!.TypeObject!.FullName}, {this.LocalName}>.Link {x.LinkName};");
-            }
-            else
-            {
-                ssb.AppendLine($"public {x.Type.ChainTypeToName()}<{this.LocalName}>.Link {x.LinkName};");
-            }
-
-            ssb.AppendLine();
         }
 
         internal void GenerateGoshujinClass(ScopingStringBuilder ssb, GeneratorInformation info)

@@ -21,7 +21,7 @@ public partial class TestClass // Partial class is required for source generator
     [Link(Type = ChainType.Ordered)] // Sorted link associated with name.
     public string Name { get; private set; } = string.Empty; // Generated property name: Id, chain name: IdChain
 
-    [Link(Type = ChainType.Ordered)] // Sorted link associated with age.
+    [Link(Type = ChainType.Ordered, Accessibility = ValueLinkAccessibility.Public)] // Sorted link associated with age.
     private int Age; // Generated property name: Id, chain name: IdChain
 
     [Link(Type = ChainType.StackList, Name = "Stack")] // Stack (Constructor can have multiple Link attributes)

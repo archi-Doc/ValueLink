@@ -127,6 +127,31 @@ namespace ValueLink.Generator
                 }
             }
 
+            // Accessibility
+            linkage.Accessibility = linkAttribute.Accessibility;
+            if (linkage.IsValidLink)
+            {
+                if (obj.Kind == VisceralObjectKind.Property)
+                {
+                    (linkage.GetterAccessibility, linkage.SetterAccessibility) = obj.Property_Accessibility;
+                }
+                else if (obj.Kind == VisceralObjectKind.Field)
+                {
+                    linkage.GetterAccessibility = obj.Field_Accessibility;
+                    linkage.SetterAccessibility = linkage.GetterAccessibility;
+                }
+
+                if (linkage.Accessibility == ValueLinkAccessibility.PublicGetter)
+                {
+                    linkage.GetterAccessibility = Microsoft.CodeAnalysis.Accessibility.Public;
+                }
+                else if (linkage.Accessibility == ValueLinkAccessibility.Public)
+                {
+                    linkage.GetterAccessibility = Microsoft.CodeAnalysis.Accessibility.Public;
+                    linkage.SetterAccessibility = Microsoft.CodeAnalysis.Accessibility.Public;
+                }
+            }
+
             return linkage;
         }
 
@@ -144,6 +169,8 @@ namespace ValueLink.Generator
 
         public string TargetName { get; private set; } = string.Empty; // int id;
 
+        public ValueLinkAccessibility Accessibility { get; private set; }
+
         public string Name { get; private set; } = string.Empty; // int Id { get; set; }
 
         public string LinkName { get; private set; } = string.Empty; // ListChain<int>.Link IdLink;
@@ -157,5 +184,9 @@ namespace ValueLink.Generator
         public bool IsValidLink => this.Type != ChainType.None;
 
         public bool RequiresTarget => this.Type == ChainType.Ordered || this.Type == ChainType.ReverseOrdered || this.Type == ChainType.Unordered;
+
+        public Accessibility GetterAccessibility { get; private set; } = Microsoft.CodeAnalysis.Accessibility.Public;
+
+        public Accessibility SetterAccessibility { get; private set; } = Microsoft.CodeAnalysis.Accessibility.Public;
     }
 }
