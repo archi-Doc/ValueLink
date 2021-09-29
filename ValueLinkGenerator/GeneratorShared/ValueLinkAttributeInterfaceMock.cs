@@ -23,6 +23,13 @@ namespace ValueLink
         Observable,
     }
 
+    public enum ValueLinkAccessibility
+    {
+        PublicGetter,
+        Public,
+        Inherit,
+    }
+
     public static class AttributeHelper
     {
         public static object? GetValue(int constructorIndex, string? name, object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
@@ -108,36 +115,19 @@ namespace ValueLink
         public static readonly string StandardName = SimpleName + "Attribute";
         public static readonly string FullName = "ValueLink." + StandardName;
 
-        /// <summary>
-        /// Gets or sets a value indicating the type of object linkage.
-        /// </summary>
         public ChainType Type { get; set; }
 
-        /// <summary>
-        /// Gets or sets a value indicating whether or not the link is a primary link that is guaranteed to holds all objects in the collection [the default is false].
-        /// </summary>
         public bool Primary { get; set; } = false;
 
-        /// <summary>
-        /// Gets or sets a string value which represents the name used for the linkage interface.
-        /// </summary>
         public string Name { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Gets or sets a value indicating whether or not to link the object automatically when the goshujin is set or changed [the default is true].
-        /// </summary>
         public bool AutoLink { get; set; } = true;
 
-        /// <summary>
-        /// Gets or sets a value indicating whether or not to invoke PropertyChanged event when the value has changed [the default is false].
-        /// </summary>
         public bool AutoNotify { get; set; } = false;
 
-        /// <summary>
-        /// Gets or sets a string value which represents the target member(property or field) name of the linkage.<br/>
-        /// Only LinkAttribute annotated to constructor is supported.
-        /// </summary>
         public string TargetMember { get; set; } = string.Empty;
+
+        public ValueLinkAccessibility Accessibility { get; set; } = ValueLinkAccessibility.PublicGetter;
 
         public LinkAttributeMock()
         {
@@ -182,6 +172,12 @@ namespace ValueLink
             if (val != null)
             {
                 attribute.TargetMember = (string)val;
+            }
+
+            val = AttributeHelper.GetValue(-1, nameof(Accessibility), constructorArguments, namedArguments);
+            if (val != null)
+            {
+                attribute.Accessibility = (ValueLinkAccessibility)val;
             }
 
             return attribute;
