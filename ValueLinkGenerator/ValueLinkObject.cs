@@ -849,10 +849,10 @@ ModuleInitializerClass_Added:
             }
 
             var accessibility = VisceralHelper.GetterSetterAccessibilityToPropertyString(x.GetterAccessibility, x.SetterAccessibility);
-            using (var scopeProperty = ssb.ScopeBrace($"{accessibility.property} {target.TypeObject.FullName} {x.Name}"))
+            using (var scopeProperty = ssb.ScopeBrace($"{accessibility.property}{target.TypeObject.FullName} {x.Name}"))
             {
-                ssb.AppendLine($"{accessibility.getter} get => this.{x.TargetName};");
-                using (var scopeSet = ssb.ScopeBrace($"{accessibility.setter} set"))
+                ssb.AppendLine($"{accessibility.getter}get => this.{x.TargetName};");
+                using (var scopeSet = ssb.ScopeBrace($"{accessibility.setter}set"))
                 {
                     string compare;
                     if (target.TypeObject.IsPrimitive)
