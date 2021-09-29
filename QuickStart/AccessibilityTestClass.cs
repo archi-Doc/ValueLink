@@ -6,7 +6,6 @@ using ValueLink;
 #pragma warning disable SA1202 // Elements should be ordered by access
 #pragma warning disable SA1401 // Fields should be private
 #pragma warning disable SA1307 // Accessible fields should begin with upper-case letter
-#pragma warning disable SA1306 // Field names should begin with lower-case letter
 
 namespace QuickStart;
 

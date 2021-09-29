@@ -8,13 +8,6 @@ using ValueLink;
 namespace Sandbox.Design;
 
 [ValueLinkObject]
-public partial class AccessibilityTestClass
-{
-    [Link(Type = ChainType.Ordered, Accessibility = ValueLinkAccessibility.PublicGetter)]
-    private int privateField_PublicGetter;
-}
-
-[ValueLinkObject]
 public partial class SimpleClass
 {
     [Link(Type = ChainType.Ordered)]
