@@ -103,19 +103,20 @@ namespace ValueLink.Generator
                     }
                     else
                     {
-                        linkAttribute.Name = obj.SimpleName;
-
-                        // Obsolete (id -> Id)
-                        /*var name = obj.SimpleName.ToCharArray();
-                        if (!char.IsLower(name[0]))
-                        {// Link name must start with a lowercase letter.
-                            obj.Body.AddDiagnostic(ValueLinkBody.Error_LinkTargetNameError, obj.Location, obj.SimpleName);
+                        if (obj.SimpleName.Length > 0 && char.IsLower(obj.SimpleName[0]))
+                        {// id -> Id
+                            var name = obj.SimpleName.ToCharArray();
+                            name[0] = char.ToUpperInvariant(name[0]);
+                            linkAttribute.Name = new string(name);
                         }
                         else
                         {
-                            name[0] = char.ToUpperInvariant(name[0]);
-                            linkAttribute.Name = new string(name);
-                        }*/
+                            linkAttribute.Name = obj.SimpleName;
+                        }
+
+                        // Obsolete
+                        // Link name must start with a lowercase letter.
+                        // obj.Body.AddDiagnostic(ValueLinkBody.Error_LinkTargetNameError, obj.Location, obj.SimpleName);
                     }
                 }
 

@@ -19,7 +19,7 @@ public partial class SimpleClass
     private static void Test()
     {
         var c = new SimpleClass();
-        c.xValue = 19;
+        c.XValue = 19;
     }
 }
 
