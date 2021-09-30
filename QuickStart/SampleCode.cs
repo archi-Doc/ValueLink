@@ -74,9 +74,9 @@ public partial class AutoNotifyClass
     public static void Test()
     {
         var c = new AutoNotifyClass();
-        c.PropertyChanged += (s, e) => { Console.WriteLine($"Id changed: {((AutoNotifyClass)s!).idValue}"); };
+        c.PropertyChanged += (s, e) => { Console.WriteLine($"Id changed: {((AutoNotifyClass)s!).IdValue}"); };
 
-        c.idValue = 1; // Change the value and automatically invoke PropertyChange.
+        c.IdValue = 1; // Change the value and automatically invoke PropertyChange.
         c.Reset(); // Reset the value.
     }
 }
@@ -98,10 +98,10 @@ public partial class ManualLinkClass
 
         var c = new ManualLinkClass(1);
         c.Goshujin = g;
-        Debug.Assert(g.idChain.Count == 0, "Chain is empty.");
+        Debug.Assert(g.IdChain.Count == 0, "Chain is empty.");
 
-        g.idChain.Add(c.id, c); // Link the object manually.
-        Debug.Assert(g.idChain.Count == 1, "Object is linked.");
+        g.IdChain.Add(c.id, c); // Link the object manually.
+        Debug.Assert(g.IdChain.Count == 1, "Object is linked.");
     }
 }
 

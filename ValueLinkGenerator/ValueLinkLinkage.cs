@@ -103,19 +103,20 @@ namespace ValueLink.Generator
                     }
                     else
                     {
-                        linkAttribute.Name = obj.SimpleName;
-
-                        // Obsolete (id -> Id)
-                        /*var name = obj.SimpleName.ToCharArray();
-                        if (!char.IsLower(name[0]))
-                        {// Link name must start with a lowercase letter.
-                            obj.Body.AddDiagnostic(ValueLinkBody.Error_LinkTargetNameError, obj.Location, obj.SimpleName);
+                        if (obj.SimpleName.Length > 0 && char.IsLower(obj.SimpleName[0]))
+                        {// id -> Id
+                            var name = obj.SimpleName.ToCharArray();
+                            name[0] = char.ToUpperInvariant(name[0]);
+                            linkAttribute.Name = new string(name);
                         }
                         else
                         {
-                            name[0] = char.ToUpperInvariant(name[0]);
-                            linkAttribute.Name = new string(name);
-                        }*/
+                            linkAttribute.Name = obj.SimpleName;
+                        }
+
+                        // Obsolete
+                        // Link name must start with a lowercase letter.
+                        // obj.Body.AddDiagnostic(ValueLinkBody.Error_LinkTargetNameError, obj.Location, obj.SimpleName);
                     }
                 }
 
@@ -124,6 +125,31 @@ namespace ValueLink.Generator
                 {
                     linkage.LinkName = linkAttribute.Name + "Link";
                     linkage.ChainName = linkAttribute.Name + "Chain";
+                }
+            }
+
+            // Accessibility
+            linkage.Accessibility = linkAttribute.Accessibility;
+            if (linkage.IsValidLink)
+            {
+                if (obj.Kind == VisceralObjectKind.Property)
+                {
+                    (linkage.GetterAccessibility, linkage.SetterAccessibility) = obj.Property_Accessibility;
+                }
+                else if (obj.Kind == VisceralObjectKind.Field)
+                {
+                    linkage.GetterAccessibility = obj.Field_Accessibility;
+                    linkage.SetterAccessibility = linkage.GetterAccessibility;
+                }
+
+                if (linkage.Accessibility == ValueLinkAccessibility.PublicGetter)
+                {
+                    linkage.GetterAccessibility = Microsoft.CodeAnalysis.Accessibility.Public;
+                }
+                else if (linkage.Accessibility == ValueLinkAccessibility.Public)
+                {
+                    linkage.GetterAccessibility = Microsoft.CodeAnalysis.Accessibility.Public;
+                    linkage.SetterAccessibility = Microsoft.CodeAnalysis.Accessibility.Public;
                 }
             }
 
@@ -144,6 +170,8 @@ namespace ValueLink.Generator
 
         public string TargetName { get; private set; } = string.Empty; // int id;
 
+        public ValueLinkAccessibility Accessibility { get; private set; }
+
         public string Name { get; private set; } = string.Empty; // int Id { get; set; }
 
         public string LinkName { get; private set; } = string.Empty; // ListChain<int>.Link IdLink;
@@ -157,5 +185,9 @@ namespace ValueLink.Generator
         public bool IsValidLink => this.Type != ChainType.None;
 
         public bool RequiresTarget => this.Type == ChainType.Ordered || this.Type == ChainType.ReverseOrdered || this.Type == ChainType.Unordered;
+
+        public Accessibility GetterAccessibility { get; private set; } = Microsoft.CodeAnalysis.Accessibility.Public;
+
+        public Accessibility SetterAccessibility { get; private set; } = Microsoft.CodeAnalysis.Accessibility.Public;
     }
 }
