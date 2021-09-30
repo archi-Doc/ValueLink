@@ -66,22 +66,22 @@ namespace ValueLink
     }
 
     /// <summary>
-    /// Specifies the accessibility of generated Value/Link properties.
+    /// Specifies the accessibility of generated Value/Link members.
     /// </summary>
     public enum ValueLinkAccessibility
     {
         /// <summary>
-        /// Value/Link properties have public getter, and setter with inherited accessibility.
+        /// Value/Link members have public getter, and setter with inherited accessibility.
         /// </summary>
         PublicGetter,
 
         /// <summary>
-        /// Value/Link properties have public getter/setter.
+        /// Value/Link members have public getter/setter.
         /// </summary>
         Public,
 
         /// <summary>
-        /// The accessibility of Value/Link properties is exactly the same as it's target member.
+        /// The accessibility of Value/Link members is exactly the same as it's target member.
         /// </summary>
         Inherit,
     }
@@ -144,7 +144,7 @@ namespace ValueLink
         public string TargetMember { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets a value which specifies the accessibility of generated Value/Link properties [the default is <see cref="ValueLinkAccessibility.PublicGetter"/>].
+        /// Gets or sets a value which specifies the accessibility of generated Value/Link members [the default is <see cref="ValueLinkAccessibility.PublicGetter"/>].
         /// </summary>
         public ValueLinkAccessibility Accessibility { get; set; } = ValueLinkAccessibility.PublicGetter;
 
