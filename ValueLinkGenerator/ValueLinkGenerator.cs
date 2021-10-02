@@ -49,72 +49,78 @@ namespace ValueLink.Generator
 
         public void Execute(GeneratorExecutionContext context)
         {
-            this.Context = context;
-
-            if (!(context.SyntaxReceiver is ValueLinkSyntaxReceiver receiver))
+            try
             {
-                return;
-            }
+                this.Context = context;
 
-            var compilation = context.Compilation;
-
-            this.valueLinkObjectAttributeSymbol = compilation.GetTypeByMetadataName(ValueLinkObjectAttributeMock.FullName);
-            if (this.valueLinkObjectAttributeSymbol == null)
-            {
-                return;
-            }
-
-            this.linkAttributeSymbol = compilation.GetTypeByMetadataName(LinkAttributeMock.FullName);
-            if (this.linkAttributeSymbol == null)
-            {
-                return;
-            }
-
-            this.valueLinkGeneratorOptionAttributeSymbol = compilation.GetTypeByMetadataName(ValueLinkGeneratorOptionAttributeMock.FullName);
-            if (this.valueLinkGeneratorOptionAttributeSymbol == null)
-            {
-                return;
-            }
-
-            this.ProcessGeneratorOption(receiver, compilation);
-            if (this.AttachDebugger)
-            {
-                System.Diagnostics.Debugger.Launch();
-            }
-
-            this.Prepare(context, compilation);
-
-            this.body = new ValueLinkBody(context);
-            receiver.Generics.Prepare(compilation);
-
-            // IN: type declaration
-            foreach (var x in receiver.CandidateSet)
-            {
-                var model = compilation.GetSemanticModel(x.SyntaxTree);
-                if (model.GetDeclaredSymbol(x) is INamedTypeSymbol s)
+                if (!(context.SyntaxReceiver is ValueLinkSyntaxReceiver receiver))
                 {
-                    this.ProcessSymbol(s);
+                    return;
                 }
-            }
 
-            // IN: close generic (member, expression)
-            foreach (var ts in receiver.Generics.ItemDictionary.Values.Where(a => a.GenericsKind == VisceralGenericsKind.ClosedGeneric).Select(a => a.TypeSymbol))
-            {
-                if (ts != null)
+                var compilation = context.Compilation;
+
+                this.valueLinkObjectAttributeSymbol = compilation.GetTypeByMetadataName(ValueLinkObjectAttributeMock.FullName);
+                if (this.valueLinkObjectAttributeSymbol == null)
                 {
-                    this.ProcessSymbol(ts);
+                    return;
                 }
+
+                this.linkAttributeSymbol = compilation.GetTypeByMetadataName(LinkAttributeMock.FullName);
+                if (this.linkAttributeSymbol == null)
+                {
+                    return;
+                }
+
+                this.valueLinkGeneratorOptionAttributeSymbol = compilation.GetTypeByMetadataName(ValueLinkGeneratorOptionAttributeMock.FullName);
+                if (this.valueLinkGeneratorOptionAttributeSymbol == null)
+                {
+                    return;
+                }
+
+                this.ProcessGeneratorOption(receiver, compilation);
+                if (this.AttachDebugger)
+                {
+                    System.Diagnostics.Debugger.Launch();
+                }
+
+                this.Prepare(context, compilation);
+
+                this.body = new ValueLinkBody(context);
+                receiver.Generics.Prepare(compilation);
+
+                // IN: type declaration
+                foreach (var x in receiver.CandidateSet)
+                {
+                    var model = compilation.GetSemanticModel(x.SyntaxTree);
+                    if (model.GetDeclaredSymbol(x) is INamedTypeSymbol s)
+                    {
+                        this.ProcessSymbol(s);
+                    }
+                }
+
+                // IN: close generic (member, expression)
+                foreach (var ts in receiver.Generics.ItemDictionary.Values.Where(a => a.GenericsKind == VisceralGenericsKind.ClosedGeneric).Select(a => a.TypeSymbol))
+                {
+                    if (ts != null)
+                    {
+                        this.ProcessSymbol(ts);
+                    }
+                }
+
+                this.SalvageCloseGeneric(receiver.Generics);
+
+                this.body.Prepare();
+                if (this.body.Abort)
+                {
+                    return;
+                }
+
+                this.body.Generate(this);
             }
-
-            this.SalvageCloseGeneric(receiver.Generics);
-
-            this.body.Prepare();
-            if (this.body.Abort)
+            catch
             {
-                return;
             }
-
-            this.body.Generate(this);
         }
 
         public void Initialize(GeneratorInitializationContext context)
