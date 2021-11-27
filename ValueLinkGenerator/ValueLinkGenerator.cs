@@ -78,18 +78,22 @@ namespace ValueLink.Generator
                     return;
                 }
 
+                context.CancellationToken.ThrowIfCancellationRequested();
                 this.ProcessGeneratorOption(receiver, compilation);
                 if (this.AttachDebugger)
                 {
                     System.Diagnostics.Debugger.Launch();
                 }
 
+                context.CancellationToken.ThrowIfCancellationRequested();
                 this.Prepare(context, compilation);
 
+                context.CancellationToken.ThrowIfCancellationRequested();
                 this.body = new ValueLinkBody(context);
                 receiver.Generics.Prepare(compilation);
 
                 // IN: type declaration
+                context.CancellationToken.ThrowIfCancellationRequested();
                 foreach (var x in receiver.CandidateSet)
                 {
                     var model = compilation.GetSemanticModel(x.SyntaxTree);
@@ -100,6 +104,7 @@ namespace ValueLink.Generator
                 }
 
                 // IN: close generic (member, expression)
+                context.CancellationToken.ThrowIfCancellationRequested();
                 foreach (var ts in receiver.Generics.ItemDictionary.Values.Where(a => a.GenericsKind == VisceralGenericsKind.ClosedGeneric).Select(a => a.TypeSymbol))
                 {
                     if (ts != null)
@@ -110,13 +115,14 @@ namespace ValueLink.Generator
 
                 this.SalvageCloseGeneric(receiver.Generics);
 
+                context.CancellationToken.ThrowIfCancellationRequested();
                 this.body.Prepare();
                 if (this.body.Abort)
                 {
                     return;
                 }
 
-                this.body.Generate(this);
+                this.body.Generate(this, context.CancellationToken);
             }
             catch
             {
