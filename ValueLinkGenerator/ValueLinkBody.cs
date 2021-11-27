@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Arc.Visceral;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
@@ -148,7 +149,7 @@ namespace ValueLink.Generator
             }
         }
 
-        public void Generate(ValueLinkGenerator generator)
+        public void Generate(ValueLinkGenerator generator, CancellationToken cancellationToken)
         {
             ScopingStringBuilder ssb = new();
             GeneratorInformation info = new()
@@ -160,6 +161,7 @@ namespace ValueLink.Generator
             // Namespace
             foreach (var x in this.Namespaces)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 var tinyhandFlag = x.Value.Any(a => a.ObjectFlag.HasFlag(ValueLinkObjectFlag.TinyhandObject)); // has TinyhandObjectAttribute
                 this.GenerateHeader(ssb, tinyhandFlag);
                 var ns = ssb.ScopeNamespace(x.Key);
@@ -191,6 +193,7 @@ namespace ValueLink.Generator
                 }
             }
 
+            cancellationToken.ThrowIfCancellationRequested();
             if (info.UseTinyhand)
             {
                 this.GenerateLoader(generator, info, rootObjects);
