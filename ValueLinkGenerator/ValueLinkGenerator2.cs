@@ -32,12 +32,10 @@ namespace ValueLink.Generator
 
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
-            var provider = context.SyntaxProvider
-
-                // Find all MethodDeclarationSyntax nodes attributed with RegexGenerator
-                .CreateSyntaxProvider(static (s, _) => IsSyntaxTargetForGeneration(s), (ctx, _) => this.GetSemanticTargetForGeneration(ctx))
-                .Combine(context.CompilationProvider)
-                .Collect();
+            var provider = context.CompilationProvider.Combine(
+                context.SyntaxProvider
+                .CreateSyntaxProvider(static (s, _) => IsSyntaxTargetForGeneration(s), static (ctx, _) => GetSemanticTargetForGeneration(ctx))
+                .Collect());
 
             context.RegisterImplementationSourceOutput(provider, this.Emit);
         }
@@ -58,7 +56,7 @@ namespace ValueLink.Generator
             }
         }
 
-        private TypeDeclarationSyntax? GetSemanticTargetForGeneration(GeneratorSyntaxContext context)
+        private static TypeDeclarationSyntax? GetSemanticTargetForGeneration(GeneratorSyntaxContext context)
         {
             if (context.Node is TypeDeclarationSyntax typeSyntax)
             {
@@ -80,22 +78,13 @@ namespace ValueLink.Generator
                     }
                 }
             }
-            else if (context.Node is GenericNameSyntax genericSyntax)
-            {
-                return null; // genericSyntax;
-            }
 
             return null;
         }
 
-        private void Emit(SourceProductionContext context, ImmutableArray<(TypeDeclarationSyntax? type, Compilation compilation)> sources)
+        private void Emit(SourceProductionContext context, (Compilation compilation, ImmutableArray<TypeDeclarationSyntax?> types) source)
         {
-            if (sources.Length == 0)
-            {
-                return;
-            }
-
-            var compilation = sources[0].compilation;
+            var compilation = source.compilation;
             this.valueLinkObjectAttributeSymbol = compilation.GetTypeByMetadataName(ValueLinkObjectAttributeMock.FullName);
             if (this.valueLinkObjectAttributeSymbol == null)
             {
@@ -119,19 +108,19 @@ namespace ValueLink.Generator
 #pragma warning restore RS1024 // Symbols should be compared for equality
 
             this.generatorOptionIsSet = false;
-            foreach (var x in sources)
+            foreach (var x in source.types)
             {
-                if (x.type == null)
+                if (x == null)
                 {
                     continue;
                 }
 
                 context.CancellationToken.ThrowIfCancellationRequested();
 
-                var model = compilation.GetSemanticModel(x.type.SyntaxTree);
-                if (model.GetDeclaredSymbol(x.type) is INamedTypeSymbol symbol)
+                var model = compilation.GetSemanticModel(x.SyntaxTree);
+                if (model.GetDeclaredSymbol(x) is INamedTypeSymbol symbol)
                 {
-                    this.ProcessSymbol(body, processed, x.type.SyntaxTree, symbol);
+                    this.ProcessSymbol(body, processed, x.SyntaxTree, symbol);
                 }
             }
 
