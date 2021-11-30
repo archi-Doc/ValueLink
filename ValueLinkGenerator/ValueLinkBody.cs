@@ -113,6 +113,11 @@ namespace ValueLink.Generator
         {
         }
 
+        public ValueLinkBody(SourceProductionContext context)
+            : base(context)
+        {
+        }
+
         internal Dictionary<string, List<ValueLinkObject>> Namespaces = new();
 
         public void Prepare()
@@ -186,7 +191,10 @@ namespace ValueLink.Generator
                 }
                 else
                 {
-                    this.Context?.AddSource($"gen.ValueLink.{x.Key}", SourceText.From(result, Encoding.UTF8));
+                    var hintName = $"gen.ValueLink.{x.Key}";
+                    var sourceText = SourceText.From(result, Encoding.UTF8);
+                    this.Context?.AddSource(hintName, sourceText);
+                    this.Context2?.AddSource(hintName, sourceText);
                 }
             }
 
@@ -247,7 +255,10 @@ namespace ValueLink.Generator
             }
             else
             {
-                this.Context?.AddSource($"gen.ValueLinkLoader", SourceText.From(result, Encoding.UTF8));
+                var hintName = "gen.ValueLinkLoader";
+                var sourceText = SourceText.From(result, Encoding.UTF8);
+                this.Context?.AddSource(hintName, sourceText);
+                this.Context2?.AddSource(hintName, sourceText);
             }
         }
 
