@@ -13,7 +13,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace ValueLink.Generator
 {
-    // [Generator]
+    [Generator]
     public class ValueLinkGeneratorV2 : IIncrementalGenerator, IGeneratorInformation
     {
         public bool AttachDebugger { get; private set; }
@@ -49,8 +49,8 @@ namespace ValueLink.Generator
                 return true;
             }
             else if (node is GenericNameSyntax { })
-            {//
-                return true;
+            {
+                return false; // true;
             }
             else
             {
