@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ValueLinkGenerator": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "..\\Sandbox\\Sandbox.csproj"
+    }
+  }
+}

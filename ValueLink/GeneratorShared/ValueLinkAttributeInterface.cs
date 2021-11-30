@@ -162,8 +162,6 @@ namespace ValueLink
 
         public string? CustomNamespace { get; set; }
 
-        public bool UseModuleInitializer { get; set; } = true;
-
         public ValueLinkGeneratorOptionAttribute()
         {
         }

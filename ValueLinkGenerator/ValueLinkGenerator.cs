@@ -12,16 +12,14 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace ValueLink.Generator
 {
-    [Generator]
-    public class ValueLinkGenerator : ISourceGenerator
+    // [Generator]
+    public class ValueLinkGenerator : ISourceGenerator, IGeneratorInformation
     {
         public bool AttachDebugger { get; private set; } = false;
 
         public bool GenerateToFile { get; private set; } = false;
 
         public string? CustomNamespace { get; private set; }
-
-        public bool UseModuleInitializer { get; set; } = true;
 
         public bool ModuleInitializerIsAvailable { get; private set; } = false;
 
@@ -246,7 +244,6 @@ namespace ValueLink.Generator
                     this.AttachDebugger = ta.AttachDebugger;
                     this.GenerateToFile = ta.GenerateToFile;
                     this.CustomNamespace = ta.CustomNamespace;
-                    this.UseModuleInitializer = ta.UseModuleInitializer;
                     this.TargetFolder = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(receiver.GeneratorOptionSyntax.SyntaxTree.FilePath), "Generated");
                 }
             }

@@ -16,8 +16,6 @@ namespace ValueLink.Generator
 
         public int FormatterCount { get; set; } = 1;
 
-        public bool UseModuleInitializer { get; set; }
-
         public bool UseTinyhand { get; set; }
 
         public List<string> ModuleInitializerClass { get; } = new();
