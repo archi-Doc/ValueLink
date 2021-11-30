@@ -13,7 +13,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace ValueLink.Generator
 {
     [Generator]
-    public class ValueLinkGenerator : ISourceGenerator
+    public class ValueLinkGenerator : ISourceGenerator, IGeneratorInformation
     {
         public bool AttachDebugger { get; private set; } = false;
 

@@ -149,13 +149,10 @@ namespace ValueLink.Generator
             }
         }
 
-        public void Generate(ValueLinkGenerator generator, CancellationToken cancellationToken)
+        public void Generate(IGeneratorInformation generator, CancellationToken cancellationToken)
         {
             ScopingStringBuilder ssb = new();
-            GeneratorInformation info = new()
-            {
-                UseModuleInitializer = generator.ModuleInitializerIsAvailable && generator.UseModuleInitializer,
-            };
+            GeneratorInformation info = new();
             List<ValueLinkObject> rootObjects = new();
 
             // Namespace
@@ -225,7 +222,7 @@ namespace ValueLink.Generator
             ssb.AppendLine();
         }
 
-        private void GenerateLoader(ValueLinkGenerator generator, GeneratorInformation info, List<ValueLinkObject> rootObjects)
+        private void GenerateLoader(IGeneratorInformation generator, GeneratorInformation info, List<ValueLinkObject> rootObjects)
         {
             var ssb = new ScopingStringBuilder();
             this.GenerateHeader(ssb, true);
@@ -254,7 +251,7 @@ namespace ValueLink.Generator
             }
         }
 
-        private void GenerateInitializer(ValueLinkGenerator generator, ScopingStringBuilder ssb, GeneratorInformation info)
+        private void GenerateInitializer(IGeneratorInformation generator, ScopingStringBuilder ssb, GeneratorInformation info)
         {
             // Namespace
             var ns = "ValueLink";
@@ -280,10 +277,7 @@ namespace ValueLink.Generator
             {
                 ssb.AppendLine("private static bool Initialized;");
                 ssb.AppendLine();
-                if (info.UseModuleInitializer)
-                {
-                    ssb.AppendLine("[ModuleInitializer]");
-                }
+                ssb.AppendLine("[ModuleInitializer]");
 
                 using (var scopeMethod = ssb.ScopeBrace("public static void Initialize()"))
                 {
