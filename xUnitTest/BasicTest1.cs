@@ -9,6 +9,15 @@ using Xunit;
 
 namespace xUnitTest
 {
+    // [TinyhandObject]
+    public partial class TestClass1Derived : TestClass1
+    {
+        public void Test()
+        {
+            // this.HeightValue = 1d;
+        }
+    }
+
     [ValueLinkObject]
     [TinyhandObject]
     public partial class TestClass1 : IComparable<TestClass1>
@@ -24,6 +33,10 @@ namespace xUnitTest
         [Link(Type = ChainType.Ordered)]
         [KeyAsName]
         private byte Age;
+
+        [Link(Type = ChainType.Ordered)]
+        [KeyAsName]
+        public double Height { get; protected set; }
 
         [Link(Type = ChainType.StackList, Primary = true, Name = "Stack")]
         public TestClass1()

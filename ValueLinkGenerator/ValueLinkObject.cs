@@ -409,6 +409,7 @@ namespace ValueLink.Generator
                 if (baseObject.ObjectAttribute != null)
                 {
                     this.Body.ReportDiagnostic(ValueLinkBody.Error_DerivedClass, this.Location, this.FullName, baseObject.FullName);
+                    return;
                 }
 
                 baseObject = baseObject.BaseObject;
@@ -479,6 +480,11 @@ namespace ValueLink.Generator
 
             if (this.Linkage != null)
             {
+                if (!this.IsSerializable || this.IsReadOnly || this.IsInitOnly)
+                {// Not serializable
+                    this.Body.AddDiagnostic(ValueLinkBody.Error_ReadonlyMember, this.Location, this.SimpleName);
+                }
+
                 /*if (this.Kind != VisceralObjectKind.Field)
                 {// Link target must be a field
                     this.Body.AddDiagnostic(ValueLinkBody.Error_LinkTargetNotField, this.Location, this.SimpleName);

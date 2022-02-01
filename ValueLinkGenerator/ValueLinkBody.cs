@@ -40,8 +40,8 @@ namespace ValueLink.Generator
             id: "CLG004", title: "Keyword used", messageFormat: "The type '{0}' already contains a definition for '{1}'",
             category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
-        public static readonly DiagnosticDescriptor Error_LinkTargetNotField = new DiagnosticDescriptor(
-            id: "CLG005", title: "Not field", messageFormat: "The target of the link '{0}' must be a field",
+        public static readonly DiagnosticDescriptor Error_ReadonlyMember = new DiagnosticDescriptor(
+            id: "CLG005", title: "Not field", messageFormat: "The target of the link '{0}' cannot be readonly or getter-only",
             category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public static readonly DiagnosticDescriptor Error_LinkTargetNameError = new DiagnosticDescriptor(
