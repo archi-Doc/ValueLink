@@ -198,10 +198,6 @@ namespace ValueLink.Generator
                         continue;
                     }
 
-                    if (parent.SimpleName == "TestClass1")
-                    {
-                        var ii = 1;
-                    }
                     parent.Links.Add(linkage);
                 }
             }
@@ -240,7 +236,7 @@ namespace ValueLink.Generator
                     flag = true;
                 }
 
-                if (flag && x.TypeObject != null && !x.IsStatic)
+                if (flag && x.TypeObject != null && !x.IsStatic && x.ContainingObject == this)
                 { // Valid TypeObject && not static
                     x.Configure();
                 }

@@ -10,7 +10,7 @@ using Xunit;
 namespace xUnitTest
 {
     // [TinyhandObject]
-    [ValueLinkObject]
+    // [ValueLinkObject] // Error!
     public partial class TestClass1Derived : TestClass1
     {
         public void Test()
@@ -35,9 +35,9 @@ namespace xUnitTest
         [KeyAsName]
         private byte Age;
 
-        [Link(Type = ChainType.Ordered)]
+        /*[Link(Type = ChainType.Ordered)]
         [KeyAsName]
-        public double Height { get; protected set; }
+        public double Height { get; } // Error! */
 
         [Link(Type = ChainType.StackList, Primary = true, Name = "Stack")]
         public TestClass1()
