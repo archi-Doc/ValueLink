@@ -198,6 +198,10 @@ namespace ValueLink.Generator
                         continue;
                     }
 
+                    if (parent.SimpleName == "TestClass1")
+                    {
+                        var ii = 1;
+                    }
                     parent.Links.Add(linkage);
                 }
             }

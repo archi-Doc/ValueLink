@@ -10,6 +10,7 @@ using Xunit;
 namespace xUnitTest
 {
     // [TinyhandObject]
+    [ValueLinkObject]
     public partial class TestClass1Derived : TestClass1
     {
         public void Test()
