@@ -164,7 +164,7 @@ namespace ValueLink.Generator
             foreach (var x in this.Namespaces)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                var tinyhandFlag = x.Value.Any(a => a.ObjectFlag.HasFlag(ValueLinkObjectFlag.TinyhandObject)); // has TinyhandObjectAttribute
+                var tinyhandFlag = x.Value.Any(a => a.ContainTinyhandObjectAttribute()); // has TinyhandObjectAttribute
                 this.GenerateHeader(ssb, tinyhandFlag);
                 var ns = ssb.ScopeNamespace(x.Key);
 

@@ -1400,5 +1400,20 @@ ModuleInitializerClass_Added:
             ssb.AppendLine($"private {this.ObjectAttribute!.GoshujinClass}? {goshujinInstance};");
             ssb.AppendLine();
         }
+
+        internal bool ContainTinyhandObjectAttribute()
+        {
+            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.TinyhandObject))
+            {
+                return true;
+            }
+
+            if (this.Children != null)
+            {
+                return this.Children.Any(a => a.ObjectFlag.HasFlag(ValueLinkObjectFlag.TinyhandObject));
+            }
+
+            return false;
+        }
     }
 }

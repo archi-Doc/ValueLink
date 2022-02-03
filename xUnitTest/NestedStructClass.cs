@@ -1,10 +1,14 @@
-﻿using System;
-using System.Collections.ObjectModel;
+// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
+
+using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using ValueLink;
 using Tinyhand;
+using Xunit;
 
-namespace Sandbox;
+namespace xUnitTest;
 
 public partial class NestedStructClass<T>
     where T : struct
@@ -37,12 +41,4 @@ public partial class NestedStructClass<T>
     }
 
     private Item.GoshujinClass goshujin = new();
-}
-
-class Program
-{
-    static void Main(string[] args)
-    {
-        Console.WriteLine("Hello World!");
-    }
 }
