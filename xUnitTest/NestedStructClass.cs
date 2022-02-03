@@ -10,8 +10,9 @@ using Xunit;
 
 namespace xUnitTest;
 
-public partial class NestedStructClass<T>
+public partial class NestedStructClass<T, U>
     where T : struct
+    where U : class
 {
     [TinyhandObject]
     [ValueLinkObject]
@@ -29,7 +30,7 @@ public partial class NestedStructClass<T>
         }
 
         [Key(0)]
-        internal T Value;
+        internal T Value = default!;
 
         [Key(1)]
         [Link(Type = ChainType.Unordered)]

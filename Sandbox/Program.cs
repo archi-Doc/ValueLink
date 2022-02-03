@@ -6,8 +6,16 @@ using Tinyhand;
 
 namespace Sandbox;
 
-public partial class NestedStructClass<T>
+[TinyhandObject]
+public partial class GenericClass<T>
+{
+    [Key(0)]
+    public T X { get; set; } = default!;
+}
+
+public partial class NestedStructClass<T, U>
     where T : struct
+    where U : class
 {
     [TinyhandObject]
     [ValueLinkObject]

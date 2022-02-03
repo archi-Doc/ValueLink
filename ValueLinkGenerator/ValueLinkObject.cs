@@ -616,7 +616,8 @@ namespace ValueLink.Generator
                 }
 
                 // Open generic
-                (initializerClassName, _) = containingObject.GetClosedGenericName("object");
+                var nameList = containingObject.GetSafeGenericNameList(); // tempcode
+                (initializerClassName, _) = containingObject.GetClosedGenericName(nameList);
 
 ModuleInitializerClass_Added:
                 if (initializerClassName != null)
