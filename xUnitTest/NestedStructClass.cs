@@ -1,17 +1,14 @@
-﻿using System;
-using System.Collections.ObjectModel;
+// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
+
+using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using ValueLink;
 using Tinyhand;
+using Xunit;
 
-namespace Sandbox;
-
-[TinyhandObject]
-public partial class GenericClass<T>
-{
-    [Key(0)]
-    public T X { get; set; } = default!;
-}
+namespace xUnitTest;
 
 public partial class NestedStructClass<T, U>
     where T : struct
@@ -33,7 +30,7 @@ public partial class NestedStructClass<T, U>
         }
 
         [Key(0)]
-        internal T Value;
+        internal T Value = default!;
 
         [Key(1)]
         [Link(Type = ChainType.Unordered)]
@@ -45,12 +42,4 @@ public partial class NestedStructClass<T, U>
     }
 
     private Item.GoshujinClass goshujin = new();
-}
-
-class Program
-{
-    static void Main(string[] args)
-    {
-        Console.WriteLine("Hello World!");
-    }
 }
