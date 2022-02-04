@@ -642,14 +642,15 @@ ModuleInitializerClass_Added:
                         var generic = x.GetClosedGenericName(null);
                         generic.count = x.Generics_Arguments.Length;
                         var genericBrace = generic.count == 0 ? string.Empty : generic.count == 1 ? "<>" : $"<{new string(',', generic.count - 1)}>";
+                        var getGenericType = generic.count == 0 ? ".GetGenericTypeDefinition()" : string.Empty;
                         ssb.AppendLine($"GeneratedResolver.Instance.SetFormatterGenerator(typeof({generic.name + "." + x.ObjectAttribute!.GoshujinClass}), x =>");
                         ssb.AppendLine("{");
                         ssb.IncrementIndent();
                         // ssb.AppendLine($"if (x.Length != {x.CountGenericsArguments()}) return (null!, null!);");
                         var name = string.Format(classFormat, x.FormatterNumber);
-                        ssb.AppendLine($"var formatter = Activator.CreateInstance(typeof({name}{genericBrace}).MakeGenericType(x));");
+                        ssb.AppendLine($"var formatter = Activator.CreateInstance(typeof({name}{genericBrace}){getGenericType}.MakeGenericType(x));");
                         name = string.Format(classFormat, x.FormatterExtraNumber);
-                        ssb.AppendLine($"var formatterExtra = Activator.CreateInstance(typeof({name}{genericBrace}).MakeGenericType(x));");
+                        ssb.AppendLine($"var formatterExtra = Activator.CreateInstance(typeof({name}{genericBrace}){getGenericType}.MakeGenericType(x));");
                         ssb.AppendLine($"return ((ITinyhandFormatter)formatter!, (ITinyhandFormatterExtra)formatterExtra!);");
                         ssb.DecrementIndent();
                         ssb.AppendLine("});");
