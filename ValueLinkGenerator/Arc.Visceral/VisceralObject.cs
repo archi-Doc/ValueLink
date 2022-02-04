@@ -761,7 +761,7 @@ public abstract class VisceralObjectBase<T> : IComparable<T>
         {
             sb.Append(".");
             sb.Append(array[i].SimpleName);
-            if (array[i].Generics_IsGeneric)
+            if (array[i].Generics_Arguments.Length > 0)
             {
                 var length = array[i].Generics_Arguments.Length;
                 sb.Append("<");
