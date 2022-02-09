@@ -844,7 +844,11 @@ ModuleInitializerClass_Added:
 
         internal void GenerateLink(ScopingStringBuilder ssb, GeneratorInformation info, Linkage x)
         {
-            this.GenerateLink_Property(ssb, info, x);
+            if (!x.NoValue)
+            {// Value property
+                this.GenerateLink_Property(ssb, info, x);
+            }
+
             this.GenerateLink_Link(ssb, info, x);
         }
 

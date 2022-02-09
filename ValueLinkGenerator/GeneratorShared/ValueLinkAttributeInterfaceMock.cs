@@ -129,6 +129,8 @@ namespace ValueLink
 
         public ValueLinkAccessibility Accessibility { get; set; } = ValueLinkAccessibility.PublicGetter;
 
+        public bool NoValue { get; set; } = false;
+
         public LinkAttributeMock()
         {
         }
@@ -178,6 +180,12 @@ namespace ValueLink
             if (val != null)
             {
                 attribute.Accessibility = (ValueLinkAccessibility)val;
+            }
+
+            val = AttributeHelper.GetValue(-1, nameof(NoValue), constructorArguments, namedArguments);
+            if (val != null)
+            {
+                attribute.NoValue = (bool)val;
             }
 
             return attribute;
