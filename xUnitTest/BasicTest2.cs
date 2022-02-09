@@ -14,8 +14,12 @@ namespace xUnitTest
     public partial class TestClass3
     {
         [Link(Primary = true, Type = ChainType.Ordered, NoValue = true, Accessibility = ValueLinkAccessibility.Public)]
+        // [Link(Name = "Id2", Type = ChainType.Unordered)]
         [KeyAsName]
         private int Id;
+
+        // [Link(Type = ChainType.Ordered)]
+        public string Name { get; } = string.Empty;
 
         public TestClass3()
         {

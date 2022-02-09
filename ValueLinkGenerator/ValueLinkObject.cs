@@ -39,6 +39,7 @@ namespace ValueLink.Generator
         GenerateINotifyPropertyChanged = 1 << 13, // Generate INotifyPropertyChanged
         GenerateSetProperty = 1 << 14, // Generate SetProperty()
         TinyhandObject = 1 << 15, // Has TinyhandObjectAttribute
+        HasLinkAttribute = 1 << 16, // Has LinkAttribute
     }
 
     public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
@@ -54,8 +55,6 @@ namespace ValueLink.Generator
         public ValueLinkObjectAttributeMock? ObjectAttribute { get; private set; }
 
         public DeclarationCondition PropertyChangedDeclaration { get; private set; }
-
-        public Linkage? Linkage { get; private set; }
 
         public List<Linkage>? Links { get; private set; } = null;
 
@@ -175,6 +174,7 @@ namespace ValueLink.Generator
                 if (linkageFlag && !this.Method_IsConstructor)
                 {// One link is allowed per member.
                     this.Body.AddDiagnostic(ValueLinkBody.Error_MultipleLink, linkAttribute.Location);
+                    continue;
                 }
 
                 linkageFlag = true;
@@ -184,7 +184,7 @@ namespace ValueLink.Generator
                     continue;
                 }
 
-                this.Linkage = linkage;
+                this.ObjectFlag |= ValueLinkObjectFlag.HasLinkAttribute;
                 if (this.ContainingObject is { } parent)
                 {// Add to parent's list
                     if (parent.Links == null)
@@ -478,7 +478,7 @@ namespace ValueLink.Generator
                 return;
             }
 
-            if (this.Linkage != null)
+            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.HasLinkAttribute))
             {
                 if (!this.IsSerializable || this.IsReadOnly || this.IsInitOnly)
                 {// Not serializable
