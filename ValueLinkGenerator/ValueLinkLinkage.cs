@@ -164,6 +164,8 @@ namespace ValueLink.Generator
             return linkage;
         }
 
+        public Linkage? MainLink { get; set; }
+
         public Location Location { get; private set; } = Location.None;
 
         public ChainType Type { get; private set; }
@@ -180,7 +182,7 @@ namespace ValueLink.Generator
 
         public ValueLinkAccessibility Accessibility { get; private set; }
 
-        public string ValueName { get; private set; } = string.Empty; // int Id { get; set; }
+        public string ValueName { get; set; } = string.Empty; // int Id { get; set; }
 
         public string LinkName { get; private set; } = string.Empty; // ListChain<int>.Link IdLink;
 

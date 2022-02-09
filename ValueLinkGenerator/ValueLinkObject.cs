@@ -184,12 +184,12 @@ namespace ValueLink.Generator
                         parent.Links = new();
                     }
 
-                    /*if (linkage.Target != null && parent.Links.First(x => x.Target == linkage.Target) is { } firstLink)
+                    if (linkage.Target != null && parent.Links.FirstOrDefault(x => x.Target == linkage.Target) is { } mainLink)
                     {
-                        // linkage.
-                        this.Body.AddDiagnostic(ValueLinkBody.Error_MultipleLink2, linkAttribute.Location);
-                        continue;
-                    }*/
+                        // Multiple linkages.
+                        linkage.MainLink = mainLink;
+                        linkage.ValueName = mainLink.ValueName;
+                    }
 
                     parent.Links.Add(linkage);
                 }
@@ -427,7 +427,12 @@ namespace ValueLink.Generator
                         x.Target.CheckMember(this);
                     }
 
-                    var result = this.CheckKeyword(x.ValueName, x.Location);
+                    var result = true;
+                    if (!x.NoValue && x.MainLink == null)
+                    {
+                        result = this.CheckKeyword(x.ValueName, x.Location);
+                    }
+
                     if (x.IsValidLink && result)
                     {
                         this.CheckKeyword(x.LinkName, x.Location);
@@ -810,10 +815,12 @@ ModuleInitializerClass_Added:
             }
 
             if (this.Links != null)
-            {// Generate Link
-                foreach (var x in this.Links)
+            {// Generate Value and Link properties
+                // Main link, sub, sub,,,
+                foreach (var priority in this.Links.Where(a => a.MainLink == null))
                 {
-                    this.GenerateLink(ssb, info, x);
+                    var sub = this.Links.Where(a => a.MainLink == priority).ToArray();
+                    this.GenerateLink(ssb, info, priority, sub);
                 }
             }
 
@@ -835,55 +842,64 @@ ModuleInitializerClass_Added:
             }
         }
 
-        internal void GenerateLink(ScopingStringBuilder ssb, GeneratorInformation info, Linkage x)
+        internal void GenerateLink(ScopingStringBuilder ssb, GeneratorInformation info, Linkage main, Linkage[] sub)
         {
-            if (!x.NoValue)
+            if (!main.NoValue)
             {// Value property
-                this.GenerateLink_Property(ssb, info, x);
+                this.GenerateLink_Property(ssb, info, main, sub);
             }
 
-            this.GenerateLink_Link(ssb, info, x);
+            this.GenerateLink_Link(ssb, info, main);
+            foreach (var x in sub)
+            {
+                this.GenerateLink_Link(ssb, info, x);
+            }
         }
 
-        internal void GenerateLink_Property(ScopingStringBuilder ssb, GeneratorInformation info, Linkage x)
+        internal void GenerateLink_Property(ScopingStringBuilder ssb, GeneratorInformation info, Linkage main, Linkage[] sub)
         {
-            var target = x.Target;
+            var target = main.Target;
             if (target == null || target.TypeObject == null)
             {
                 return;
             }
 
-            var accessibility = VisceralHelper.GetterSetterAccessibilityToPropertyString(x.GetterAccessibility, x.SetterAccessibility);
-            using (var scopeProperty = ssb.ScopeBrace($"{accessibility.property}{target.TypeObject.FullName} {x.ValueName}"))
+            var accessibility = VisceralHelper.GetterSetterAccessibilityToPropertyString(main.GetterAccessibility, main.SetterAccessibility);
+            using (var scopeProperty = ssb.ScopeBrace($"{accessibility.property}{target.TypeObject.FullName} {main.ValueName}"))
             {
-                ssb.AppendLine($"{accessibility.getter}get => this.{x.TargetName};");
+                ssb.AppendLine($"{accessibility.getter}get => this.{main.TargetName};");
                 using (var scopeSet = ssb.ScopeBrace($"{accessibility.setter}set"))
                 {
                     string compare;
                     if (target.TypeObject.IsPrimitive)
                     {
-                        compare = $"if (value != this.{x.TargetName})";
+                        compare = $"if (value != this.{main.TargetName})";
                     }
                     else
                     {
-                        compare = $"if (!EqualityComparer<{target.TypeObject.FullName}>.Default.Equals(value, this.{x.TargetName}))";
+                        compare = $"if (!EqualityComparer<{target.TypeObject.FullName}>.Default.Equals(value, this.{main.TargetName}))";
                     }
 
                     using (var scopeCompare = ssb.ScopeBrace(compare))
                     {
-                        ssb.AppendLine($"this.{x.TargetName} = value;");
-                        if (x.AutoLink)
+                        ssb.AppendLine($"this.{main.TargetName} = value;");
+                        if (main.AutoLink)
                         {
                             using (var obj = ssb.ScopeObject("this"))
                             {
-                                if (x.IsValidLink)
+                                if (main.IsValidLink)
+                                {
+                                    this.Generate_AddLink(ssb, info, main, $"this.{this.GoshujinInstanceIdentifier}?");
+                                }
+
+                                foreach (var x in sub.Where(a => a.IsValidLink))
                                 {
                                     this.Generate_AddLink(ssb, info, x, $"this.{this.GoshujinInstanceIdentifier}?");
                                 }
 
-                                if (x.AutoNotify)
+                                if (main.AutoNotify)
                                 {
-                                    this.Generate_Notify(ssb, info, x);
+                                    this.Generate_Notify(ssb, info, main);
                                 }
                             }
                         }
@@ -1366,12 +1382,9 @@ ModuleInitializerClass_Added:
                         {// Remove Chains
                             if (this.Links != null)
                             {
-                                foreach (var link in this.Links)
+                                foreach (var link in this.Links.Where(a => a.IsValidLink))
                                 {
-                                    if (link.IsValidLink)
-                                    {
-                                        ssb.AppendLine($"this.{goshujinInstance}.{link.ChainName}.Remove({ssb.FullObject});");
-                                    }
+                                    ssb.AppendLine($"this.{goshujinInstance}.{link.ChainName}.Remove({ssb.FullObject});");
                                 }
                             }
                         }
