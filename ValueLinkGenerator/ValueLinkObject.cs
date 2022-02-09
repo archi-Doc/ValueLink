@@ -184,6 +184,13 @@ namespace ValueLink.Generator
                         parent.Links = new();
                     }
 
+                    /*if (linkage.Target != null && parent.Links.First(x => x.Target == linkage.Target) is { } firstLink)
+                    {
+                        // linkage.
+                        this.Body.AddDiagnostic(ValueLinkBody.Error_MultipleLink2, linkAttribute.Location);
+                        continue;
+                    }*/
+
                     parent.Links.Add(linkage);
                 }
             }
@@ -420,7 +427,7 @@ namespace ValueLink.Generator
                         x.Target.CheckMember(this);
                     }
 
-                    var result = this.CheckKeyword(x.Name, x.Location);
+                    var result = this.CheckKeyword(x.ValueName, x.Location);
                     if (x.IsValidLink && result)
                     {
                         this.CheckKeyword(x.LinkName, x.Location);
@@ -847,7 +854,7 @@ ModuleInitializerClass_Added:
             }
 
             var accessibility = VisceralHelper.GetterSetterAccessibilityToPropertyString(x.GetterAccessibility, x.SetterAccessibility);
-            using (var scopeProperty = ssb.ScopeBrace($"{accessibility.property}{target.TypeObject.FullName} {x.Name}"))
+            using (var scopeProperty = ssb.ScopeBrace($"{accessibility.property}{target.TypeObject.FullName} {x.ValueName}"))
             {
                 ssb.AppendLine($"{accessibility.getter}get => this.{x.TargetName};");
                 using (var scopeSet = ssb.ScopeBrace($"{accessibility.setter}set"))
@@ -909,11 +916,11 @@ ModuleInitializerClass_Added:
         {
             if (this.PropertyChangedDeclaration == DeclarationCondition.ImplicitlyDeclared)
             {
-                ssb.AppendLine($"this.PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(\"{link.Name}\"));");
+                ssb.AppendLine($"this.PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(\"{link.ValueName}\"));");
             }
             else if (this.PropertyChangedDeclaration == DeclarationCondition.ExplicitlyDeclared)
             {
-                ssb.AppendLine($"this.{this.ObjectAttribute!.ExplicitPropertyChanged}?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(\"{link.Name}\"));");
+                ssb.AppendLine($"this.{this.ObjectAttribute!.ExplicitPropertyChanged}?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(\"{link.ValueName}\"));");
             }
         }
 

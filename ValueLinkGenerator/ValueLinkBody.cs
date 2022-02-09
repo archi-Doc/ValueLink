@@ -108,6 +108,10 @@ namespace ValueLink.Generator
             id: "CLG021", title: "Inaccessible member", messageFormat: "'{0}' is inaccessible due to its protection level",
             category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
+        public static readonly DiagnosticDescriptor Warning_AutoNotifyEnabled = new DiagnosticDescriptor(
+            id: "CLG022", title: "AutoNotify enabled", messageFormat: "Value property is enabled for AutoNotify to work properly",
+            category: "ValueLinkGenerator", DiagnosticSeverity.Warning, isEnabledByDefault: true);
+
         public ValueLinkBody(GeneratorExecutionContext context)
             : base(context)
         {
