@@ -153,6 +153,9 @@ namespace ValueLink.Generator
                 }
             }
 
+            // No value
+            linkage.NoValue = linkAttribute.NoValue;
+
             return linkage;
         }
 
@@ -189,5 +192,7 @@ namespace ValueLink.Generator
         public Accessibility GetterAccessibility { get; private set; } = Microsoft.CodeAnalysis.Accessibility.Public;
 
         public Accessibility SetterAccessibility { get; private set; } = Microsoft.CodeAnalysis.Accessibility.Public;
+
+        public bool NoValue { get; private set; }
     }
 }

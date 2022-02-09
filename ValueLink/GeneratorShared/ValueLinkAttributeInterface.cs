@@ -71,7 +71,7 @@ namespace ValueLink
     public enum ValueLinkAccessibility
     {
         /// <summary>
-        /// Value/Link members have public getter, and setter with inherited accessibility.
+        /// [Default] Value/Link members have public getter, and setter with inherited accessibility.
         /// </summary>
         PublicGetter,
 
@@ -147,6 +147,11 @@ namespace ValueLink
         /// Gets or sets a value which specifies the accessibility of generated Value/Link members [the default is <see cref="ValueLinkAccessibility.PublicGetter"/>].
         /// </summary>
         public ValueLinkAccessibility Accessibility { get; set; } = ValueLinkAccessibility.PublicGetter;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether or not to create a value property from the target member [the default is <see langword="false"/>].
+        /// </summary>
+        public bool NoValue { get; set; } = false;
 
         public LinkAttribute()
         {
