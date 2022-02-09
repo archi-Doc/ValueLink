@@ -14,7 +14,7 @@ public partial class NestedStructClass<T, U>
     where T : struct
     where U : class
 {
-    [TinyhandObject]
+    // [TinyhandObject]
     [ValueLinkObject]
     private sealed partial class Item
     {

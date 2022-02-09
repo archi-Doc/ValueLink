@@ -721,13 +721,18 @@ public abstract class VisceralObjectBase<T> : IComparable<T>
 
         return list;
 
-        static string GetSafeGenericName(T typeArgument)
+        string GetSafeGenericName(T typeArgument)
         {
             if (typeArgument.symbol is ITypeParameterSymbol tps)
             {
                 if (tps.HasValueTypeConstraint)
                 {
                     return "int";
+                }
+                else if (tps.ConstraintTypes.Length > 0 &&
+                    this.Body.Add(tps.ConstraintTypes[0]) is { } typeObject)
+                {// Temporary fix...
+                    return typeObject.FullName;
                 }
             }
 
@@ -761,7 +766,7 @@ public abstract class VisceralObjectBase<T> : IComparable<T>
         {
             sb.Append(".");
             sb.Append(array[i].SimpleName);
-            if (array[i].Generics_IsGeneric)
+            if (array[i].Generics_Arguments.Length > 0)
             {
                 var length = array[i].Generics_Arguments.Length;
                 sb.Append("<");
