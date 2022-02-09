@@ -168,16 +168,8 @@ namespace ValueLink.Generator
             }
 
             // Linkage
-            bool linkageFlag = false;
             foreach (var linkAttribute in this.AllAttributes.Where(x => x.FullName == LinkAttributeMock.FullName))
             {
-                if (linkageFlag && !this.Method_IsConstructor)
-                {// One link is allowed per member.
-                    this.Body.AddDiagnostic(ValueLinkBody.Error_MultipleLink, linkAttribute.Location);
-                    continue;
-                }
-
-                linkageFlag = true;
                 var linkage = Linkage.Create(this, linkAttribute);
                 if (linkage == null)
                 {
@@ -190,12 +182,6 @@ namespace ValueLink.Generator
                     if (parent.Links == null)
                     {
                         parent.Links = new();
-                    }
-
-                    if (linkage.Target != null && parent.Links.Any(x => x.Target == linkage.Target))
-                    {
-                        this.Body.AddDiagnostic(ValueLinkBody.Error_MultipleLink2, linkAttribute.Location);
-                        continue;
                     }
 
                     parent.Links.Add(linkage);
