@@ -41,7 +41,7 @@ namespace ValueLink.Generator
             category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public static readonly DiagnosticDescriptor Error_ReadonlyMember = new DiagnosticDescriptor(
-            id: "CLG005", title: "Not field", messageFormat: "The target of the link '{0}' cannot be readonly or getter-only",
+            id: "CLG005", title: "Not field", messageFormat: "The the link target '{0}' cannot be readonly or getter-only",
             category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public static readonly DiagnosticDescriptor Error_LinkTargetNameError = new DiagnosticDescriptor(
@@ -107,6 +107,10 @@ namespace ValueLink.Generator
         public static readonly DiagnosticDescriptor Error_InaccessibleMember = new DiagnosticDescriptor(
             id: "CLG021", title: "Inaccessible member", messageFormat: "'{0}' is inaccessible due to its protection level",
             category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Warning_AutoNotifyEnabled = new DiagnosticDescriptor(
+            id: "CLG022", title: "AutoNotify enabled", messageFormat: "Value property is enabled for AutoNotify to work properly",
+            category: "ValueLinkGenerator", DiagnosticSeverity.Warning, isEnabledByDefault: true);
 
         public ValueLinkBody(GeneratorExecutionContext context)
             : base(context)

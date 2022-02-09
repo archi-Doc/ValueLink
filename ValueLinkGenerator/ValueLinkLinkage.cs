@@ -120,7 +120,7 @@ namespace ValueLink.Generator
                     }
                 }
 
-                linkage.Name = linkAttribute.Name + "Value";
+                linkage.ValueName = linkAttribute.Name + "Value";
                 if (linkage.IsValidLink)
                 {
                     linkage.LinkName = linkAttribute.Name + "Link";
@@ -155,9 +155,16 @@ namespace ValueLink.Generator
 
             // No value
             linkage.NoValue = linkAttribute.NoValue;
+            if (linkage.AutoNotify && linkage.NoValue)
+            {
+                linkage.NoValue = false;
+                obj.Body.AddDiagnostic(ValueLinkBody.Warning_AutoNotifyEnabled, attribute.Location);
+            }
 
             return linkage;
         }
+
+        public Linkage? MainLink { get; set; }
 
         public Location Location { get; private set; } = Location.None;
 
@@ -175,7 +182,7 @@ namespace ValueLink.Generator
 
         public ValueLinkAccessibility Accessibility { get; private set; }
 
-        public string Name { get; private set; } = string.Empty; // int Id { get; set; }
+        public string ValueName { get; set; } = string.Empty; // int Id { get; set; }
 
         public string LinkName { get; private set; } = string.Empty; // ListChain<int>.Link IdLink;
 

@@ -18,9 +18,10 @@ public partial class TestClass // Partial class is required for source generator
     public string Name { get; private set; } = string.Empty; // Generated property name: NameValue, chain name: NameChain
 
     [Link(Type = ChainType.Ordered, Accessibility = ValueLinkAccessibility.Public)] // Sorted link associated with age.
+    [Link(Name = "AgeRev", Type = ChainType.ReverseOrdered)] // Specify a different name for the target in order to set up multiple links.
     private int age; // Generated property name: AgeValue, chain name: AgeChain
 
-    [Link(Type = ChainType.StackList, Name = "Stack")] // Stack (Constructor can have multiple Link attributes)
+    [Link(Type = ChainType.StackList, Name = "Stack")] // Stack
     [Link(Type = ChainType.List, Name = "List")] // List
     public TestClass(int id, string name, int age)
     {
@@ -76,6 +77,14 @@ public class Program
              ID: 2, Fuga , 15
              ID: 1, Hoge , 27
              ID: 0, Zero , 50 */
+
+        ConsoleWriteIEnumerable("[Sorted by Age in reverse order]", g.AgeRevChain);
+        /* Sorted by Age
+             ID: 0, Zero , 50
+             ID: 1, Hoge , 27
+             ID: 2, Fuga , 15
+             ID: 1, A    ,  7
+              */
 
         var t = g.ListChain[1];
         Console.WriteLine($"{t.NameValue} age {t.AgeValue} => 95"); // Change Fuga's age to 95.
