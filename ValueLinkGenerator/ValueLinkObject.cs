@@ -40,6 +40,7 @@ namespace ValueLink.Generator
         GenerateSetProperty = 1 << 14, // Generate SetProperty()
         TinyhandObject = 1 << 15, // Has TinyhandObjectAttribute
         HasLinkAttribute = 1 << 16, // Has LinkAttribute
+        HasPrimaryLink = 1 << 17, // Has primary link
     }
 
     public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
@@ -456,14 +457,16 @@ namespace ValueLink.Generator
                 }
             }
 
-            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.TinyhandObject))
-            {// Check primary link
-                if (this.Links != null)
-                {
-                    if (!this.Links.Any(x => x.Primary))
-                    {
-                        this.Body.AddDiagnostic(ValueLinkBody.Warning_NoPrimaryLink, this.Location);
-                    }
+            // Check primary link
+            if (this.Links != null)
+            {
+                if (this.Links.Any(x => x.Primary))
+                {// Has primary link.
+                    this.ObjectFlag |= ValueLinkObjectFlag.HasPrimaryLink;
+                }
+                else if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.TinyhandObject))
+                {// No primary link
+                    this.Body.AddDiagnostic(ValueLinkBody.Warning_NoPrimaryLink, this.Location);
                 }
             }
         }
