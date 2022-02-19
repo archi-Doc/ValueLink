@@ -976,8 +976,21 @@ ModuleInitializerClass_Added:
             var tinyhandObject = this.ObjectFlag.HasFlag(ValueLinkObjectFlag.TinyhandObject);
 
             var goshujinInterface = " : IGoshujin";
-            if (tinyhandObject)
+
+            // Primary link
+            Linkage? primaryLink = null;
+            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.HasPrimaryLink))
             {
+                primaryLink = this.Links.FirstOrDefault(x => x.Primary);
+            }
+
+            if (primaryLink != null)
+            {// IEnumerable
+                goshujinInterface += $", IEnumerable, IEnumerable<{this.LocalName}>";
+            }
+
+            if (tinyhandObject)
+            {// ITinyhandSerialize
                 goshujinInterface += $", ITinyhandSerialize, ITinyhandClone<{this.GoshujinFullName}>";
             }
 
@@ -990,6 +1003,13 @@ ModuleInitializerClass_Added:
                 this.GenerateGoshujin_Remove(ssb, info);
                 this.GenerateGoshujin_Clear(ssb, info);
                 this.GenerateGoshujin_Chain(ssb, info);
+
+                if (primaryLink != null)
+                {// IEnumerable
+                    ssb.AppendLine();
+                    ssb.AppendLine($"IEnumerator<{this.LocalName}> IEnumerable<{this.LocalName}>.GetEnumerator() => this.{primaryLink.ChainName}.GetEnumerator();");
+                    ssb.AppendLine($"System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => this.{primaryLink.ChainName}.GetEnumerator();");
+                }
 
                 if (tinyhandObject)
                 {

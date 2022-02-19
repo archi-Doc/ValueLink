@@ -55,6 +55,8 @@ public partial class SerializeClass
         new SerializeClass(1, "Hoge").Goshujin = g; // Add an object.
         new SerializeClass(2, "Fuga").Goshujin = g;
 
+        var array = g.ToArray();
+
         var st = TinyhandSerializer.SerializeToString(g); // Serialize to string.
         var g2 = TinyhandSerializer.Deserialize<SerializeClass.GoshujinClass>(TinyhandSerializer.Serialize(g)); // Serialize to a byte array and deserialize it.
     }
