@@ -40,6 +40,7 @@ namespace ValueLink.Generator
         GenerateSetProperty = 1 << 14, // Generate SetProperty()
         TinyhandObject = 1 << 15, // Has TinyhandObjectAttribute
         HasLinkAttribute = 1 << 16, // Has LinkAttribute
+        HasPrimaryLink = 1 << 17, // Has primary link
     }
 
     public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
@@ -456,14 +457,16 @@ namespace ValueLink.Generator
                 }
             }
 
-            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.TinyhandObject))
-            {// Check primary link
-                if (this.Links != null)
-                {
-                    if (!this.Links.Any(x => x.Primary))
-                    {
-                        this.Body.AddDiagnostic(ValueLinkBody.Warning_NoPrimaryLink, this.Location);
-                    }
+            // Check primary link
+            if (this.Links != null)
+            {
+                if (this.Links.Any(x => x.Primary))
+                {// Has primary link.
+                    this.ObjectFlag |= ValueLinkObjectFlag.HasPrimaryLink;
+                }
+                else if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.TinyhandObject))
+                {// No primary link
+                    this.Body.AddDiagnostic(ValueLinkBody.Warning_NoPrimaryLink, this.Location);
                 }
             }
         }
@@ -973,8 +976,21 @@ ModuleInitializerClass_Added:
             var tinyhandObject = this.ObjectFlag.HasFlag(ValueLinkObjectFlag.TinyhandObject);
 
             var goshujinInterface = " : IGoshujin";
-            if (tinyhandObject)
+
+            // Primary link
+            Linkage? primaryLink = null;
+            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.HasPrimaryLink))
             {
+                primaryLink = this.Links.FirstOrDefault(x => x.Primary);
+            }
+
+            if (primaryLink != null)
+            {// IEnumerable
+                goshujinInterface += $", IEnumerable, IEnumerable<{this.LocalName}>";
+            }
+
+            if (tinyhandObject)
+            {// ITinyhandSerialize
                 goshujinInterface += $", ITinyhandSerialize, ITinyhandClone<{this.GoshujinFullName}>";
             }
 
@@ -987,6 +1003,13 @@ ModuleInitializerClass_Added:
                 this.GenerateGoshujin_Remove(ssb, info);
                 this.GenerateGoshujin_Clear(ssb, info);
                 this.GenerateGoshujin_Chain(ssb, info);
+
+                if (primaryLink != null)
+                {// IEnumerable
+                    ssb.AppendLine();
+                    ssb.AppendLine($"IEnumerator<{this.LocalName}> IEnumerable<{this.LocalName}>.GetEnumerator() => this.{primaryLink.ChainName}.GetEnumerator();");
+                    ssb.AppendLine($"System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => this.{primaryLink.ChainName}.GetEnumerator();");
+                }
 
                 if (tinyhandObject)
                 {
