@@ -22,7 +22,7 @@ public partial class TestClass // Partial class is required for source generator
     private int age; // Generated property name: AgeValue, chain name: AgeChain
 
     [Link(Type = ChainType.StackList, Name = "Stack")] // Stack
-    [Link(Type = ChainType.List, Name = "List")] // List
+    [Link(Type = ChainType.List, Name = "List", Primary = true)] // List (Primary link is a link type which is guaranteed to holds all objects in the collection)
     public TestClass(int id, string name, int age)
     {
         this.id = id;
@@ -52,6 +52,8 @@ public class Program
              ID: 2, Fuga , 15
              ID: 1, A    ,  7
              ID: 0, Zero , 50 */
+
+        ConsoleWriteIEnumerable("[Direct]", g); // You can enumerate objects directly if a primary link is specified (ListChain).
 
         Console.WriteLine("ListChain[2] : "); // ListChain can be accessed by index.
         Console.WriteLine(g.ListChain[2]); // ID: 1, A    ,  7
