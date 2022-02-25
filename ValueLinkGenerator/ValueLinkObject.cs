@@ -577,6 +577,11 @@ namespace ValueLink.Generator
 
         public static void GenerateDeserializeChain(ValueLinkObject obj, ScopingStringBuilder ssb, object? info, Linkage link)
         {
+            if (link.AutoLink)
+            {
+                ssb.AppendLine($"read{link.ChainName} = true;"); // readflag
+            }
+
             ssb.AppendLine("var len = reader.ReadArrayHeader();");
             ssb.AppendLine($"this.{link.ChainName}.Clear();");
             using (var scopeParameter = ssb.ScopeObject("x"))
@@ -1234,12 +1239,42 @@ ModuleInitializerClass_Added:
 
                 ssb.RestoreSecurityDepth();
 
+                // readflag
+                if (this.Links != null)
+                {
+                    ssb.AppendLine();
+                    foreach (var x in this.Links.Where(x => x.IsValidLink && x.AutoLink))
+                    {
+                        ssb.AppendLine($"var read{x.ChainName} = false;");
+                    }
+                }
+
                 // map, chains
                 ssb.AppendLine();
                 ssb.AppendLine("var numberOfData = reader.ReadMapHeader2();");
                 using (var loop = ssb.ScopeBrace("while (numberOfData-- > 0)"))
                 {
                     this.DeserializeChainAutomata.Generate(ssb, info);
+                }
+
+                // readflag
+                if (this.Links != null)
+                {// autolink unread chains.
+                    foreach (var x in this.Links.Where(x => x.IsValidLink && x.AutoLink))
+                    {
+                        ssb.AppendLine();
+                        using (var ifUnread = ssb.ScopeBrace($"if (!read{x.ChainName})"))
+                        {
+                            using (var scopeFor = ssb.ScopeBrace("for (var n = 0; n < max; n++)"))
+                            {
+                                using (var scopeParameter = ssb.ScopeObject("x"))
+                                {
+                                    ssb.AppendLine("var x = array[n];");
+                                    this.Generate_AddLink(ssb, info, x, "this");
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

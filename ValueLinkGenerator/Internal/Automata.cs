@@ -134,6 +134,11 @@ namespace Arc.Visceral
                 }
             }
 
+            using (var ifElse = ssb.ScopeBrace("else"))
+            {
+                ssb.AppendLine("goto SkipLabel;");
+            }
+
             // ssb.GotoSkipLabel();
         }
 
@@ -156,6 +161,11 @@ namespace Arc.Visceral
                 {
                     this.GenerateMethod(this.Object, ssb, info, x.Member!);
                 }
+            }
+
+            using (var ifElse = ssb.ScopeBrace("else"))
+            {
+                ssb.AppendLine("goto SkipLabel;");
             }
 
             // ssb.GotoSkipLabel();
