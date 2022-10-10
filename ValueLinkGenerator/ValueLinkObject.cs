@@ -597,9 +597,9 @@ namespace ValueLink.Generator
         public static void GenerateLoader(ScopingStringBuilder ssb, GeneratorInformation info, List<ValueLinkObject> list)
         {
             var classFormat = "__gen__cf__{0:D4}";
-            var list2 = list.SelectMany(x => x.ConstructedObjects).Where(x => x.ObjectFlag.HasFlag(ValueLinkObjectFlag.TinyhandObject));
+            var list2 = list.SelectMany(x => x.ConstructedObjects).Where(x => x.ObjectFlag.HasFlag(ValueLinkObjectFlag.TinyhandObject)).ToArray();
 
-            if (list.Count > 0 && list[0].ContainingObject is { } containingObject)
+            if (list2.Length > 0 && list2[0].ContainingObject is { } containingObject)
             {// Add ModuleInitializerClass
                 string? initializerClassName = null;
                 if (containingObject.ClosedGenericHint != null)
