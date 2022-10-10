@@ -211,6 +211,8 @@ public class VisceralAttribute : IComparable<VisceralAttribute>
         }
     }
 
+    public SyntaxReference? SyntaxReference => this.attributeData?.ApplicationSyntaxReference;
+
     protected AttributeData? attributeData;
 }
 
@@ -716,14 +718,14 @@ public abstract class VisceralObjectBase<T> : IComparable<T>
         var list = new string[this.Generics_Arguments.Length];
         for (var i = 0; i < this.Generics_Arguments.Length; i++)
         {
-            list[i] = GetSafeGenericName(this.Generics_Arguments[i]);
+            list[i] = GetSafeGenericName(this.Generics_Arguments[i].symbol);
         }
 
         return list;
 
-        string GetSafeGenericName(T typeArgument)
+        string GetSafeGenericName(ISymbol? symbol)
         {
-            if (typeArgument.symbol is ITypeParameterSymbol tps)
+            if (symbol is ITypeParameterSymbol tps)
             {
                 if (tps.HasValueTypeConstraint)
                 {
@@ -732,7 +734,37 @@ public abstract class VisceralObjectBase<T> : IComparable<T>
                 else if (tps.ConstraintTypes.Length > 0 &&
                     this.Body.Add(tps.ConstraintTypes[0]) is { } typeObject)
                 {// Temporary fix...
-                    return typeObject.FullName;
+                    if (typeObject.Generics_IsGeneric && typeObject.symbol is INamedTypeSymbol nts)
+                    {
+                        return "string";
+
+                        /*var sb = new StringBuilder();
+                        sb.Append(typeObject.SimpleName);
+                        sb.Append("<");
+                        for (var i = 0; i < nts.TypeArguments.Length; i++)
+                        {
+                            if (i > 0)
+                            {
+                                sb.Append(", ");
+                            }
+
+                            if (SymbolEqualityComparer.Default.Equals(symbol, nts.TypeArguments[i]))
+                            {
+                                sb.Append("object");
+                            }
+                            else
+                            {
+                                sb.Append(GetSafeGenericName(nts.TypeArguments[i]));
+                            }
+                            sb.Append(">");
+                        }
+
+                        return sb.ToString();*/
+                    }
+                    else
+                    {
+                        return typeObject.FullName;
+                    }
                 }
             }
 
@@ -2030,6 +2062,19 @@ public abstract class VisceralObjectBase<T> : IComparable<T>
         protected set
         {
             this.isReadable = value;
+        }
+    }
+
+    public bool IsUnmanagedType
+    {
+        get
+        {
+            if (this.symbol is ITypeSymbol typeSymbol)
+            {
+                return typeSymbol.IsUnmanagedType;
+            }
+
+            return false;
         }
     }
 
