@@ -135,6 +135,13 @@ namespace ValueLink
         }
 
         /// <summary>
+        /// Gets the most duplicate key and the number of duplicates.
+        /// </summary>
+        /// <returns>The most duplicate key and the number of duplicates.</returns>
+        public (TKey? Key, int Count) TryGetMostDuplicateKey()
+            => this.chain.TryGetMostDuplicateKey();
+
+        /// <summary>
         /// Enumerates elements with the specified key.
         /// </summary>
         /// <param name="key">The key to search in a collection.</param>
