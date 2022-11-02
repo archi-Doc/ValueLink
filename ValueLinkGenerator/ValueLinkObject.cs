@@ -1010,10 +1010,11 @@ ModuleInitializerClass_Added:
                 this.GenerateGoshujin_Chain(ssb, info);
 
                 if (primaryLink != null)
-                {// IEnumerable
+                {// IEnumerable, Count
                     ssb.AppendLine();
                     ssb.AppendLine($"IEnumerator<{this.LocalName}> IEnumerable<{this.LocalName}>.GetEnumerator() => this.{primaryLink.ChainName}.GetEnumerator();");
                     ssb.AppendLine($"System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => this.{primaryLink.ChainName}.GetEnumerator();");
+                    ssb.AppendLine($"public int Count => this.{primaryLink.ChainName}.Count;");
                 }
 
                 if (tinyhandObject)
