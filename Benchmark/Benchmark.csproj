@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <LangVersion>default</LangVersion>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
@@ -17,7 +17,7 @@
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.13.2" />
-    <PackageReference Include="Tinyhand" Version="0.39.1" />
+    <PackageReference Include="Tinyhand" Version="0.41.1" />
   </ItemGroup>
 
   <ItemGroup>
