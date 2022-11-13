@@ -75,14 +75,6 @@ namespace ValueLink.Generator
 
         public string SerializeIndexIdentifier = string.Empty;
 
-        public int GenericsNumber { get; private set; }
-
-        public string GenericsNumberString => this.GenericsNumber > 1 ? this.GenericsNumber.ToString() : string.Empty;
-
-        public int FormatterNumber { get; private set; }
-
-        public int FormatterExtraNumber { get; private set; }
-
         public ValueLinkObject? ClosedGenericHint { get; private set; }
 
         internal Automata<ValueLinkObject, Linkage>? DeserializeChainAutomata { get; private set; }
@@ -364,7 +356,6 @@ namespace ValueLink.Generator
             if (!cf.ConstructedObjects.Contains(this))
             {
                 cf.ConstructedObjects.Add(this);
-                this.GenericsNumber = cf.ConstructedObjects.Count;
             }
         }
 
@@ -583,20 +574,20 @@ namespace ValueLink.Generator
             }
 
             ssb.AppendLine("var len = reader.ReadArrayHeader();");
-            ssb.AppendLine($"this.{link.ChainName}.Clear();");
-            using (var scopeParameter = ssb.ScopeObject("x"))
+            ssb.AppendLine($"{ssb.FullObject}.{link.ChainName}.Clear();");
+            var prevObject = ssb.FullObject;
+            using (var scopeParameter = ssb.ScopeFullObject("x"))
             using (var scopeFor = ssb.ScopeBrace("for (var n = 0; n < len; n++)"))
             {
                 ssb.AppendLine("var i = reader.ReadInt32();");
                 ssb.AppendLine("if (i >= max) throw new IndexOutOfRangeException();");
                 ssb.AppendLine("var x = array[i];");
-                obj.Generate_AddLink(ssb, (GeneratorInformation)info!, link, "this");
+                obj.Generate_AddLink(ssb, (GeneratorInformation)info!, link, prevObject);
             }
         }
 
         public static void GenerateLoader(ScopingStringBuilder ssb, GeneratorInformation info, List<ValueLinkObject> list)
         {
-            var classFormat = "__gen__cf__{0:D4}";
             var list2 = list.SelectMany(x => x.ConstructedObjects).Where(x => x.ObjectFlag.HasFlag(ValueLinkObjectFlag.TinyhandObject)).ToArray();
 
             if (list2.Length > 0 && list2[0].ContainingObject is { } containingObject)
@@ -638,26 +629,21 @@ ModuleInitializerClass_Added:
                 {
                     if (x.Generics_Kind != VisceralGenericsKind.OpenGeneric)
                     {// Formatter
-                        var name = string.Format(classFormat, x.FormatterNumber);
-                        ssb.AppendLine($"GeneratedResolver.Instance.SetFormatter<{x.GoshujinFullName}>(new {name}());");
-                        name = string.Format(classFormat, x.FormatterExtraNumber);
-                        ssb.AppendLine($"GeneratedResolver.Instance.SetFormatterExtra<{x.GoshujinFullName}>(new {name}());");
+                        ssb.AppendLine($"GeneratedResolver.Instance.SetFormatter(new Tinyhand.Formatters.TinyhandObjectFormatter<{x.GoshujinFullName}>());");
                     }
                     else
                     {// Formatter generator
-                        var generic = x.GetClosedGenericName(null);
-                        generic.count = x.Generics_Arguments.Length;
-                        var genericBrace = generic.count == 0 ? string.Empty : generic.count == 1 ? "<>" : $"<{new string(',', generic.count - 1)}>";
-                        var getGenericType = generic.count == 0 ? ".GetGenericTypeDefinition()" : string.Empty;
-                        ssb.AppendLine($"GeneratedResolver.Instance.SetFormatterGenerator(typeof({generic.name + "." + x.ObjectAttribute!.GoshujinClass}), x =>");
+                        var generic = x.GetClosedGenericName(null); // this.GoshujinFullName = this.FullName + "." + this.ObjectAttribute!.GoshujinClass;
+                        var name = generic.name + "." + x.ObjectAttribute!.GoshujinClass;
+
+                        ssb.AppendLine($"GeneratedResolver.Instance.SetFormatterGenerator(typeof({name}), x =>");
                         ssb.AppendLine("{");
                         ssb.IncrementIndent();
-                        // ssb.AppendLine($"if (x.Length != {x.CountGenericsArguments()}) return (null!, null!);");
-                        var name = string.Format(classFormat, x.FormatterNumber);
-                        ssb.AppendLine($"var formatter = Activator.CreateInstance(typeof({name}{genericBrace}){getGenericType}.MakeGenericType(x));");
-                        name = string.Format(classFormat, x.FormatterExtraNumber);
-                        ssb.AppendLine($"var formatterExtra = Activator.CreateInstance(typeof({name}{genericBrace}){getGenericType}.MakeGenericType(x));");
-                        ssb.AppendLine($"return ((ITinyhandFormatter)formatter!, (ITinyhandFormatterExtra)formatterExtra!);");
+
+                        ssb.AppendLine($"var ft = typeof({name}).MakeGenericType(x);");
+                        ssb.AppendLine($"var formatter = Activator.CreateInstance(typeof(Tinyhand.Formatters.TinyhandObjectFormatter<>).MakeGenericType(ft));");
+                        ssb.AppendLine("return (ITinyhandFormatter)formatter!;");
+
                         ssb.DecrementIndent();
                         ssb.AppendLine("});");
                     }
@@ -684,62 +670,6 @@ ModuleInitializerClass_Added:
 
                     sb.Append(">");
                     genericArguments = sb.ToString();
-                }
-
-                var name = string.Format(classFormat, x.FormatterNumber) + genericArguments;
-                using (var cls = ssb.ScopeBrace($"class {name}: ITinyhandFormatter<{x.GoshujinFullName}>"))
-                {
-                    // Serialize
-                    using (var s = ssb.ScopeBrace($"public void Serialize(ref TinyhandWriter writer, {x.GoshujinFullName + x.QuestionMarkIfReferenceType} v, TinyhandSerializerOptions options)"))
-                    {
-                        if (x.Kind.IsReferenceType())
-                        {// Reference type
-                            ssb.AppendLine($"if (v == null) {{ writer.WriteNil(); return; }}");
-                        }
-
-                        ssb.AppendLine($"v.Serialize(ref writer, options);");
-                    }
-
-                    // Deserialize
-                    using (var d = ssb.ScopeBrace($"public {x.GoshujinFullName + x.QuestionMarkIfReferenceType} Deserialize(ref TinyhandReader reader, TinyhandSerializerOptions options)"))
-                    {
-                        if (x.Kind.IsReferenceType())
-                        {// Reference type
-                            ssb.AppendLine("if (reader.TryReadNil()) return default;");
-                        }
-
-                        ssb.AppendLine($"var v = new {x.GoshujinFullName}();");
-                        ssb.AppendLine($"v.Deserialize(ref reader, options);");
-                        ssb.AppendLine("return v;");
-                    }
-
-                    // Reconstruct
-                    using (var r = ssb.ScopeBrace($"public {x.GoshujinFullName} Reconstruct(TinyhandSerializerOptions options)"))
-                    {
-                        ssb.AppendLine($"return new {x.GoshujinFullName}();");
-                    }
-
-                    // Clone
-                    using (var r = ssb.ScopeBrace($"public {x.GoshujinFullName}? Clone({x.GoshujinFullName}? value, TinyhandSerializerOptions options)"))
-                    {
-                        ssb.AppendLine($"return value?.DeepClone(options);");
-                    }
-                }
-
-                name = string.Format(classFormat, x.FormatterExtraNumber) + genericArguments;
-                using (var cls = ssb.ScopeBrace($"class {name}: ITinyhandFormatterExtra<{x.GoshujinFullName}>"))
-                {
-                    // Deserialize
-                    using (var d = ssb.ScopeBrace($"public {x.GoshujinFullName + x.QuestionMarkIfReferenceType} Deserialize({x.GoshujinFullName} reuse, ref TinyhandReader reader, TinyhandSerializerOptions options)"))
-                    {
-                        if (x.Kind.IsReferenceType() && x.ObjectFlag.HasFlag(ValueLinkObjectFlag.CanCreateInstance))
-                        {// Reference type
-                            ssb.AppendLine($"reuse = reuse ?? new {x.GoshujinFullName}();");
-                        }
-
-                        ssb.AppendLine("reuse.Deserialize(ref reader, options);");
-                        ssb.AppendLine("return reuse;");
-                    }
                 }
             }
         }
@@ -996,7 +926,7 @@ ModuleInitializerClass_Added:
 
             if (tinyhandObject)
             {// ITinyhandSerialize
-                goshujinInterface += $", ITinyhandSerialize, ITinyhandClone<{this.GoshujinFullName}>";
+                goshujinInterface += $", ITinyhandSerialize<{this.GoshujinFullName}>, ITinyhandReconstruct<{this.GoshujinFullName}>, ITinyhandClone<{this.GoshujinFullName}>, ITinyhandSerialize";
             }
 
             using (var scopeClass = ssb.ScopeBrace("public sealed class " + this.ObjectAttribute!.GoshujinClass + goshujinInterface))
@@ -1020,8 +950,6 @@ ModuleInitializerClass_Added:
                 if (tinyhandObject)
                 {
                     info.UseTinyhand = true;
-                    this.FormatterNumber = info.FormatterCount++;
-                    this.FormatterExtraNumber = info.FormatterCount++;
                     this.GenerateGoshujin_Tinyhand(ssb, info);
 
                     if (this.ConstructedObjects != null)
@@ -1030,8 +958,6 @@ ModuleInitializerClass_Added:
                         {
                             if (x != this)
                             {// Set closed generic type information for formatter.
-                                x.FormatterNumber = info.FormatterCount++;
-                                x.FormatterExtraNumber = info.FormatterCount++;
                                 x.GoshujinFullName = x.FullName + "." + this.ObjectAttribute!.GoshujinClass;
                             }
                         }
@@ -1079,7 +1005,11 @@ ModuleInitializerClass_Added:
             ssb.AppendLine();
             this.GenerateGoshujin_TinyhandDeserialize(ssb, info);
             ssb.AppendLine();
+            this.GenerateGoshujin_TinyhandReconstruct(ssb, info);
+            ssb.AppendLine();
             this.GenerateGoshujin_TinyhandClone(ssb, info);
+            ssb.AppendLine();
+            this.GenerateGoshujin_TinyhandITinyhandSerialize(ssb, info);
             ssb.AppendLine();
             this.GenerateGoshujin_TinyhandUtf8Name(ssb, info);
         }
@@ -1105,8 +1035,20 @@ ModuleInitializerClass_Added:
 
         internal void GenerateGoshujin_TinyhandSerialize(ScopingStringBuilder ssb, GeneratorInformation info)
         {// void Serialize(ref TinyhandWriter writer, TinyhandSerializerOptions options);
-            using (var scopeMethod = ssb.ScopeBrace("public void Serialize(ref TinyhandWriter writer, TinyhandSerializerOptions options)"))
+            using (var scopeMethod = ssb.ScopeBrace($"static void ITinyhandSerialize<{this.GoshujinFullName}>.Serialize(ref TinyhandWriter writer, scoped ref {this.GoshujinFullName}? v, TinyhandSerializerOptions options)"))
+            using (var v = ssb.ScopeObject("v"))
             {
+                if (this.Kind.IsReferenceType())
+                {
+                    using (var scopeNullCheck = ssb.ScopeBrace($"if ({ssb.FullObject} == null)"))
+                    {
+                        ssb.AppendLine("writer.WriteNil();");
+                        ssb.AppendLine("return;");
+                    }
+
+                    ssb.AppendLine();
+                }
+
                 if (this.Links == null)
                 {
                     return;
@@ -1129,11 +1071,11 @@ ModuleInitializerClass_Added:
 
         internal void GenerateGoshujin_TinyhandSerialize_PrimaryIndex(ScopingStringBuilder ssb, GeneratorInformation info, Linkage link)
         {
-            ssb.AppendLine($"var max = this.{link.ChainName}.Count;");
+            ssb.AppendLine($"var max = {ssb.FullObject}.{link.ChainName}.Count;");
             ssb.AppendLine("var number = 0;");
             ssb.AppendLine($"var array = new {this.LocalName}[max];");
 
-            using (var scopeFor = ssb.ScopeBrace($"foreach (var x in this.{link.ChainName})"))
+            using (var scopeFor = ssb.ScopeBrace($"foreach (var x in {ssb.FullObject}.{link.ChainName})"))
             {
                 ssb.AppendLine("array[number] = x;");
                 ssb.AppendLine($"x.{this.SerializeIndexIdentifier} = number++;");
@@ -1148,8 +1090,8 @@ ModuleInitializerClass_Added:
 
             foreach (var x in this.Links!.Where(x => x.IsValidLink))
             {
-                ssb.AppendLine($"max = max > this.{x.ChainName}.Count ? max : this.{x.ChainName}.Count;");
-                using (var scopeFor = ssb.ScopeBrace($"foreach (var x in this.{x.ChainName})"))
+                ssb.AppendLine($"max = max > {ssb.FullObject}.{x.ChainName}.Count ? max : {ssb.FullObject}.{x.ChainName}.Count;");
+                using (var scopeFor = ssb.ScopeBrace($"foreach (var x in {ssb.FullObject}.{x.ChainName})"))
                 {
                     ssb.AppendLine($"x.{this.SerializeIndexIdentifier} = -1;");
                 }
@@ -1165,7 +1107,7 @@ ModuleInitializerClass_Added:
 
             foreach (var x in this.Links!.Where(x => x.IsValidLink))
             {
-                using (var scopeFor = ssb.ScopeBrace($"foreach (var x in this.{x.ChainName})"))
+                using (var scopeFor = ssb.ScopeBrace($"foreach (var x in {ssb.FullObject}.{x.ChainName})"))
                 {
                     using (var scopeIf = ssb.ScopeBrace($"if (x.{this.SerializeIndexIdentifier} == -1)"))
                     {
@@ -1203,8 +1145,8 @@ ModuleInitializerClass_Added:
             foreach (var x in this.Links!.Where(x => x.IsValidLink))
             {
                 ssb.AppendLine($"writer.WriteString({x.ChainNameIdentifier});");
-                ssb.AppendLine($"writer.WriteArrayHeader(this.{x.ChainName}.Count);");
-                using (var scopeFor2 = ssb.ScopeBrace($"foreach (var x in this.{x.ChainName})"))
+                ssb.AppendLine($"writer.WriteArrayHeader({ssb.FullObject}.{x.ChainName}.Count);");
+                using (var scopeFor2 = ssb.ScopeBrace($"foreach (var x in {ssb.FullObject}.{x.ChainName})"))
                 {
                     ssb.AppendLine($"writer.Write(x.{this.SerializeIndexIdentifier});");
                 }
@@ -1213,8 +1155,20 @@ ModuleInitializerClass_Added:
 
         internal void GenerateGoshujin_TinyhandDeserialize(ScopingStringBuilder ssb, GeneratorInformation info)
         {// void Deserialize(ref TinyhandReader reader, TinyhandSerializerOptions options);
-            using (var scopeMethod = ssb.ScopeBrace("public void Deserialize(ref TinyhandReader reader, TinyhandSerializerOptions options)"))
+            using (var scopeMethod = ssb.ScopeBrace($"static void ITinyhandSerialize<{this.GoshujinFullName}>.Deserialize(ref TinyhandReader reader, scoped ref {this.GoshujinFullName}? v, TinyhandSerializerOptions options)"))
+            using (var v = ssb.ScopeObject("v"))
             {
+                if (this.Kind.IsReferenceType())
+                {
+                    using (var scopeNillCheck = ssb.ScopeBrace($"if (reader.TryReadNil())"))
+                    {
+                        ssb.AppendLine("return;");
+                    }
+
+                    ssb.AppendLine();
+                    ssb.AppendLine($"{ssb.FullObject} ??= new();");
+                }
+
                 if (this.DeserializeChainAutomata == null)
                 {
                     return;
@@ -1234,7 +1188,7 @@ ModuleInitializerClass_Added:
                     using (var scopeFor = ssb.ScopeBrace("for (var n = 0; n < max; n++)"))
                     {
                         ssb.AppendLine("array[n] = formatter.Deserialize(ref reader, options)!;");
-                        ssb.AppendLine($"array[n].{this.GoshujinInstanceIdentifier} = this;");
+                        ssb.AppendLine($"array[n].{this.GoshujinInstanceIdentifier} = {ssb.FullObject};");
                     }
                 }
 
@@ -1268,10 +1222,11 @@ ModuleInitializerClass_Added:
                         {
                             using (var scopeFor = ssb.ScopeBrace("for (var n = 0; n < max; n++)"))
                             {
-                                using (var scopeParameter = ssb.ScopeObject("x"))
+                                var prevObject = ssb.FullObject;
+                                using (var scopeParameter = ssb.ScopeFullObject("x"))
                                 {
                                     ssb.AppendLine("var x = array[n];");
-                                    this.Generate_AddLink(ssb, info, x, "this");
+                                    this.Generate_AddLink(ssb, info, x, prevObject);
                                 }
                             }
                         }
@@ -1280,12 +1235,28 @@ ModuleInitializerClass_Added:
             }
         }
 
-        internal void GenerateGoshujin_TinyhandClone(ScopingStringBuilder ssb, GeneratorInformation info)
+        internal void GenerateGoshujin_TinyhandReconstruct(ScopingStringBuilder ssb, GeneratorInformation info)
         {// this.GoshujinFullName? Clone(TinyhandSerializerOptions options);
-            using (var scopeMethod = ssb.ScopeBrace($"public {this.GoshujinFullName} DeepClone(TinyhandSerializerOptions options)"))
+            using (var scopeMethod = ssb.ScopeBrace($"static void ITinyhandReconstruct<{this.GoshujinFullName}>.Reconstruct([NotNull] scoped ref {this.GoshujinFullName}? v, TinyhandSerializerOptions options)"))
             {
-                ssb.AppendLine($"return TinyhandSerializer.Deserialize<{this.GoshujinFullName}>(TinyhandSerializer.Serialize(this))!;");
+                ssb.AppendLine($"v = new {this.GoshujinFullName}();");
             }
+        }
+
+        internal void GenerateGoshujin_TinyhandClone(ScopingStringBuilder ssb, GeneratorInformation info)
+        {
+            using (var scopeMethod = ssb.ScopeBrace($"static {this.GoshujinFullName}? ITinyhandClone<{this.GoshujinFullName}>.Clone(scoped ref {this.GoshujinFullName}? v, TinyhandSerializerOptions options)"))
+            {
+                ssb.AppendLine($"return v == null ? null : TinyhandSerializer.Deserialize<{this.GoshujinFullName}>(TinyhandSerializer.Serialize(v));");
+            }
+        }
+
+        internal void GenerateGoshujin_TinyhandITinyhandSerialize(ScopingStringBuilder ssb, GeneratorInformation info)
+        {// ITinyhandSerialize
+            ssb.AppendLine("void ITinyhandSerialize.Deserialize(ref TinyhandReader reader, TinyhandSerializerOptions options)");
+            ssb.AppendLine("    => TinyhandSerializer.DeserializeObject(ref reader, ref Unsafe.AsRef(this)!, options);");
+            ssb.AppendLine("void ITinyhandSerialize.Serialize(ref TinyhandWriter writer, TinyhandSerializerOptions options)");
+            ssb.AppendLine("    => TinyhandSerializer.SerializeObject(ref writer, this, options);");
         }
 
         internal void GenerateGoshujin_Add(ScopingStringBuilder ssb, GeneratorInformation info)
