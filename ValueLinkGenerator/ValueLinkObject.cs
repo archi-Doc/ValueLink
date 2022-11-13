@@ -1148,7 +1148,7 @@ ModuleInitializerClass_Added:
 
             foreach (var x in this.Links!.Where(x => x.IsValidLink))
             {
-                ssb.AppendLine($"max = max > this.{x.ChainName}.Count ? max : this.{x.ChainName}.Count;");
+                ssb.AppendLine($"max = max > {ssb.FullObject}.{x.ChainName}.Count ? max : {ssb.FullObject}.{x.ChainName}.Count;");
                 using (var scopeFor = ssb.ScopeBrace($"foreach (var x in this.{x.ChainName})"))
                 {
                     ssb.AppendLine($"x.{this.SerializeIndexIdentifier} = -1;");
