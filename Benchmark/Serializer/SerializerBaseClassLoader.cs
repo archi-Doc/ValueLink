@@ -31,7 +31,7 @@ namespace Sandbox
         internal static void __gen__load()
         {
             GeneratedResolver.Instance.SetFormatter<Benchmark.Serializer.SerializerBaseClass.GoshujinClass>(new __gen__tf__0000());
-            GeneratedResolver.Instance.SetFormatterExtra<Benchmark.Serializer.SerializerBaseClass.GoshujinClass>(new __gen__tf__0001());
+            // GeneratedResolver.Instance.SetFormatterExtra<Benchmark.Serializer.SerializerBaseClass.GoshujinClass>(new __gen__tf__0001());
         }
 
         class __gen__tf__0000 : ITinyhandFormatter<Benchmark.Serializer.SerializerBaseClass.GoshujinClass>
@@ -57,15 +57,6 @@ namespace Sandbox
             public SerializerBaseClass.GoshujinClass? Clone(SerializerBaseClass.GoshujinClass? value, TinyhandSerializerOptions options)
             {
                 throw new NotImplementedException();
-            }
-        }
-        class __gen__tf__0001 : ITinyhandFormatterExtra<Benchmark.Serializer.SerializerBaseClass.GoshujinClass>
-        {
-            public Benchmark.Serializer.SerializerBaseClass.GoshujinClass? Deserialize(Benchmark.Serializer.SerializerBaseClass.GoshujinClass reuse, ref TinyhandReader reader, TinyhandSerializerOptions options)
-            {
-                reuse = reuse ?? new Benchmark.Serializer.SerializerBaseClass.GoshujinClass();
-                reuse.Deserialize(ref reader, options);
-                return reuse;
             }
         }
     }
