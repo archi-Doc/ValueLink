@@ -11,6 +11,15 @@ public partial class GenericClass<T>
 {
     [Key(0)]
     public T X { get; set; } = default!;
+
+    [TinyhandObject(InitializerGenericsArguments = "double")]
+    [ValueLinkObject]
+    public partial class Item
+    {
+        [Key(0)]
+        [Link(Primary = true, Type = ChainType.Ordered)]
+        public string Name { get; set; } = string.Empty;
+    }
 }
 
 public partial class NestedStructClass<T, U>

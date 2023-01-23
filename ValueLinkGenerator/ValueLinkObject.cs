@@ -79,6 +79,8 @@ namespace ValueLink.Generator
 
         internal Automata<ValueLinkObject, Linkage>? DeserializeChainAutomata { get; private set; }
 
+        public string[]? InitializerGenericsArguments { get; private set; }
+
         public Arc.Visceral.NullableAnnotation NullableAnnotationIfReferenceType
         {
             get
@@ -189,9 +191,20 @@ namespace ValueLink.Generator
             }
 
             // TinyhandObjectAttribute
-            if (this.AllAttributes.Any(x => x.FullName == "Tinyhand.TinyhandObjectAttribute"))
+            if (this.AllAttributes.FirstOrDefault(x => x.FullName == "Tinyhand.TinyhandObjectAttribute") is { } tinyhandAttribute)
             {
                 this.ObjectFlag |= ValueLinkObjectFlag.TinyhandObject;
+
+                if (AttributeHelper.GetValue(-1, "InitializerGenericsArguments", tinyhandAttribute.ConstructorArguments, tinyhandAttribute.NamedArguments) is string genericsArguments)
+                {// InitializerGenericsArguments
+                    var args = genericsArguments.Split(new char[] { ',', }, StringSplitOptions.RemoveEmptyEntries);
+                    for (var i = 0; i < args.Length; i++)
+                    {
+                        args[i] = args[i].Trim();
+                    }
+
+                    this.InitializerGenericsArguments = args;
+                }
             }
 
             if (this.ObjectAttribute != null)
@@ -593,6 +606,14 @@ namespace ValueLink.Generator
             if (list2.Length > 0 && list2[0].ContainingObject is { } containingObject)
             {// Add ModuleInitializerClass
                 string? initializerClassName = null;
+
+                var args = containingObject.InitializerGenericsArguments ?? list2.Select(x => x.InitializerGenericsArguments).FirstOrDefault(y => y != null);
+                if (args != null)
+                {// Generics argument is specified.
+                    (initializerClassName, _) = containingObject.GetClosedGenericName(args);
+                    goto ModuleInitializerClass_Added;
+                }
+
                 if (containingObject.ClosedGenericHint != null)
                 {// ClosedGenericHint
                     initializerClassName = containingObject.ClosedGenericHint.FullName;
