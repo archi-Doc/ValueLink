@@ -79,8 +79,6 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal Automata<ValueLinkObject, Linkage>? DeserializeChainAutomata { get; private set; }
 
-    public string[]? InitializerGenericsArguments { get; private set; }
-
     public Arc.Visceral.NullableAnnotation NullableAnnotationIfReferenceType
     {
         get
@@ -191,20 +189,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
 
         // TinyhandObjectAttribute
-        if (this.AllAttributes.FirstOrDefault(x => x.FullName == "Tinyhand.TinyhandObjectAttribute") is { } tinyhandAttribute)
+        if (this.AllAttributes.Any(x => x.FullName == "Tinyhand.TinyhandObjectAttribute"))
         {
             this.ObjectFlag |= ValueLinkObjectFlag.TinyhandObject;
-
-            if (AttributeHelper.GetValue(-1, "InitializerGenericsArguments", tinyhandAttribute.ConstructorArguments, tinyhandAttribute.NamedArguments) is string genericsArguments)
-            {// InitializerGenericsArguments
-                var args = genericsArguments.Split(new char[] { ',', }, StringSplitOptions.RemoveEmptyEntries);
-                for (var i = 0; i < args.Length; i++)
-                {
-                    args[i] = args[i].Trim();
-                }
-
-                this.InitializerGenericsArguments = args;
-            }
         }
 
         if (this.ObjectAttribute != null)
@@ -641,7 +628,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             else
             {
                 var fullName = this.GetGenericsName();
-                ssb.AppendLine($"GeneratedResolver.Instance.SetFormatterGenerator(Type.GetType(\"{fullName}\")!, static (x, y) =>");
+                ssb.AppendLine($"GeneratedResolver.Instance.SetFormatterGenerator(Type.GetType(\"{fullName}+{this.ObjectAttribute!.GoshujinClass}\")!, static (x, y) =>");
                 ssb.AppendLine("{");
                 ssb.IncrementIndent();
 
@@ -658,15 +645,12 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             if (isAccessible)
             {
                 var generic = this.GetClosedGenericName(null);
-                generic.count = this.Generics_Arguments.Length;
-                var genericBrace = generic.count == 0 ? string.Empty : generic.count == 1 ? "<>" : $"<{new string(',', generic.count - 1)}>";
-                var getGenericType = generic.count == 0 ? ".GetGenericTypeDefinition()" : string.Empty;
-                typeName = $"typeof({generic.name})";
+                typeName = $"typeof({generic.name}.{this.ObjectAttribute!.GoshujinClass})";
             }
             else
             {
                 var fullName = this.GetGenericsName();
-                typeName = $"Type.GetType(\"{fullName}\")!";
+                typeName = $"Type.GetType(\"{fullName}+{this.ObjectAttribute!.GoshujinClass}\")!";
             }
 
             ssb.AppendLine($"GeneratedResolver.Instance.SetFormatterGenerator({typeName}, static (x, y) =>");
