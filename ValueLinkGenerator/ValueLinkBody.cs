@@ -205,7 +205,7 @@ namespace ValueLink.Generator
             cancellationToken.ThrowIfCancellationRequested();
             if (info.UseTinyhand)
             {
-                this.GenerateLoader(generator, info, rootObjects);
+                this.GenerateLoader(generator, info, rootObjects, this.Namespaces);
             }
 
             this.FlushDiagnostic();
@@ -235,7 +235,7 @@ namespace ValueLink.Generator
             ssb.AppendLine();
         }
 
-        private void GenerateLoader(IGeneratorInformation generator, GeneratorInformation info, List<ValueLinkObject> rootObjects)
+        private void GenerateLoader(IGeneratorInformation generator, GeneratorInformation info, List<ValueLinkObject> rootObjects, Dictionary<string, List<ValueLinkObject>> namespaces)
         {
             var ssb = new ScopingStringBuilder();
             this.GenerateHeader(ssb, true);
@@ -246,7 +246,17 @@ namespace ValueLink.Generator
                 {
                     info.FinalizeBlock(ssb);
 
-                    ValueLinkObject.GenerateLoader(ssb, info, rootObjects);
+                    // FlatLoader
+                    using (var m = ssb.ScopeBrace("internal static void __gen__cl()"))
+                    {
+                        foreach (var x in namespaces.Values)
+                        {
+                            foreach (var y in x)
+                            {
+                                y.GenerateFlatLoader(ssb, info);
+                            }
+                        }
+                    }
                 }
             }
 
