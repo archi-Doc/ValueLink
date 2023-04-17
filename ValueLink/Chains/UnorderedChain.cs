@@ -75,7 +75,7 @@ namespace ValueLink
             else
             {
                 var result = this.chain.Add(key, obj);
-                link.NodeIndex = result.nodeIndex;
+                link.NodeIndex = result.NodeIndex;
             }
         }
 
