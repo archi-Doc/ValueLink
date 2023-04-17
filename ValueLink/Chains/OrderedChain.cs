@@ -105,7 +105,7 @@ namespace ValueLink
             else
             {
                 var result = this.chain.Add(key, obj);
-                link.Node = result.node;
+                link.Node = result.Node;
             }
         }
 

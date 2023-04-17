@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Tinyhand" Version="0.43.0" />
+    <PackageReference Include="Tinyhand" Version="0.48.1" />
   </ItemGroup>
 
 </Project>
