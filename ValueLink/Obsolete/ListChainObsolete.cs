@@ -94,7 +94,7 @@ namespace ValueLink.Obsolete
             }
 
             link.index = -1;
-            this.items[this.size] = default(T) !;
+            this.items[this.size] = default(T)!;
             this.version++;
 
             return true;

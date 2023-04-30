@@ -31,7 +31,7 @@ internal class Automata<TObj, TMember>
 
     public Action<TObj, ScopingStringBuilder, object?, TMember> GenerateMethod { get; }
 
-    public (Node? node, AutomataAddNodeResult result, bool keyResized) AddNode(string name, TMember member)
+    public (Node? Node, AutomataAddNodeResult Result, bool KeyResized) AddNode(string name, TMember member)
     {
         var keyResized = false;
 

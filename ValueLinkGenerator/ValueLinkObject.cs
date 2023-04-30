@@ -536,32 +536,32 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         foreach (var x in this.Links.Where(x => x.IsValidLink))
         {
             var ret = this.DeserializeChainAutomata.AddNode(x.ChainName, x);
-            if (ret.keyResized)
+            if (ret.KeyResized)
             {// Key resized
                 this.Body.AddDiagnostic(ValueLinkBody.Warning_StringKeySizeLimit, x.Location, Automata<ValueLinkObject, Linkage>.MaxStringKeySizeInBytes);
             }
 
-            if (ret.result == AutomataAddNodeResult.KeyCollision)
+            if (ret.Result == AutomataAddNodeResult.KeyCollision)
             {// Key collision
                 this.Body.AddDiagnostic(ValueLinkBody.Error_StringKeyConflict, x.Location);
-                if (ret.node != null && ret.node.Member != null)
+                if (ret.Node != null && ret.Node.Member != null)
                 {
-                    this.Body.AddDiagnostic(ValueLinkBody.Error_StringKeyConflict, ret.node.Member.Location);
+                    this.Body.AddDiagnostic(ValueLinkBody.Error_StringKeyConflict, ret.Node.Member.Location);
                 }
 
                 continue;
             }
-            else if (ret.result == AutomataAddNodeResult.NullKey)
+            else if (ret.Result == AutomataAddNodeResult.NullKey)
             {// Null key
                 this.Body.AddDiagnostic(ValueLinkBody.Error_StringKeyNull, x.Location);
                 continue;
             }
-            else if (ret.node == null)
+            else if (ret.Node == null)
             {
                 continue;
             }
 
-            x.ChainNameUtf8 = ret.node.Utf8Name!;
+            x.ChainNameUtf8 = ret.Node.Utf8Name!;
             x.ChainNameIdentifier = this.Identifier.GetIdentifier();
         }
     }
@@ -645,7 +645,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             if (isAccessible)
             {
                 var generic = this.GetClosedGenericName(null);
-                typeName = $"typeof({generic.name}.{this.ObjectAttribute!.GoshujinClass})";
+                typeName = $"typeof({generic.Name}.{this.ObjectAttribute!.GoshujinClass})";
             }
             else
             {
@@ -792,10 +792,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
 
         var accessibility = VisceralHelper.GetterSetterAccessibilityToPropertyString(main.GetterAccessibility, main.SetterAccessibility);
-        using (var scopeProperty = ssb.ScopeBrace($"{accessibility.property}{target.TypeObject.FullName} {main.ValueName}"))
+        using (var scopeProperty = ssb.ScopeBrace($"{accessibility.Property}{target.TypeObject.FullName} {main.ValueName}"))
         {
-            ssb.AppendLine($"{accessibility.getter}get => this.{main.TargetName};");
-            using (var scopeSet = ssb.ScopeBrace($"{accessibility.setter}set"))
+            ssb.AppendLine($"{accessibility.Getter}get => this.{main.TargetName};");
+            using (var scopeSet = ssb.ScopeBrace($"{accessibility.Setter}set"))
             {
                 string compare;
                 if (target.TypeObject.IsPrimitive)

@@ -82,9 +82,9 @@ namespace ValueLink.Generator
             return null;
         }
 
-        private void Emit(SourceProductionContext context, (Compilation compilation, ImmutableArray<TypeDeclarationSyntax?> types) source)
+        private void Emit(SourceProductionContext context, (Compilation Compilation, ImmutableArray<TypeDeclarationSyntax?> Types) source)
         {
-            var compilation = source.compilation;
+            var compilation = source.Compilation;
             this.valueLinkObjectAttributeSymbol = compilation.GetTypeByMetadataName(ValueLinkObjectAttributeMock.FullName);
             if (this.valueLinkObjectAttributeSymbol == null)
             {
@@ -108,7 +108,7 @@ namespace ValueLink.Generator
 #pragma warning restore RS1024 // Symbols should be compared for equality
 
             this.generatorOptionIsSet = false;
-            foreach (var x in source.types)
+            foreach (var x in source.Types)
             {
                 if (x == null)
                 {
