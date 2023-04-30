@@ -777,7 +777,7 @@ public abstract class VisceralObjectBase<T> : IComparable<T>
         }
     }
 
-    public (string name, int count) GetClosedGenericName(string[]? argumentName)
+    public (string Name, int Count) GetClosedGenericName(string[]? argumentName)
     {// Namespace.Class<T, U>.Nested<X> -> Namespace.Class<argumentName, argumentName>.Nested<argumentName>
         var pos = 0;
         var genericCount = 0;
@@ -2055,6 +2055,20 @@ public abstract class VisceralObjectBase<T> : IComparable<T>
         }
     }
 
+    public bool IsSameAssembly(IAssemblySymbol assemblySymbol)
+    {
+        if (this.symbol != null)
+        {
+#pragma warning disable RS1024
+            return this.symbol.ContainingAssembly == assemblySymbol;
+#pragma warning restore RS1024
+        }
+        else
+        {
+            return false;
+        }
+    }
+
     private bool? isReadable;
 
     public bool IsReadable
@@ -2732,6 +2746,23 @@ public abstract class VisceralObjectBase<T> : IComparable<T>
         }
     }
 
+    public bool Field_IsPublic
+    {
+        get
+        {
+            if (this.symbol is IFieldSymbol fs)
+            {
+                return fs.DeclaredAccessibility == Accessibility.Public;
+            }
+            else if (this.memberInfo is FieldInfo fi)
+            {
+                return fi.IsPublic;
+            }
+
+            return false;
+        }
+    }
+
     public Accessibility Field_Accessibility
     {
         get
@@ -2749,7 +2780,7 @@ public abstract class VisceralObjectBase<T> : IComparable<T>
         }
     }
 
-    public (Accessibility getter, Accessibility setter) Property_Accessibility
+    public (Accessibility Getter, Accessibility Setter) Property_Accessibility
     {
         get
         {
@@ -2796,6 +2827,40 @@ public abstract class VisceralObjectBase<T> : IComparable<T>
             else if (this.memberInfo is PropertyInfo pi)
             {
                 return pi.SetMethod.IsPrivate;
+            }
+
+            return false;
+        }
+    }
+
+    public bool Property_IsPublicGetter
+    {
+        get
+        {
+            if (this.symbol is IPropertySymbol ps)
+            {
+                return ps.GetMethod?.DeclaredAccessibility == Accessibility.Public;
+            }
+            else if (this.memberInfo is PropertyInfo pi)
+            {
+                return pi.GetMethod.IsPublic;
+            }
+
+            return false;
+        }
+    }
+
+    public bool Property_IsPublicSetter
+    {
+        get
+        {
+            if (this.symbol is IPropertySymbol ps)
+            {
+                return ps.SetMethod?.DeclaredAccessibility == Accessibility.Public;
+            }
+            else if (this.memberInfo is PropertyInfo pi)
+            {
+                return pi.SetMethod.IsPublic;
             }
 
             return false;

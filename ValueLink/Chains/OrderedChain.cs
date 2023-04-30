@@ -204,6 +204,40 @@ namespace ValueLink
         public TObj? Last => this.chain.Last == null ? default(TObj) : this.chain.Last.Value;
 
         /// <summary>
+        /// Returns the first object with a key that is equal to or greater than the specified key.<br/>If it returns null, it means that the keys of all objects are less than or equal to the specified value.
+        /// </summary>
+        /// <param name="key">The specified key.</param>
+        /// <returns>The first object with a key that is equal to or greater than the specified key.</returns>
+        public TObj? GetLowerBound(TKey key)
+        {
+            var node = this.chain.GetLowerBound(key);
+            return node == null ? default : node.Value;
+        }
+
+        /// <summary>
+        /// Returns the last object with a key that is equal to or lower than the specified key.<br/>If it returns null, it means that the keys of all objects are greater than or equal to the specified value.
+        /// </summary>
+        /// <param name="key">The specified key.</param>
+        /// <returns>The last object with a key that is equal to or lower than the specified key.</returns>
+        public TObj? GetUpperBound(TKey key)
+        {
+            var node = this.chain.GetUpperBound(key);
+            return node == null ? default : node.Value;
+        }
+
+        /// <summary>
+        /// Specify the lower and upper bounds of the key, and return the first and last objects within that range.
+        /// </summary>
+        /// <param name="lower">The lower bound key.</param>
+        /// <param name="upper">The upper bound key.</param>
+        /// <returns>The first and last objects within that range.</returns>
+        public (TObj? Lower, TObj? Upper) GetRange(TKey lower, TKey upper)
+        {
+            var range = this.chain.GetRange(lower, upper);
+            return (range.Lower is null ? default : range.Lower.Value, range.Upper is null ? default : range.Upper.Value);
+        }
+
+        /// <summary>
         /// Gets a value indicating whether or not the collection is in reverse order.
         /// </summary>
         public bool Reverse { get; }
