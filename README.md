@@ -22,7 +22,7 @@ This document may be inaccurate. It would be greatly appreciated if anyone could
 - [Chains](#chains)
 - [Features](#features)
   - [Serialization](#serialization)
-  - [Additional methods](#Additional methods)
+  - [Additional methods](#additional-methods)
   - [TargetMember](#targetmember)
   - [AutoNotify](#autonotify)
   - [AutoLink](#autolink)
