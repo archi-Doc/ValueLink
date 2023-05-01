@@ -1,9 +1,7 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Arc.Visceral;
 using Microsoft.CodeAnalysis;
 
@@ -21,6 +19,12 @@ namespace ValueLink.Generator
             catch (InvalidCastException)
             {
                 obj.Body.AddDiagnostic(ValueLinkBody.Error_AttributePropertyError, attribute.Location);
+                return null;
+            }
+
+            var parent = obj.ContainingObject;
+            if (parent == null)
+            {
                 return null;
             }
 
@@ -42,12 +46,6 @@ namespace ValueLink.Generator
 
             if (linkAttribute.TargetMember != string.Empty)
             {// Check target member
-                var parent = obj.ContainingObject;
-                if (parent == null)
-                {
-                    return null;
-                }
-
                 var target = parent.GetMembers(VisceralTarget.FieldProperty).FirstOrDefault(x => x.SimpleName == linkAttribute.TargetMember);
                 if (target == null)
                 {// 'obj.FullName' does not contain a class member named 'linkAttribute.TargetMember'.
@@ -161,6 +159,34 @@ namespace ValueLink.Generator
                 obj.Body.AddDiagnostic(ValueLinkBody.Warning_AutoNotifyEnabled, attribute.Location);
             }
 
+            if (!string.IsNullOrEmpty(linkage.LinkName))
+            {// Methods (Predicate, Adding, Removing)
+                var predicateName = linkage.LinkName + ValueLinkBody.PredicateMethodName;
+                var addedName = linkage.LinkName + ValueLinkBody.AddedMethodName;
+                var removedName = linkage.LinkName + ValueLinkBody.RemovedMethodName;
+                foreach (var x in parent.GetMembers(VisceralTarget.Method).Where(y => y.Method_Parameters.Length == 0))
+                {
+                    if (x.SimpleName == predicateName)
+                    {
+                        if (x.Method_ReturnObject?.FullName == "bool")
+                        {// bool LinkNamePredicate()
+                            linkage.PredicateMethodName = predicateName;
+                        }
+                    }
+                    else if (x.Method_ReturnObject?.FullName == "void")
+                    {
+                        if (x.SimpleName == addedName)
+                        {// void LinkNameAdded()
+                            linkage.AddedMethodName = addedName;
+                        }
+                        else if (x.SimpleName == removedName)
+                        {// void LinkNameRemoved()
+                            linkage.RemovedMethodName = removedName;
+                        }
+                    }
+                }
+            }
+
             return linkage;
         }
 
@@ -201,5 +227,11 @@ namespace ValueLink.Generator
         public Accessibility SetterAccessibility { get; private set; } = Microsoft.CodeAnalysis.Accessibility.Public;
 
         public bool NoValue { get; private set; }
+
+        public string? PredicateMethodName { get; set; }
+
+        public string? AddedMethodName { get; set; }
+
+        public string? RemovedMethodName { get; set; }
     }
 }

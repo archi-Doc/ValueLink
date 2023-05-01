@@ -22,6 +22,7 @@ This document may be inaccurate. It would be greatly appreciated if anyone could
 - [Chains](#chains)
 - [Features](#features)
   - [Serialization](#serialization)
+  - [Additional methods](#Additional methods)
   - [TargetMember](#targetmember)
   - [AutoNotify](#autonotify)
   - [AutoLink](#autolink)
@@ -429,6 +430,38 @@ new SerializeClass(2, "Fuga").Goshujin = g;
 
 var st = TinyhandSerializer.SerializeToString(g); // Serialize the Goshujin to string.
 var g2 = TinyhandSerializer.Deserialize<SerializeClass.GoshujinClass>(TinyhandSerializer.Serialize(g)); // Serialize to a byte array and deserialize it.
+```
+
+
+
+### Additional methods
+
+By adding methods within the class, you can determine whether to link or not, and add code to perform actions after the link has been added or removed.
+
+```csharp
+[ValueLinkObject]
+public partial class AdditionalMethodClass
+{
+    public static int TotalAge;
+
+    [Link(Type = ChainType.Ordered)]
+    private int age;
+
+    protected bool AgeLinkPredicate()
+    {// bool Name+Link+Predicate(): Determines whether to add the object to the chain or not.
+        return this.age >= 20;
+    }
+
+    protected void AgeLinkAdded()
+    {// void Name+Link+Added(): Performs post-processing after the object has been added to the chain.
+        TotalAge += this.age;
+    }
+
+    protected void AgeLinkRemoved()
+    {// void Name+Link+Removed(): Performs post-processing after the object has been removed from the chain.
+        TotalAge -= this.age;
+    }
+}
 ```
 
 

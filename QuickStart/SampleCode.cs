@@ -155,3 +155,27 @@ public partial class DerivedClass3 : DerivedClass
     [Link(Type = ChainType.Ordered)]
     protected string name2 = string.Empty;
 }*/
+
+[ValueLinkObject]
+public partial class AdditionalMethodClass
+{
+    public static int TotalAge;
+
+    [Link(Type = ChainType.Ordered)]
+    private int age;
+
+    protected bool AgeLinkPredicate()
+    {// bool Name+Link+Predicate(): Determines whether to add the object to the chain or not.
+        return this.age >= 20;
+    }
+
+    protected void AgeLinkAdded()
+    {// void Name+Link+Added(): Performs post-processing after the object has been added to the chain.
+        TotalAge += this.age;
+    }
+
+    protected void AgeLinkRemoved()
+    {// void Name+Link+Removed(): Performs post-processing after the object has been removed from the chain.
+        TotalAge -= this.age;
+    }
+}
