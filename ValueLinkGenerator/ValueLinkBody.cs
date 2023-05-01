@@ -23,6 +23,9 @@ namespace ValueLink.Generator
         public static readonly string DefaultGoshujinClass = "GoshujinClass";
         public static readonly string DefaultGoshujinInstance = "Goshujin";
         public static readonly string ExplicitPropertyChanged = "PropertyChanged";
+        public static readonly string PredicateMethodName = "Predicate"; // bool Link name + PredicateMethodName()
+        public static readonly string AddedMethodName = "Added"; // void Link name + AddedMethodName()
+        public static readonly string RemovedMethodName = "Removed"; // void Link name + RemovedMethodName()
 
         public static readonly DiagnosticDescriptor Error_NotPartial = new DiagnosticDescriptor(
             id: "CLG001", title: "Not a partial class/struct", messageFormat: "ValueLinkObject '{0}' is not a partial class/struct",

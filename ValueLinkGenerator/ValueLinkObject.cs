@@ -873,7 +873,14 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         {// Invalid link
             return;
         }
-        else if (link.Type == ChainType.Ordered || link.Type == ChainType.ReverseOrdered || link.Type == ChainType.Unordered)
+
+        ScopingStringBuilder.IScope? scopePredicate = null;
+        if (link.PredicateMethodName != null)
+        {
+            scopePredicate = ssb.ScopeBrace($"if ({ssb.FullObject}.{link.PredicateMethodName}())");
+        }
+
+        if (link.Type == ChainType.Ordered || link.Type == ChainType.ReverseOrdered || link.Type == ChainType.Unordered)
         {
             ssb.AppendLine($"{prefix}.{link.ChainName}.Add({ssb.FullObject}.{link.Target!.SimpleName}, {ssb.FullObject});");
         }
@@ -892,6 +899,16 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         else
         {
             ssb.AppendLine($"{prefix}.{link.ChainName}.Add({ssb.FullObject});");
+        }
+
+        if (link.AddedMethodName != null)
+        {
+            ssb.AppendLine($"{ssb.FullObject}.{link.AddedMethodName}();");
+        }
+
+        if (scopePredicate != null)
+        {
+            scopePredicate.Dispose();
         }
     }
 
@@ -1403,7 +1420,17 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                         {
                             foreach (var link in this.Links.Where(a => a.IsValidLink))
                             {
-                                ssb.AppendLine($"this.{goshujinInstance}.{link.ChainName}.Remove({ssb.FullObject});");
+                                if (link.RemovedMethodName != null)
+                                {
+                                    using (var scopeRemove = ssb.ScopeBrace($"if (this.{goshujinInstance}.{link.ChainName}.Remove({ssb.FullObject}))"))
+                                    {
+                                        ssb.AppendLine($"this.{link.RemovedMethodName}();");
+                                    }
+                                }
+                                else
+                                {
+                                    ssb.AppendLine($"this.{goshujinInstance}.{link.ChainName}.Remove({ssb.FullObject});");
+                                }
                             }
                         }
                     }
