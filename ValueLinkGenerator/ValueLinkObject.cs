@@ -41,6 +41,7 @@ public enum ValueLinkObjectFlag
     TinyhandObject = 1 << 15, // Has TinyhandObjectAttribute
     HasLinkAttribute = 1 << 16, // Has LinkAttribute
     HasPrimaryLink = 1 << 17, // Has primary link
+    GenerateJournal = 1 << 18, // Getnerate journal feature
 }
 
 public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
@@ -189,9 +190,13 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
 
         // TinyhandObjectAttribute
-        if (this.AllAttributes.Any(x => x.FullName == "Tinyhand.TinyhandObjectAttribute"))
+        if (this.AllAttributes.FirstOrDefault(x => x.FullName == "Tinyhand.TinyhandObjectAttribute") is { } tinyhandAttribute)
         {
             this.ObjectFlag |= ValueLinkObjectFlag.TinyhandObject;
+            if (tinyhandAttribute.NamedArguments.FirstOrDefault(x => x.Key == "Journaling").Value is true)
+            {
+                this.ObjectFlag |= ValueLinkObjectFlag.GenerateJournal;
+            }
         }
 
         if (this.ObjectAttribute != null)
@@ -915,6 +920,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     internal void GenerateGoshujinClass(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         var tinyhandObject = this.ObjectFlag.HasFlag(ValueLinkObjectFlag.TinyhandObject);
+        var generateJournal = this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournal);
 
         var goshujinInterface = " : IGoshujin";
 
@@ -933,6 +939,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         if (tinyhandObject)
         {// ITinyhandSerialize
             goshujinInterface += $", ITinyhandSerialize<{this.GoshujinFullName}>, ITinyhandReconstruct<{this.GoshujinFullName}>, ITinyhandClone<{this.GoshujinFullName}>, ITinyhandSerialize";
+        }
+
+        if (generateJournal)
+        {// ITinyhandSerialize
+            goshujinInterface += $", ITinyhandJournal";
         }
 
         using (var scopeClass = ssb.ScopeBrace("public sealed class " + this.ObjectAttribute!.GoshujinClass + goshujinInterface))
@@ -968,6 +979,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                         }
                     }
                 }
+
+                if (generateJournal)
+                {
+                    this.GenerateGosjujin_Journal(ssb, info);
+                }
             }
         }
 
@@ -1002,6 +1018,21 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
 
         ssb.AppendLine();
+    }
+
+    internal void GenerateGosjujin_Journal(ScopingStringBuilder ssb, GeneratorInformation info)
+    {
+        ssb.AppendLine();
+
+        ssb.AppendLine("[IgnoreMember]");
+        ssb.AppendLine("public ITinyhandCrystal? Crystal { get; set; }");
+        ssb.AppendLine("[IgnoreMember]");
+        ssb.AppendLine("public uint CurrentPlane { get; set; }");
+
+        using (var scopeMethod = ssb.ScopeBrace("bool ITinyhandJournal.ReadRecord(ref TinyhandReader reader)"))
+        {
+            ssb.AppendLine("return false;");
+        }
     }
 
     internal void GenerateGoshujin_Tinyhand(ScopingStringBuilder ssb, GeneratorInformation info)

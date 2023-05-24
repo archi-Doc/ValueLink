@@ -6,7 +6,20 @@ using Tinyhand;
 
 namespace Sandbox;
 
-[TinyhandObject]
+[TinyhandObject(Journaling = true)]
+[ValueLinkObject]
+internal partial class ValueClass
+{
+    [Key(0, AddProperty = "Id")]
+    [Link(Type = ChainType.Unordered, Primary = true, Accessibility = ValueLinkAccessibility.Public)]
+    private int id;
+
+    [Key(1, AddProperty = "Name")]
+    [Link(Type = ChainType.Ordered, Accessibility = ValueLinkAccessibility.Public)]
+    private string name = string.Empty;
+}
+
+    [TinyhandObject]
 public partial class GenericClass<T>
 {
     [Key(0)]
