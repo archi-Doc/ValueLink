@@ -2,18 +2,14 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using Arc.Visceral;
 using Microsoft.CodeAnalysis;
+using Tinyhand.Generator;
 
 #pragma warning disable SA1202 // Elements should be ordered by access
 #pragma warning disable SA1204 // Static elements should appear before instance elements
-#pragma warning disable SA1310 // Field names should not contain underscore
 #pragma warning disable SA1401 // Fields should be private
-#pragma warning disable SA1405 // Debug.Assert should provide message text
 #pragma warning disable SA1602 // Enumeration items should be documented
 
 namespace ValueLink.Generator;
@@ -41,7 +37,6 @@ public enum ValueLinkObjectFlag
     TinyhandObject = 1 << 15, // Has TinyhandObjectAttribute
     HasLinkAttribute = 1 << 16, // Has LinkAttribute
     HasPrimaryLink = 1 << 17, // Has primary link
-    GenerateJournal = 1 << 18, // Getnerate journal feature
 }
 
 public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
@@ -56,9 +51,13 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     public ValueLinkObjectAttributeMock? ObjectAttribute { get; private set; }
 
+    public TinyhandObjectAttributeMock? TinyhandAttribute { get; private set; }
+
     public DeclarationCondition PropertyChangedDeclaration { get; private set; }
 
     public List<Linkage>? Links { get; private set; } = null;
+
+    public Linkage? PrimaryLink { get; private set; }
 
     public int NumberOfValidLinks { get; private set; }
 
@@ -190,13 +189,18 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
 
         // TinyhandObjectAttribute
-        if (this.AllAttributes.FirstOrDefault(x => x.FullName == "Tinyhand.TinyhandObjectAttribute") is { } tinyhandAttribute)
+        if (this.AllAttributes.FirstOrDefault(x => x.FullName == TinyhandObjectAttributeMock.FullName) is { } tinyhandAttribute)
         {
-            this.ObjectFlag |= ValueLinkObjectFlag.TinyhandObject;
-            if (tinyhandAttribute.NamedArguments.FirstOrDefault(x => x.Key == "Journaling").Value is true)
+            try
             {
-                this.ObjectFlag |= ValueLinkObjectFlag.GenerateJournal;
+                this.TinyhandAttribute = TinyhandObjectAttributeMock.FromArray(tinyhandAttribute.ConstructorArguments, tinyhandAttribute.NamedArguments);
             }
+            catch (InvalidCastException)
+            {
+                this.Body.ReportDiagnostic(ValueLinkBody.Error_AttributePropertyError, tinyhandAttribute.Location);
+            }
+
+            this.ObjectFlag |= ValueLinkObjectFlag.TinyhandObject;
         }
 
         if (this.ObjectAttribute != null)
@@ -456,7 +460,17 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         // Check primary link
         if (this.Links != null)
         {
-            if (this.Links.Any(x => x.Primary))
+            this.PrimaryLink = this.Links.FirstOrDefault(x => x.Primary);
+            if (this.TinyhandAttribute?.Journaling == true)
+            {// Required
+                if (this.PrimaryLink is null || !this.PrimaryLink.Type.IsLocatable())
+                {
+                    this.Body.AddDiagnostic(ValueLinkBody.Error_NoPrimaryLink, this.Location);
+                    return;
+                }
+            }
+
+            if (this.PrimaryLink != null)
             {// Has primary link.
                 this.ObjectFlag |= ValueLinkObjectFlag.HasPrimaryLink;
             }
@@ -920,18 +934,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     internal void GenerateGoshujinClass(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         var tinyhandObject = this.ObjectFlag.HasFlag(ValueLinkObjectFlag.TinyhandObject);
-        var generateJournal = this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournal);
+        var generateJournal = this.TinyhandAttribute?.Journaling == true;
 
         var goshujinInterface = " : IGoshujin";
 
-        // Primary link
-        Linkage? primaryLink = null;
-        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.HasPrimaryLink))
-        {
-            primaryLink = this.Links.FirstOrDefault(x => x.Primary);
-        }
-
-        if (primaryLink != null)
+        if (this.PrimaryLink != null)
         {// IEnumerable
             goshujinInterface += $", IEnumerable, IEnumerable<{this.LocalName}>";
         }
@@ -956,12 +963,12 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             this.GenerateGoshujin_Clear(ssb, info);
             this.GenerateGoshujin_Chain(ssb, info);
 
-            if (primaryLink != null)
+            if (this.PrimaryLink is not null)
             {// IEnumerable, Count
                 ssb.AppendLine();
-                ssb.AppendLine($"IEnumerator<{this.LocalName}> IEnumerable<{this.LocalName}>.GetEnumerator() => this.{primaryLink.ChainName}.GetEnumerator();");
-                ssb.AppendLine($"System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => this.{primaryLink.ChainName}.GetEnumerator();");
-                ssb.AppendLine($"public int Count => this.{primaryLink.ChainName}.Count;");
+                ssb.AppendLine($"IEnumerator<{this.LocalName}> IEnumerable<{this.LocalName}>.GetEnumerator() => this.{this.PrimaryLink.ChainName}.GetEnumerator();");
+                ssb.AppendLine($"System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => this.{this.PrimaryLink.ChainName}.GetEnumerator();");
+                ssb.AppendLine($"public int Count => this.{this.PrimaryLink.ChainName}.Count;");
             }
 
             if (tinyhandObject)
@@ -1022,6 +1029,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGosjujin_Journal(ScopingStringBuilder ssb, GeneratorInformation info)
     {
+        if (this.PrimaryLink is null)
+        {
+            return;
+        }
+
         ssb.AppendLine();
 
         ssb.AppendLine("[IgnoreMember]");
@@ -1031,6 +1043,60 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         using (var scopeMethod = ssb.ScopeBrace("bool ITinyhandJournal.ReadRecord(ref TinyhandReader reader)"))
         {
+            ssb.AppendLine("var record = reader.Read_Record();");
+
+            using (var scopeLocator = ssb.ScopeBrace("if (record == JournalRecord.Locator)"))
+            {// Locator
+                ssb.AppendLine("var id = reader.ReadInt32();");
+                ssb.AppendLine($"if (this.{this.PrimaryLink.ChainName}.FindFirst(id) is ITinyhandJournal obj)");
+
+                ssb.AppendLine("{");
+                ssb.IncrementIndent();
+                ssb.AppendLine("return obj.ReadRecord(ref reader);");
+                ssb.DecrementIndent();
+                ssb.AppendLine("}");
+            }
+
+            using (var scopeAdd = ssb.ScopeBrace("else if (record == JournalRecord.Add)"))
+            {// Add
+                ssb.AppendLine("if (reader.TryReadBytes(out var span))");
+                ssb.AppendLine("{");
+                ssb.IncrementIndent();
+
+                ssb.AppendLine("try");
+                ssb.AppendLine("{");
+                ssb.IncrementIndent();
+
+                ssb.AppendLine($"var obj = TinyhandSerializer.DeserializeObject<{this.LocalName}>(span);");
+                ssb.AppendLine("if (obj is not null)");
+                ssb.AppendLine("{");
+                ssb.IncrementIndent();
+                ssb.AppendLine($"obj.{this.ObjectAttribute?.GoshujinInstance} = this;");
+                ssb.AppendLine("return true;");
+                ssb.DecrementIndent();
+                ssb.AppendLine("}");
+
+                ssb.DecrementIndent();
+                ssb.AppendLine("}");
+                ssb.AppendLine("catch {}");
+
+                ssb.DecrementIndent();
+                ssb.AppendLine("}");
+            }
+
+            using (var scopeRemove = ssb.ScopeBrace("else if (record == JournalRecord.Remove)"))
+            {// Remove
+                ssb.AppendLine("var id = reader.ReadInt32();");
+                ssb.AppendLine($"if (this.{this.PrimaryLink.ChainName}.FindFirst(id) is {{ }} obj)");
+
+                ssb.AppendLine("{");
+                ssb.IncrementIndent();
+                ssb.AppendLine($"obj.{this.ObjectAttribute?.GoshujinInstance} = null;");
+                ssb.AppendLine("return true;");
+                ssb.DecrementIndent();
+                ssb.AppendLine("}");
+            }
+
             ssb.AppendLine("return false;");
         }
     }

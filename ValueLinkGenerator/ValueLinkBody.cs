@@ -115,6 +115,10 @@ namespace ValueLink.Generator
             id: "CLG022", title: "AutoNotify enabled", messageFormat: "Value property is enabled for AutoNotify to work properly",
             category: "ValueLinkGenerator", DiagnosticSeverity.Warning, isEnabledByDefault: true);
 
+        public static readonly DiagnosticDescriptor Error_NoPrimaryLink = new DiagnosticDescriptor(
+            id: "CLG023", title: "No primary link", messageFormat: "Primary Link of ChainType.Ordered or ChainType.Unordered is required if journaling is enabled",
+            category: "ValueLinkGenerator", DiagnosticSeverity.Warning, isEnabledByDefault: true);
+
         public ValueLinkBody(GeneratorExecutionContext context)
             : base(context)
         {
