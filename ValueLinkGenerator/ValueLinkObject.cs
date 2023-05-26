@@ -579,9 +579,6 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             {
                 continue;
             }
-
-            x.ChainNameUtf8 = ret.Node.Utf8Name!;
-            x.ChainNameIdentifier = this.Identifier.GetIdentifier();
         }
     }
 
@@ -1113,27 +1110,6 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         this.GenerateGoshujin_TinyhandClone(ssb, info);
         ssb.AppendLine();
         this.GenerateGoshujin_TinyhandITinyhandSerialize(ssb, info);
-        ssb.AppendLine();
-        this.GenerateGoshujin_TinyhandUtf8Name(ssb, info);
-    }
-
-    internal void GenerateGoshujin_TinyhandUtf8Name(ScopingStringBuilder ssb, GeneratorInformation info)
-    {
-        if (this.Links == null)
-        {
-            return;
-        }
-
-        foreach (var x in this.Links.Where(x => x.IsValidLink))
-        {
-            ssb.Append($"private static ReadOnlySpan<byte> {x.ChainNameIdentifier} => new byte[] {{ ");
-            foreach (var y in x.ChainNameUtf8)
-            {
-                ssb.Append($"{y}, ", false);
-            }
-
-            ssb.Append("};\r\n", false);
-        }
     }
 
     internal void GenerateGoshujin_TinyhandSerialize(ScopingStringBuilder ssb, GeneratorInformation info)
@@ -1247,7 +1223,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         ssb.AppendLine($"writer.WriteMapHeader({this.NumberOfValidLinks});");
         foreach (var x in this.Links!.Where(x => x.IsValidLink))
         {
-            ssb.AppendLine($"writer.WriteString({x.ChainNameIdentifier});");
+            ssb.AppendLine($"writer.WriteString(\"{x.ChainName}\"u8);");
             ssb.AppendLine($"writer.WriteArrayHeader({ssb.FullObject}.{x.ChainName}.Count);");
             using (var scopeFor2 = ssb.ScopeBrace($"foreach (var x in {ssb.FullObject}.{x.ChainName})"))
             {
