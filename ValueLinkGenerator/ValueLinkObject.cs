@@ -6,6 +6,7 @@ using System.Linq;
 using Arc.Visceral;
 using Microsoft.CodeAnalysis;
 using Tinyhand.Generator;
+using ValueLinkGenerator;
 
 #pragma warning disable SA1202 // Elements should be ordered by access
 #pragma warning disable SA1204 // Static elements should appear before instance elements
@@ -1044,7 +1045,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             using (var scopeLocator = ssb.ScopeBrace("if (record == JournalRecord.Locator)"))
             {// Locator
-                ssb.AppendLine("var id = reader.ReadInt32();");
+
+                ssb.AppendLine($"var id = {this.PrimaryLink.Target.TypeObject.ObjectToReader()};");
                 ssb.AppendLine($"if (this.{this.PrimaryLink.ChainName}.FindFirst(id) is ITinyhandJournal obj)");
 
                 ssb.AppendLine("{");
@@ -1083,7 +1085,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             using (var scopeRemove = ssb.ScopeBrace("else if (record == JournalRecord.Remove)"))
             {// Remove
-                ssb.AppendLine("var id = reader.ReadInt32();");
+                ssb.AppendLine($"var id = {this.PrimaryLink.Target.TypeObject.ObjectToReader()};");
                 ssb.AppendLine($"if (this.{this.PrimaryLink.ChainName}.FindFirst(id) is {{ }} obj)");
 
                 ssb.AppendLine("{");

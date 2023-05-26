@@ -81,12 +81,7 @@ internal static class TinyhandValueLinkShared
 
     public static string? ObjectToReader(this ValueLinkObject obj)
     {
-        if (obj.TypeObject is not { } typeObject)
-        {
-            return null;
-        }
-
-        var coder = typeObject.FullName switch
+        var coder = obj.FullName switch
         {
             "bool" => "reader.ReadBoolean()",
             "byte" => "reader.ReadUInt8()",
@@ -111,11 +106,11 @@ internal static class TinyhandValueLinkShared
             return coder;
         }
 
-        if (typeObject.AllAttributes.Any(x => x.FullName == "Tinyhand.TinyhandObject"))
+        if (obj.AllAttributes.Any(x => x.FullName == "Tinyhand.TinyhandObject"))
         {// TinyhandObject
-            return $"TinyhandSerializer.DeserializeObject<{typeObject.FullName}>(ref reader)";
+            return $"TinyhandSerializer.DeserializeObject<{obj.FullName}>(ref reader)";
         }
 
-        return $"TinyhandSerializer.Deserialize<{typeObject.FullName}>(ref reader)";
+        return $"TinyhandSerializer.Deserialize<{obj.FullName}>(ref reader)";
     }
 }
