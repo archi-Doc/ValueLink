@@ -106,9 +106,9 @@ internal static class TinyhandValueLinkShared
             return coder;
         }
 
-        if (obj.AllAttributes.Any(x => x.FullName == "Tinyhand.TinyhandObject"))
+        if (obj.AllAttributes.Any(x => x.FullName == TinyhandObjectAttributeMock.FullName))
         {// TinyhandObject
-            return $"TinyhandSerializer.DeserializeObject<{obj.FullName}>(ref reader)";
+            return $"TinyhandSerializer.DeserializeOrReconstructObject<{obj.FullName}>(ref reader)";
         }
 
         return $"TinyhandSerializer.Deserialize<{obj.FullName}>(ref reader)";

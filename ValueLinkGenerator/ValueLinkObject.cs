@@ -1027,17 +1027,15 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGosjujin_Journal(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        if (this.PrimaryLink is null)
+        if (this.PrimaryLink?.Target?.TypeObject is null)
         {
             return;
         }
 
         ssb.AppendLine();
 
-        ssb.AppendLine("[IgnoreMember]");
-        ssb.AppendLine("public ITinyhandCrystal? Crystal { get; set; }");
-        ssb.AppendLine("[IgnoreMember]");
-        ssb.AppendLine("public uint CurrentPlane { get; set; }");
+        ssb.AppendLine("[IgnoreMember] public ITinyhandCrystal? Crystal { get; set; }");
+        ssb.AppendLine("[IgnoreMember] public uint CurrentPlane { get; set; }");
 
         using (var scopeMethod = ssb.ScopeBrace("bool ITinyhandJournal.ReadRecord(ref TinyhandReader reader)"))
         {
@@ -1045,9 +1043,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             using (var scopeLocator = ssb.ScopeBrace("if (record == JournalRecord.Locator)"))
             {// Locator
-
-                ssb.AppendLine($"var id = {this.PrimaryLink.Target.TypeObject.ObjectToReader()};");
-                ssb.AppendLine($"if (this.{this.PrimaryLink.ChainName}.FindFirst(id) is ITinyhandJournal obj)");
+                ssb.AppendLine($"var key = {this.PrimaryLink.Target.TypeObject.ObjectToReader()};");
+                ssb.AppendLine($"if (this.{this.PrimaryLink.ChainName}.FindFirst(key) is ITinyhandJournal obj)");
 
                 ssb.AppendLine("{");
                 ssb.IncrementIndent();
@@ -1085,8 +1082,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             using (var scopeRemove = ssb.ScopeBrace("else if (record == JournalRecord.Remove)"))
             {// Remove
-                ssb.AppendLine($"var id = {this.PrimaryLink.Target.TypeObject.ObjectToReader()};");
-                ssb.AppendLine($"if (this.{this.PrimaryLink.ChainName}.FindFirst(id) is {{ }} obj)");
+                ssb.AppendLine($"var key = {this.PrimaryLink.Target.TypeObject.ObjectToReader()};");
+                ssb.AppendLine($"if (this.{this.PrimaryLink.ChainName}.FindFirst(key) is {{ }} obj)");
 
                 ssb.AppendLine("{");
                 ssb.IncrementIndent();
