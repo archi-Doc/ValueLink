@@ -11,7 +11,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
 #pragma warning disable RS2008
-#pragma warning disable SA1306 // Field names should begin with lower-case letter
 #pragma warning disable SA1310 // Field names should not contain underscore
 #pragma warning disable SA1401 // Fields should be private
 #pragma warning disable SA1117 // Parameters should be on same line or separate lines
@@ -113,6 +112,10 @@ namespace ValueLink.Generator
 
         public static readonly DiagnosticDescriptor Warning_AutoNotifyEnabled = new DiagnosticDescriptor(
             id: "CLG022", title: "AutoNotify enabled", messageFormat: "Value property is enabled for AutoNotify to work properly",
+            category: "ValueLinkGenerator", DiagnosticSeverity.Warning, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Error_NoPrimaryLink = new DiagnosticDescriptor(
+            id: "CLG023", title: "No primary link", messageFormat: "Primary Link of ChainType.Ordered or ChainType.Unordered is required if journaling is enabled",
             category: "ValueLinkGenerator", DiagnosticSeverity.Warning, isEnabledByDefault: true);
 
         public ValueLinkBody(GeneratorExecutionContext context)

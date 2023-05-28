@@ -214,10 +214,6 @@ namespace ValueLink.Generator
 
         public string ChainName { get; private set; } = string.Empty; // ListChain<int> IdChain
 
-        public byte[] ChainNameUtf8 { get; set; } = Array.Empty<byte>();
-
-        public string ChainNameIdentifier { get; set; } = string.Empty;
-
         public bool IsValidLink => this.Type != ChainType.None;
 
         public bool RequiresTarget => this.Type == ChainType.Ordered || this.Type == ChainType.ReverseOrdered || this.Type == ChainType.Unordered;

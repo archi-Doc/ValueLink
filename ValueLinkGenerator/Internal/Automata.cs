@@ -63,7 +63,7 @@ internal class Automata<TObj, TMember>
             }
             else if (bytes.Length == 0)
             {// leaf node
-                node = node.Add(key, this.NodeList.Count, member, utf8);
+                node = node.Add(key, this.NodeList.Count, member);
                 this.NodeList.Add(node);
             }
             else
@@ -252,8 +252,6 @@ internal class Automata<TObj, TMember>
 
         public TMember? Member { get; private set; }
 
-        public byte[]? Utf8Name { get; private set; }
-
         public SortedDictionary<ulong, Node>? Nexts { get; private set; }
 
         public bool HasValue => this.Index != -1;
@@ -279,19 +277,13 @@ internal class Automata<TObj, TMember>
             }
         }
 
-        public Node Add(ulong key, int index, TMember member, byte[] utf8)
+        public Node Add(ulong key, int index, TMember member)
         {
             var node = this.Add(key);
             node.Index = index;
             node.Member = member;
-            node.Utf8Name = utf8;
 
             return node;
-        }
-
-        public override string ToString()
-        {
-            return Encoding.UTF8.GetString(this.Utf8Name);
         }
     }
 }

@@ -32,6 +32,14 @@ namespace ValueLink
 
     public static class AttributeHelper
     {
+        public static bool IsLocatable(this ChainType chainType) => chainType switch
+        {
+            ChainType.Ordered => true,
+            ChainType.ReverseOrdered => true,
+            ChainType.Unordered => true,
+            _ => false,
+        };
+
         public static object? GetValue(int constructorIndex, string? name, object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
         {
             if (constructorIndex >= 0 && constructorIndex < constructorArguments.Length)
