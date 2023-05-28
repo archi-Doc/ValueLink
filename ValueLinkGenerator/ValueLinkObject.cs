@@ -788,15 +788,42 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateLink(ScopingStringBuilder ssb, GeneratorInformation info, Linkage main, Linkage[] sub)
     {
-        if (!main.NoValue)
+        var tinyhandProperty = this.TinyhandAttribute is not null &&
+            main.Target?.AllAttributes.Any(x => x.FullName == Tinyhand.Generator.KeyAttributeMock.FullName) == true;
+
+        if (!main.NoValue/* && !tinyhandProperty*/)
         {// Value property
             this.GenerateLink_Property(ssb, info, main, sub);
+        }
+
+        if (tinyhandProperty)
+        {
+            this.GenerateLink_Update(ssb, info, main, sub);
         }
 
         this.GenerateLink_Link(ssb, info, main);
         foreach (var x in sub)
         {
             this.GenerateLink_Link(ssb, info, x);
+        }
+    }
+
+    internal void GenerateLink_Update(ScopingStringBuilder ssb, GeneratorInformation info, Linkage main, Linkage[] sub)
+    {
+        using (var scopeUpdate = ssb.ScopeBrace($"private void __gen_cl_update_{main.TargetName}()"))
+        {
+            using (var obj = ssb.ScopeObject("this"))
+            {
+                if (main.IsValidLink)
+                {
+                    this.Generate_AddLink(ssb, info, main, $"this.{this.GoshujinInstanceIdentifier}?");
+                }
+
+                foreach (var x in sub.Where(a => a.IsValidLink))
+                {
+                    this.Generate_AddLink(ssb, info, x, $"this.{this.GoshujinInstanceIdentifier}?");
+                }
+            }
         }
     }
 
