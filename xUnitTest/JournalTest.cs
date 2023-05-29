@@ -7,13 +7,13 @@ using Xunit;
 namespace xUnitTest;
 
 [TinyhandObject]
-public partial class JournalIdentifier
+public readonly partial struct JournalIdentifier
 {
     [Key(0)]
-    public int Id0 { get; set; }
+    public readonly int Id0;
 
     [Key(1)]
-    public int Id1 { get; set; }
+    public readonly int Id1;
 }
 
 [ValueLinkObject]
@@ -23,6 +23,10 @@ public partial record JournalTestClass
     [Link(Type = ChainType.Ordered, Primary = true)]
     [KeyAsName]
     private int id;
+
+    [Link(Type = ChainType.Ordered)]
+    [KeyAsName]
+    private JournalIdentifier identifier = default!;
 
     public JournalTestClass()
     {
