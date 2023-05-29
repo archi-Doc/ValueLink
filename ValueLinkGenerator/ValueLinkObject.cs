@@ -801,6 +801,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             this.GenerateLink_Update(ssb, info, main, sub);
         }
 
+        ssb.AppendLine();
+
         this.GenerateLink_Link(ssb, info, main);
         foreach (var x in sub)
         {
@@ -877,8 +879,6 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 }
             }
         }
-
-        ssb.AppendLine();
     }
 
     internal void GenerateLink_Link(ScopingStringBuilder ssb, GeneratorInformation info, Linkage x)
