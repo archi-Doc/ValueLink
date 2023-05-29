@@ -235,6 +235,7 @@ namespace ValueLink.Generator
             }
 
             ssb.AppendLine("#nullable enable", false);
+            ssb.AppendLine("#pragma warning disable CS0169", false);
             ssb.AppendLine("#pragma warning disable CS1591", false);
             // ssb.AppendLine("#pragma warning disable SA1306", false); // Field names should begin with lower-case letter
             // ssb.AppendLine("#pragma warning disable SA1401", false); // Fields should be private
