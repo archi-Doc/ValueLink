@@ -1073,8 +1073,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             using (var scopeLocator = ssb.ScopeBrace("if (record == JournalRecord.Locator)"))
             {// Locator
-                ssb.AppendLine($"var key = {this.PrimaryLink.Target.TypeObject.CodeReader()};");
-                ssb.AppendLine($"if (this.{this.PrimaryLink.ChainName}.FindFirst(key) is ITinyhandJournal obj)");
+                var typeObject = this.PrimaryLink.Target.TypeObject;
+                ssb.AppendLine($"var key = {typeObject.CodeReader()};");
+                var keyIsNotNull = typeObject.Kind.IsReferenceType() ? "key is not null && " : string.Empty;
+                ssb.AppendLine($"if ({keyIsNotNull}this.{this.PrimaryLink.ChainName}.FindFirst(key) is ITinyhandJournal obj)");
 
                 ssb.AppendLine("{");
                 ssb.IncrementIndent();
@@ -1112,8 +1114,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             using (var scopeRemove = ssb.ScopeBrace("else if (record == JournalRecord.Remove)"))
             {// Remove
-                ssb.AppendLine($"var key = {this.PrimaryLink.Target.TypeObject.CodeReader()};");
-                ssb.AppendLine($"if (this.{this.PrimaryLink.ChainName}.FindFirst(key) is {{ }} obj)");
+                var typeObject = this.PrimaryLink.Target.TypeObject;
+                ssb.AppendLine($"var key = {typeObject.CodeReader()};");
+                var keyIsNotNull = typeObject.Kind.IsReferenceType() ? "key is not null && " : string.Empty;
+                ssb.AppendLine($"if ({keyIsNotNull}this.{this.PrimaryLink.ChainName}.FindFirst(key) is {{ }} obj)");
 
                 ssb.AppendLine("{");
                 ssb.IncrementIndent();
