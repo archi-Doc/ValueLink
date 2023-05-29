@@ -1075,7 +1075,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             {// Locator
                 var typeObject = this.PrimaryLink.Target.TypeObject;
                 ssb.AppendLine($"var key = {typeObject.CodeReader()};");
-                var keyIsNotNull = typeObject.Kind.IsReferenceType() ? "key is not null && " : string.Empty;
+                var keyIsNotNull = typeObject.Kind.IsValueType() ? string.Empty : "key is not null && ";
                 ssb.AppendLine($"if ({keyIsNotNull}this.{this.PrimaryLink.ChainName}.FindFirst(key) is ITinyhandJournal obj)");
 
                 ssb.AppendLine("{");
@@ -1116,7 +1116,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             {// Remove
                 var typeObject = this.PrimaryLink.Target.TypeObject;
                 ssb.AppendLine($"var key = {typeObject.CodeReader()};");
-                var keyIsNotNull = typeObject.Kind.IsReferenceType() ? "key is not null && " : string.Empty;
+                var keyIsNotNull = typeObject.Kind.IsValueType() ? string.Empty : "key is not null && ";
                 ssb.AppendLine($"if ({keyIsNotNull}this.{this.PrimaryLink.ChainName}.FindFirst(key) is {{ }} obj)");
 
                 ssb.AppendLine("{");
