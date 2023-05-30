@@ -39,6 +39,7 @@ public enum ValueLinkObjectFlag
     HasLinkAttribute = 1 << 16, // Has LinkAttribute
     HasPrimaryLink = 1 << 17, // Has primary link
     GenerateJournaling = 1 << 18, // Generate journaling
+    EnableLock = 1 << 19, // Lock
 }
 
 public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
@@ -211,6 +212,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         if (this.ObjectAttribute != null)
         {// ValueLinkObject
+            if (this.ObjectAttribute.Lock)
+            {// Lock
+                this.ObjectFlag |= ValueLinkObjectFlag.EnableLock;
+            }
+
             this.ConfigureObject();
         }
     }
@@ -981,7 +987,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             goshujinInterface += $", ITinyhandJournal";
         }
 
-        if (this.ObjectAttribute?.Lock == true)
+        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.EnableLock))
         {// ILockable
             goshujinInterface += $", Arc.Threading.ILockable";
         }
@@ -1026,7 +1032,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 }
             }
 
-            if (this.ObjectAttribute?.Lock == true)
+            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.EnableLock))
             {// ILockable
                 this.GenerateGosjujin_Lock(ssb, info);
             }
@@ -1068,9 +1074,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     internal void GenerateGosjujin_Lock(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         ssb.AppendLine("public Arc.Threading.ILockable LockObject { get; set; } = new Arc.Threading.MonitorLock();");
-        ssb.AppendLine("bool Arc.Threading.ILockable.IsLocked => this.LockObject.IsLocked;");
-        ssb.AppendLine("bool Arc.Threading.ILockable.Enter() => this.LockObject.Enter();");
-        ssb.AppendLine("void Arc.Threading.ILockable.Exit() => this.LockObject.Exit();");
+        ssb.AppendLine("public bool IsLocked => this.LockObject.IsLocked;");
+        ssb.AppendLine("public bool Enter() => this.LockObject.Enter();");
+        ssb.AppendLine("public void Exit() => this.LockObject.Exit();");
+        ssb.AppendLine("public Arc.Threading.LockStruct Lock() => new(this);");
     }
 
     internal void GenerateGosjujin_Journal(ScopingStringBuilder ssb, GeneratorInformation info)
@@ -1184,6 +1191,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 return;
             }
 
+            var lockScope = this.ScopeLock(ssb);
+
             var primaryLink = this.Links.FirstOrDefault(x => x.Primary);
             if (primaryLink != null)
             {// Primary link
@@ -1196,6 +1205,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             }
 
             this.GenerateGoshujin_TinyhandSerialize_ArrayAndChains(ssb, info);
+
+            lockScope?.Dispose();
         }
     }
 
@@ -1477,12 +1488,20 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         ssb.AppendLine();*/
     }
 
+    internal ScopingStringBuilder.IScope? ScopeLock(ScopingStringBuilder ssb)
+    {
+        return this.ObjectFlag.HasFlag(ValueLinkObjectFlag.EnableLock) ? ssb.ScopeBrace($"using ({ssb.FullObject}.Lock())") : null;
+    }
+
     internal void GenerateGoshujin_Clear(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         using (var scopeMethod = ssb.ScopeBrace($"public void Clear()"))
+        using (var scopeThis = ssb.ScopeObject("this"))
         {
             if (this.Links != null)
             {
+                var lockScope = this.ScopeLock(ssb);
+
                 foreach (var link in this.Links)
                 {
                     if (link.Type == ChainType.None)
@@ -1494,6 +1513,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                         ssb.AppendLine($"this.{link.ChainName}.Clear();");
                     }
                 }
+
+                lockScope?.Dispose();
             }
         }
 
