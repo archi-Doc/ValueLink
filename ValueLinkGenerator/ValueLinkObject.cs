@@ -794,7 +794,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     internal void GenerateLink(ScopingStringBuilder ssb, GeneratorInformation info, Linkage main, Linkage[] sub)
     {
         var tinyhandProperty = this.TinyhandAttribute is not null &&
-            main.Target?.AllAttributes.Any(x => x.FullName == Tinyhand.Generator.KeyAttributeMock.FullName) == true;
+            main.Target?.AllAttributes.Any(x => x.FullName == Tinyhand.Generator.KeyAttributeMock.FullName || x.FullName == Tinyhand.Generator.KeyAsNameAttributeMock.FullName) == true;
 
         if (!main.NoValue/* && !tinyhandProperty*/)
         {// Value property
@@ -981,6 +981,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             goshujinInterface += $", ITinyhandJournal";
         }
 
+        if (this.ObjectAttribute?.Lock == true)
+        {// ILockable
+            goshujinInterface += $", Arc.Threading.ILockable";
+        }
+
         using (var scopeClass = ssb.ScopeBrace("public sealed class " + this.ObjectAttribute!.GoshujinClass + goshujinInterface))
         {
             // Constructor
@@ -1020,6 +1025,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     this.GenerateGosjujin_Journal(ssb, info);
                 }
             }
+
+            if (this.ObjectAttribute?.Lock == true)
+            {// ILockable
+                this.GenerateGosjujin_Lock(ssb, info);
+            }
         }
 
         ssb.AppendLine();
@@ -1053,6 +1063,14 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
 
         ssb.AppendLine();
+    }
+
+    internal void GenerateGosjujin_Lock(ScopingStringBuilder ssb, GeneratorInformation info)
+    {
+        ssb.AppendLine("public Arc.Threading.ILockable LockObject { get; set; } = new Arc.Threading.MonitorLock();");
+        ssb.AppendLine("bool Arc.Threading.ILockable.IsLocked => this.LockObject.IsLocked;");
+        ssb.AppendLine("bool Arc.Threading.ILockable.Enter() => this.LockObject.Enter();");
+        ssb.AppendLine("void Arc.Threading.ILockable.Exit() => this.LockObject.Exit();");
     }
 
     internal void GenerateGosjujin_Journal(ScopingStringBuilder ssb, GeneratorInformation info)

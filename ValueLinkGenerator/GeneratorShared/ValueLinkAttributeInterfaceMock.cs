@@ -85,6 +85,8 @@ namespace ValueLink
         /// </summary>
         public string ExplicitPropertyChanged { get; set; } = string.Empty;
 
+        public bool Lock { get; set; } = false;
+
         public ValueLinkObjectAttributeMock()
         {
         }
@@ -110,6 +112,12 @@ namespace ValueLink
             if (val != null)
             {
                 attribute.ExplicitPropertyChanged = (string)val;
+            }
+
+            val = AttributeHelper.GetValue(-1, nameof(Lock), constructorArguments, namedArguments);
+            if (val != null)
+            {
+                attribute.Lock = (bool)val;
             }
 
             return attribute;
