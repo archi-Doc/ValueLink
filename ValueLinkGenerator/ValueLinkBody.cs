@@ -27,6 +27,7 @@ namespace ValueLink.Generator
         public static readonly string RemovedMethodName = "Removed"; // void Link name + RemovedMethodName()
         public static readonly string GeneratedIdentifierName = "__gen_cl_identifier__";
         public static readonly string GeneratedEnterName = "__gen_cl_enter__";
+        public static readonly string GeneratedNullLockName = "__gen_cl_null_lock__";
 
         public static readonly DiagnosticDescriptor Error_NotPartial = new DiagnosticDescriptor(
             id: "CLG001", title: "Not a partial class/struct", messageFormat: "ValueLinkObject '{0}' is not a partial class/struct",
