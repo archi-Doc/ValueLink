@@ -224,7 +224,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     private void ConfigureObject()
     {
         // Used keywords
-        this.Identifier = new VisceralIdentifier("__gen_cl_identifier__"); // Don't forget CrossLink!
+        this.Identifier = new VisceralIdentifier(ValueLinkBody.GeneratedIdentifierName); // Don't forget CrossLink!
         foreach (var x in this.AllMembers)
         {
             this.Identifier.Add(x.SimpleName);
@@ -779,7 +779,27 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             }
         }
 
+        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.EnableLock))
+        {
+            this.Generate_Enter(ssb, info);
+        }
+
         return;
+    }
+
+    internal void Generate_Enter(ScopingStringBuilder ssb, GeneratorInformation info)
+    {
+        ssb.AppendLine("[MethodImpl(MethodImplOptions.AggressiveInlining)]");
+        using (var enterScope = ssb.ScopeBrace($"private Arc.Threading.ILockable? {ValueLinkBody.GeneratedEnterName}()"))
+        {
+            using (var whileScope = ssb.ScopeBrace("while (true)"))
+            {
+                ssb.AppendLine("var lockObject = this.Goshujin?.LockObject;");
+                ssb.AppendLine("lockObject?.Enter();");
+                ssb.AppendLine("if (lockObject == this.Goshujin?.LockObject) return lockObject;");
+                ssb.AppendLine("else lockObject?.Exit();");
+            }
+        }
     }
 
     internal void Generate_SetProperty(ScopingStringBuilder ssb, GeneratorInformation info)

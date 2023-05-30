@@ -8,14 +8,6 @@ using ValueLink;
 
 namespace Sandbox.Design;
 
-public class GoshujinLock : ILockable
-{
-    public ILockable LockObject { get; set; } = new MonitorLock();
-    bool ILockable.IsLocked => this.LockObject.IsLocked;
-    bool ILockable.Enter() => this.LockObject.Enter();
-    void ILockable.Exit() => this.LockObject.Exit();
-}
-
 [ValueLinkObject]
 public partial class SimpleClass
 {

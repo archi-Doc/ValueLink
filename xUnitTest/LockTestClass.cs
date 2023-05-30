@@ -1,5 +1,6 @@
 // Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
+using Arc.Threading;
 using ValueLink;
 using Xunit;
 
@@ -21,5 +22,7 @@ public class LockTest
     [Fact]
     public void Test1()
     {
+        var tc = new LockTestClass();
+
     }
 }
