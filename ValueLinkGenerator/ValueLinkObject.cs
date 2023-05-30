@@ -794,7 +794,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     internal void GenerateLink(ScopingStringBuilder ssb, GeneratorInformation info, Linkage main, Linkage[] sub)
     {
         var tinyhandProperty = this.TinyhandAttribute is not null &&
-            main.Target?.AllAttributes.Any(x => x.FullName == Tinyhand.Generator.KeyAttributeMock.FullName) == true;
+            main.Target?.AllAttributes.Any(x => x.FullName == Tinyhand.Generator.KeyAttributeMock.FullName || x.FullName == Tinyhand.Generator.KeyAsNameAttributeMock.FullName) == true;
 
         if (!main.NoValue/* && !tinyhandProperty*/)
         {// Value property
