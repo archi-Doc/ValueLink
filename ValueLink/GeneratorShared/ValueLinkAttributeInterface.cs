@@ -104,6 +104,11 @@ namespace ValueLink
         /// </summary>
         public string ExplicitPropertyChanged { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Gets or sets a value indicating whether to implement an exclusive access feature to the goshujin class.
+        /// </summary>
+        public bool Lock { get; set; } = false;
+
         public ValueLinkObjectAttribute()
         {
         }
