@@ -797,7 +797,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     {
         ssb.AppendLine($"private static Arc.Threading.ILockable {ValueLinkBody.GeneratedNullLockName} = new Arc.Threading.MonitorLock();");
         ssb.AppendLine("[MethodImpl(MethodImplOptions.AggressiveInlining)]");
-        using (var enterScope = ssb.ScopeBrace($"private Arc.Threading.ILockable {ValueLinkBody.GeneratedEnterName}()"))
+        using (var enterScope = ssb.ScopeBrace($"private Arc.Threading.ILockable {ValueLinkBody.GeneratedEnterName}(bool lockGoshujin = false)"))
         {
             ssb.AppendLine("var spin = new System.Threading.SpinWait();");
             using (var whileScope = ssb.ScopeBrace("while (true)"))
@@ -807,7 +807,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 ssb.AppendLine($"var lockObject2 = this.{this.GoshujinInstanceIdentifier}?.LockObject ?? {ValueLinkBody.GeneratedNullLockName};");
                 using (var compareScope = ssb.ScopeBrace($"if (lockObject == lockObject2 && !this.{this.GoshujinLockIdentifier})"))
                 {
-                    ssb.AppendLine($"this.{this.GoshujinLockIdentifier} = true;");
+                    ssb.AppendLine($"this.{this.GoshujinLockIdentifier} = lockGoshujin;");
                     ssb.AppendLine("return lockObject;");
                 }
 
@@ -901,6 +901,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
                 using (var scopeCompare = ssb.ScopeBrace(compare))
                 {
+                    if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.EnableLock))
+                    {// Enter
+                        ssb.AppendLine($"var lockObject = this.{ValueLinkBody.GeneratedEnterName}();");
+                    }
+
                     ssb.AppendLine($"this.{main.TargetName} = value;");
 
                     if (main.AutoLink)
@@ -922,6 +927,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                                 this.Generate_Notify(ssb, info, main);
                             }
                         }
+                    }
+
+                    if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.EnableLock))
+                    {// Enter
+                        ssb.AppendLine($"lockObject.Exit();");
                     }
                 }
             }
@@ -1598,7 +1608,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 {
                     if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.EnableLock))
                     {// Enter
-                        ssb.AppendLine($"var lockObject = this.{ValueLinkBody.GeneratedEnterName}();");
+                        ssb.AppendLine($"var lockObject = this.{ValueLinkBody.GeneratedEnterName}(true);");
                     }
 
                     using (var scopeIfNull = ssb.ScopeBrace($"if (this.{goshujinInstance} != null)"))

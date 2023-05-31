@@ -52,5 +52,11 @@ public class JournalTest
     [Fact]
     public void Test1()
     {
+        var tc = new JournalTestClass();
+        /*using (tc.Goshujin.Lock())
+        {
+            tc.Goshujin.IdChain.Is
+        }
+            tc.IdLink.Next;*/
     }
 }
