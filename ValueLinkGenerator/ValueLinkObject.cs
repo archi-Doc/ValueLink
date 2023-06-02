@@ -74,7 +74,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     public string GoshujinInstanceIdentifier = string.Empty;
 
-    public string GoshujinLockIdentifier = string.Empty;
+    // public string GoshujinLockIdentifier = string.Empty;
 
     public string GoshujinFullName = string.Empty;
 
@@ -429,10 +429,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             this.CheckKeyword(this.ObjectAttribute!.GoshujinInstance, this.Location);
             this.GoshujinInstanceIdentifier = this.Identifier.GetIdentifier();
             this.GoshujinFullName = this.FullName + "." + this.ObjectAttribute!.GoshujinClass;
-            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.EnableLock))
-            {
+            /*if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.EnableLock))
+            {// Withdraw lock feature
                 this.GoshujinLockIdentifier = this.Identifier.GetIdentifier();
-            }
+            }*/
         }
 
         // Check Links.
@@ -785,15 +785,15 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             }
         }
 
-        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.EnableLock))
-        {
+        /*if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.EnableLock))
+        {// Withdraw lock feature
             this.Generate_EnterMethod(ssb, info);
-        }
+        }*/
 
         return;
     }
 
-    internal void Generate_EnterMethod(ScopingStringBuilder ssb, GeneratorInformation info)
+    /*internal void Generate_EnterMethod(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         ssb.AppendLine($"private static Arc.Threading.ILockable {ValueLinkBody.GeneratedNullLockName} = new Arc.Threading.MonitorLock();");
         ssb.AppendLine("[MethodImpl(MethodImplOptions.AggressiveInlining)]");
@@ -815,7 +815,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 ssb.AppendLine("spin.SpinOnce();");
             }
         }
-    }
+    }*/
 
     internal void Generate_SetProperty(ScopingStringBuilder ssb, GeneratorInformation info)
     {
@@ -901,10 +901,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
                 using (var scopeCompare = ssb.ScopeBrace(compare))
                 {
-                    if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.EnableLock))
-                    {// Enter
+                    /*if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.EnableLock))
+                    {// Withdraw lock feature
                         ssb.AppendLine($"var lockObject = this.{ValueLinkBody.GeneratedEnterName}();");
-                    }
+                    }*/
 
                     ssb.AppendLine($"this.{main.TargetName} = value;");
 
@@ -929,10 +929,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                         }
                     }
 
-                    if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.EnableLock))
-                    {// Enter
+                    /*if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.EnableLock))
+                    {// Withdraw lock feature
                         ssb.AppendLine($"lockObject.Exit();");
-                    }
+                    }*/
                 }
             }
         }
@@ -1606,10 +1606,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
                 using (var scopeParamter = ssb.ScopeObject("this"))
                 {
-                    if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.EnableLock))
-                    {// Enter
+                    /*if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.EnableLock))
+                    {// Withdraw lock feature
                         ssb.AppendLine($"var lockObject = this.{ValueLinkBody.GeneratedEnterName}(true);");
-                    }
+                    }*/
 
                     using (var scopeIfNull = ssb.ScopeBrace($"if (this.{goshujinInstance} != null)"))
                     {// Remove Chains
@@ -1638,8 +1638,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     }
 
                     ssb.AppendLine();
-                    if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.EnableLock))
-                    {// Exit and enter
+                    /*if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.EnableLock))
+                    {// Exit and enter // Withdraw lock feature
                         // ssb.AppendLine($"this.{goshujinInstance} = null;");
                         ssb.AppendLine($"lockObject.Exit();");
                         ssb.AppendLine($"lockObject = value?.LockObject ?? {ValueLinkBody.GeneratedNullLockName};");
@@ -1647,7 +1647,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                         ssb.AppendLine($"this.{goshujinInstance} = value;");
                         ssb.AppendLine($"this.{this.GoshujinLockIdentifier} = false;");
                     }
-                    else
+                    else*/
                     {
                         ssb.AppendLine($"this.{goshujinInstance} = value;");
                     }
@@ -1676,20 +1676,20 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                         }
                     }
 
-                    if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.EnableLock))
-                    {// Exit
+                    /*if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.EnableLock))
+                    {// Withdraw lock feature
                         ssb.AppendLine($"lockObject.Exit();");
-                    }
+                    }*/
                 }
             }
         }
 
         ssb.AppendLine();
         ssb.AppendLine($"private {this.ObjectAttribute!.GoshujinClass}? {goshujinInstance};");
-        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.EnableLock))
-        {
+        /*if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.EnableLock))
+        {// Withdraw lock feature
             ssb.AppendLine($"private bool {this.GoshujinLockIdentifier};");
-        }
+        }*/
 
         ssb.AppendLine();
     }
