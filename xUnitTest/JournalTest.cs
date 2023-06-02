@@ -16,7 +16,7 @@ public readonly partial struct JournalIdentifier
     public readonly int Id1;
 }
 
-[ValueLinkObject]
+[ValueLinkObject(Lock = true)]
 [TinyhandObject(Journaling = true)]
 public partial record JournalTestClass
 {
@@ -52,5 +52,11 @@ public class JournalTest
     [Fact]
     public void Test1()
     {
+        var tc = new JournalTestClass();
+        /*using (tc.Goshujin.Lock())
+        {
+            tc.Goshujin.IdChain.Is
+        }
+            tc.IdLink.Next;*/
     }
 }

@@ -21,5 +21,7 @@ public class LockTest
     [Fact]
     public void Test1()
     {
+        var tc = new LockTestClass();
+
     }
 }
