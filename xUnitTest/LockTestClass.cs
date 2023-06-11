@@ -49,7 +49,7 @@ public partial record IsolationTestClass
             this.original = instance;
         }
 
-        public IsolationTestClass Instance => this.instance ?? this.original with { };
+        public IsolationTestClass Instance => this.instance ??= this.original with { };
 
         private IsolationTestClass original;
         private IsolationTestClass? instance;
@@ -73,23 +73,35 @@ public partial record IsolationTestClass
 
         public void Commit()
         {
-            var instance = this.Instance;
-            var lockObject = instance.Goshujin?.LockObject;
-            lockObject?.Enter();
-            try
+            var goshujin = this.original.__gen_cl_identifier__001;
+            if (goshujin is not null)
             {
-                if (this.idChanged)
+                goshujin.LockObject.Enter();
+                try
                 {
-                    instance.__gen_cl_identifier__001?.IdChain.Add(instance.id, instance);
-                }
+                    // Replace instance
+                    goshujin.IdChain.UnsafeReplaceInstance(this.original, this.Instance);
+                    // this.original.IdLink = default;
 
-                // Replace instance
-                instance.LinkedListLink.UnsafeChangeInstance(instance);
+                    // Set chains
+                    if (this.idChanged)
+                    {
+                        goshujin.IdChain.Add(this.Instance.id, this.Instance);
+                    }
+
+                    // Add journal
+                }
+                finally
+                {
+                    goshujin.LockObject.Exit();
+                }
             }
-            finally
-            {
-                lockObject?.Exit();
-            }
+        }
+
+        public void Rollback()
+        {
+            this.instance = null;
+            this.idChanged = false;
         }
 
         public void Dispose() => this.original.writerSemaphore.Exit();
