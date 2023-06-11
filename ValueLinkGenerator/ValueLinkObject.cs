@@ -39,7 +39,7 @@ public enum ValueLinkObjectFlag
     HasLinkAttribute = 1 << 16, // Has LinkAttribute
     HasPrimaryLink = 1 << 17, // Has primary link
     GenerateJournaling = 1 << 18, // Generate journaling
-    EnableLock = 1 << 19, // Lock
+    AddLock = 1 << 19,
 }
 
 public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
@@ -214,9 +214,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         if (this.ObjectAttribute != null)
         {// ValueLinkObject
-            if (this.ObjectAttribute.Lock)
-            {// Lock
-                this.ObjectFlag |= ValueLinkObjectFlag.EnableLock;
+            if (this.ObjectAttribute.Isolation == IsolationLevel.Serializable ||
+                this.ObjectAttribute.Isolation == IsolationLevel.RepeatableRead)
+            {// Serializable, RepeatableRead
+                this.ObjectFlag |= ValueLinkObjectFlag.AddLock;
             }
 
             this.ConfigureObject();
@@ -1032,7 +1033,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             goshujinInterface += $", ITinyhandJournal";
         }
 
-        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.EnableLock))
+        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddLock))
         {// ILockable
             goshujinInterface += $", Arc.Threading.ILockable";
         }
@@ -1077,7 +1078,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 }
             }
 
-            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.EnableLock))
+            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddLock))
             {// ILockable
                 this.GenerateGosjujin_Lock(ssb, info);
             }
@@ -1236,7 +1237,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 return;
             }
 
-            var lockScope = this.ScopeLock(ssb);
+            // var lockScope = this.ScopeLock(ssb);
 
             var primaryLink = this.Links.FirstOrDefault(x => x.Primary);
             if (primaryLink != null)
@@ -1251,7 +1252,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             this.GenerateGoshujin_TinyhandSerialize_ArrayAndChains(ssb, info);
 
-            lockScope?.Dispose();
+            // lockScope?.Dispose();
         }
     }
 
@@ -1535,7 +1536,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal ScopingStringBuilder.IScope? ScopeLock(ScopingStringBuilder ssb)
     {
-        return this.ObjectFlag.HasFlag(ValueLinkObjectFlag.EnableLock) ? ssb.ScopeBrace($"using ({ssb.FullObject}.Lock())") : null;
+        return this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddLock) ? ssb.ScopeBrace($"using ({ssb.FullObject}.Lock())") : null;
     }
 
     internal void GenerateGoshujin_Clear(ScopingStringBuilder ssb, GeneratorInformation info)
@@ -1545,7 +1546,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         {
             if (this.Links != null)
             {
-                var lockScope = this.ScopeLock(ssb);
+                // var lockScope = this.ScopeLock(ssb);
 
                 foreach (var link in this.Links)
                 {
@@ -1559,7 +1560,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     }
                 }
 
-                lockScope?.Dispose();
+                // lockScope?.Dispose();
             }
         }
 

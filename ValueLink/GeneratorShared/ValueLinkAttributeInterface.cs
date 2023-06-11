@@ -7,6 +7,29 @@ using Arc.Collections;
 namespace ValueLink;
 
 /// <summary>
+/// Specifies the isolation level of each data.
+/// </summary>
+public enum IsolationLevel
+{
+    /// <summary>
+    /// There is no implementation for isolation.
+    /// </summary>
+    None,
+
+    /// <summary>
+    /// Lock-based concurrency control.<br/>
+    /// using (goshujin.Lock).
+    /// </summary>
+    Serializable,
+
+    /// <summary>
+    /// During the transaction, the same data (primitive types) is guaranteed to be read.<br/>
+    /// The class must be a record type to specify this level.
+    /// </summary>
+    RepeatableRead,
+}
+
+/// <summary>
 /// Specifies the type of chain that represents the relationship between values.
 /// </summary>
 public enum ChainType
@@ -105,9 +128,9 @@ public sealed class ValueLinkObjectAttribute : Attribute
     public string ExplicitPropertyChanged { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets a value indicating whether to implement an exclusive access feature to the goshujin class.
+    /// Gets or sets a value indicating the isolation level to be implemented in the goshujin class.
     /// </summary>
-    public bool Lock { get; set; } = false;
+    public IsolationLevel Isolation { get; set; } = IsolationLevel.None;
 
     public ValueLinkObjectAttribute()
     {

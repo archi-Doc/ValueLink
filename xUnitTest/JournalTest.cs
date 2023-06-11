@@ -16,7 +16,7 @@ public readonly partial struct JournalIdentifier
     public readonly int Id1;
 }
 
-[ValueLinkObject(Lock = true)]
+[ValueLinkObject(Isolation = IsolationLevel.Serializable)]
 [TinyhandObject(Journaling = true)]
 public partial record JournalTestClass
 {
