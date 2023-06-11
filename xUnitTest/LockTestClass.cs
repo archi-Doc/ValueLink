@@ -35,7 +35,9 @@ public partial record IsolationTestClass
 
         public Writer Lock() => this.Instance.Lock();
 
-        public Task<Writer?> TryLock(TimeSpan timeout) => this.Instance.TryLock(timeout);
+        public Task<Writer?> TryLock(int millisecondsTimeout, CancellationToken cancellationToken) => this.Instance.TryLock(millisecondsTimeout, cancellationToken);
+
+        public Task<Writer?> TryLock(int millisecondsTimeout) => this.Instance.TryLock(millisecondsTimeout);
 
         public int Id => this.Instance.id;
 
@@ -115,9 +117,11 @@ public partial record IsolationTestClass
         return new Writer(this);
     }
 
-    public async Task<Writer?> TryLock(TimeSpan timeout)
+    public Task<Writer?> TryLock(int millisecondsTimeout) => this.TryLock(millisecondsTimeout, default);
+
+    public async Task<Writer?> TryLock(int millisecondsTimeout, CancellationToken cancellationToken)
     {
-        var entered = await this.writerSemaphore.EnterAsync().ConfigureAwait(false);
+        var entered = await this.writerSemaphore.EnterAsync(millisecondsTimeout, cancellationToken).ConfigureAwait(false);
         if (entered)
         {
             return new Writer(this);
@@ -147,5 +151,24 @@ public class LockTest
     public void Test1()
     {
         var tc = new LockTestClass();
+
+        var tc2 = new IsolationTestClass();
+        using (var writer = tc2.Lock())
+        {
+        }
+
+        TestAsync(tc2).Wait();
+
+        async Task TestAsync(IsolationTestClass t)
+        {
+            using (var writer = await t.TryLock(100))
+            {
+                if (writer is not null)
+                {
+                    writer.Id = 19;
+                    writer.Commit();
+                }
+            }
+        }
     }
 }
