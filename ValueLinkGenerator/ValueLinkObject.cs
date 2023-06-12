@@ -448,7 +448,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 }
 
                 var result = true;
-                if (!x.NoValue && x.MainLink == null)
+                if (x.AddValue && x.MainLink == null)
                 {
                     result = this.CheckKeyword(x.ValueName, x.Location);
                 }
@@ -838,7 +838,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         var tinyhandProperty = this.TinyhandAttribute is not null &&
             main.Target?.AllAttributes.Any(x => x.FullName == Tinyhand.Generator.KeyAttributeMock.FullName || x.FullName == Tinyhand.Generator.KeyAsNameAttributeMock.FullName) == true;
 
-        if (!main.NoValue/* && !tinyhandProperty*/)
+        if (main.AddValue/* && !tinyhandProperty*/)
         {// Value property
             this.GenerateLink_Property(ssb, info, main, sub);
         }

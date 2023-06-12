@@ -177,9 +177,9 @@ public sealed class LinkAttribute : Attribute
     public ValueLinkAccessibility Accessibility { get; set; } = ValueLinkAccessibility.PublicGetter;
 
     /// <summary>
-    /// Gets or sets a value indicating whether or not to create a value property from the target member [the default is <see langword="false"/>].
+    /// Gets or sets a value indicating whether or not to create a value property from the target member [the default is <see langword="true"/>].
     /// </summary>
-    public bool NoValue { get; set; } = false;
+    public bool AddValue { get; set; } = true;
 
     public LinkAttribute()
     {

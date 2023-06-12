@@ -152,7 +152,7 @@ public sealed class LinkAttributeMock : Attribute
 
     public ValueLinkAccessibility Accessibility { get; set; } = ValueLinkAccessibility.PublicGetter;
 
-    public bool NoValue { get; set; } = false;
+    public bool AddValue { get; set; } = true;
 
     public LinkAttributeMock()
     {
@@ -205,10 +205,10 @@ public sealed class LinkAttributeMock : Attribute
             attribute.Accessibility = (ValueLinkAccessibility)val;
         }
 
-        val = AttributeHelper.GetValue(-1, nameof(NoValue), constructorArguments, namedArguments);
+        val = AttributeHelper.GetValue(-1, nameof(AddValue), constructorArguments, namedArguments);
         if (val != null)
         {
-            attribute.NoValue = (bool)val;
+            attribute.AddValue = (bool)val;
         }
 
         return attribute;

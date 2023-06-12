@@ -152,10 +152,10 @@ namespace ValueLink.Generator
             }
 
             // No value
-            linkage.NoValue = linkAttribute.NoValue;
-            if (linkage.AutoNotify && linkage.NoValue)
+            linkage.AddValue = linkAttribute.AddValue;
+            if (linkage.AutoNotify && !linkage.AddValue)
             {
-                linkage.NoValue = false;
+                linkage.AddValue = true;
                 obj.Body.AddDiagnostic(ValueLinkBody.Warning_AutoNotifyEnabled, attribute.Location);
             }
 
@@ -222,7 +222,7 @@ namespace ValueLink.Generator
 
         public Accessibility SetterAccessibility { get; private set; } = Microsoft.CodeAnalysis.Accessibility.Public;
 
-        public bool NoValue { get; private set; }
+        public bool AddValue { get; private set; }
 
         public string? PredicateMethodName { get; set; }
 
