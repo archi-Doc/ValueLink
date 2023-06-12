@@ -78,8 +78,7 @@ public partial record IsolationTestClass
             var goshujin = this.original.__gen_cl_identifier__001;
             if (goshujin is not null)
             {
-                goshujin.LockObject.Enter();
-                try
+                using (goshujin.Lock())
                 {
                     // Replace instance
                     goshujin.IdChain.UnsafeReplaceInstance(this.original, this.Instance);
@@ -92,10 +91,6 @@ public partial record IsolationTestClass
                     }
 
                     // Add journal
-                }
-                finally
-                {
-                    goshujin.LockObject.Exit();
                 }
             }
         }
