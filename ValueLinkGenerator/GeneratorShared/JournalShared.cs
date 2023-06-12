@@ -10,6 +10,27 @@ namespace TinyhandGenerator;
 
 internal static class JournalShared
 {
+    public static bool IsSupportedPrimitive(this ValueLinkObject obj)
+        => obj.FullName switch
+        {
+            "bool" => true,
+            "byte" => true,
+            "sbyte" => true,
+            "ushort" => true,
+            "short" => true,
+            "uint" => true,
+            "int" => true,
+            "ulong" => true,
+            "long" => true,
+
+            "char" => true,
+            "string" => true,
+            "float" => true,
+            "double" => true,
+
+            _ => false,
+        };
+
     public static string? CodeWriteKey(this ValueLinkObject obj)
     {
         int intKey = -1;

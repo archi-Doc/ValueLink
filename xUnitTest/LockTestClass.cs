@@ -1,10 +1,10 @@
 // Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
-using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Arc.Threading;
+using Tinyhand;
 using ValueLink;
 using Xunit;
 
@@ -24,7 +24,7 @@ public partial record LockTestClass
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 public partial record IsolationTestClass
 {
-    public readonly struct Reader
+    /*public readonly struct Reader
     {
         public Reader(IsolationTestClass instance)
         {
@@ -42,9 +42,9 @@ public partial record IsolationTestClass
         public int Id => this.Instance.id;
 
         public string Name => this.Instance.name;
-    }
+    }*/
 
-    public class Writer : IDisposable
+    /*public class Writer : IDisposable
     {
         public Writer(IsolationTestClass instance)
         {
@@ -102,9 +102,9 @@ public partial record IsolationTestClass
         }
 
         public void Dispose() => this.original.writerSemaphore.Exit();
-    }
+    }*/
 
-    public Reader GetReader() => new Reader(this);
+    /*public Reader GetReader() => new Reader(this);
 
     public Writer Lock()
     {
@@ -127,7 +127,7 @@ public partial record IsolationTestClass
         }
     }
 
-    private SemaphoreLock writerSemaphore = new();
+    private SemaphoreLock writerSemaphore = new();*/
 
     [Link(Type = ChainType.LinkedList, Name = "LinkedList")]
     public IsolationTestClass()
@@ -138,6 +138,13 @@ public partial record IsolationTestClass
     private int id;
 
     private string name = string.Empty;
+
+    public int Id2;
+
+    public string Name2 { get; set; } = string.Empty;
+
+    [IgnoreMember]
+    private string name3 = string.Empty;
 }
 
 public class LockTest

@@ -60,6 +60,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     public List<Linkage>? Links { get; private set; } = null;
 
+    public List<Member>? Members { get; private set; } = null;
+
     public Linkage? PrimaryLink { get; private set; }
 
     public int NumberOfValidLinks { get; private set; }
@@ -498,6 +500,50 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 this.Body.AddDiagnostic(ValueLinkBody.Warning_NoPrimaryLink, this.Location);
             }
         }
+
+        // Check isolation
+        if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatableRead)
+        {
+            if (!this.IsRecord)
+            {
+                this.Body.AddDiagnostic(ValueLinkBody.Error_MustBeRecord, this.Location);
+                return;
+            }
+
+            if (this.Links != null)
+            {
+                foreach (var x in this.Links)
+                {
+                    x.SetRepeatableRead();
+                }
+            }
+
+            // Prepare members
+            foreach (var x in this.GetMembers(VisceralTarget.Field))
+            {// private or protected + supported primitive + not IgnoreMember
+                if (x.Field_Accessibility == Accessibility.Public ||
+                    x.TypeObject == null || !JournalShared.IsSupportedPrimitive(x.TypeObject) ||
+                    x.AllAttributes.Any(y => y.FullName == "Tinyhand.IgnoreMemberAttribute"))
+                {
+                    continue;
+                }
+
+                var member = Member.Create(x, this.Links.FirstOrDefault(y => y.Target == x));
+                if (member is not null)
+                {
+                    this.Members ??= new();
+                    this.Members.Add(member);
+                }
+            }
+
+            // Check keywords
+            this.CheckKeyword2(ValueLinkBody.ReaderStructName, this.Location);
+            // this.CheckKeyword2(ValueLinkBody.WriterClassName, this.Location);
+            // this.CheckKeyword2(ValueLinkBody.WriterSemaphoreName, this.Location);
+            // this.CheckKeyword2(ValueLinkBody.LockMethodName, this.Location);
+            // this.CheckKeyword2(ValueLinkBody.TryLockMethodName, this.Location);
+            // this.CheckKeyword2(ValueLinkBody.GetReaderMethodName, this.Location);
+        }
     }
 
     public void CheckMember(ValueLinkObject parent)
@@ -537,6 +583,17 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         if (!this.Identifier.Add(keyword))
         {
             this.Body.AddDiagnostic(ValueLinkBody.Error_KeywordUsed, location ?? Location.None, this.SimpleName, keyword);
+            return false;
+        }
+
+        return true;
+    }
+
+    public bool CheckKeyword2(string keyword, Location? location = null)
+    {
+        if (!this.Identifier.Add(keyword))
+        {
+            this.Body.AddDiagnostic(ValueLinkBody.Error_KeywordUsed2, location ?? Location.None, keyword);
             return false;
         }
 
@@ -786,12 +843,171 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             }
         }
 
+        if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatableRead)
+        {
+            this.Generate_RepeatableRead(ssb, info);
+        }
+
         /*if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.EnableLock))
         {// Withdraw lock feature
             this.Generate_EnterMethod(ssb, info);
         }*/
 
         return;
+    }
+
+    internal void Generate_RepeatableRead(ScopingStringBuilder ssb, GeneratorInformation info)
+    {
+        this.Generate_RepeatableRead_Reader(ssb, info);
+        this.Generate_RepeatableRead_Writer(ssb, info);
+        this.Generate_RepeatableRead_Other(ssb, info);
+    }
+
+    internal void Generate_RepeatableRead_Reader(ScopingStringBuilder ssb, GeneratorInformation info)
+    {
+        using (var scopeClass = ssb.ScopeBrace($"public readonly struct {ValueLinkBody.ReaderStructName}"))
+        {
+            using (var scopeConstructor = ssb.ScopeBrace($"public {ValueLinkBody.ReaderStructName}({this.SimpleName} instance)"))
+            {
+                ssb.AppendLine("this.Instance = instance;");
+            }
+
+            ssb.AppendLine();
+
+            ssb.AppendLine($"public readonly {this.SimpleName} Instance;");
+            ssb.AppendLine($"public {ValueLinkBody.WriterClassName} {ValueLinkBody.LockMethodName}() => this.Instance.{ValueLinkBody.LockMethodName}();");
+            ssb.AppendLine($"public Task<{ValueLinkBody.WriterClassName}?> {ValueLinkBody.TryLockMethodName}(int millisecondsTimeout, CancellationToken cancellationToken) => this.Instance.{ValueLinkBody.TryLockMethodName}(millisecondsTimeout, cancellationToken);");
+            ssb.AppendLine($"public Task<{ValueLinkBody.WriterClassName}?> {ValueLinkBody.TryLockMethodName}(int millisecondsTimeout) => this.Instance.{ValueLinkBody.TryLockMethodName}(millisecondsTimeout);");
+
+            ssb.AppendLine();
+
+            if (this.Members is not null)
+            {
+                foreach (var x in this.Members)
+                {
+                    x.GenerateReaderProperty(ssb);
+                }
+            }
+        }
+    }
+
+    internal void Generate_RepeatableRead_Writer(ScopingStringBuilder ssb, GeneratorInformation info)
+    {
+        ssb.AppendLine();
+
+        using (var scopeClass = ssb.ScopeBrace($"public class {ValueLinkBody.WriterClassName} : IDisposable"))
+        {
+            using (var scopeConstructor = ssb.ScopeBrace($"public {ValueLinkBody.WriterClassName}({this.SimpleName} instance)"))
+            {
+                ssb.AppendLine("this.original = instance;");
+            }
+
+            ssb.AppendLine();
+
+            ssb.AppendLine($"public {this.SimpleName} Instance => this.instance ??= this.original with {{ }};");
+            ssb.AppendLine($"private {this.SimpleName} original;");
+            ssb.AppendLine($"private {this.SimpleName}? instance;");
+            if (this.Members is not null)
+            {
+                foreach (var x in this.Members)
+                {
+                    if (x.ChangedName is not null)
+                    {
+                        ssb.AppendLine($"private bool {x.ChangedName};");
+                    }
+                }
+            }
+
+            ssb.AppendLine();
+
+            this.Generate_RepeatableRead_Writer_Commit(ssb);
+
+            using (var scopeRollback = ssb.ScopeBrace($"public void Rollback()"))
+            {
+                ssb.AppendLine("this.instance = null;");
+                if (this.Members is not null)
+                {
+                    foreach (var x in this.Members)
+                    {
+                        if (x.ChangedName is not null)
+                        {
+                            ssb.AppendLine($"this.{x.ChangedName} = false;");
+                        }
+                    }
+                }
+            }
+
+            ssb.AppendLine($"public void Dispose() => this.original.{ValueLinkBody.WriterSemaphoreName}.Exit();");
+
+            if (this.Members is not null)
+            {
+                ssb.AppendLine();
+                foreach (var x in this.Members)
+                {
+                    x.GenerateWriterProperty(ssb);
+                }
+            }
+        }
+    }
+
+    internal void Generate_RepeatableRead_Writer_Commit(ScopingStringBuilder ssb)
+    {
+        using (var scopeRollback = ssb.ScopeBrace($"public void Commit()"))
+        {
+            ssb.AppendLine($"var goshujin = this.original.{this.GoshujinInstanceIdentifier};");
+            using (var scopeGoshujin = ssb.ScopeBrace($"if (goshujin is not null)"))
+            {
+                using (var scopeLock = ssb.ScopeBrace($"using (goshujin.Lock())"))
+                {
+                    // Replace instance
+                    if (this.Links is not null)
+                    {
+                        foreach (var x in this.Links)
+                        {
+                            ssb.AppendLine($"goshujin.{x.ChainName}.UnsafeReplaceInstance(this.original, this.Instance);");
+                        }
+                    }
+
+                    // Set chains
+                    if (this.Members is not null)
+                    {
+                        foreach (var x in this.Members)
+                        {
+                            if (x.ChangedName is not null)
+                            {
+                                ssb.AppendLine($"if (this.{x.ChangedName}) goshujin.{x.Linkage!.ChainName}.Add(this.Instance.{x.Object.SimpleName}, this.Instance);");
+                                ssb.AppendLine($"this.{x.ChangedName} = false;");
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Journal
+        }
+    }
+
+    internal void Generate_RepeatableRead_Other(ScopingStringBuilder ssb, GeneratorInformation info)
+    {
+        ssb.AppendLine();
+        ssb.AppendLine($"public {ValueLinkBody.ReaderStructName} {ValueLinkBody.GetReaderMethodName}() => new {ValueLinkBody.ReaderStructName}(this);");
+
+        using (var scopeLock = ssb.ScopeBrace($"public {ValueLinkBody.WriterClassName} {ValueLinkBody.LockMethodName}()"))
+        {
+            ssb.AppendLine($"this.{ValueLinkBody.WriterSemaphoreName}.Enter();");
+            ssb.AppendLine($"return new {ValueLinkBody.WriterClassName}(this);");
+        }
+
+        ssb.AppendLine($"public Task<{ValueLinkBody.WriterClassName}?> {ValueLinkBody.TryLockMethodName}(int millisecondsTimeout) => this.{ValueLinkBody.TryLockMethodName}(millisecondsTimeout, default);");
+
+        using (var scopeLock = ssb.ScopeBrace($"public async Task<{ValueLinkBody.WriterClassName}?> {ValueLinkBody.TryLockMethodName}(int millisecondsTimeout, CancellationToken cancellationToken)"))
+        {
+            ssb.AppendLine($"var entered = await this.{ValueLinkBody.WriterSemaphoreName}.EnterAsync(millisecondsTimeout, cancellationToken).ConfigureAwait(false);");
+            ssb.AppendLine($"if (entered) return new {ValueLinkBody.WriterClassName}(this);");
+            ssb.AppendLine($"else return null;");
+        }
+
+        ssb.AppendLine($"private Arc.Threading.SemaphoreLock {ValueLinkBody.WriterSemaphoreName} = new();");
     }
 
     /*internal void Generate_EnterMethod(ScopingStringBuilder ssb, GeneratorInformation info)

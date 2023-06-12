@@ -28,6 +28,12 @@ namespace ValueLink.Generator
         public static readonly string GeneratedIdentifierName = "__gen_cl_identifier__";
         public static readonly string GeneratedEnterName = "__gen_cl_enter__";
         public static readonly string GeneratedNullLockName = "__gen_cl_null_lock__";
+        public static readonly string ReaderStructName = "Reader";
+        public static readonly string WriterClassName = "Writer";
+        public static readonly string LockMethodName = "Lock";
+        public static readonly string TryLockMethodName = "TryLock";
+        public static readonly string GetReaderMethodName = "GetReader";
+        public static readonly string WriterSemaphoreName = "writerSemaphore";
 
         public static readonly DiagnosticDescriptor Error_NotPartial = new DiagnosticDescriptor(
             id: "CLG001", title: "Not a partial class/struct", messageFormat: "ValueLinkObject '{0}' is not a partial class/struct",
@@ -120,6 +126,14 @@ namespace ValueLink.Generator
         public static readonly DiagnosticDescriptor Error_NoPrimaryLink = new DiagnosticDescriptor(
             id: "CLG023", title: "No primary link", messageFormat: "Primary Link of ChainType.Ordered or ChainType.Unordered is required if journaling is enabled",
             category: "ValueLinkGenerator", DiagnosticSeverity.Warning, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Error_MustBeRecord = new DiagnosticDescriptor(
+            id: "CLG024", title: "No primary link", messageFormat: "If the isolation level is set to RepeatableRead, the target must be a record class",
+            category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Error_KeywordUsed2 = new DiagnosticDescriptor(
+            id: "CLG025", title: "Keyword used", messageFormat: "Keyword '{0}' is reserved for source generator.'",
+            category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public ValueLinkBody(GeneratorExecutionContext context)
             : base(context)
@@ -228,6 +242,8 @@ namespace ValueLink.Generator
             ssb.AddUsing("System.Collections.Generic");
             ssb.AddUsing("System.Diagnostics.CodeAnalysis");
             ssb.AddUsing("System.Runtime.CompilerServices");
+            ssb.AddUsing("System.Threading");
+            ssb.AddUsing("System.Threading.Tasks");
             ssb.AddUsing("Arc.Collections");
             ssb.AddUsing("ValueLink");
             if (tinyhandFlag)
