@@ -952,7 +952,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void Generate_RepeatableRead_Writer_Commit(ScopingStringBuilder ssb)
     {
-        using (var scopeRollback = ssb.ScopeBrace($"public void Commit()"))
+        using (var scopeRollback = ssb.ScopeBrace($"public {ValueLinkBody.ReaderStructName} Commit()"))
         {
             ssb.AppendLine($"var goshujin = this.original.{this.GoshujinInstanceIdentifier};");
             using (var scopeGoshujin = ssb.ScopeBrace($"if (goshujin is not null)"))
@@ -984,6 +984,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             }
 
             // Journal
+
+            ssb.AppendLine($"if (this.instance is not null) this.original = this.instance;");
+            ssb.AppendLine($"this.instance = null;");
+            ssb.AppendLine($"return this.original.GetReader();");
         }
     }
 

@@ -155,22 +155,26 @@ public class LockTest
         var tc = new LockTestClass();
 
         var tc2 = new IsolationTestClass();
+        var r1 = tc2.GetReader();
         using (var writer = tc2.Lock())
         {
         }
 
-        TestAsync(tc2).Wait();
+        var r2 = tc2.GetReader();
+        var r3 = TestAsync(tc2).Result;
 
-        async Task TestAsync(IsolationTestClass t)
+        async Task<IsolationTestClass.Reader> TestAsync(IsolationTestClass t)
         {
             using (var writer = await t.TryLock(100))
             {
                 if (writer is not null)
                 {
                     writer.Id = 19;
-                    writer.Commit();
+                    return writer.Commit();
                 }
             }
+
+            return t.GetReader();
         }
     }
 }
