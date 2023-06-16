@@ -21,7 +21,7 @@ public partial record LockTestClass
     }
 }
 
-[ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
+[ValueLinkObject(Isolation = IsolationLevel.RepeatablePrimitives)]
 public partial record IsolationTestClass
 {
     /*public readonly struct Reader
@@ -143,6 +143,8 @@ public partial record IsolationTestClass
 
     public string Name2 { get; set; } = string.Empty;
 
+    public int[] IntArray { get; set; } = Array.Empty<int>();
+
     [IgnoreMember]
     private string name3 = string.Empty;
 }
@@ -156,11 +158,15 @@ public class LockTest
 
         var tc2 = new IsolationTestClass();
         var r1 = tc2.GetReader();
+        tc2.IntArray = new int[] { 1, };
         using (var writer = tc2.Lock())
         {
+            writer.Instance.IntArray[0] = 100;
+            writer.Commit();
         }
 
         var r2 = tc2.GetReader();
+        tc2.IntArray = new int[] { 1, 2, 3, };
         var r3 = TestAsync(tc2).Result;
 
         async Task<IsolationTestClass.Reader> TestAsync(IsolationTestClass t)

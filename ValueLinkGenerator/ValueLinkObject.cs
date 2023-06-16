@@ -217,8 +217,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         if (this.ObjectAttribute != null)
         {// ValueLinkObject
             if (this.ObjectAttribute.Isolation == IsolationLevel.Serializable ||
-                this.ObjectAttribute.Isolation == IsolationLevel.RepeatableRead)
-            {// Serializable, RepeatableRead
+                this.ObjectAttribute.Isolation == IsolationLevel.RepeatablePrimitives)
+            {// Serializable, RepeatablePrimitives(RepeatableRead)
                 this.ObjectFlag |= ValueLinkObjectFlag.AddLock;
             }
 
@@ -502,7 +502,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
 
         // Check isolation
-        if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatableRead)
+        if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatablePrimitives)
         {
             if (!this.IsRecord)
             {
@@ -843,7 +843,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             }
         }
 
-        if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatableRead)
+        if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatablePrimitives)
         {
             this.Generate_RepeatableRead(ssb, info);
         }
