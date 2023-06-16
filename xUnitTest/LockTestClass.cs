@@ -21,6 +21,7 @@ public partial record LockTestClass
     }
 }
 
+[TinyhandObject]
 [ValueLinkObject(Isolation = IsolationLevel.RepeatablePrimitives)]
 public partial record IsolationTestClass
 {
@@ -134,15 +135,19 @@ public partial record IsolationTestClass
     {
     }
 
+    [Key(0)]
     [Link(Primary = true, Type = ChainType.Ordered)]
     private int id;
 
     private string name = string.Empty;
 
+    [Key(1)]
     public int Id2;
 
+    [Key(2)]
     public string Name2 { get; set; } = string.Empty;
 
+    [Key(3)]
     public int[] IntArray { get; set; } = Array.Empty<int>();
 
     [IgnoreMember]
@@ -151,6 +156,29 @@ public partial record IsolationTestClass
 
 public class LockTest
 {
+    [Fact]
+    public void Test2()
+    {
+        var g = new IsolationTestClass.GoshujinClass();
+        using (g.Lock())
+        {
+            var tc = new IsolationTestClass();
+            g.Add(tc);
+
+            var tc2 = g.IdChain.FindFirst(0);
+
+            if (tc2 is not null)
+            {
+                var r = tc2.GetReader();
+                using (var w = r.Lock())
+                {
+                    w.Id = 1;
+                    w.Commit();
+                }
+            }
+        }
+    }
+
     [Fact]
     public void Test1()
     {

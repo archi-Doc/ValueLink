@@ -987,14 +987,14 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             ssb.AppendLine($"if (this.instance is not null) this.original = this.instance;");
             ssb.AppendLine($"this.instance = null;");
-            ssb.AppendLine($"return this.original.GetReader();");
+            ssb.AppendLine($"return this.original.{ValueLinkBody.GetReaderMethodName};");
         }
     }
 
     internal void Generate_RepeatableRead_Other(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         ssb.AppendLine();
-        ssb.AppendLine($"public {ValueLinkBody.ReaderStructName} {ValueLinkBody.GetReaderMethodName}() => new {ValueLinkBody.ReaderStructName}(this);");
+        ssb.AppendLine($"public {ValueLinkBody.ReaderStructName} {ValueLinkBody.GetReaderMethodName} => new {ValueLinkBody.ReaderStructName}(this);");
 
         using (var scopeLock = ssb.ScopeBrace($"public {ValueLinkBody.WriterClassName} {ValueLinkBody.LockMethodName}()"))
         {

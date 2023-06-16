@@ -32,7 +32,7 @@ namespace ValueLink.Generator
         public static readonly string WriterClassName = "Writer";
         public static readonly string LockMethodName = "Lock";
         public static readonly string TryLockMethodName = "TryLock";
-        public static readonly string GetReaderMethodName = "GetReader";
+        public static readonly string GetReaderMethodName = "GetReader()";
         public static readonly string WriterSemaphoreName = "writerSemaphore";
 
         public static readonly DiagnosticDescriptor Error_NotPartial = new DiagnosticDescriptor(
