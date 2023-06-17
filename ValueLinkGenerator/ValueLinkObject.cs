@@ -920,7 +920,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             ssb.AppendLine();
 
-            this.Generate_RepeatableRead_Writer_Commit(ssb);
+            // this.Generate_RepeatableRead_Writer_Commit(ssb);
 
             using (var scopeRollback = ssb.ScopeBrace($"public void Rollback()"))
             {
@@ -937,7 +937,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 }
             }
 
-            ssb.AppendLine($"public void Dispose() => this.original.{ValueLinkBody.WriterSemaphoreName}.Exit();");
+            // ssb.AppendLine($"public void Dispose() => this.original.{ValueLinkBody.WriterSemaphoreName}.Exit();");
+            this.Generate_RepeatableRead_Writer_Dispose(ssb);
 
             if (this.Members is not null)
             {
@@ -947,6 +948,48 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     x.GenerateWriterProperty(ssb);
                 }
             }
+        }
+    }
+
+    internal void Generate_RepeatableRead_Writer_Dispose(ScopingStringBuilder ssb)
+    {
+        using (var scopeRollback = ssb.ScopeBrace($"public void Dispose()"))
+        {
+            ssb.AppendLine("var originalInstance = this.original;");
+            ssb.AppendLine("var newInstance = this.instance;");
+            ssb.AppendLine($"var goshujin = this.original.{this.GoshujinInstanceIdentifier};");
+            ssb.AppendLine($"originalInstance.{ValueLinkBody.WriterSemaphoreName}.Exit();");
+            using (var scopeGoshujin = ssb.ScopeBrace($"if (goshujin is not null && newInstance is not null)"))
+            {
+                using (var scopeLock = ssb.ScopeBrace($"using (goshujin.Lock())"))
+                {
+                    // Replace instance
+                    if (this.Links is not null)
+                    {
+                        foreach (var x in this.Links)
+                        {
+                            ssb.AppendLine($"goshujin.{x.ChainName}.UnsafeReplaceInstance(originalInstance, newInstance);");
+                        }
+                    }
+
+                    // Set chains
+                    if (this.Members is not null)
+                    {
+                        foreach (var x in this.Members)
+                        {
+                            if (x.ChangedName is not null)
+                            {
+                                ssb.AppendLine($"if (this.{x.ChangedName}) goshujin.{x.Linkage!.ChainName}.Add(newInstance.{x.Object.SimpleName}, newInstance);");
+                                ssb.AppendLine($"this.{x.ChangedName} = false;");
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Journal
+
+            ssb.AppendLine($"this.instance = null;");
         }
     }
 

@@ -173,9 +173,11 @@ public class LockTest
                 using (var w = r.Lock())
                 {
                     w.Id = 1;
-                    w.Commit();
+                    // w.Commit();
                 }
             }
+
+            tc2 = g.IdChain.FindFirst(1);
         }
     }
 
@@ -190,7 +192,7 @@ public class LockTest
         using (var writer = tc2.Lock())
         {
             writer.Instance.IntArray[0] = 100;
-            writer.Commit();
+            // writer.Commit();
         }
 
         var r2 = tc2.GetReader();
@@ -204,7 +206,7 @@ public class LockTest
                 if (writer is not null)
                 {
                     writer.Id = 19;
-                    return writer.Commit();
+                    // return writer.Commit();
                 }
             }
 
