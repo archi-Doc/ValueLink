@@ -160,6 +160,10 @@ public class LockTest
     public void Test2()
     {
         var g = new IsolationTestClass.GoshujinClass();
+        g.Add(new());
+        // var array = g.GetArray();
+        // var array = g.GetArray(x => x.Id > 100);
+        // var t = g.FindById(1);
         using (g.Lock())
         {
             var tc = new IsolationTestClass();
