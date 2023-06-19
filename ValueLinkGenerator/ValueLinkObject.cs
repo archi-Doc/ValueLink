@@ -40,6 +40,7 @@ public enum ValueLinkObjectFlag
     HasPrimaryLink = 1 << 17, // Has primary link
     GenerateJournaling = 1 << 18, // Generate journaling
     AddLock = 1 << 19,
+    AddGoshujinProperty = 1 << 20,
 }
 
 public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
@@ -219,6 +220,14 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             if (this.ObjectAttribute.Isolation == IsolationLevel.Serializable)
             {// Serializable
                 this.ObjectFlag |= ValueLinkObjectFlag.AddLock;
+                this.ObjectFlag |= ValueLinkObjectFlag.AddGoshujinProperty;
+            }
+            else if (this.ObjectAttribute.Isolation == IsolationLevel.RepeatablePrimitives)
+            {// Repeatable read
+            }
+            else
+            {// None
+                this.ObjectFlag |= ValueLinkObjectFlag.AddGoshujinProperty;
             }
 
             this.ConfigureObject();
@@ -812,7 +821,13 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.HasLink))
         {// Generate Goshujin
             this.GenerateGoshujinClass(ssb, info);
-            this.GenerateGoshujinInstance(ssb, info);
+            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddGoshujinProperty))
+            {
+                this.GenerateGoshujinProperty(ssb, info);
+            }
+
+            ssb.AppendLine($"private {this.ObjectAttribute!.GoshujinClass}? {this.GoshujinInstanceIdentifier};");
+            ssb.AppendLine();
         }
 
         if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateINotifyPropertyChanged))
@@ -1694,9 +1709,39 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     internal void GenerateGoshujin_Add(ScopingStringBuilder ssb, GeneratorInformation info)
     {// I've implemented this feature, but I'm wondering if I should enable it due to my coding philosophy.
         using (var scopeParameter = ssb.ScopeObject("x"))
-        using (var scopeMethod = ssb.ScopeBrace($"public void Add({this.LocalName} {ssb.FullObject})"))
+        using (var scopeMethod = ssb.ScopeBrace($"public bool Add({this.LocalName} {ssb.FullObject})"))
         {
-            ssb.AppendLine($"{ssb.FullObject}.{this.ObjectAttribute!.GoshujinInstance} = this;");
+            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddGoshujinProperty))
+            {// Goshujin property
+                ssb.AppendLine($"{ssb.FullObject}.{this.ObjectAttribute!.GoshujinInstance} = this;");
+                ssb.AppendLine("return true;");
+            }
+            else
+            {// No property
+                ssb.AppendLine($"if ({ssb.FullObject}.{this.GoshujinInstanceIdentifier} != null) return false;");
+
+                if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournaling))
+                {
+                    ssb.AppendLine($"{ssb.FullObject}.Crystal = this.Crystal;");
+                }
+
+                var scopeLock = this.ScopeLock(ssb, "this");
+
+                if (this.Links != null)
+                {
+                    foreach (var link in this.Links)
+                    {
+                        if (link.AutoLink)
+                        {
+                            this.Generate_AddLink(ssb, info, link, "this");
+                        }
+                    }
+                }
+
+                ssb.AppendLine("return true;");
+
+                scopeLock?.Dispose();
+            }
         }
 
         ssb.AppendLine();
@@ -1729,17 +1774,51 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     internal void GenerateGoshujin_Remove(ScopingStringBuilder ssb, GeneratorInformation info)
     {// I've implemented this feature, but I'm wondering if I should enable it due to my coding philosophy.
         using (var scopeParameter = ssb.ScopeObject("x"))
-        using (var scopeMethod = ssb.ScopeBrace($"public bool Remove({this.LocalName}? {ssb.FullObject})"))
+        using (var scopeMethod = ssb.ScopeBrace($"public bool Remove({this.LocalName} {ssb.FullObject})"))
         {
-            using (var scopeIf = ssb.ScopeBrace($"if ({ssb.FullObject}?.{this.GoshujinInstanceIdentifier} == this)"))
-            {
-                ssb.AppendLine($"{ssb.FullObject}.{this.ObjectAttribute!.GoshujinInstance} = null;");
-                ssb.AppendLine("return true;");
-            }
+            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddGoshujinProperty))
+            {// Goshujin property
+                using (var scopeIf = ssb.ScopeBrace($"if ({ssb.FullObject}.{this.GoshujinInstanceIdentifier} == this)"))
+                {
+                    ssb.AppendLine($"{ssb.FullObject}.{this.ObjectAttribute!.GoshujinInstance} = null;");
+                    ssb.AppendLine("return true;");
+                }
 
-            using (var scopeElse = ssb.ScopeBrace($"else"))
-            {
-                ssb.AppendLine("return false;");
+                using (var scopeElse = ssb.ScopeBrace($"else"))
+                {
+                    ssb.AppendLine("return false;");
+                }
+            }
+            else
+            {// No property
+                var scopeLock = this.ScopeLock(ssb, "this");
+
+                if (this.Links != null)
+                {
+                    foreach (var link in this.Links.Where(a => a.IsValidLink))
+                    {
+                        if (link.RemovedMethodName != null)
+                        {
+                            using (var scopeRemove = ssb.ScopeBrace($"if (this.{link.ChainName}.Remove({ssb.FullObject}))"))
+                            {
+                                ssb.AppendLine($"this.{link.RemovedMethodName}();");
+                            }
+                        }
+                        else
+                        {
+                            ssb.AppendLine($"this.{link.ChainName}.Remove({ssb.FullObject});");
+                        }
+                    }
+                }
+
+                if (this.PrimaryLink is not null && this.TinyhandAttribute?.Journaling == true)
+                {
+                    this.CodeJournal2(ssb, this.PrimaryLink.Target);
+                }
+
+                ssb.AppendLine("return true;");
+
+                scopeLock?.Dispose();
             }
         }
 
@@ -1802,7 +1881,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         {
             if (this.Links != null)
             {
-                // var lockScope = this.ScopeLock(ssb);
+                var scopeLock = this.ScopeLock(ssb, "this");
 
                 foreach (var link in this.Links)
                 {
@@ -1816,7 +1895,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     }
                 }
 
-                // lockScope?.Dispose();
+                scopeLock?.Dispose();
             }
         }
 
@@ -1847,7 +1926,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
     }
 
-    internal void GenerateGoshujinInstance(ScopingStringBuilder ssb, GeneratorInformation info)
+    internal void GenerateGoshujinProperty(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         var generateJournal = this.TinyhandAttribute?.Journaling == true;
         var goshujin = this.ObjectAttribute!.GoshujinInstance;
@@ -1940,13 +2019,6 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 }
             }
         }
-
-        ssb.AppendLine();
-        ssb.AppendLine($"private {this.ObjectAttribute!.GoshujinClass}? {goshujinInstance};");
-        /*if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.EnableLock))
-        {// Withdraw lock feature
-            ssb.AppendLine($"private bool {this.GoshujinLockIdentifier};");
-        }*/
 
         ssb.AppendLine();
     }

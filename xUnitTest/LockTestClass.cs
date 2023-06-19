@@ -168,6 +168,7 @@ public class LockTest
         {
             var tc = new IsolationTestClass();
             g.Add(tc);
+            g.Remove(tc);
 
             var tc2 = g.IdChain.FindFirst(0);
 

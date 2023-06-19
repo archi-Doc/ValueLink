@@ -41,8 +41,10 @@ public partial class ObjectCache<TKey, TObject> : IDisposable
         Item? item;
         lock (this.goshujin)
         {
-            this.goshujin.KeyChain.TryGetValue(key, out item);
-            this.goshujin.Remove(item);
+            if (this.goshujin.KeyChain.TryGetValue(key, out item))
+            {
+                this.goshujin.Remove(item);
+            }
         }
 
         return item == null ? default : item.Object;
