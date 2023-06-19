@@ -164,7 +164,7 @@ public class LockTest
         // var array = g.GetArray();
         // var array = g.GetArray(x => x.Id > 100);
         // var t = g.FindById(1);
-        using (g.Lock())
+        // using (g.Lock())
         {
             var tc = new IsolationTestClass();
             g.Add(tc);
