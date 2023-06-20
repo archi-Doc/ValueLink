@@ -221,7 +221,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         {// ValueLinkObject
             if (this.ObjectAttribute.Isolation == IsolationLevel.Serializable)
             {// Serializable
-                this.ObjectFlag |= ValueLinkObjectFlag.AddSyncObject | ValueLinkObjectFlag.AddLockable;
+                this.ObjectFlag |= ValueLinkObjectFlag.AddSyncObject; // | ValueLinkObjectFlag.AddLockable;
                 this.ObjectFlag |= ValueLinkObjectFlag.AddGoshujinProperty;
             }
             else if (this.ObjectAttribute.Isolation == IsolationLevel.RepeatablePrimitives)
@@ -831,6 +831,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             }
 
             ssb.AppendLine($"private {this.ObjectAttribute!.GoshujinClass}? {this.GoshujinInstanceIdentifier};");
+            this.Generate_TryRemove(ssb, info);
             ssb.AppendLine();
         }
 
@@ -867,11 +868,62 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
 
         if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSyncObject))
-        {// Withdraw lock feature
+        {
             this.Generate_EnterGoshujinMethod(ssb, info);
         }
 
         return;
+    }
+
+    internal void Generate_TryRemove(ScopingStringBuilder ssb, GeneratorInformation info)
+    {
+        var generateJournal = this.TinyhandAttribute?.Journaling == true;
+        var goshujinInstance = this.GoshujinInstanceIdentifier; // goshujin + "Instance";
+
+        using (var enterScope = ssb.ScopeBrace($"internal bool {ValueLinkBody.GeneratedTryRemoveName}({this.ObjectAttribute!.GoshujinClass}? g)"))
+        using (var scopeParamter = ssb.ScopeObject("this"))
+        {
+            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSyncObject))
+            {
+                this.Generate_LockedGoshujinStatement(ssb, info, CodeRemove);
+            }
+            else
+            {
+                CodeRemove();
+            }
+
+            void CodeRemove()
+            {
+                ssb.AppendLine($"if (this.{goshujinInstance} == null) return g == null;");
+                ssb.AppendLine($"else if (g != null && g != this.{goshujinInstance}) return false;");
+                // Remove Chains
+                if (this.Links != null)
+                {
+                    foreach (var link in this.Links.Where(a => a.IsValidLink))
+                    {
+                        if (link.RemovedMethodName != null)
+                        {
+                            using (var scopeRemove = ssb.ScopeBrace($"if (this.{goshujinInstance}.{link.ChainName}.Remove({ssb.FullObject}))"))
+                            {
+                                ssb.AppendLine($"this.{link.RemovedMethodName}();");
+                            }
+                        }
+                        else
+                        {
+                            ssb.AppendLine($"this.{goshujinInstance}.{link.ChainName}.Remove({ssb.FullObject});");
+                        }
+                    }
+                }
+
+                if (this.PrimaryLink is not null && generateJournal)
+                {
+                    this.CodeJournal2(ssb, this.PrimaryLink.Target);
+                }
+
+                ssb.AppendLine($"this.{goshujinInstance} = null;");
+                ssb.AppendLine("return true;");
+            }
+        }
     }
 
     internal void Generate_EnterGoshujinMethod(ScopingStringBuilder ssb, GeneratorInformation info)
@@ -908,7 +960,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void Generate_LockedGoshujinStatement2(ScopingStringBuilder ssb, GeneratorInformation info, Action codeMethod)
     {
-        ssb.AppendLine($"lockObject = value?.SyncObject ?? {ValueLinkBody.GeneratedNullLockName};");
+        ssb.AppendLine($"var lockObject = value?.SyncObject ?? {ValueLinkBody.GeneratedNullLockName};");
         ssb.AppendLine("Monitor.Enter(lockObject);");
         using (var scopeTry = ssb.ScopeBrace("try"))
         {
@@ -1336,6 +1388,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             goshujinInterface += $", ITinyhandJournal";
         }
 
+        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSyncObject))
+        {// ISyncObject
+            goshujinInterface += $", Arc.Threading.ISyncObject";
+        }
+
         if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddLockable))
         {// ILockable
             goshujinInterface += $", Arc.Threading.ILockable";
@@ -1383,7 +1440,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSyncObject))
             {
-                ssb.AppendLine("internal object SyncObject => this.syncObject;");
+                ssb.AppendLine("public object SyncObject => this.syncObject;");
                 ssb.AppendLine("private object syncObject = new();");
             }
 
@@ -1805,9 +1862,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
                 scopeLock?.Dispose();
             }
-        }*/
+        }
 
-        ssb.AppendLine();
+        ssb.AppendLine();*/
 
         // Obsolete
         /* using (var scopeParameter = ssb.ScopeObject("x"))
@@ -1836,7 +1893,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGoshujin_Remove(ScopingStringBuilder ssb, GeneratorInformation info)
     {// I've implemented this feature, but I'm wondering if I should enable it due to my coding philosophy.
-        using (var scopeParameter = ssb.ScopeObject("x"))
+        ssb.AppendLine($"public bool Remove({this.LocalName} x) => x.{ValueLinkBody.GeneratedTryRemoveName}(this);");
+
+        /*using (var scopeParameter = ssb.ScopeObject("x"))
         using (var scopeMethod = ssb.ScopeBrace($"public bool Remove({this.LocalName} {ssb.FullObject})"))
         {
             if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddGoshujinProperty))
@@ -1885,7 +1944,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             }
         }
 
-        ssb.AppendLine();
+        ssb.AppendLine();*/
 
         // Obsolete
         /* using (var scopeParameter = ssb.ScopeObject("x"))
@@ -2015,7 +2074,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
                 using (var scopeParamter = ssb.ScopeObject("this"))
                 {
-                    if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSyncObject))
+                    ssb.AppendLine($"this.{ValueLinkBody.GeneratedTryRemoveName}(null);");
+                    /*if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSyncObject))
                     {
                         this.Generate_LockedGoshujinStatement(ssb, info, CodeRemove);
                     }
@@ -2053,14 +2113,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
                             ssb.AppendLine($"this.{goshujinInstance} = null;");
                         }
-                    }
+                    }*/
 
                     ssb.AppendLine();
-
-                    if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournaling))
-                    {
-                        ssb.AppendLine($"this.Crystal = value?.Crystal;");
-                    }
 
                     if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSyncObject))
                     {
@@ -2076,6 +2131,12 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                         if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSyncObject))
                         {
                             ssb.AppendLine($"if (this.{goshujinInstance} != null) goto Retry;");
+                        }
+
+                        ssb.AppendLine($"this.{goshujinInstance} = value;");
+                        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournaling))
+                        {
+                            ssb.AppendLine($"this.Crystal = value?.Crystal;");
                         }
 
                         using (var scopeIfNull2 = ssb.ScopeBrace($"if (value != null)"))
