@@ -113,10 +113,10 @@ internal static class JournalShared
 
     public static void CodeJournal2(this ValueLinkObject obj, ScopingStringBuilder ssb, ValueLinkObject? remove)
     {
-        using (var journalScope = ssb.ScopeBrace("if (this.Crystal is not null && this.Crystal.TryGetJournalWriter(JournalType.Record, this.CurrentPlane, out var writer))"))
+        using (var journalScope = ssb.ScopeBrace($"if ({ssb.FullObject}.Crystal is not null && {ssb.FullObject}.Crystal.TryGetJournalWriter(JournalType.Record, {ssb.FullObject}.CurrentPlane, out var writer))"))
         {
             // Custom locator
-            using (var customScope = ssb.ScopeBrace($"if (this is Tinyhand.ITinyhandCustomJournal custom)"))
+            using (var customScope = ssb.ScopeBrace($"if ({ssb.FullObject} is Tinyhand.ITinyhandCustomJournal custom)"))
             {
                 ssb.AppendLine("custom.WriteCustomLocator(ref writer);");
             }
@@ -131,13 +131,13 @@ internal static class JournalShared
 
             // Remove
             if (remove is not null &&
-                remove.CodeWriter($"this.{remove.SimpleName}") is { } writeRemove)
+                remove.CodeWriter($"{ssb.FullObject}.{remove.SimpleName}") is { } writeRemove)
             {
                 ssb.AppendLine("writer.Write_Remove();");
                 ssb.AppendLine(writeRemove);
             }
 
-            ssb.AppendLine("this.Crystal.AddJournal(writer);");
+            ssb.AppendLine($"{ssb.FullObject}.Crystal.AddJournal(writer);");
         }
     }
 
