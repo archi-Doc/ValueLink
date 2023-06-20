@@ -2064,62 +2064,21 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             ssb.AppendLine($"get => this.{goshujinInstance};");
             using (var scopeSet = ssb.ScopeBrace("set"))
             {
-                // using (var scopeEqual = ssb.ScopeBrace($"if (!EqualityComparer<{this.ObjectAttribute!.GoshujinClass}>.Default.Equals(value, this.{goshujinInstance}))"))
+                ssb.AppendLine($"if (value == this.{goshujinInstance}) return;");
                 if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSyncObject))
                 {
                     ssb.AppendLine("Retry:", false);
                 }
 
-                ssb.AppendLine($"if (value == this.{goshujinInstance}) return;");
-
                 using (var scopeParamter = ssb.ScopeObject("this"))
                 {
                     ssb.AppendLine($"this.{ValueLinkBody.GeneratedTryRemoveName}(null);");
-                    /*if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSyncObject))
-                    {
-                        this.Generate_LockedGoshujinStatement(ssb, info, CodeRemove);
-                    }
-                    else
-                    {
-                        CodeRemove();
-                    }
-
-                    void CodeRemove()
-                    {
-                        using (var scopeIfNull = ssb.ScopeBrace($"if (this.{goshujinInstance} != null)"))
-                        {// Remove Chains
-                            if (this.Links != null)
-                            {
-                                foreach (var link in this.Links.Where(a => a.IsValidLink))
-                                {
-                                    if (link.RemovedMethodName != null)
-                                    {
-                                        using (var scopeRemove = ssb.ScopeBrace($"if (this.{goshujinInstance}.{link.ChainName}.Remove({ssb.FullObject}))"))
-                                        {
-                                            ssb.AppendLine($"this.{link.RemovedMethodName}();");
-                                        }
-                                    }
-                                    else
-                                    {
-                                        ssb.AppendLine($"this.{goshujinInstance}.{link.ChainName}.Remove({ssb.FullObject});");
-                                    }
-                                }
-                            }
-
-                            if (this.PrimaryLink is not null && generateJournal)
-                            {
-                                this.CodeJournal2(ssb, this.PrimaryLink.Target);
-                            }
-
-                            ssb.AppendLine($"this.{goshujinInstance} = null;");
-                        }
-                    }*/
-
                     ssb.AppendLine();
 
+                    ssb.AppendLine($"this.{goshujinInstance} = value;");
                     if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSyncObject))
                     {
-                        this.Generate_LockedGoshujinStatement2(ssb, info, CodeAdd);
+                        this.Generate_LockedGoshujinStatement(ssb, info, CodeAdd);
                     }
                     else
                     {
@@ -2130,10 +2089,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     {
                         if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSyncObject))
                         {
-                            ssb.AppendLine($"if (this.{goshujinInstance} != null) goto Retry;");
+                            ssb.AppendLine($"if (this.{goshujinInstance} != value) goto Retry;");
                         }
 
-                        ssb.AppendLine($"this.{goshujinInstance} = value;");
                         if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournaling))
                         {
                             ssb.AppendLine($"this.Crystal = value?.Crystal;");
