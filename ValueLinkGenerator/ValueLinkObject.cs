@@ -1157,6 +1157,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         using (var scopeLock = ssb.ScopeBrace($"public {ValueLinkBody.WriterClassName} {ValueLinkBody.LockMethodName}()"))
         {
+            ssb.AppendLine($"if (Monitor.IsEntered(this.{ValueLinkBody.GeneratedGoshujinLockName})) throw new LockOrderException();");
             ssb.AppendLine($"this.{ValueLinkBody.WriterSemaphoreName}.Enter();");
             ssb.AppendLine($"return new {ValueLinkBody.WriterClassName}(this);");
         }

@@ -164,25 +164,29 @@ public class LockTest
         // var array = g.GetArray();
         // var array = g.GetArray(x => x.Id > 100);
         // var t = g.FindById(1);
-        // using (g.Lock())
+        IsolationTestClass? tc2;
+        lock (g.SyncObject)
         {
             var tc = new IsolationTestClass();
             g.Add(tc);
             g.Remove(tc);
 
-            var tc2 = g.IdChain.FindFirst(0);
+            tc2 = g.IdChain.FindFirst(0);
+        }
 
-            if (tc2 is not null)
+        if (tc2 is not null)
+        {
+            var r = tc2.GetReader();
+            using (var w = r.Lock())
             {
-                var r = tc2.GetReader();
-                using (var w = r.Lock())
-                {
-                    w.Id = 1;
-                    // w.Commit();
-                }
+                w.Id = 1;
+                // w.Commit();
             }
+        }
 
-            tc2 = g.IdChain.FindFirst(1);
+        lock (g.SyncObject)
+        {
+            tc2 = g.IdChain.FindFirst(0);
         }
     }
 
