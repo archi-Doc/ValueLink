@@ -180,7 +180,8 @@ public class LockTest
             using (var w = r.Lock())
             {
                 w.Id = 1;
-                // w.Commit();
+                // w.Goshujin = newGoshujin;
+                w.Commit();
             }
         }
 

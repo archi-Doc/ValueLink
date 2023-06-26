@@ -1404,8 +1404,12 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             // Constructor
             this.GenerateGoshujin_Constructor(ssb, info);
 
-            this.GenerateGoshujin_Add(ssb, info);
-            this.GenerateGoshujin_Remove(ssb, info);
+            if (!this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSyncObject))
+            {
+                this.GenerateGoshujin_Add(ssb, info);
+                this.GenerateGoshujin_Remove(ssb, info);
+            }
+
             this.GenerateGoshujin_Clear(ssb, info);
             this.GenerateGoshujin_Chain(ssb, info);
 
@@ -2052,6 +2056,62 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 ssb.AppendLine($"public {link.Type.ChainTypeToName()}<{this.LocalName}> {link.ChainName} {{ get; }}");
             }
         }
+    }
+
+    internal void GenerateGoshujinProperty(ScopingStringBuilder ssb, GeneratorInformation info)
+    {
+        var generateJournal = this.TinyhandAttribute?.Journaling == true;
+        var goshujin = this.ObjectAttribute!.GoshujinInstance;
+        var goshujinInstance = this.GoshujinInstanceIdentifier; // goshujin + "Instance";
+
+        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSyncObject))
+        {
+            ssb.AppendLine($"public {this.ObjectAttribute!.GoshujinClass}? {goshujin} => this.{goshujinInstance};");
+            return;
+        }
+
+        using (var scopeProperty = ssb.ScopeBrace($"public {this.ObjectAttribute!.GoshujinClass}? {goshujin}"))
+        {
+            ssb.AppendLine($"get => this.{goshujinInstance};");
+            using (var scopeSet = ssb.ScopeBrace("set"))
+            {
+                ssb.AppendLine($"if (value == this.{goshujinInstance}) return;");
+
+                using (var scopeParamter = ssb.ScopeObject("this"))
+                {
+                    ssb.AppendLine($"this.{ValueLinkBody.GeneratedTryRemoveName}(null);");
+                    ssb.AppendLine();
+
+                    ssb.AppendLine($"this.{goshujinInstance} = value;");
+
+                    if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournaling))
+                    {
+                        ssb.AppendLine($"this.Crystal = value?.Crystal;");
+                    }
+
+                    using (var scopeIfNull2 = ssb.ScopeBrace($"if (value != null)"))
+                    {// Add Chains
+                        if (this.Links != null)
+                        {
+                            foreach (var link in this.Links)
+                            {
+                                if (link.AutoLink)
+                                {
+                                    this.Generate_AddLink(ssb, info, link, "value");
+                                }
+                            }
+                        }
+
+                        if (generateJournal)
+                        {
+                            this.CodeJournal2(ssb, null);
+                        }
+                    }
+                }
+            }
+        }
+
+        ssb.AppendLine();
     }
 
     /*internal void GenerateGoshujinProperty(ScopingStringBuilder ssb, GeneratorInformation info)
