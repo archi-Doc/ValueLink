@@ -1034,7 +1034,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             ssb.AppendLine();
 
-            // this.Generate_RepeatableRead_Writer_Commit(ssb);
+            this.Generate_RepeatableRead_Writer_Commit(ssb);
 
             using (var scopeRollback = ssb.ScopeBrace($"public void Rollback()"))
             {
@@ -1051,8 +1051,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 }
             }
 
-            // ssb.AppendLine($"public void Dispose() => this.original.{ValueLinkBody.WriterSemaphoreName}.Exit();");
-            this.Generate_RepeatableRead_Writer_Dispose(ssb);
+            ssb.AppendLine($"public void Dispose() => this.original.{ValueLinkBody.WriterSemaphoreName}.Exit();");
+            // this.Generate_RepeatableRead_Writer_Dispose(ssb);
 
             if (this.Members is not null)
             {
@@ -2054,7 +2054,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
     }
 
-    internal void GenerateGoshujinProperty(ScopingStringBuilder ssb, GeneratorInformation info)
+    /*internal void GenerateGoshujinProperty(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         var generateJournal = this.TinyhandAttribute?.Journaling == true;
         var goshujin = this.ObjectAttribute!.GoshujinInstance;
@@ -2122,7 +2122,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
 
         ssb.AppendLine();
-    }
+    }*/
 
     internal bool ContainTinyhandObjectAttribute()
     {
