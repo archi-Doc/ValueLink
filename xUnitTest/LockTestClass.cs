@@ -160,7 +160,15 @@ public class LockTest
     public void Test2()
     {
         var g = new IsolationTestClass.GoshujinClass();
-        g.Add(new());
+
+        using (var w = new IsolationTestClass().Lock())
+        {
+            // w.Goshujin = g;
+            w.Id = 10;
+            w.Commit();
+        }
+
+        // g.Add(new());
         // var array = g.GetArray();
         // var array = g.GetArray(x => x.Id > 100);
         // var t = g.FindById(1);
@@ -168,8 +176,8 @@ public class LockTest
         lock (g.SyncObject)
         {
             var tc = new IsolationTestClass();
-            g.Add(tc);
-            g.Remove(tc);
+            // g.Add(tc);
+            // g.Remove(tc);
 
             tc2 = g.IdChain.FindFirst(0);
         }
