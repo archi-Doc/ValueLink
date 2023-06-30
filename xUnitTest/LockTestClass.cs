@@ -173,12 +173,11 @@ public class LockTest
         // var array = g.GetArray(x => x.Id > 100);
         // var t = g.FindById(1);
         IsolationTestClass? tc2;
+        var tc = new IsolationTestClass();
+        g.Add(tc);
+        g.Remove(tc);
         lock (g.SyncObject)
         {
-            var tc = new IsolationTestClass();
-            // g.Add(tc);
-            // g.Remove(tc);
-
             tc2 = g.IdChain.FindFirst(0);
         }
 
