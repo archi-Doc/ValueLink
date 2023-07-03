@@ -18,12 +18,12 @@ public enum IsolationLevel
 
     /// <summary>
     /// Lock-based concurrency control.<br/>
-    /// using (goshujin.Lock()).
+    /// lock (goshujin.SyncObject).
     /// </summary>
     Serializable,
 
     /// <summary>
-    /// During the transaction, the same data (primitive types) is guaranteed to be read.<br/>
+    /// Same data (primitive types) is guaranteed to be read during the transaction.<br/>
     /// The class must be a record type to specify this level.
     /// </summary>
     RepeatablePrimitives,

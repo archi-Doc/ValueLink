@@ -176,6 +176,7 @@ public class LockTest
         var tc = new IsolationTestClass();
         g.Add(tc);
         g.Remove(tc);
+        tc.Goshujin = null;
         lock (g.SyncObject)
         {
             tc2 = g.IdChain.FindFirst(0);

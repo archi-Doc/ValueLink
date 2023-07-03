@@ -831,6 +831,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             }
 
             ssb.AppendLine($"private {this.ObjectAttribute!.GoshujinClass}? {this.GoshujinInstanceIdentifier};");
+            this.Generate_Add(ssb, info);
             this.Generate_TryRemove(ssb, info);
             ssb.AppendLine();
         }
@@ -875,19 +876,53 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         return;
     }
 
+    internal void Generate_Add(ScopingStringBuilder ssb, GeneratorInformation info)
+    {
+        var goshujinInstance = this.GoshujinInstanceIdentifier; // goshujin + "Instance";
+
+        using (var enterScope = ssb.ScopeBrace($"internal void {ValueLinkBody.GeneratedAddName}({this.ObjectAttribute!.GoshujinClass}? g)"))
+        using (var scopeParamter = ssb.ScopeObject("this"))
+        {
+            ssb.AppendLine($"this.{goshujinInstance} = g;");
+
+            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournaling))
+            {
+                ssb.AppendLine($"this.Crystal = g?.Crystal;");
+            }
+
+            using (var scopeIfNull2 = ssb.ScopeBrace($"if (g != null)"))
+            {// Add Chains
+                if (this.Links != null)
+                {
+                    foreach (var link in this.Links)
+                    {
+                        if (link.AutoLink)
+                        {
+                            this.Generate_AddLink(ssb, info, link, "g");
+                        }
+                    }
+                }
+
+                if (this.TinyhandAttribute?.Journaling == true)
+                {
+                    this.CodeJournal2(ssb, null);
+                }
+            }
+        }
+    }
+
     internal void Generate_TryRemove(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        var generateJournal = this.TinyhandAttribute?.Journaling == true;
         var goshujinInstance = this.GoshujinInstanceIdentifier; // goshujin + "Instance";
 
         using (var enterScope = ssb.ScopeBrace($"internal bool {ValueLinkBody.GeneratedTryRemoveName}({this.ObjectAttribute!.GoshujinClass}? g)"))
         using (var scopeParamter = ssb.ScopeObject("this"))
         {
-            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSyncObject))
+            /*if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSyncObject))
             {
                 this.Generate_LockedGoshujinStatement(ssb, info, CodeRemove);
             }
-            else
+            else*/
             {
                 CodeRemove();
             }
@@ -896,6 +931,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             {
                 ssb.AppendLine($"if (this.{goshujinInstance} == null) return g == null;");
                 ssb.AppendLine($"else if (g != null && g != this.{goshujinInstance}) return false;");
+
                 // Remove Chains
                 if (this.Links != null)
                 {
@@ -915,7 +951,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     }
                 }
 
-                if (this.PrimaryLink is not null && generateJournal)
+                if (this.PrimaryLink is not null && this.TinyhandAttribute?.Journaling == true)
                 {
                     this.CodeJournal2(ssb, this.PrimaryLink.Target);
                 }
@@ -948,7 +984,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     }
 
     internal void Generate_LockedGoshujinStatement(ScopingStringBuilder ssb, GeneratorInformation info, Action codeMethod)
-    {
+    {// struggling...
         ssb.AppendLine("var lockObject = this.EnterGoshujin();");
         using (var scopeTry = ssb.ScopeBrace("try"))
         {
@@ -959,7 +995,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     }
 
     internal void Generate_LockedGoshujinStatement2(ScopingStringBuilder ssb, GeneratorInformation info, Action codeMethod)
-    {
+    {// struggling...
         ssb.AppendLine($"var lockObject = value?.SyncObject ?? {ValueLinkBody.GeneratedNullLockName};");
         ssb.AppendLine("Monitor.Enter(lockObject);");
         using (var scopeTry = ssb.ScopeBrace("try"))
@@ -2062,7 +2098,6 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGoshujinProperty(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        var generateJournal = this.TinyhandAttribute?.Journaling == true;
         var goshujin = this.ObjectAttribute!.GoshujinInstance;
         var goshujinInstance = this.GoshujinInstanceIdentifier; // goshujin + "Instance";
 
@@ -2077,7 +2112,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 {
                     using (var scopeLock = ssb.ScopeBrace("using (var w = this.Lock())"))
                     {
-                        ssb.AppendLine($"if (value == w.{goshujin}) return;");
+                        // ssb.AppendLine($"if (value == w.{goshujin}) return;");
                         ssb.AppendLine($"w.{goshujin} = value;");
                         ssb.AppendLine("w.Commit();");
                     }
@@ -2088,33 +2123,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 using (var scopeParamter = ssb.ScopeObject("this"))
                 {
                     ssb.AppendLine($"this.{ValueLinkBody.GeneratedTryRemoveName}(null);");
-                    ssb.AppendLine();
-
-                    ssb.AppendLine($"this.{goshujinInstance} = value;");
-
-                    if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournaling))
-                    {
-                        ssb.AppendLine($"this.Crystal = value?.Crystal;");
-                    }
-
-                    using (var scopeIfNull2 = ssb.ScopeBrace($"if (value != null)"))
-                    {// Add Chains
-                        if (this.Links != null)
-                        {
-                            foreach (var link in this.Links)
-                            {
-                                if (link.AutoLink)
-                                {
-                                    this.Generate_AddLink(ssb, info, link, "value");
-                                }
-                            }
-                        }
-
-                        if (generateJournal)
-                        {
-                            this.CodeJournal2(ssb, null);
-                        }
-                    }
+                    ssb.AppendLine($"this.{ValueLinkBody.GeneratedAddName}(value);");
                 }
             }
         }
