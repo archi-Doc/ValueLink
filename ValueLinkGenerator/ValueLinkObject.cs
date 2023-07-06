@@ -1151,39 +1151,47 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         using (var scopeRollback = ssb.ScopeBrace($"public {ValueLinkBody.ReaderStructName} Commit()"))
         {
             ssb.AppendLine($"var goshujin = this.original.{this.GoshujinInstanceIdentifier};");
-            using (var scopeGoshujin = ssb.ScopeBrace($"if (goshujin is not null)"))
+            using (var scopeSame = ssb.ScopeBrace($"if (goshujin == this.Goshujin)"))
             {
-                var scopeLock = this.ScopeLock(ssb, "goshujin");
-
-                // Replace instance
-                if (this.Links is not null)
+                using (var scopeGoshujin = ssb.ScopeBrace($"if (goshujin is not null)"))
                 {
-                    foreach (var x in this.Links)
-                    {
-                        ssb.AppendLine($"goshujin.{x.ChainName}.UnsafeReplaceInstance(this.original, this.Instance);");
-                    }
-                }
+                    var scopeLock = this.ScopeLock(ssb, "goshujin");
 
-                // Set chains
-                if (this.Members is not null)
-                {
-                    foreach (var x in this.Members)
+                    // Replace instance
+                    if (this.Links is not null)
                     {
-                        if (x.ChangedName is not null)
+                        foreach (var x in this.Links)
                         {
-                            ssb.AppendLine($"if (this.{x.ChangedName}) goshujin.{x.Linkage!.ChainName}.Add(this.Instance.{x.Object.SimpleName}, this.Instance);");
-                            ssb.AppendLine($"this.{x.ChangedName} = false;");
+                            ssb.AppendLine($"goshujin.{x.ChainName}.UnsafeReplaceInstance(this.original, this.Instance);");
                         }
                     }
-                }
 
-                scopeLock?.Dispose();
+                    // Set chains
+                    if (this.Members is not null)
+                    {
+                        foreach (var x in this.Members)
+                        {
+                            if (x.ChangedName is not null)
+                            {
+                                ssb.AppendLine($"if (this.{x.ChangedName}) goshujin.{x.Linkage!.ChainName}.Add(this.Instance.{x.Object.SimpleName}, this.Instance);");
+                                ssb.AppendLine($"this.{x.ChangedName} = false;");
+                            }
+                        }
+                    }
+
+                    scopeLock?.Dispose();
+                }
+            }
+
+            using (var scopeDifferent = ssb.ScopeBrace("else"))
+            {
+                ssb.AppendLine($"if (goshujin is not null) {{ lock (goshujin.SyncObject) {{ this.Instance.{ValueLinkBody.GeneratedTryRemoveName}(null); }} }}");
+                ssb.AppendLine($"if (this.Goshujin is not null) {{ lock (this.Goshujin.SyncObject) {{ this.Instance.{ValueLinkBody.GeneratedAddName}(this.Goshujin); }} }}");
             }
 
             // Journal
 
-            ssb.AppendLine($"if (this.instance is not null) this.original = this.instance;");
-            ssb.AppendLine($"this.instance = null;");
+            ssb.AppendLine($"if (this.instance is not null) {{ this.original = this.instance; this.instance = null; }}");
             ssb.AppendLine($"return this.original.{ValueLinkBody.GetReaderMethodName};");
         }
     }

@@ -1,6 +1,7 @@
 // Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
+using System.Linq;
 using ValueLink;
 using Xunit;
 
@@ -23,15 +24,17 @@ public partial record RoomClass2
     [Link(Primary = true, Type = ChainType.Ordered, AddValue = false)]
     public int RoomId { get; set; }
 
-    public RoomBooking.GoshujinClass Bookings { get; set; } = new();
+    public Booking.GoshujinClass Bookings { get; set; } = new();
 
     public RoomClass2(int roomId)
     {
+        this.RoomId = roomId;
     }
 
-    [ValueLinkObject]
-    public partial record RoomBooking
+    [ValueLinkObject(Isolation = IsolationLevel.RepeatablePrimitives)]
+    public partial record Booking
     {
+
         [Link(Primary = true, Type = ChainType.Ordered)]
         public DateTime StartTime { get; set; }
 
@@ -39,9 +42,23 @@ public partial record RoomClass2
 
         public int UserId { get; set; }
 
-        public RoomBooking()
+        public Booking()
         {
         }
+    }
+}
+
+public static class IsolationExtension
+{
+    public static RoomClass2.Booking[] GetArray(this RoomClass2.Booking.GoshujinClass g)
+    {
+        RoomClass2.Booking[] array;
+        lock (g.SyncObject)
+        {
+            array = g.ToArray();
+        }
+
+        return array;
     }
 }
 
@@ -74,6 +91,16 @@ public class IsolationTest
             {
                 w.Goshujin = g;
                 w.Commit();
+            }
+
+            var booking = room2.Bookings.GetArray();
+            if (booking.Length > 0)
+            {
+                var b = booking[0];
+                using (var w = b.Lock())
+                {
+
+                }
             }
         }
     }
