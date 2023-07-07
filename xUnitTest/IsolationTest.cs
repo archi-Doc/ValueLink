@@ -50,12 +50,12 @@ public partial record RoomClass2
 
 public static class IsolationExtension
 {
-    public static RoomClass2.Booking[] GetArray(this RoomClass2.Booking.GoshujinClass g)
+    public static RoomClass2.Booking.Reader[] GetArray(this RoomClass2.Booking.GoshujinClass g)
     {
-        RoomClass2.Booking[] array;
+        RoomClass2.Booking.Reader[] array;
         lock (g.SyncObject)
         {
-            array = g.ToArray();
+            array = g.Select(x => x.GetReader()).ToArray();
         }
 
         return array;
@@ -99,7 +99,6 @@ public class IsolationTest
                 var b = booking[0];
                 using (var w = b.Lock())
                 {
-
                 }
             }
         }
