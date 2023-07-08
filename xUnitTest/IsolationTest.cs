@@ -40,10 +40,37 @@ public partial record RoomClass2
 
         public DateTime EndTime { get; set; }
 
-        public int UserId { get; set; }
+        public int UserId { get; private set; }
+
+        [Link(Type = ChainType.Ordered)]
+        private string name = string.Empty;
 
         public Booking()
         {
+        }
+
+        public partial record Writer2 : Booking, IDisposable
+        {
+            public string Name
+            {
+                get => this.name;
+                set => this.name = value;
+            }
+
+            public new int UserId
+            {
+                get => base.UserId;
+                set => base.UserId = value;
+            }
+
+            public void Test()
+            {
+                this.Name = string.Empty;
+            }
+
+            public void Dispose()
+            {
+            }
         }
     }
 }
@@ -99,6 +126,8 @@ public class IsolationTest
                 var b = booking[0];
                 using (var w = b.Lock())
                 {
+                    w.Name = "test";
+                    w.Commit();
                 }
             }
         }
