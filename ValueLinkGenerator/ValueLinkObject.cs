@@ -440,7 +440,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.HasLink))
         {// Check Goshujin Class / Instance
-            this.CheckKeyword(this.ObjectAttribute!.GoshujinClass, this.Location);
+            // this.CheckKeyword(this.ObjectAttribute!.GoshujinClass, this.Location);
             this.CheckKeyword(this.ObjectAttribute!.GoshujinInstance, this.Location);
             this.GoshujinInstanceIdentifier = this.Identifier.GetIdentifier();
             this.GoshujinFullName = this.FullName + "." + this.ObjectAttribute!.GoshujinClass;
@@ -1445,7 +1445,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             goshujinInterface += $", Arc.Threading.ILockable";
         }
 
-        using (var scopeClass = ssb.ScopeBrace("public sealed class " + this.ObjectAttribute!.GoshujinClass + goshujinInterface))
+        // selaed -> partial
+        using (var scopeClass = ssb.ScopeBrace("public partial class " + this.ObjectAttribute!.GoshujinClass + goshujinInterface))
         {
             // Constructor
             this.GenerateGoshujin_Constructor(ssb, info);

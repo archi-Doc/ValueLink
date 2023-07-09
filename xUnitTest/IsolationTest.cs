@@ -34,6 +34,19 @@ public partial record Room
     [ValueLinkObject(Isolation = IsolationLevel.RepeatablePrimitives)]
     public partial record Booking
     {
+        public partial class GoshujinClass
+        {
+            public Reader[] GetArray()
+            {
+                Reader[] array;
+                lock (this.SyncObject)
+                {
+                    array = this.Select(x => x.GetReader()).ToArray();
+                }
+
+                return array;
+            }
+        }
 
         [Link(Primary = true, Type = ChainType.Ordered)]
         public DateTime StartTime { get; private set; }
@@ -78,20 +91,6 @@ public partial record Room
             {
             }
         }
-    }
-}
-
-public static class IsolationExtension
-{
-    public static Room.Booking.Reader[] GetArray(this Room.Booking.GoshujinClass g)
-    {
-        Room.Booking.Reader[] array;
-        lock (g.SyncObject)
-        {
-            array = g.Select(x => x.GetReader()).ToArray();
-        }
-
-        return array;
     }
 }
 
