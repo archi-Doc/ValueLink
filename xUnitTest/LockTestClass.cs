@@ -184,8 +184,7 @@ public class LockTest
 
         if (tc2 is not null)
         {
-            var r = tc2.GetReader();
-            using (var w = r.Lock())
+            using (var w = tc2.Lock())
             {
                 w.Id = 1;
                 // w.Goshujin = newGoshujin;
@@ -205,19 +204,17 @@ public class LockTest
         var tc = new LockTestClass();
 
         var tc2 = new IsolationTestClass();
-        var r1 = tc2.GetReader();
         tc2.IntArray = new int[] { 1, };
         using (var writer = tc2.Lock())
         {
-            writer.Instance.IntArray[0] = 100;
+            writer.IntArray[0] = 100;
             // writer.Commit();
         }
 
-        var r2 = tc2.GetReader();
         tc2.IntArray = new int[] { 1, 2, 3, };
         var r3 = TestAsync(tc2).Result;
 
-        async Task<IsolationTestClass.Reader> TestAsync(IsolationTestClass t)
+        async Task<IsolationTestClass> TestAsync(IsolationTestClass t)
         {
             using (var writer = await t.TryLock(100))
             {
@@ -228,7 +225,7 @@ public class LockTest
                 }
             }
 
-            return t.GetReader();
+            return t;
         }
     }
 }

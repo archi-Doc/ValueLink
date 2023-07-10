@@ -50,21 +50,21 @@ public partial record Room
 
         public partial class GoshujinClass
         {
-            public Reader[] GetArray()
+            public Booking[] GetArray()
             {
-                Reader[] array;
+                Booking[] array;
                 lock (this.SyncObject)
                 {
-                    array = this.Select(x => x.GetReader()).ToArray();
+                    array = this.ToArray();
                 }
 
                 return array;
             }
         }
 
-        public partial record WriterClass : Booking, IDisposable
+        public partial record WriterClass2 : Booking, IDisposable
         {
-            public WriterClass(Booking parent)
+            public WriterClass2(Booking parent)
                 : base(parent)
             {
             }
@@ -81,11 +81,6 @@ public partial record Room
             {
                 get => base.UserId;
                 set { base.UserId = value; }
-            }
-
-            public void Test()
-            {
-                this.Name = string.Empty;
             }
 
             public void Dispose()

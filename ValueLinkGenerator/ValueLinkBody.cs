@@ -30,12 +30,13 @@ namespace ValueLink.Generator
         public static readonly string GeneratedTryRemoveName = "__gen_cl_tryremove__";
         public static readonly string GeneratedNullLockName = "__gen_cl_null_lock__";
         public static readonly string GeneratedGoshujinLockName = "__gen_cl_gosh_lock__";
-        public static readonly string ReaderStructName = "Reader";
-        public static readonly string WriterClassName = "Writer";
+        // public static readonly string ReaderStructName = "Reader";
+        public static readonly string WriterClassName = "WriterClass";
         public static readonly string LockMethodName = "Lock";
         public static readonly string TryLockMethodName = "TryLock";
         public static readonly string GetReaderMethodName = "GetReader()";
         public static readonly string WriterSemaphoreName = "writerSemaphore";
+        public static readonly string IsObsoleteProperty = "IsObsolete";
 
         public static readonly DiagnosticDescriptor Error_NotPartial = new DiagnosticDescriptor(
             id: "CLG001", title: "Not a partial class/struct", messageFormat: "ValueLinkObject '{0}' is not a partial class/struct",
