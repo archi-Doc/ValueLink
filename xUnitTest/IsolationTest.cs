@@ -62,13 +62,14 @@ public partial record Room
         {
         }
 
-        public partial record Writer2 : Booking, IDisposable
+        public partial record WriterClass : Booking, IDisposable
         {
-            public Writer2(Booking parent)
+            public WriterClass(Booking parent)
                 : base(parent)
             {
-
             }
+
+            public new GoshujinClass? Goshujin { get; set; }
 
             public string Name
             {
