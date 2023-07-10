@@ -130,7 +130,7 @@ namespace ValueLink.Generator
             category: "ValueLinkGenerator", DiagnosticSeverity.Warning, isEnabledByDefault: true);
 
         public static readonly DiagnosticDescriptor Error_MustBeRecord = new DiagnosticDescriptor(
-            id: "CLG024", title: "No primary link", messageFormat: "If the isolation level is set to RepeatablePrimitives, the target must be a record class",
+            id: "CLG024", title: "No primary link", messageFormat: "The target must be a record class when the isolation level is set to RepeatablePrimitive",
             category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public static readonly DiagnosticDescriptor Error_KeywordUsed2 = new DiagnosticDescriptor(

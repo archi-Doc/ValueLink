@@ -18,7 +18,7 @@ public partial record RoomClass
     }
 }
 
-[ValueLinkObject(Isolation = IsolationLevel.RepeatablePrimitives)]
+[ValueLinkObject(Isolation = IsolationLevel.RepeatablePrimitive)]
 public partial record Room
 {
     [Link(Primary = true, Type = ChainType.Ordered, AddValue = false)]
@@ -31,23 +31,9 @@ public partial record Room
         this.RoomId = roomId;
     }
 
-    [ValueLinkObject(Isolation = IsolationLevel.RepeatablePrimitives)]
+    [ValueLinkObject(Isolation = IsolationLevel.RepeatablePrimitive)]
     public partial record Booking
     {
-        public partial class GoshujinClass
-        {
-            public Reader[] GetArray()
-            {
-                Reader[] array;
-                lock (this.SyncObject)
-                {
-                    array = this.Select(x => x.GetReader()).ToArray();
-                }
-
-                return array;
-            }
-        }
-
         [Link(Primary = true, Type = ChainType.Ordered)]
         public DateTime StartTime { get; private set; }
 
@@ -60,6 +46,20 @@ public partial record Room
 
         public Booking()
         {
+        }
+
+        public partial class GoshujinClass
+        {
+            public Reader[] GetArray()
+            {
+                Reader[] array;
+                lock (this.SyncObject)
+                {
+                    array = this.Select(x => x.GetReader()).ToArray();
+                }
+
+                return array;
+            }
         }
 
         public partial record WriterClass : Booking, IDisposable

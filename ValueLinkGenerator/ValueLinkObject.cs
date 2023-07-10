@@ -224,7 +224,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 this.ObjectFlag |= ValueLinkObjectFlag.AddSyncObject; // | ValueLinkObjectFlag.AddLockable;
                 this.ObjectFlag |= ValueLinkObjectFlag.AddGoshujinProperty;
             }
-            else if (this.ObjectAttribute.Isolation == IsolationLevel.RepeatablePrimitives)
+            else if (this.ObjectAttribute.Isolation == IsolationLevel.RepeatablePrimitive)
             {// Repeatable read
                 this.ObjectFlag |= ValueLinkObjectFlag.AddSyncObject;
                 this.ObjectFlag |= ValueLinkObjectFlag.AddGoshujinProperty;
@@ -514,7 +514,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
 
         // Check isolation
-        if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatablePrimitives)
+        if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatablePrimitive)
         {
             if (!this.IsRecord)
             {
@@ -863,7 +863,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             }
         }
 
-        if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatablePrimitives)
+        if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatablePrimitive)
         {
             this.Generate_RepeatableRead(ssb, info);
         }
@@ -2038,7 +2038,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         {
             return ssb.ScopeBrace($"using ({objectName}.Lock())");
         }
-        else if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatablePrimitives)
+        else if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatablePrimitive)
         {
             return ssb.ScopeBrace($"lock ({objectName}.SyncObject)");
         }*/
@@ -2117,7 +2117,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             {
                 ssb.AppendLine($"if (value == this.{goshujinInstance}) return;");
 
-                if (this.ObjectAttribute.Isolation == IsolationLevel.RepeatablePrimitives)
+                if (this.ObjectAttribute.Isolation == IsolationLevel.RepeatablePrimitive)
                 {
                     using (var scopeLock = ssb.ScopeBrace("using (var w = this.Lock())"))
                     {

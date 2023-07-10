@@ -22,7 +22,7 @@ public partial record LockTestClass
 }
 
 [TinyhandObject]
-[ValueLinkObject(Isolation = IsolationLevel.RepeatablePrimitives)]
+[ValueLinkObject(Isolation = IsolationLevel.RepeatablePrimitive)]
 public partial record IsolationTestClass
 {
     /*public readonly struct Reader
