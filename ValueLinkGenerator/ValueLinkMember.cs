@@ -30,7 +30,6 @@ public class Member
         }
         else
         {
-            this.NewKeyword = true;
             this.GeneratedName = name;
         }
 
@@ -46,10 +45,6 @@ public class Member
     public string GeneratedName { get; private set; }
 
     public string? ChangedName { get; private set; }
-
-    public bool NewKeyword { get; private set; }
-
-    public string AccessorName => this.NewKeyword ? "base" : "this";
 
     public void GenerateReaderProperty(ScopingStringBuilder ssb)
     {
@@ -72,7 +67,7 @@ public class Member
         }
     }
 
-    public void GenerateWriterProperty2(ScopingStringBuilder ssb)
+    /*public void GenerateWriterProperty2(ScopingStringBuilder ssb)
     {
         using (var scopeProperty = ssb.ScopeBrace($"public {(this.NewKeyword ? "new " : string.Empty)}{this.Object.TypeObject?.FullName} {this.GeneratedName}"))
         {
@@ -86,5 +81,5 @@ public class Member
                 }
             }
         }
-    }
+    }*/
 }
