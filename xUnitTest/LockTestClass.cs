@@ -161,11 +161,14 @@ public class LockTest
     {
         var g = new IsolationTestClass.GoshujinClass();
 
-        using (var w = new IsolationTestClass().Lock())
+        using (var w = new IsolationTestClass().TryLock())
         {
             // w.Goshujin = g;
-            w.Id = 10;
-            w.Commit();
+            if (w is not null)
+            {
+                w.Id = 10;
+                w.Commit();
+            }
         }
 
         // g.Add(new());
@@ -176,7 +179,7 @@ public class LockTest
         var tc = new IsolationTestClass();
         g.Add(tc);
         g.Remove(tc);
-        tc.Goshujin = null;
+        // tc.Goshujin = null;
         lock (g.SyncObject)
         {
             tc2 = g.IdChain.FindFirst(0);
@@ -184,11 +187,14 @@ public class LockTest
 
         if (tc2 is not null)
         {
-            using (var w = tc2.Lock())
+            using (var w = tc2.TryLock())
             {
-                w.Id = 1;
-                // w.Goshujin = newGoshujin;
-                w.Commit();
+                if (w is not null)
+                {
+                    w.Id = 1;
+                    // w.Goshujin = newGoshujin;
+                    w.Commit();
+                }
             }
         }
 
@@ -205,10 +211,13 @@ public class LockTest
 
         var tc2 = new IsolationTestClass();
         tc2.IntArray = new int[] { 1, };
-        using (var writer = tc2.Lock())
+        using (var writer = tc2.TryLock())
         {
-            writer.IntArray[0] = 100;
-            // writer.Commit();
+            if (writer is not null)
+            {
+                writer.IntArray[0] = 100;
+                writer.Commit();
+            }
         }
 
         tc2.IntArray = new int[] { 1, 2, 3, };
@@ -216,12 +225,12 @@ public class LockTest
 
         async Task<IsolationTestClass> TestAsync(IsolationTestClass t)
         {
-            using (var writer = await t.TryLock(100))
+            using (var writer = await t.TryLockAsync(100))
             {
                 if (writer is not null)
                 {
                     writer.Id = 19;
-                    // return writer.Commit();
+                    return writer.Commit();
                 }
             }
 

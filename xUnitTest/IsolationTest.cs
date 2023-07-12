@@ -26,6 +26,8 @@ public partial record Room
 
     public Booking.GoshujinClass Bookings { get; private set; } = new();
 
+    public bool TestFlag => true;
+
     public Room(int roomId)
     {
         this.RoomId = roomId;
@@ -114,21 +116,27 @@ public class IsolationTest
             g.Add(new Room(1));
 
             var room2 = new Room(2);
-            room2.Goshujin = g;
-            using (var w = room2.Lock())
+            g.Add(room2);
+            using (var w = room2.TryLock())
             {
-                w.Goshujin = g;
-                w.Commit();
+                if (w is not null)
+                {
+                    w.Goshujin = g;
+                    w.Commit();
+                }
             }
 
             var booking = room2.Bookings.GetArray();
             if (booking.Length > 0)
             {
                 var b = booking[0];
-                using (var w = b.Lock())
+                using (var w = b.TryLock())
                 {
-                    w.Name = "test";
-                    w.Commit();
+                    if (w is not null)
+                    {
+                        w.Name = "test";
+                        w.Commit();
+                    }
                 }
             }
         }

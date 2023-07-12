@@ -563,7 +563,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             this.CheckKeyword2(ValueLinkBody.WriterClassName, this.Location);
             this.CheckKeyword2(ValueLinkBody.WriterSemaphoreName, this.Location);
             // this.CheckKeyword2(ValueLinkBody.LockMethodName, this.Location);
-            this.CheckKeyword2(ValueLinkBody.TryLockMethodName, this.Location);
+            this.CheckKeyword2(ValueLinkBody.TryLockAsyncMethodName, this.Location);
             // this.CheckKeyword2(ValueLinkBody.GetReaderMethodName, this.Location);
         }
     }
@@ -1184,7 +1184,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                             if (x.ChangedName is not null)
                             {
                                 ssb.AppendLine($"if (this.{x.ChangedName}) goshujin.{x.Linkage!.ChainName}.Add(this.Instance.{x.Object.SimpleName}, this.Instance);");
-                                ssb.AppendLine($"this.{x.ChangedName} = false;");
+                                // ssb.AppendLine($"this.{x.ChangedName} = false;");
                             }
                         }
                     }
@@ -1201,7 +1201,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             // Journal
 
-            ssb.AppendLine($"if (this.instance is not null) {{ this.original = this.instance; this.instance = null; }}");
+            ssb.AppendLine($"if (this.instance is not null) {{ this.original.{ValueLinkBody.IsObsoleteProperty} = true; this.original = this.instance; }}");
+            ssb.AppendLine("this.Rollback();");
             ssb.AppendLine($"return this.original;");
         }
     }
@@ -1209,23 +1210,25 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     internal void Generate_RepeatableRead_Other(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         ssb.AppendLine();
-        ssb.AppendLine($"public bool {ValueLinkBody.IsObsoleteProperty} {{ get; set; }}");
+        ssb.AppendLine($"public bool {ValueLinkBody.IsObsoleteProperty} {{ get; private set; }}");
         // ssb.AppendLine($"public {ValueLinkBody.ReaderStructName} {ValueLinkBody.GetReaderMethodName} => new {ValueLinkBody.ReaderStructName}(this);");
 
-        using (var scopeLock = ssb.ScopeBrace($"public {ValueLinkBody.WriterClassName} {ValueLinkBody.LockMethodName}()"))
+        using (var scopeLock = ssb.ScopeBrace($"public {ValueLinkBody.WriterClassName}? {ValueLinkBody.TryLockMethodName}()"))
         {
             ssb.AppendLine($"if (Monitor.IsEntered(this.{ValueLinkBody.GeneratedGoshujinLockName})) throw new LockOrderException();");
             ssb.AppendLine($"this.{ValueLinkBody.WriterSemaphoreName}.Enter();");
+            ssb.AppendLine($"if (this.{ValueLinkBody.IsObsoleteProperty}) {{ this.{ValueLinkBody.WriterSemaphoreName}.Exit(); return null; }}");
             ssb.AppendLine($"return new {ValueLinkBody.WriterClassName}(this);");
         }
 
-        ssb.AppendLine($"public Task<{ValueLinkBody.WriterClassName}?> {ValueLinkBody.TryLockMethodName}(int millisecondsTimeout) => this.{ValueLinkBody.TryLockMethodName}(millisecondsTimeout, default);");
+        ssb.AppendLine($"public Task<{ValueLinkBody.WriterClassName}?> {ValueLinkBody.TryLockAsyncMethodName}(int millisecondsTimeout) => this.{ValueLinkBody.TryLockAsyncMethodName}(millisecondsTimeout, default);");
 
-        using (var scopeLock = ssb.ScopeBrace($"public async Task<{ValueLinkBody.WriterClassName}?> {ValueLinkBody.TryLockMethodName}(int millisecondsTimeout, CancellationToken cancellationToken)"))
+        using (var scopeLock = ssb.ScopeBrace($"public async Task<{ValueLinkBody.WriterClassName}?> {ValueLinkBody.TryLockAsyncMethodName}(int millisecondsTimeout, CancellationToken cancellationToken)"))
         {
             ssb.AppendLine($"var entered = await this.{ValueLinkBody.WriterSemaphoreName}.EnterAsync(millisecondsTimeout, cancellationToken).ConfigureAwait(false);");
-            ssb.AppendLine($"if (entered) return new {ValueLinkBody.WriterClassName}(this);");
-            ssb.AppendLine($"else return null;");
+            ssb.AppendLine($"if (!entered) return null;");
+            ssb.AppendLine($"else if (this.{ValueLinkBody.IsObsoleteProperty}) {{ this.{ValueLinkBody.WriterSemaphoreName}.Exit(); return null; }}");
+            ssb.AppendLine($"else return new {ValueLinkBody.WriterClassName}(this);");
         }
 
         ssb.AppendLine($"private Arc.Threading.SemaphoreLock {ValueLinkBody.WriterSemaphoreName} = new();");
@@ -1889,7 +1892,21 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGoshujin_Add(ScopingStringBuilder ssb, GeneratorInformation info)
     {// I've implemented this feature, but I'm wondering if I should enable it due to my coding philosophy.
-        ssb.AppendLine($"public void Add({this.LocalName} x) => x.{this.ObjectAttribute!.GoshujinInstance} = this;");
+        if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatablePrimitive)
+        {
+            using (var scopeMethod = ssb.ScopeBrace($"public bool Add({this.LocalName} x)"))
+            {
+                using (var scopeLock = ssb.ScopeBrace("using (var w = x.TryLock())"))
+                {
+                    ssb.AppendLine("if (w is null) return false;");
+                    ssb.AppendLine("w.Goshujin = this; w.Commit(); return true; ");
+                }
+            }
+        }
+        else
+        {
+            ssb.AppendLine($"public void Add({this.LocalName} x) => x.{this.ObjectAttribute!.GoshujinInstance} = this;");
+        }
 
         /*using (var scopeParameter = ssb.ScopeObject("x"))
         using (var scopeMethod = ssb.ScopeBrace($"public bool Add({this.LocalName} {ssb.FullObject})"))
@@ -1956,7 +1973,21 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGoshujin_Remove(ScopingStringBuilder ssb, GeneratorInformation info)
     {// I've implemented this feature, but I'm wondering if I should enable it due to my coding philosophy.
-        ssb.AppendLine($"public bool Remove({this.LocalName} x) => x.{ValueLinkBody.GeneratedTryRemoveName}(this);");
+        if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatablePrimitive)
+        {
+            using (var scopeMethod = ssb.ScopeBrace($"public bool Remove({this.LocalName} x)"))
+            {
+                using (var scopeLock = ssb.ScopeBrace("using (var w = x.TryLock())"))
+                {
+                    ssb.AppendLine("if (w is null || w.Goshujin != this) return false;");
+                    ssb.AppendLine("w.Goshujin = null; w.Commit(); return true; ");
+                }
+            }
+        }
+        else
+        {
+            ssb.AppendLine($"public bool Remove({this.LocalName} x) => x.{ValueLinkBody.GeneratedTryRemoveName}(this);");
+        }
 
         /*using (var scopeParameter = ssb.ScopeObject("x"))
         using (var scopeMethod = ssb.ScopeBrace($"public bool Remove({this.LocalName} {ssb.FullObject})"))
@@ -2124,26 +2155,27 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         using (var scopeProperty = ssb.ScopeBrace($"public {this.ObjectAttribute!.GoshujinClass}? {goshujin}"))
         {
             ssb.AppendLine($"get => this.{goshujinInstance};");
-            using (var scopeSet = ssb.ScopeBrace("set"))
+            if (this.ObjectAttribute.Isolation == IsolationLevel.RepeatablePrimitive)
             {
-                ssb.AppendLine($"if (value == this.{goshujinInstance}) return;");
-
-                if (this.ObjectAttribute.Isolation == IsolationLevel.RepeatablePrimitive)
+                /*using (var scopeSet = ssb.ScopeBrace("set"))
                 {
-                    using (var scopeLock = ssb.ScopeBrace("using (var w = this.Lock())"))
+                    using (var scopeLock = ssb.ScopeBrace($"using (var w = this.{ValueLinkBody.TryLockMethodName}())"))
                     {
-                        // ssb.AppendLine($"if (value == w.{goshujin}) return;");
-                        ssb.AppendLine($"w.{goshujin} = value;");
-                        ssb.AppendLine("w.Commit();");
+                        ssb.AppendLine($"if (w is not null) {{ w.{goshujin} = value; w.Commit(); }}");
                     }
-
-                    return;
-                }
-
-                using (var scopeParamter = ssb.ScopeObject("this"))
+                }*/
+            }
+            else
+            {
+                using (var scopeSet = ssb.ScopeBrace("set"))
                 {
-                    ssb.AppendLine($"this.{ValueLinkBody.GeneratedTryRemoveName}(null);");
-                    ssb.AppendLine($"this.{ValueLinkBody.GeneratedAddName}(value);");
+                    ssb.AppendLine($"if (value == this.{goshujinInstance}) return;");
+
+                    using (var scopeParamter = ssb.ScopeObject("this"))
+                    {
+                        ssb.AppendLine($"this.{ValueLinkBody.GeneratedTryRemoveName}(null);");
+                        ssb.AppendLine($"this.{ValueLinkBody.GeneratedAddName}(value);");
+                    }
                 }
             }
         }

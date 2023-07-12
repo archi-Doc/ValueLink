@@ -32,8 +32,8 @@ namespace ValueLink.Generator
         public static readonly string GeneratedGoshujinLockName = "__gen_cl_gosh_lock__";
         // public static readonly string ReaderStructName = "Reader";
         public static readonly string WriterClassName = "WriterClass";
-        public static readonly string LockMethodName = "Lock";
         public static readonly string TryLockMethodName = "TryLock";
+        public static readonly string TryLockAsyncMethodName = "TryLockAsync";
         public static readonly string GetReaderMethodName = "GetReader()";
         public static readonly string WriterSemaphoreName = "writerSemaphore";
         public static readonly string IsObsoleteProperty = "IsObsolete";
