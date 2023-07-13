@@ -8,18 +8,18 @@ using Xunit;
 namespace xUnitTest;
 
 [ValueLinkObject(Isolation = IsolationLevel.Serializable)]
-public partial record RoomClass
+public partial record SerializableRoom
 {
     [Link(Primary = true, Type = ChainType.Ordered, AddValue = false)]
     public int RoomId { get; set; }
 
-    public RoomClass(int roomId)
+    public SerializableRoom(int roomId)
     {
     }
 }
 
 [ValueLinkObject(Isolation = IsolationLevel.RepeatablePrimitive)]
-public partial record Room
+public partial record RepeatableRoom
 {
     [Link(Primary = true, Type = ChainType.Ordered, AddValue = false)]
     public int RoomId { get; private set; }
@@ -28,9 +28,33 @@ public partial record Room
 
     public bool TestFlag => true;
 
-    public Room(int roomId)
+    public RepeatableRoom(int roomId)
     {
         this.RoomId = roomId;
+    }
+
+    public partial class GoshujinClass
+    {
+        public WriterClass? TryLock(int roomId)
+        {
+            while (true)
+            {
+                RepeatableRoom? x = null;
+                lock (this.SyncObject)
+                {
+                    x = this.RoomIdChain.FindFirst(roomId);
+                }
+
+                if (x is null)
+                {
+                    return null;
+                }
+                else if (x.TryLock() is { } writer)
+                {
+                    return writer;
+                }
+            }
+        }
     }
 
     [ValueLinkObject(Isolation = IsolationLevel.RepeatablePrimitive)]
@@ -95,28 +119,28 @@ public partial record Room
 public class IsolationTest
 {
     [Fact]
-    public void Test1()
+    public void TestSerializable()
     {// Serializable
-        var g = new RoomClass.GoshujinClass();
+        var g = new SerializableRoom.GoshujinClass();
         lock (g.SyncObject)
         {
-            g.Add(new RoomClass(1));
+            g.Add(new SerializableRoom(1));
 
-            var room2 = new RoomClass(2);
+            var room2 = new SerializableRoom(2);
             room2.Goshujin = g;
         }
     }
 
     [Fact]
-    public void Test2()
+    public void TestRepeatable()
     {// RepeatablePrimitive
-        var g = new Room.GoshujinClass();
-        lock (g.SyncObject)
-        {
-            g.Add(new Room(1));
+        var g = new RepeatableRoom.GoshujinClass();
+        var room1 = g.Add(new RepeatableRoom(1));
 
-            var room2 = new Room(2);
-            g.Add(room2);
+        var r = new RepeatableRoom(2);
+        var room2 = g.Add(r);
+        if (room2 is not null)
+        {
             using (var w = room2.TryLock())
             {
                 if (w is not null)

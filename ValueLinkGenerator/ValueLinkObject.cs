@@ -1894,12 +1894,12 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     {// I've implemented this feature, but I'm wondering if I should enable it due to my coding philosophy.
         if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatablePrimitive)
         {
-            using (var scopeMethod = ssb.ScopeBrace($"public bool Add({this.LocalName} x)"))
+            using (var scopeMethod = ssb.ScopeBrace($"public {this.LocalName}? Add({this.LocalName} x)"))
             {
                 using (var scopeLock = ssb.ScopeBrace("using (var w = x.TryLock())"))
                 {
-                    ssb.AppendLine("if (w is null) return false;");
-                    ssb.AppendLine("w.Goshujin = this; w.Commit(); return true; ");
+                    ssb.AppendLine("if (w is null) return null;");
+                    ssb.AppendLine("w.Goshujin = this; return w.Commit();");
                 }
             }
         }
@@ -1975,12 +1975,12 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     {// I've implemented this feature, but I'm wondering if I should enable it due to my coding philosophy.
         if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatablePrimitive)
         {
-            using (var scopeMethod = ssb.ScopeBrace($"public bool Remove({this.LocalName} x)"))
+            using (var scopeMethod = ssb.ScopeBrace($"public {this.LocalName}? Remove({this.LocalName} x)"))
             {
                 using (var scopeLock = ssb.ScopeBrace("using (var w = x.TryLock())"))
                 {
-                    ssb.AppendLine("if (w is null || w.Goshujin != this) return false;");
-                    ssb.AppendLine("w.Goshujin = null; w.Commit(); return true; ");
+                    ssb.AppendLine("if (w is null || w.Goshujin != this) return null;");
+                    ssb.AppendLine("w.Goshujin = null; return w.Commit();");
                 }
             }
         }
@@ -2157,13 +2157,13 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             ssb.AppendLine($"get => this.{goshujinInstance};");
             if (this.ObjectAttribute.Isolation == IsolationLevel.RepeatablePrimitive)
             {
-                /*using (var scopeSet = ssb.ScopeBrace("set"))
+                using (var scopeSet = ssb.ScopeBrace("set"))
                 {
                     using (var scopeLock = ssb.ScopeBrace($"using (var w = this.{ValueLinkBody.TryLockMethodName}())"))
                     {
                         ssb.AppendLine($"if (w is not null) {{ w.{goshujin} = value; w.Commit(); }}");
                     }
-                }*/
+                }
             }
             else
             {
