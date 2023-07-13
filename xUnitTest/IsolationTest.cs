@@ -43,13 +43,63 @@ public partial record RepeatableRoom
                 lock (this.SyncObject)
                 {
                     x = this.RoomIdChain.FindFirst(roomId);
+                    if (x is null)
+                    {
+                        return null;
+                    }
                 }
 
-                if (x is null)
+                if (x.TryLock() is { } writer)
+                {
+                    return writer;
+                }
+            }
+        }
+
+        public RepeatableRoom? TryGet(int roomId)
+        {
+            lock (this.SyncObject)
+            {
+                var x = this.RoomIdChain.FindFirst(roomId);
+                return x;
+            }
+        }
+
+        public WriterClass? CreateAndLock(int roomId)
+        {
+            RepeatableRoom x;
+            lock (this.SyncObject)
+            {
+                if (this.RoomIdChain.FindFirst(roomId) is not null)
                 {
                     return null;
                 }
-                else if (x.TryLock() is { } writer)
+
+                x = new(roomId);
+                x.RoomId = roomId;
+                x.AddToGoshujinInternal(this);
+            }
+
+            return x.TryLock();
+        }
+
+        public WriterClass GetOrCreate(int roomId)
+        {
+            while (true)
+            {
+                RepeatableRoom? x;
+                lock (this.SyncObject)
+                {
+                    x = this.RoomIdChain.FindFirst(roomId);
+                    if (x is null)
+                    {
+                        x = new(roomId);
+                        x.RoomId = roomId;
+                        x.AddToGoshujinInternal(this);
+                    }
+                }
+
+                if (x.TryLock() is { } writer)
                 {
                     return writer;
                 }
@@ -85,32 +135,6 @@ public partial record RepeatableRoom
                 }
 
                 return array;
-            }
-        }
-
-        public partial record WriterClass2 : Booking, IDisposable
-        {
-            public WriterClass2(Booking parent)
-                : base(parent)
-            {
-            }
-
-            public new GoshujinClass? Goshujin { get; set; }
-
-            public string Name
-            {
-                get => this.name;
-                set { this.name = value; }
-            }
-
-            public new int UserId
-            {
-                get => base.UserId;
-                set { base.UserId = value; }
-            }
-
-            public void Dispose()
-            {
             }
         }
     }

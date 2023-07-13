@@ -26,8 +26,8 @@ namespace ValueLink.Generator
         public static readonly string AddedMethodName = "Added"; // void Link name + AddedMethodName()
         public static readonly string RemovedMethodName = "Removed"; // void Link name + RemovedMethodName()
         public static readonly string GeneratedIdentifierName = "__gen_cl_identifier__";
-        public static readonly string GeneratedAddName = "__gen_cl_add__";
-        public static readonly string GeneratedTryRemoveName = "__gen_cl_tryremove__";
+        public static readonly string GeneratedAddName = "AddToGoshujinInternal";
+        public static readonly string GeneratedTryRemoveName = "RemoveFromGoshujinInternal";
         public static readonly string GeneratedNullLockName = "__gen_cl_null_lock__";
         public static readonly string GeneratedGoshujinLockName = "__gen_cl_gosh_lock__";
         // public static readonly string ReaderStructName = "Reader";
