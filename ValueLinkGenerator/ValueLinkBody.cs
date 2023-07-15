@@ -138,6 +138,10 @@ namespace ValueLink.Generator
             id: "CLG025", title: "Keyword used", messageFormat: "Keyword '{0}' is reserved for source generator.'",
             category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
+        public static readonly DiagnosticDescriptor Error_NoDefaultConstructor = new DiagnosticDescriptor(
+            id: "CLG026", title: "No default constructor", messageFormat: "'{0}' must have a default constructor when the isolation level is repeatable read..'",
+            category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
         public ValueLinkBody(GeneratorExecutionContext context)
             : base(context)
         {

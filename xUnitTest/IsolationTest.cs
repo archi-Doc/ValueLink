@@ -28,6 +28,10 @@ public partial record RepeatableRoom
 
     public bool TestFlag => true;
 
+    public RepeatableRoom()
+    {
+    }
+
     public RepeatableRoom(int roomId)
     {
         this.RoomId = roomId;
@@ -75,7 +79,7 @@ public partial record RepeatableRoom
                     return null;
                 }
 
-                x = new(roomId);
+                x = new();
                 x.RoomId = roomId;
                 x.AddToGoshujinInternal(this);
             }
