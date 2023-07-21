@@ -1,6 +1,7 @@
 // Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
+using System.Formats.Tar;
 using System.Linq;
 using ValueLink;
 using Xunit;
@@ -18,8 +19,48 @@ public partial record SerializableRoom
     }
 }
 
+public interface IWriter
+{
+}
+
+public interface IRepeatableReads<TWriter>
+    where TWriter : class
+{
+    public TWriter? TryLock();
+}
+
+public interface GoshujinBase<TKey, TObject, TWriter>
+    where TObject : IRepeatableReads<TWriter>
+    where TWriter : class
+{
+    public object SyncObject { get; }
+
+    protected TObject? FindFirst(TKey key);
+
+    public TWriter? TryLock(TKey key)
+    {
+        while (true)
+        {
+            TObject? x = default;
+            lock (this.SyncObject)
+            {
+                x = this.FindFirst(key);
+                if (x is null)
+                {
+                    return default;
+                }
+            }
+
+            if (x.TryLock() is { } writer)
+            {
+                return writer;
+            }
+        }
+    }
+}
+
 [ValueLinkObject(Isolation = IsolationLevel.RepeatablePrimitive)]
-public partial record RepeatableRoom
+public partial record RepeatableRoom : IRepeatableReads<RepeatableRoom.WriterClass>
 {
     [Link(Primary = true, Type = ChainType.Ordered, AddValue = false)]
     public int RoomId { get; private set; }
@@ -37,9 +78,13 @@ public partial record RepeatableRoom
         this.RoomId = roomId;
     }
 
-    public partial class GoshujinClass
+    public partial class GoshujinClass : GoshujinBase<int, RepeatableRoom, WriterClass>
     {
-        public WriterClass? TryLock(int roomId)
+        RepeatableRoom? GoshujinBase<int, RepeatableRoom, WriterClass>.FindFirst(int key) => this.RoomIdChain.FindFirst(key);
+
+        // public override object SyncObject => throw new NotImplementedException();
+
+        /*public WriterClass? TryLock(int roomId)
         {
             while (true)
             {
@@ -58,7 +103,7 @@ public partial record RepeatableRoom
                     return writer;
                 }
             }
-        }
+        }*/
 
         public RepeatableRoom? TryGet(int roomId)
         {
