@@ -27,6 +27,8 @@ public interface IRepeatableReads<TWriter>
     where TWriter : class
 {
     public TWriter? TryLock();
+
+    public void AddToGoshujinInternal(object? g);
 }
 
 public interface GoshujinBase<TKey, TObject, TWriter>
@@ -36,6 +38,8 @@ public interface GoshujinBase<TKey, TObject, TWriter>
     public object SyncObject { get; }
 
     protected TObject? FindFirst(TKey key);
+
+    protected TObject NewObject(TKey key);
 
     public TWriter? TryLock(TKey key)
     {
@@ -56,6 +60,24 @@ public interface GoshujinBase<TKey, TObject, TWriter>
                 return writer;
             }
         }
+    }
+
+    public TWriter? CreateAndLock(TKey key)
+    {
+        TObject x;
+        lock (this.SyncObject)
+        {
+            if (this.FindFirst(key) is not null)
+            {
+                return null;
+            }
+
+            x = this.NewObject(key);
+            // x.RoomId = key;
+            x.AddToGoshujinInternal(this);
+        }
+
+        return x.TryLock();
     }
 }
 
