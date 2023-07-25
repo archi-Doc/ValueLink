@@ -54,9 +54,8 @@ public interface IRepeatableObject<TGoshujin, TWriter>
 /// <typeparam name="TWriter">The type of writer class.</typeparam>
 public abstract class IRepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
     where TObject : class, IRepeatableObject<TGoshujin, TWriter>
-    where TGoshujin : class
+    where TGoshujin : IRepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
     where TWriter : class
-    // where TGoshujin : IRepeatableGoshujin<TKey, TObject, TWriter, TGoshujin>
 {
     public abstract object SyncObject { get; }
 
@@ -108,7 +107,7 @@ public abstract class IRepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
                     else
                     {// Create, GetOrCreate
                         x = this.NewObject(key);
-                        x.AddToGoshujinInternal((TGoshujin)default!);
+                        x.AddToGoshujinInternal((TGoshujin)this);
                     }
                 }
                 else

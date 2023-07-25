@@ -1,11 +1,8 @@
 // Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using ValueLink;
 using Xunit;
-using static xUnitTest.RepeatableRoom;
 
 namespace xUnitTest;
 
@@ -37,80 +34,6 @@ public partial record RepeatableRoom
     public RepeatableRoom(int roomId)
     {
         this.RoomId = roomId;
-    }
-
-    public partial class GoshujinClass
-    {
-        /*public WriterClass? TryLock(int roomId)
-        {
-            while (true)
-            {
-                RepeatableRoom? x = null;
-                lock (this.SyncObject)
-                {
-                    x = this.RoomIdChain.FindFirst(roomId);
-                    if (x is null)
-                    {
-                        return null;
-                    }
-                }
-
-                if (x.TryLock() is { } writer)
-                {
-                    return writer;
-                }
-            }
-        }*/
-
-        /*public RepeatableRoom? TryGet(int roomId)
-        {
-            lock (this.SyncObject)
-            {
-                var x = this.RoomIdChain.FindFirst(roomId);
-                return x;
-            }
-        }
-
-        public WriterClass? CreateAndLock(int roomId)
-        {
-            RepeatableRoom x;
-            lock (this.SyncObject)
-            {
-                if (this.RoomIdChain.FindFirst(roomId) is not null)
-                {
-                    return null;
-                }
-
-                x = new();
-                x.RoomId = roomId;
-                x.AddToGoshujinInternal(this);
-            }
-
-            return x.TryLock();
-        }
-
-        public WriterClass GetOrCreate(int roomId)
-        {
-            while (true)
-            {
-                RepeatableRoom? x;
-                lock (this.SyncObject)
-                {
-                    x = this.RoomIdChain.FindFirst(roomId);
-                    if (x is null)
-                    {
-                        x = new(roomId);
-                        x.RoomId = roomId;
-                        x.AddToGoshujinInternal(this);
-                    }
-                }
-
-                if (x.TryLock() is { } writer)
-                {
-                    return writer;
-                }
-            }
-        }*/
     }
 
     [ValueLinkObject(Isolation = IsolationLevel.RepeatablePrimitive)]
