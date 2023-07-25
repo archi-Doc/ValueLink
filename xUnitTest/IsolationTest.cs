@@ -1,9 +1,11 @@
 // Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using ValueLink;
 using Xunit;
+using static xUnitTest.RepeatableRoom;
 
 namespace xUnitTest;
 
@@ -18,120 +20,8 @@ public partial record SerializableRoom
     }
 }
 
-public interface IRepeatableObject<TGoshujin, TWriter>
-    where TWriter : class
-{
-    TWriter? TryLock();
-
-    void AddToGoshujinInternal(TGoshujin g);
-}
-
-public enum TryLockMode
-{
-    Get,
-    Create,
-    GetOrCreate,
-}
-
-public interface IRepeatableGoshujin<TKey, TObject, TWriter, TGoshujin>
-    where TObject : IRepeatableObject<TGoshujin, TWriter>
-    where TWriter : class
-    where TGoshujin : IRepeatableGoshujin<TKey, TObject, TWriter, TGoshujin>
-{
-    public object SyncObject { get; }
-
-    protected TObject? FindFirst(TKey key);
-
-    protected TObject NewObject(TKey key);
-
-    public TObject? TryGet(TKey key)
-    {
-        lock (this.SyncObject)
-        {
-            var x = this.FindFirst(key);
-            return x;
-        }
-    }
-
-    public TWriter? TryLock(TKey key, TryLockMode mode = TryLockMode.Get)
-    {
-        while (true)
-        {
-            TObject? x = default;
-            lock (this.SyncObject)
-            {
-                x = this.FindFirst(key);
-                if (x is null)
-                {// No object
-                    if (mode == TryLockMode.Get)
-                    {// Get
-                        return default;
-                    }
-                    else
-                    {// Create, GetOrCreate
-                        x = this.NewObject(key);
-                        x.AddToGoshujinInternal((TGoshujin)this);
-                    }
-                }
-                else
-                {// Exists
-                    if (mode == TryLockMode.Create)
-                    {// Create
-                        return default;
-                    }
-
-                    // Get, GetOrCreate
-                }
-            }
-
-            if (x.TryLock() is { } writer)
-            {
-                return writer;
-            }
-        }
-    }
-
-    /*public TWriter? TryLock(TKey key)
-    {
-        while (true)
-        {
-            TObject? x = default;
-            lock (this.SyncObject)
-            {
-                x = this.FindFirst(key);
-                if (x is null)
-                {
-                    return default;
-                }
-            }
-
-            if (x.TryLock() is { } writer)
-            {
-                return writer;
-            }
-        }
-    }
-
-    public TWriter? CreateAndLock(TKey key)
-    {
-        TObject x;
-        lock (this.SyncObject)
-        {
-            if (this.FindFirst(key) is not null)
-            {
-                return null;
-            }
-
-            x = this.NewObject(key);
-            x.AddToGoshujinInternal((TGoshujin)this);
-        }
-
-        return x.TryLock();
-    }*/
-}
-
 [ValueLinkObject(Isolation = IsolationLevel.RepeatablePrimitive)]
-public partial record RepeatableRoom : IRepeatableObject<RepeatableRoom.GoshujinClass, RepeatableRoom.WriterClass>
+public partial record RepeatableRoom
 {
     [Link(Primary = true, Type = ChainType.Ordered, AddValue = false)]
     public int RoomId { get; private set; }
@@ -149,19 +39,8 @@ public partial record RepeatableRoom : IRepeatableObject<RepeatableRoom.Goshujin
         this.RoomId = roomId;
     }
 
-    public partial class GoshujinClass : IRepeatableGoshujin<int, RepeatableRoom, WriterClass, GoshujinClass>
+    public partial class GoshujinClass
     {
-        RepeatableRoom? IRepeatableGoshujin<int, RepeatableRoom, WriterClass, GoshujinClass>.FindFirst(int key) => this.RoomIdChain.FindFirst(key);
-
-        RepeatableRoom IRepeatableGoshujin<int, RepeatableRoom, WriterClass, GoshujinClass>.NewObject(int key)
-        {
-            var obj = new RepeatableRoom();
-            obj.RoomId = key;
-            return obj;
-        }
-
-        // public override object SyncObject => throw new NotImplementedException();
-
         /*public WriterClass? TryLock(int roomId)
         {
             while (true)
@@ -183,7 +62,7 @@ public partial record RepeatableRoom : IRepeatableObject<RepeatableRoom.Goshujin
             }
         }*/
 
-        public RepeatableRoom? TryGet(int roomId)
+        /*public RepeatableRoom? TryGet(int roomId)
         {
             lock (this.SyncObject)
             {
@@ -231,7 +110,7 @@ public partial record RepeatableRoom : IRepeatableObject<RepeatableRoom.Goshujin
                     return writer;
                 }
             }
-        }
+        }*/
     }
 
     [ValueLinkObject(Isolation = IsolationLevel.RepeatablePrimitive)]
@@ -249,29 +128,6 @@ public partial record RepeatableRoom : IRepeatableObject<RepeatableRoom.Goshujin
 
         public Booking()
         {
-        }
-
-        public partial class GoshujinClass
-        {
-            public Booking[] GetArray()
-            {
-                Booking[] array;
-                lock (this.SyncObject)
-                {
-                    array = this.ToArray();
-                }
-
-                return array;
-            }
-        }
-    }
-
-    void IRepeatableObject<GoshujinClass, WriterClass>.AddToGoshujinInternal(GoshujinClass g)
-    {
-        this.__gen_cl_identifier__001 = g;
-        if (g != null)
-        {
-            g.RoomIdChain.Add(this.RoomId, this);
         }
     }
 }
@@ -310,7 +166,7 @@ public class IsolationTest
                 }
             }
 
-            var booking = room2.Bookings.GetArray();
+            var booking = ((IRepeatableGoshujin<System.DateTime, Booking, GoshujinClass, WriterClass>)room2.Bookings).GetArray();
             if (booking.Length > 0)
             {
                 var b = booking[0];

@@ -37,6 +37,8 @@ namespace ValueLink.Generator
         public static readonly string GetReaderMethodName = "GetReader()";
         public static readonly string WriterSemaphoreName = "writerSemaphore";
         public static readonly string IsObsoleteProperty = "IsObsolete";
+        public static readonly string IRepeatableObject = "IRepeatableObject";
+        public static readonly string IRepeatableGoshujin = "IRepeatableGoshujin";
 
         public static readonly DiagnosticDescriptor Error_NotPartial = new DiagnosticDescriptor(
             id: "CLG001", title: "Not a partial class/struct", messageFormat: "ValueLinkObject '{0}' is not a partial class/struct",

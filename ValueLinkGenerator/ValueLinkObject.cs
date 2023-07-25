@@ -85,6 +85,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     public string SerializeIndexIdentifier = string.Empty;
 
+    public string? IRepeatableObject;
+
+    public string? IRepeatableGoshujin;
+
     public ValueLinkObject? ClosedGenericHint { get; private set; }
 
     internal Automata<ValueLinkObject, Linkage>? DeserializeChainAutomata { get; private set; }
@@ -799,10 +803,28 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             return;
         }
 
+        if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatablePrimitive)
+        {
+            this.IRepeatableObject = $"{ValueLinkBody.IRepeatableObject}<{this.SimpleName}.{this.ObjectAttribute?.GoshujinClass}, {this.SimpleName}.{ValueLinkBody.WriterClassName}>";
+            this.IRepeatableGoshujin = $"{ValueLinkBody.IRepeatableGoshujin}<{this.PrimaryLink?.TypeObject.FullName}, {this.SimpleName}, {this.ObjectAttribute?.GoshujinClass}, {ValueLinkBody.WriterClassName}>";
+        }
+
         var interfaceString = string.Empty;
         if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateINotifyPropertyChanged))
         {
             interfaceString = " : System.ComponentModel.INotifyPropertyChanged";
+        }
+
+        if (this.IRepeatableObject is not null)
+        {
+            if (string.IsNullOrEmpty(interfaceString))
+            {
+                interfaceString = $" : {this.IRepeatableObject}";
+            }
+            else
+            {
+                interfaceString = $", {this.IRepeatableObject}";
+            }
         }
 
         using (var cls = ssb.ScopeBrace($"{this.AccessibilityName} partial {this.KindName} {this.LocalName}{interfaceString}"))
@@ -898,7 +920,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     {
         var goshujinInstance = this.GoshujinInstanceIdentifier; // goshujin + "Instance";
 
-        using (var enterScope = ssb.ScopeBrace($"internal void {ValueLinkBody.GeneratedAddName}({this.ObjectAttribute!.GoshujinClass}? g)"))
+        using (var enterScope = ssb.ScopeBrace($"public void {ValueLinkBody.GeneratedAddName}({this.ObjectAttribute!.GoshujinClass}? g)"))
         using (var scopeParamter = ssb.ScopeObject("this"))
         {
             ssb.AppendLine($"this.{goshujinInstance} = g;");
@@ -1467,6 +1489,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             goshujinInterface += $", Arc.Threading.ILockable";
         }
 
+        if (this.IRepeatableGoshujin is not null)
+        {
+            goshujinInterface += $", {this.IRepeatableGoshujin}";
+        }
+
         // selaed -> partial
         using (var scopeClass = ssb.ScopeBrace("public partial class " + this.ObjectAttribute!.GoshujinClass + goshujinInterface))
         {
@@ -1521,6 +1548,21 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddLockable))
             {// ILockable
                 this.GenerateGosjujin_Lock(ssb, info);
+            }
+
+            if (this.IRepeatableGoshujin is not null)
+            {
+                if (this.PrimaryLink is not null)
+                {
+                    ssb.AppendLine($"{this.SimpleName}? {this.IRepeatableGoshujin}.FindFirst({this.PrimaryLink.TypeObject.FullName} key) => this.{this.PrimaryLink.ChainName}.FindFirst(key);");
+
+                    using (var scopeNewObject = ssb.ScopeBrace($"{this.SimpleName} {this.IRepeatableGoshujin}.NewObject({this.PrimaryLink.TypeObject.FullName} key)"))
+                    {
+                        ssb.AppendLine($"var obj = new {this.SimpleName}();");
+                        ssb.AppendLine($"obj.{this.PrimaryLink.TargetName} = key;");
+                        ssb.AppendLine($"return obj;");
+                    }
+                }
             }
         }
 

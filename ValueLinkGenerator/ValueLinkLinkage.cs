@@ -23,7 +23,7 @@ public class Linkage
         }
 
         var parent = obj.ContainingObject;
-        if (parent == null)
+        if (parent is null || obj.TypeObject is null)
         {
             return null;
         }
@@ -31,6 +31,7 @@ public class Linkage
         var linkage = new Linkage();
         linkage.Location = attribute.Location;
         linkage.Type = linkAttribute.Type;
+        linkage.TypeObject = obj.TypeObject;
         linkage.Primary = linkAttribute.Primary;
         if (obj.Kind.IsValue())
         {
@@ -195,6 +196,8 @@ public class Linkage
     public Location Location { get; private set; } = Location.None;
 
     public ChainType Type { get; private set; }
+
+    public ValueLinkObject TypeObject { get; private set; } = default!;
 
     public bool Primary { get; private set; }
 
