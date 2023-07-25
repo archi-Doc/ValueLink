@@ -1462,7 +1462,15 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGoshujinClass(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        var goshujinInterface = " : IGoshujin";
+        string goshujinInterface;
+        if (this.IRepeatableGoshujin is not null)
+        {
+            goshujinInterface = $" : {this.IRepeatableGoshujin}, IGoshujin";
+        }
+        else
+        {
+            goshujinInterface = " : IGoshujin";
+        }
 
         if (this.PrimaryLink != null)
         {// IEnumerable
@@ -1489,10 +1497,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             goshujinInterface += $", Arc.Threading.ILockable";
         }
 
-        if (this.IRepeatableGoshujin is not null)
+        /*if (this.IRepeatableGoshujin is not null)
         {
             goshujinInterface += $", {this.IRepeatableGoshujin}";
-        }
+        }*/
 
         // selaed -> partial
         using (var scopeClass = ssb.ScopeBrace("public partial class " + this.ObjectAttribute!.GoshujinClass + goshujinInterface))
@@ -1541,7 +1549,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSyncObject))
             {
-                ssb.AppendLine("public object SyncObject => this.syncObject;");
+                var overridePrefix = this.IRepeatableGoshujin is null ? string.Empty : "override ";
+                ssb.AppendLine($"public {overridePrefix}object SyncObject => this.syncObject;");
                 ssb.AppendLine("private object syncObject = new();");
             }
 
@@ -1554,9 +1563,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             {
                 if (this.PrimaryLink is not null)
                 {
-                    ssb.AppendLine($"{this.SimpleName}? {this.IRepeatableGoshujin}.FindFirst({this.PrimaryLink.TypeObject.FullName} key) => this.{this.PrimaryLink.ChainName}.FindFirst(key);");
+                    ssb.AppendLine($"protected override {this.SimpleName}? FindFirst({this.PrimaryLink.TypeObject.FullName} key) => this.{this.PrimaryLink.ChainName}.FindFirst(key);");
 
-                    using (var scopeNewObject = ssb.ScopeBrace($"{this.SimpleName} {this.IRepeatableGoshujin}.NewObject({this.PrimaryLink.TypeObject.FullName} key)"))
+                    using (var scopeNewObject = ssb.ScopeBrace($"protected override {this.SimpleName} NewObject({this.PrimaryLink.TypeObject.FullName} key)"))
                     {
                         ssb.AppendLine($"var obj = new {this.SimpleName}();");
                         ssb.AppendLine($"obj.{this.PrimaryLink.TargetName} = key;");

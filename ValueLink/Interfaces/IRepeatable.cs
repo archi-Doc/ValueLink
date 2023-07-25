@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+#pragma warning disable SA1202 // Elements should be ordered by access
+
 namespace ValueLink;
 
 /// <summary>
@@ -50,17 +52,17 @@ public interface IRepeatableObject<TGoshujin, TWriter>
 /// <typeparam name="TObject">The type of object class.</typeparam>
 /// <typeparam name="TGoshujin">The type of goshujin class.</typeparam>
 /// <typeparam name="TWriter">The type of writer class.</typeparam>
-public interface IRepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
+public abstract class IRepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
     where TObject : class, IRepeatableObject<TGoshujin, TWriter>
     where TGoshujin : class
     where TWriter : class
     // where TGoshujin : IRepeatableGoshujin<TKey, TObject, TWriter, TGoshujin>
 {
-    public object SyncObject { get; }
+    public abstract object SyncObject { get; }
 
-    protected TObject? FindFirst(TKey key);
+    protected abstract TObject? FindFirst(TKey key);
 
-    protected TObject NewObject(TKey key);
+    protected abstract TObject NewObject(TKey key);
 
     public TObject[] GetArray()
     {
@@ -106,7 +108,7 @@ public interface IRepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
                     else
                     {// Create, GetOrCreate
                         x = this.NewObject(key);
-                        x.AddToGoshujinInternal((TGoshujin)this);
+                        x.AddToGoshujinInternal((TGoshujin)default!);
                     }
                 }
                 else

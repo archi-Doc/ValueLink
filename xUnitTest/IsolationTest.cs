@@ -166,7 +166,7 @@ public class IsolationTest
                 }
             }
 
-            var booking = ((IRepeatableGoshujin<System.DateTime, Booking, GoshujinClass, WriterClass>)room2.Bookings).GetArray();
+            var booking = room2.Bookings.GetArray();
             if (booking.Length > 0)
             {
                 var b = booking[0];
