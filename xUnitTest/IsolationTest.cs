@@ -76,6 +76,14 @@ public class IsolationTest
         var g = new RepeatableRoom.GoshujinClass();
         var room1 = g.Add(new RepeatableRoom(1));
 
+        using (var a = g.TryLock(0))
+        {
+        }
+
+        using (var a = g.TryLock(1))
+        {
+        }
+
         var r = new RepeatableRoom(2);
         var room2 = g.Add(r);
         if (room2 is not null)
