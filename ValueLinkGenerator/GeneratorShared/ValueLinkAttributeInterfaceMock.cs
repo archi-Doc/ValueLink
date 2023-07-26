@@ -27,7 +27,7 @@ public enum IsolationLevel
 {
     None,
     Serializable,
-    RepeatablePrimitive,
+    RepeatableRead,
 }
 
 public enum ValueLinkAccessibility

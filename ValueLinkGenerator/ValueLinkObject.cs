@@ -228,7 +228,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 this.ObjectFlag |= ValueLinkObjectFlag.AddSyncObject; // | ValueLinkObjectFlag.AddLockable;
                 this.ObjectFlag |= ValueLinkObjectFlag.AddGoshujinProperty;
             }
-            else if (this.ObjectAttribute.Isolation == IsolationLevel.RepeatablePrimitive)
+            else if (this.ObjectAttribute.Isolation == IsolationLevel.RepeatableRead)
             {// Repeatable read
                 this.ObjectFlag |= ValueLinkObjectFlag.AddSyncObject;
                 this.ObjectFlag |= ValueLinkObjectFlag.AddGoshujinProperty;
@@ -428,7 +428,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 parent = parent.ContainingObject;
             }
 
-            if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatablePrimitive)
+            if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatableRead)
             {// Default constructor
                 if (this.GetMembers(VisceralTarget.Method).Any(a => a.Method_IsConstructor && a.Method_Parameters.Length == 0) != true)
                 {
@@ -526,7 +526,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
 
         // Check isolation
-        if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatablePrimitive)
+        if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatableRead)
         {
             if (!this.IsRecord)
             {
@@ -803,7 +803,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             return;
         }
 
-        if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatablePrimitive)
+        if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatableRead)
         {
             this.IRepeatableObject = $"{ValueLinkBody.IRepeatableObject}<{this.SimpleName}.{this.ObjectAttribute?.GoshujinClass}, {this.SimpleName}.{ValueLinkBody.WriterClassName}>";
             this.IRepeatableGoshujin = $"{ValueLinkBody.IRepeatableGoshujin}<{this.PrimaryLink?.TypeObject.FullName}, {this.SimpleName}, {this.ObjectAttribute?.GoshujinClass}, {ValueLinkBody.WriterClassName}>";
@@ -903,9 +903,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             }
         }
 
-        if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatablePrimitive)
+        if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatableRead)
         {
-            this.Generate_RepeatablePrimitive(ssb, info);
+            this.Generate_RepeatableRead(ssb, info);
         }
 
         if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSyncObject))
@@ -1046,10 +1046,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         ssb.AppendLine($"finally {{ Monitor.Exit(lockObject); }}");
     }
 
-    internal void Generate_RepeatablePrimitive(ScopingStringBuilder ssb, GeneratorInformation info)
+    internal void Generate_RepeatableRead(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         // this.Generate_RepeatableRead_Reader(ssb, info);
-        this.Generate_RepeatableRead(ssb, info);
+        this.Generate_RepeatableRead_Writer(ssb, info);
         this.Generate_RepeatableRead_Other(ssb, info);
     }
 
@@ -1081,7 +1081,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
     }*/
 
-    internal void Generate_RepeatableRead(ScopingStringBuilder ssb, GeneratorInformation info)
+    internal void Generate_RepeatableRead_Writer(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         ssb.AppendLine();
 
@@ -1951,7 +1951,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGoshujin_Add(ScopingStringBuilder ssb, GeneratorInformation info)
     {// I've implemented this feature, but I'm wondering if I should enable it due to my coding philosophy.
-        if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatablePrimitive)
+        if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatableRead)
         {
             using (var scopeMethod = ssb.ScopeBrace($"public {this.LocalName}? Add({this.LocalName} x)"))
             {
@@ -2032,7 +2032,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGoshujin_Remove(ScopingStringBuilder ssb, GeneratorInformation info)
     {// I've implemented this feature, but I'm wondering if I should enable it due to my coding philosophy.
-        if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatablePrimitive)
+        if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatableRead)
         {
             using (var scopeMethod = ssb.ScopeBrace($"public {this.LocalName}? Remove({this.LocalName} x)"))
             {
@@ -2139,7 +2139,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         {
             return ssb.ScopeBrace($"using ({objectName}.Lock())");
         }
-        else if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatablePrimitive)
+        else if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatableRead)
         {
             return ssb.ScopeBrace($"lock ({objectName}.SyncObject)");
         }*/
@@ -2214,7 +2214,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         using (var scopeProperty = ssb.ScopeBrace($"public {this.ObjectAttribute!.GoshujinClass}? {goshujin}"))
         {
             ssb.AppendLine($"get => this.{goshujinInstance};");
-            if (this.ObjectAttribute.Isolation == IsolationLevel.RepeatablePrimitive)
+            if (this.ObjectAttribute.Isolation == IsolationLevel.RepeatableRead)
             {
                 using (var scopeSet = ssb.ScopeBrace("set"))
                 {

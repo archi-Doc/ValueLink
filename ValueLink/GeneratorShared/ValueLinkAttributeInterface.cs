@@ -26,7 +26,7 @@ public enum IsolationLevel
     /// Same data (primitive types) is guaranteed to be read during the transaction.<br/>
     /// The class must be a record type to specify this level.
     /// </summary>
-    RepeatablePrimitive,
+    RepeatableRead,
 }
 
 /// <summary>

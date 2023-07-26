@@ -17,7 +17,7 @@ public partial record SerializableRoom
     }
 }
 
-[ValueLinkObject(Isolation = IsolationLevel.RepeatablePrimitive)]
+[ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 public partial record RepeatableRoom
 {
     [Link(Primary = true, Type = ChainType.Ordered, AddValue = false)]
@@ -36,7 +36,7 @@ public partial record RepeatableRoom
         this.RoomId = roomId;
     }
 
-    [ValueLinkObject(Isolation = IsolationLevel.RepeatablePrimitive)]
+    [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
     public partial record Booking
     {
         [Link(Primary = true, Type = ChainType.Ordered)]
@@ -72,7 +72,7 @@ public class IsolationTest
 
     [Fact]
     public void TestRepeatable()
-    {// RepeatablePrimitive
+    {// RepeatableRead
         var g = new RepeatableRoom.GoshujinClass();
         var room1 = g.Add(new RepeatableRoom(1));
 
