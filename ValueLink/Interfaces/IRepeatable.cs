@@ -44,9 +44,9 @@ public interface IRepeatableObject<TGoshujin, TWriter>
 {
     TWriter? TryLock();
 
-    ValueTask<TWriter?> TryLockAsync(int millisecondsTimeout);
+    Task<TWriter?> TryLockAsync(int millisecondsTimeout);
 
-    ValueTask<TWriter?> TryLockAsync(int millisecondsTimeout, CancellationToken cancellationToken);
+    Task<TWriter?> TryLockAsync(int millisecondsTimeout, CancellationToken cancellationToken);
 
     void AddToGoshujinInternal(TGoshujin g);
 }
@@ -134,9 +134,9 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
         }
     }
 
-    public ValueTask<TWriter?> TryLockAsync(TKey key, int millisecondsTimeout, TryLockMode mode = TryLockMode.Get) => this.TryLockAsync(key, millisecondsTimeout, default, mode);
+    public Task<TWriter?> TryLockAsync(TKey key, int millisecondsTimeout, TryLockMode mode = TryLockMode.Get) => this.TryLockAsync(key, millisecondsTimeout, default, mode);
 
-    public async ValueTask<TWriter?> TryLockAsync(TKey key, int millisecondsTimeout, CancellationToken cancellationToken, TryLockMode mode = TryLockMode.Get)
+    public async Task<TWriter?> TryLockAsync(TKey key, int millisecondsTimeout, CancellationToken cancellationToken, TryLockMode mode = TryLockMode.Get)
     {
         while (true)
         {
