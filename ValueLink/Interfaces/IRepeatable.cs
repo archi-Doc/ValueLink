@@ -3,6 +3,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 #pragma warning disable SA1202 // Elements should be ordered by access
 
@@ -41,6 +43,10 @@ public interface IRepeatableObject<TGoshujin, TWriter>
     where TWriter : class
 {
     TWriter? TryLock();
+
+    ValueTask<TWriter?> TryLockAsync(int millisecondsTimeout);
+
+    ValueTask<TWriter?> TryLockAsync(int millisecondsTimeout, CancellationToken cancellationToken);
 
     void AddToGoshujinInternal(TGoshujin g);
 }
@@ -122,6 +128,46 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
             }
 
             if (x.TryLock() is { } writer)
+            {
+                return writer;
+            }
+        }
+    }
+
+    public ValueTask<TWriter?> TryLockAsync(TKey key, int millisecondsTimeout, TryLockMode mode = TryLockMode.Get) => this.TryLockAsync(key, millisecondsTimeout, default, mode);
+
+    public async ValueTask<TWriter?> TryLockAsync(TKey key, int millisecondsTimeout, CancellationToken cancellationToken, TryLockMode mode = TryLockMode.Get)
+    {
+        while (true)
+        {
+            TObject? x = default;
+            lock (this.SyncObject)
+            {
+                x = this.FindFirst(key);
+                if (x is null)
+                {// No object
+                    if (mode == TryLockMode.Get)
+                    {// Get
+                        return default;
+                    }
+                    else
+                    {// Create, GetOrCreate
+                        x = this.NewObject(key);
+                        x.AddToGoshujinInternal((TGoshujin)this);
+                    }
+                }
+                else
+                {// Exists
+                    if (mode == TryLockMode.Create)
+                    {// Create
+                        return default;
+                    }
+
+                    // Get, GetOrCreate
+                }
+            }
+
+            if (await x.TryLockAsync(millisecondsTimeout, cancellationToken).ConfigureAwait(false) is { } writer)
             {
                 return writer;
             }
