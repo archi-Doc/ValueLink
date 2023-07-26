@@ -87,7 +87,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     public string? IRepeatableObject;
 
-    public string? IRepeatableGoshujin;
+    public string? RepeatableGoshujin;
 
     public ValueLinkObject? ClosedGenericHint { get; private set; }
 
@@ -806,7 +806,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatableRead)
         {
             this.IRepeatableObject = $"{ValueLinkBody.IRepeatableObject}<{this.SimpleName}.{this.ObjectAttribute?.GoshujinClass}, {this.SimpleName}.{ValueLinkBody.WriterClassName}>";
-            this.IRepeatableGoshujin = $"{ValueLinkBody.IRepeatableGoshujin}<{this.PrimaryLink?.TypeObject.FullName}, {this.SimpleName}, {this.ObjectAttribute?.GoshujinClass}, {ValueLinkBody.WriterClassName}>";
+            this.RepeatableGoshujin = $"{ValueLinkBody.RepeatableGoshujin}<{this.PrimaryLink?.TypeObject.FullName}, {this.SimpleName}, {this.ObjectAttribute?.GoshujinClass}, {ValueLinkBody.WriterClassName}>";
         }
 
         var interfaceString = string.Empty;
@@ -1245,7 +1245,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         using (var scopeLock = ssb.ScopeBrace($"public {ValueLinkBody.WriterClassName}? {ValueLinkBody.TryLockMethodName}()"))
         {
+            ssb.AppendLine("#if DEBUG", false);
             ssb.AppendLine($"if (Monitor.IsEntered(this.{ValueLinkBody.GeneratedGoshujinLockName})) throw new LockOrderException();");
+            ssb.AppendLine("#endif", false);
             ssb.AppendLine($"this.{ValueLinkBody.WriterSemaphoreName}.Enter();");
             ssb.AppendLine($"if (this.{ValueLinkBody.IsObsoleteProperty}) {{ this.{ValueLinkBody.WriterSemaphoreName}.Exit(); return null; }}");
             ssb.AppendLine($"return new {ValueLinkBody.WriterClassName}(this);");
@@ -1463,9 +1465,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     internal void GenerateGoshujinClass(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         string goshujinInterface;
-        if (this.IRepeatableGoshujin is not null)
+        if (this.RepeatableGoshujin is not null)
         {
-            goshujinInterface = $" : {this.IRepeatableGoshujin}, IGoshujin";
+            goshujinInterface = $" : {this.RepeatableGoshujin}, IGoshujin";
         }
         else
         {
@@ -1497,9 +1499,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             goshujinInterface += $", Arc.Threading.ILockable";
         }
 
-        /*if (this.IRepeatableGoshujin is not null)
+        /*if (this.RepeatableGoshujin is not null)
         {
-            goshujinInterface += $", {this.IRepeatableGoshujin}";
+            goshujinInterface += $", {this.RepeatableGoshujin}";
         }*/
 
         // selaed -> partial
@@ -1549,7 +1551,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSyncObject))
             {
-                var overridePrefix = this.IRepeatableGoshujin is null ? string.Empty : "override ";
+                var overridePrefix = this.RepeatableGoshujin is null ? string.Empty : "override ";
                 ssb.AppendLine($"public {overridePrefix}object SyncObject => this.syncObject;");
                 ssb.AppendLine("private object syncObject = new();");
             }
@@ -1559,7 +1561,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 this.GenerateGosjujin_Lock(ssb, info);
             }
 
-            if (this.IRepeatableGoshujin is not null)
+            if (this.RepeatableGoshujin is not null)
             {
                 if (this.PrimaryLink is not null)
                 {

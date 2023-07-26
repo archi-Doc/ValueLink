@@ -52,9 +52,9 @@ public interface IRepeatableObject<TGoshujin, TWriter>
 /// <typeparam name="TObject">The type of object class.</typeparam>
 /// <typeparam name="TGoshujin">The type of goshujin class.</typeparam>
 /// <typeparam name="TWriter">The type of writer class.</typeparam>
-public abstract class IRepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
+public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
     where TObject : class, IRepeatableObject<TGoshujin, TWriter>
-    where TGoshujin : IRepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
+    where TGoshujin : RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
     where TWriter : class
 {
     public abstract object SyncObject { get; }
