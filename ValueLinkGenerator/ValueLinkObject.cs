@@ -939,7 +939,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     {
         var goshujinInstance = this.GoshujinInstanceIdentifier; // goshujin + "Instance";
 
-        using (var enterScope = ssb.ScopeBrace($"public void {ValueLinkBody.GeneratedAddName}({this.ObjectAttribute!.GoshujinClass}? g)"))
+        using (var enterScope = ssb.ScopeBrace($"void {this.IValueLinkObjectInternal}.{ValueLinkBody.GeneratedAddName}({this.ObjectAttribute!.GoshujinClass}? g)"))
         using (var scopeParamter = ssb.ScopeObject("this"))
         {
             ssb.AppendLine($"this.{goshujinInstance} = g;");
@@ -1244,8 +1244,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             using (var scopeDifferent = ssb.ScopeBrace("else"))
             {
-                ssb.AppendLine($"if (goshujin is not null) {{ lock (goshujin.SyncObject) {{ this.Instance.{ValueLinkBody.GeneratedTryRemoveName}(null); }} }}");
-                ssb.AppendLine($"if (this.Goshujin is not null) {{ lock (this.Goshujin.SyncObject) {{ this.Instance.{ValueLinkBody.GeneratedAddName}(this.Goshujin); }} }}");
+                ssb.AppendLine($"var @interface = ({this.IValueLinkObjectInternal})this.Instance;");
+                ssb.AppendLine($"if (goshujin is not null) {{ lock (goshujin.SyncObject) {{ @interface.{ValueLinkBody.GeneratedTryRemoveName}(null); }} }}");
+                ssb.AppendLine($"if (this.Goshujin is not null) {{ lock (this.Goshujin.SyncObject) {{ @interface.{ValueLinkBody.GeneratedAddName}(this.Goshujin); }} }}");
             }
 
             // Journal
@@ -2073,7 +2074,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
         else
         {
-            ssb.AppendLine($"public bool Remove({this.LocalName} x) => x.{ValueLinkBody.GeneratedTryRemoveName}(this);");
+            ssb.AppendLine($"public bool Remove({this.LocalName} x) => (({this.IValueLinkObjectInternal})x).{ValueLinkBody.GeneratedTryRemoveName}(this);");
         }
 
         /*using (var scopeParameter = ssb.ScopeObject("x"))
@@ -2260,8 +2261,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
                     using (var scopeParamter = ssb.ScopeObject("this"))
                     {
-                        ssb.AppendLine($"this.{ValueLinkBody.GeneratedTryRemoveName}(null);");
-                        ssb.AppendLine($"this.{ValueLinkBody.GeneratedAddName}(value);");
+                        ssb.AppendLine($"var @interface = ({this.IValueLinkObjectInternal})this;");
+                        ssb.AppendLine($"@interface.{ValueLinkBody.GeneratedTryRemoveName}(null);");
+                        ssb.AppendLine($"@interface.{ValueLinkBody.GeneratedAddName}(value);");
                     }
                 }
             }

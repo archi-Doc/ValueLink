@@ -53,8 +53,6 @@ public interface IRepeatableObject<TGoshujin, TWriter>
 
     SemaphoreLock WriterSemaphoreInternal { get; }
 
-    void AddToGoshujinInternal(TGoshujin g);
-
     TWriter NewWriterInternal();
 }
 
@@ -66,7 +64,7 @@ public interface IRepeatableObject<TGoshujin, TWriter>
 /// <typeparam name="TGoshujin">The type of goshujin class.</typeparam>
 /// <typeparam name="TWriter">The type of writer class.</typeparam>
 public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
-    where TObject : class, IRepeatableObject<TGoshujin, TWriter>
+    where TObject : class, IRepeatableObject<TGoshujin, TWriter>, IValueLinkObjectInternal<TGoshujin>
     where TGoshujin : RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
     where TWriter : class
 {
