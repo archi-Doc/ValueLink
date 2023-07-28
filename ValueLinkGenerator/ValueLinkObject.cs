@@ -85,6 +85,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     public string SerializeIndexIdentifier = string.Empty;
 
+    public string? IValueLinkObjectInternal;
+
     public string? IRepeatableObject;
 
     public string? RepeatableGoshujin;
@@ -803,6 +805,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             return;
         }
 
+        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.HasLink))
+        {
+            this.IValueLinkObjectInternal = $"{ValueLinkBody.IValueLinkObjectInternal}<{this.LocalName}.{this.ObjectAttribute?.GoshujinClass}>";
+        }
+
         if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatableRead)
         {
             this.IRepeatableObject = $"{ValueLinkBody.IRepeatableObject}<{this.SimpleName}.{this.ObjectAttribute?.GoshujinClass}, {this.SimpleName}.{ValueLinkBody.WriterClassName}>";
@@ -815,6 +822,18 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             interfaceString = " : System.ComponentModel.INotifyPropertyChanged";
         }
 
+        if (this.IValueLinkObjectInternal is not null)
+        {
+            if (string.IsNullOrEmpty(interfaceString))
+            {
+                interfaceString = $" : {this.IValueLinkObjectInternal}";
+            }
+            else
+            {
+                interfaceString += $", {this.IValueLinkObjectInternal}";
+            }
+        }
+
         if (this.IRepeatableObject is not null)
         {
             if (string.IsNullOrEmpty(interfaceString))
@@ -823,7 +842,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             }
             else
             {
-                interfaceString = $", {this.IRepeatableObject}";
+                interfaceString += $", {this.IRepeatableObject}";
             }
         }
 
@@ -955,7 +974,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     {
         var goshujinInstance = this.GoshujinInstanceIdentifier; // goshujin + "Instance";
 
-        using (var enterScope = ssb.ScopeBrace($"internal bool {ValueLinkBody.GeneratedTryRemoveName}({this.ObjectAttribute!.GoshujinClass}? g)"))
+        using (var enterScope = ssb.ScopeBrace($"bool {this.IValueLinkObjectInternal}.{ValueLinkBody.GeneratedTryRemoveName}({this.ObjectAttribute!.GoshujinClass}? g)"))
         using (var scopeParamter = ssb.ScopeObject("this"))
         {
             /*if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSyncObject))
