@@ -43,19 +43,19 @@ public interface IRepeatableObject<TGoshujin, TWriter>
     where TGoshujin : class
     where TWriter : class
 {
+    bool IsObsolete { get; }
+
     TWriter? TryLock();
 
     ValueTask<TWriter?> TryLockAsync(int millisecondsTimeout);
 
     ValueTask<TWriter?> TryLockAsync(int millisecondsTimeout, CancellationToken cancellationToken);
 
+    SemaphoreLock WriterSemaphoreInternal { get; }
+
     void AddToGoshujinInternal(TGoshujin g);
 
-    bool IsObsolete { get; }
-
-    SemaphoreLock WriterSemaphore { get; }
-
-    TWriter NewWriter();
+    TWriter NewWriterInternal();
 }
 
 /// <summary>
@@ -174,7 +174,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
                 }
             }
 
-            if (x.WriterSemaphore.TryFastEnter())
+            /*if (x.WriterSemaphore.TryFastEnter())
             {
                 if (x.IsObsolete)
                 {
@@ -185,17 +185,17 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
                 {
                     return x.NewWriter();
                 }
-            }
+            }*/
 
-            if (await x.WriterSemaphore.EnterAsync(millisecondsTimeout, cancellationToken).ConfigureAwait(false))
+            if (await x.WriterSemaphoreInternal.EnterAsync(millisecondsTimeout, cancellationToken).ConfigureAwait(false))
             {
                 if (x.IsObsolete)
                 {
-                    x.WriterSemaphore.Exit();
+                    x.WriterSemaphoreInternal.Exit();
                 }
                 else
                 {
-                    return x.NewWriter();
+                    return x.NewWriterInternal();
                 }
             }
 

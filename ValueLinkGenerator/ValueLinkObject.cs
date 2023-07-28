@@ -1268,9 +1268,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         ssb.AppendLine($"private Arc.Threading.SemaphoreLock {ValueLinkBody.WriterSemaphoreName} = new();");
 
-        // tempcode
-        ssb.AppendLine($"public Arc.Threading.SemaphoreLock WriterSemaphore => this.{ValueLinkBody.WriterSemaphoreName};");
-        ssb.AppendLine($"public {ValueLinkBody.WriterClassName} NewWriter() => new {ValueLinkBody.WriterClassName}(this);");
+        // Internal
+        ssb.AppendLine($"Arc.Threading.SemaphoreLock {this.IRepeatableObject}.WriterSemaphoreInternal => this.{ValueLinkBody.WriterSemaphoreName};");
+        ssb.AppendLine($"{ValueLinkBody.WriterClassName} {this.IRepeatableObject}.NewWriterInternal() => new {ValueLinkBody.WriterClassName}(this);");
     }
 
     internal void Generate_SetProperty(ScopingStringBuilder ssb, GeneratorInformation info)
