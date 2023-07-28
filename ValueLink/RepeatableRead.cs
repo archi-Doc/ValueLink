@@ -53,7 +53,7 @@ public interface IRepeatableObject<TGoshujin, TWriter>
 
     bool IsObsolete { get; }
 
-    SemaphoreLock2 WriterSemaphore { get; }
+    SemaphoreLock WriterSemaphore { get; }
 
     TWriter NewWriter();
 }

@@ -45,14 +45,14 @@ public class IsolationBenchmark
     {
     }
 
-    [Benchmark]
+    // [Benchmark]
     public IsolationClass? TryGetObject()
     {
         var w = this.goshujin.TryGet(0);
         return w;
     }
 
-    [Benchmark]
+    // [Benchmark]
     public IsolationClass? TryLockObject()
     {
         using (var w = this.goshujin.TryLock(0))
@@ -61,7 +61,7 @@ public class IsolationBenchmark
         }
     }
 
-    [Benchmark]
+    // [Benchmark]
     public IsolationClass? LockAndCommitObject()
     {
         using (var w = this.goshujin.TryLock(0))

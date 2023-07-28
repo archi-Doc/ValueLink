@@ -1266,10 +1266,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             ssb.AppendLine($"else return new {ValueLinkBody.WriterClassName}(this);");
         }
 
-        ssb.AppendLine($"private Arc.Threading.SemaphoreLock2 {ValueLinkBody.WriterSemaphoreName} = new();");
+        ssb.AppendLine($"private Arc.Threading.SemaphoreLock {ValueLinkBody.WriterSemaphoreName} = new();");
 
         // tempcode
-        ssb.AppendLine($"public Arc.Threading.SemaphoreLock2 WriterSemaphore => this.{ValueLinkBody.WriterSemaphoreName};");
+        ssb.AppendLine($"public Arc.Threading.SemaphoreLock WriterSemaphore => this.{ValueLinkBody.WriterSemaphoreName};");
         ssb.AppendLine($"public {ValueLinkBody.WriterClassName} NewWriter() => new {ValueLinkBody.WriterClassName}(this);");
     }
 
