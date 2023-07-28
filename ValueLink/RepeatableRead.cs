@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Arc.Threading;
 
 #pragma warning disable SA1202 // Elements should be ordered by access
 
@@ -44,11 +45,17 @@ public interface IRepeatableObject<TGoshujin, TWriter>
 {
     TWriter? TryLock();
 
-    Task<TWriter?> TryLockAsync(int millisecondsTimeout);
+    ValueTask<TWriter?> TryLockAsync(int millisecondsTimeout);
 
-    Task<TWriter?> TryLockAsync(int millisecondsTimeout, CancellationToken cancellationToken);
+    ValueTask<TWriter?> TryLockAsync(int millisecondsTimeout, CancellationToken cancellationToken);
 
     void AddToGoshujinInternal(TGoshujin g);
+
+    bool IsObsolete { get; }
+
+    SemaphoreLock2 WriterSemaphore { get; }
+
+    TWriter NewWriter();
 }
 
 /// <summary>
@@ -134,9 +141,9 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
         }
     }
 
-    public Task<TWriter?> TryLockAsync(TKey key, int millisecondsTimeout, TryLockMode mode = TryLockMode.Get) => this.TryLockAsync(key, millisecondsTimeout, default, mode);
+    public ValueTask<TWriter?> TryLockAsync(TKey key, int millisecondsTimeout, TryLockMode mode = TryLockMode.Get) => this.TryLockAsync(key, millisecondsTimeout, default, mode);
 
-    public async Task<TWriter?> TryLockAsync(TKey key, int millisecondsTimeout, CancellationToken cancellationToken, TryLockMode mode = TryLockMode.Get)
+    public async ValueTask<TWriter?> TryLockAsync(TKey key, int millisecondsTimeout, CancellationToken cancellationToken, TryLockMode mode = TryLockMode.Get)
     {
         while (true)
         {
@@ -167,10 +174,16 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
                 }
             }
 
-            if (await x.TryLockAsync(millisecondsTimeout, cancellationToken).ConfigureAwait(false) is { } writer)
+            var entered = await x.WriterSemaphore.EnterAsync(millisecondsTimeout, cancellationToken).ConfigureAwait(false);
+            if (entered && !x.IsObsolete)
+            {
+                return x.NewWriter();
+            }
+
+            /*if (await x.TryLockAsync(millisecondsTimeout, cancellationToken).ConfigureAwait(false) is { } writer)
             {
                 return writer;
-            }
+            }*/
         }
     }
 }

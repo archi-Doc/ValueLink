@@ -1253,9 +1253,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             ssb.AppendLine($"return new {ValueLinkBody.WriterClassName}(this);");
         }
 
-        ssb.AppendLine($"public Task<{ValueLinkBody.WriterClassName}?> {ValueLinkBody.TryLockAsyncMethodName}(int millisecondsTimeout) => this.{ValueLinkBody.TryLockAsyncMethodName}(millisecondsTimeout, default);");
+        ssb.AppendLine($"public ValueTask<{ValueLinkBody.WriterClassName}?> {ValueLinkBody.TryLockAsyncMethodName}(int millisecondsTimeout) => this.{ValueLinkBody.TryLockAsyncMethodName}(millisecondsTimeout, default);");
 
-        using (var scopeLock = ssb.ScopeBrace($"public async Task<{ValueLinkBody.WriterClassName}?> {ValueLinkBody.TryLockAsyncMethodName}(int millisecondsTimeout, CancellationToken cancellationToken)"))
+        using (var scopeLock = ssb.ScopeBrace($"public async ValueTask<{ValueLinkBody.WriterClassName}?> {ValueLinkBody.TryLockAsyncMethodName}(int millisecondsTimeout, CancellationToken cancellationToken)"))
         {
             ssb.AppendLine("#if DEBUG", false);
             ssb.AppendLine($"if (Monitor.IsEntered(this.{ValueLinkBody.GeneratedGoshujinLockName})) throw new LockOrderException();");
@@ -1266,7 +1266,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             ssb.AppendLine($"else return new {ValueLinkBody.WriterClassName}(this);");
         }
 
-        ssb.AppendLine($"private Arc.Threading.SemaphoreLock {ValueLinkBody.WriterSemaphoreName} = new();");
+        ssb.AppendLine($"private Arc.Threading.SemaphoreLock2 {ValueLinkBody.WriterSemaphoreName} = new();");
+
+        // tempcode
+        ssb.AppendLine($"public Arc.Threading.SemaphoreLock2 WriterSemaphore => this.{ValueLinkBody.WriterSemaphoreName};");
+        ssb.AppendLine($"public {ValueLinkBody.WriterClassName} NewWriter() => new {ValueLinkBody.WriterClassName}(this);");
     }
 
     internal void Generate_SetProperty(ScopingStringBuilder ssb, GeneratorInformation info)
