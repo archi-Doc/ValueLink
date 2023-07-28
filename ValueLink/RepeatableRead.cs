@@ -174,10 +174,29 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
                 }
             }
 
-            var entered = await x.WriterSemaphore.EnterAsync(millisecondsTimeout, cancellationToken).ConfigureAwait(false);
-            if (entered && !x.IsObsolete)
+            if (x.WriterSemaphore.TryFastEnter())
             {
-                return x.NewWriter();
+                if (x.IsObsolete)
+                {
+                    x.WriterSemaphore.Exit();
+                    continue;
+                }
+                else
+                {
+                    return x.NewWriter();
+                }
+            }
+
+            if (await x.WriterSemaphore.EnterAsync(millisecondsTimeout, cancellationToken).ConfigureAwait(false))
+            {
+                if (x.IsObsolete)
+                {
+                    x.WriterSemaphore.Exit();
+                }
+                else
+                {
+                    return x.NewWriter();
+                }
             }
 
             /*if (await x.TryLockAsync(millisecondsTimeout, cancellationToken).ConfigureAwait(false) is { } writer)
