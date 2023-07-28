@@ -80,8 +80,14 @@ public class IsolationTest
         {
         }
 
+        var b = g.TryGet(1);
         using (var a = g.TryLock(1))
         {
+            if (a is not null)
+            {
+                a.RoomId = 100;
+                a.Commit();
+            }
         }
 
         var r = new RepeatableRoom(2);
@@ -100,8 +106,8 @@ public class IsolationTest
             var booking = room2.Bookings.GetArray();
             if (booking.Length > 0)
             {
-                var b = booking[0];
-                using (var w = b.TryLock())
+                var c = booking[0];
+                using (var w = c.TryLock())
                 {
                     if (w is not null)
                     {
