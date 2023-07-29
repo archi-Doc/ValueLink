@@ -1232,20 +1232,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     {
         ssb.AppendLine();
         ssb.AppendLine($"public bool {ValueLinkBody.IsObsoleteProperty} {{ get; private set; }}");
-        // ssb.AppendLine($"public {ValueLinkBody.ReaderStructName} {ValueLinkBody.GetReaderMethodName} => new {ValueLinkBody.ReaderStructName}(this);");
 
-        ssb.AppendLine($"public ValueTask<{ValueLinkBody.WriterClassName}?> {ValueLinkBody.TryLockAsyncMethodName}(int millisecondsTimeout) => this.{ValueLinkBody.TryLockAsyncMethodName}(millisecondsTimeout, default);");
-
-        using (var scopeLock = ssb.ScopeBrace($"public async ValueTask<{ValueLinkBody.WriterClassName}?> {ValueLinkBody.TryLockAsyncMethodName}(int millisecondsTimeout, CancellationToken cancellationToken)"))
-        {
-            ssb.AppendLine("#if DEBUG", false);
-            ssb.AppendLine($"if (Monitor.IsEntered(this.{ValueLinkBody.GeneratedGoshujinLockName})) throw new LockOrderException();");
-            ssb.AppendLine("#endif", false);
-            ssb.AppendLine($"var entered = await this.{ValueLinkBody.WriterSemaphoreName}.EnterAsync(millisecondsTimeout, cancellationToken).ConfigureAwait(false);");
-            ssb.AppendLine($"if (!entered) return null;");
-            ssb.AppendLine($"else if (this.{ValueLinkBody.IsObsoleteProperty}) {{ this.{ValueLinkBody.WriterSemaphoreName}.Exit(); return null; }}");
-            ssb.AppendLine($"else return new {ValueLinkBody.WriterClassName}(this);");
-        }
+        ssb.AppendLine($"public override {ValueLinkBody.WriterClassName}? {ValueLinkBody.TryLockMethodName}() => (({this.IRepeatableObject})this).{ValueLinkBody.TryLockMethodName}();");
+        ssb.AppendLine($"public ValueTask<{ValueLinkBody.WriterClassName}?> {ValueLinkBody.TryLockAsyncMethodName}() => (({this.IRepeatableObject})this).{ValueLinkBody.TryLockAsyncMethodName}();");
+        ssb.AppendLine($"public ValueTask<{ValueLinkBody.WriterClassName}?> {ValueLinkBody.TryLockAsyncMethodName}(int millisecondsTimeout) => (({this.IRepeatableObject})this).{ValueLinkBody.TryLockAsyncMethodName}(millisecondsTimeout);");
+        ssb.AppendLine($"public ValueTask<{ValueLinkBody.WriterClassName}?> {ValueLinkBody.TryLockAsyncMethodName}(int millisecondsTimeout, CancellationToken cancellationToken) => (({this.IRepeatableObject})this).{ValueLinkBody.TryLockAsyncMethodName}(millisecondsTimeout, cancellationToken);");
 
         ssb.AppendLine($"private Arc.Threading.SemaphoreLock {ValueLinkBody.WriterSemaphoreName} = new();");
 

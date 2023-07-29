@@ -23,7 +23,7 @@ internal partial class ValueClass
     }
 }
 
-    [TinyhandObject]
+[TinyhandObject]
 public partial class GenericClass<T>
 {
     [Key(0)]

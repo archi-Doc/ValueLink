@@ -45,19 +45,13 @@ public interface IRepeatableObject<TGoshujin, TWriter>
 {
     bool IsObsolete { get; }
 
-    // TWriter? TryLock();
-
-    ValueTask<TWriter?> TryLockAsync(int millisecondsTimeout);
-
-    ValueTask<TWriter?> TryLockAsync(int millisecondsTimeout, CancellationToken cancellationToken);
-
     object GoshujinSyncObjectInternal { get; }
 
     SemaphoreLock WriterSemaphoreInternal { get; }
 
     TWriter NewWriterInternal();
 
-    public TWriter? TryLock()
+    public virtual TWriter? TryLock()
     {
 #if DEBUG
         if (Monitor.IsEntered(this.GoshujinSyncObjectInternal))
@@ -74,6 +68,37 @@ public interface IRepeatableObject<TGoshujin, TWriter>
         }
 
         return this.NewWriterInternal();
+    }
+
+    ValueTask<TWriter?> TryLockAsync()
+        => this.TryLockAsync(ValueLinkGlobal.LockTimeout, default);
+
+    ValueTask<TWriter?> TryLockAsync(int millisecondsTimeout)
+        => this.TryLockAsync(millisecondsTimeout, default);
+
+    public async ValueTask<TWriter?> TryLockAsync(int millisecondsTimeout, CancellationToken cancellationToken)
+    {
+#if DEBUG
+        if (Monitor.IsEntered(this.GoshujinSyncObjectInternal))
+        {
+            throw new LockOrderException();
+        }
+#endif
+
+        var entered = await this.WriterSemaphoreInternal.EnterAsync(millisecondsTimeout, cancellationToken).ConfigureAwait(false);
+        if (!entered)
+        {
+            return null;
+        }
+        else if (this.IsObsolete)
+        {
+            this.WriterSemaphoreInternal.Exit();
+            return null;
+        }
+        else
+        {
+            return this.NewWriterInternal();
+        }
     }
 }
 
