@@ -54,7 +54,7 @@ public class IsolationTestList
 
         array.Contains(c).IsTrue();
         array.Contains(c2).IsFalse();
-        c2.IsObsolete.IsTrue();
+        c2.State.Is(RepeatableObjectState.Obsolete);
         array.Contains(c3).IsTrue();
     }
 }

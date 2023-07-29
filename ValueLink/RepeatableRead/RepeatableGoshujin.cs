@@ -143,7 +143,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
 
             if (await x.WriterSemaphoreInternal.EnterAsync(millisecondsTimeout, cancellationToken).ConfigureAwait(false))
             {
-                if (x.IsObsolete)
+                if (x.State.IsInvalid())
                 {
                     x.WriterSemaphoreInternal.Exit();
                 }

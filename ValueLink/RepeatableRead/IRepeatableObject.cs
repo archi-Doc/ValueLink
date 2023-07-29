@@ -15,7 +15,7 @@ namespace ValueLink;
 public interface IRepeatableObject<TWriter>
     where TWriter : class
 {
-    bool IsObsolete { get; }
+    RepeatableObjectState State { get; }
 
     object GoshujinSyncObjectInternal { get; }
 
@@ -33,7 +33,7 @@ public interface IRepeatableObject<TWriter>
 #endif
 
         this.WriterSemaphoreInternal.Enter();
-        if (this.IsObsolete)
+        if (this.State.IsInvalid())
         {
             this.WriterSemaphoreInternal.Exit();
             return null;
@@ -62,7 +62,7 @@ public interface IRepeatableObject<TWriter>
         {
             return null;
         }
-        else if (this.IsObsolete)
+        else if (this.State.IsInvalid())
         {
             this.WriterSemaphoreInternal.Exit();
             return null;

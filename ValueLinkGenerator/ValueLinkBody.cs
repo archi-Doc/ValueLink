@@ -34,7 +34,7 @@ namespace ValueLink.Generator
         public static readonly string TryLockMethodName = "TryLock";
         public static readonly string TryLockAsyncMethodName = "TryLockAsync";
         public static readonly string WriterSemaphoreName = "writerSemaphore";
-        public static readonly string IsObsoleteProperty = "IsObsolete";
+        public static readonly string RepeatableObjectState = "RepeatableObjectState";
         public static readonly string IRepeatableObject = "IRepeatableObject";
         public static readonly string RepeatableGoshujin = "RepeatableGoshujin";
         public static readonly string IValueLinkObjectInternal = "IValueLinkObjectInternal";

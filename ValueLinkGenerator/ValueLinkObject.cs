@@ -1222,7 +1222,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             // Journal
 
-            ssb.AppendLine($"if (this.instance is not null) {{ this.original.{ValueLinkBody.IsObsoleteProperty} = true; this.original = this.instance; }}");
+            ssb.AppendLine($"if (this.instance is not null) {{ this.original.State = {ValueLinkBody.RepeatableObjectState}.Obsolete; this.original = this.instance; }}");
             ssb.AppendLine("this.Rollback();");
             ssb.AppendLine($"return this.original;");
         }
@@ -1231,7 +1231,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     internal void Generate_RepeatableRead_Other(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         ssb.AppendLine();
-        ssb.AppendLine($"public bool {ValueLinkBody.IsObsoleteProperty} {{ get; private set; }}");
+        ssb.AppendLine($"public {ValueLinkBody.RepeatableObjectState} State {{ get; private set; }}");
 
         ssb.AppendLine($"public {ValueLinkBody.WriterClassName}? {ValueLinkBody.TryLockMethodName}() => (({this.IRepeatableObject})this).TryLockInternal();");
         ssb.AppendLine($"public ValueTask<{ValueLinkBody.WriterClassName}?> {ValueLinkBody.TryLockAsyncMethodName}() => (({this.IRepeatableObject})this).TryLockAsyncInternal();");
