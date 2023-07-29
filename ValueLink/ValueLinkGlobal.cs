@@ -7,5 +7,5 @@ namespace ValueLink;
 /// </summary>
 public static class ValueLinkGlobal
 {
-    public static int LockTimeout { get; set; } = 1000;
+    public static int LockTimeout { get; set; } = 1_000;
 }

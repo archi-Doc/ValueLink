@@ -93,6 +93,8 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
         }
     }
 
+    public ValueTask<TWriter?> TryLockAsync(TKey key, TryLockMode mode = TryLockMode.Get) => this.TryLockAsync(key, ValueLinkGlobal.LockTimeout, default, mode);
+
     public ValueTask<TWriter?> TryLockAsync(TKey key, int millisecondsTimeout, TryLockMode mode = TryLockMode.Get) => this.TryLockAsync(key, millisecondsTimeout, default, mode);
 
     public async ValueTask<TWriter?> TryLockAsync(TKey key, int millisecondsTimeout, CancellationToken cancellationToken, TryLockMode mode = TryLockMode.Get)
@@ -149,6 +151,10 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
                 {
                     return x.NewWriterInternal();
                 }
+            }
+            else
+            {// Timeout
+                return default;
             }
 
             /*if (await x.TryLockAsync(millisecondsTimeout, cancellationToken).ConfigureAwait(false) is { } writer)

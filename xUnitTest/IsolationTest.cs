@@ -18,23 +18,6 @@ public partial record SerializableRoom
 }
 
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
-public partial record RepeatableEmpty
-{
-    public RepeatableEmpty()
-    {
-    }
-}
-
-[ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
-public partial record RepeatableList
-{
-    [Link(Type = ChainType.LinkedList, Name = "Main")]
-    public RepeatableList()
-    {
-    }
-}
-
-[ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 public partial record RepeatableRoom
 {
     [Link(Primary = true, Type = ChainType.Ordered, AddValue = false)]
