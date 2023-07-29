@@ -45,15 +45,36 @@ public interface IRepeatableObject<TGoshujin, TWriter>
 {
     bool IsObsolete { get; }
 
-    TWriter? TryLock();
+    // TWriter? TryLock();
 
     ValueTask<TWriter?> TryLockAsync(int millisecondsTimeout);
 
     ValueTask<TWriter?> TryLockAsync(int millisecondsTimeout, CancellationToken cancellationToken);
 
+    object GoshujinSyncObjectInternal { get; }
+
     SemaphoreLock WriterSemaphoreInternal { get; }
 
     TWriter NewWriterInternal();
+
+    public TWriter? TryLock()
+    {
+#if DEBUG
+        if (Monitor.IsEntered(this.GoshujinSyncObjectInternal))
+        {
+            throw new LockOrderException();
+        }
+#endif
+
+        this.WriterSemaphoreInternal.Enter();
+        if (this.IsObsolete)
+        {
+            this.WriterSemaphoreInternal.Exit();
+            return null;
+        }
+
+        return this.NewWriterInternal();
+    }
 }
 
 /// <summary>

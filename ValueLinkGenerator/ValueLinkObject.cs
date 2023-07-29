@@ -1234,16 +1234,6 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         ssb.AppendLine($"public bool {ValueLinkBody.IsObsoleteProperty} {{ get; private set; }}");
         // ssb.AppendLine($"public {ValueLinkBody.ReaderStructName} {ValueLinkBody.GetReaderMethodName} => new {ValueLinkBody.ReaderStructName}(this);");
 
-        using (var scopeLock = ssb.ScopeBrace($"public {ValueLinkBody.WriterClassName}? {ValueLinkBody.TryLockMethodName}()"))
-        {
-            ssb.AppendLine("#if DEBUG", false);
-            ssb.AppendLine($"if (Monitor.IsEntered(this.{ValueLinkBody.GeneratedGoshujinLockName})) throw new LockOrderException();");
-            ssb.AppendLine("#endif", false);
-            ssb.AppendLine($"this.{ValueLinkBody.WriterSemaphoreName}.Enter();");
-            ssb.AppendLine($"if (this.{ValueLinkBody.IsObsoleteProperty}) {{ this.{ValueLinkBody.WriterSemaphoreName}.Exit(); return null; }}");
-            ssb.AppendLine($"return new {ValueLinkBody.WriterClassName}(this);");
-        }
-
         ssb.AppendLine($"public ValueTask<{ValueLinkBody.WriterClassName}?> {ValueLinkBody.TryLockAsyncMethodName}(int millisecondsTimeout) => this.{ValueLinkBody.TryLockAsyncMethodName}(millisecondsTimeout, default);");
 
         using (var scopeLock = ssb.ScopeBrace($"public async ValueTask<{ValueLinkBody.WriterClassName}?> {ValueLinkBody.TryLockAsyncMethodName}(int millisecondsTimeout, CancellationToken cancellationToken)"))
@@ -1260,6 +1250,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         ssb.AppendLine($"private Arc.Threading.SemaphoreLock {ValueLinkBody.WriterSemaphoreName} = new();");
 
         // Internal
+        ssb.AppendLine($"object {this.IRepeatableObject}.GoshujinSyncObjectInternal => this.{ValueLinkBody.GeneratedGoshujinLockName};");
         ssb.AppendLine($"Arc.Threading.SemaphoreLock {this.IRepeatableObject}.WriterSemaphoreInternal => this.{ValueLinkBody.WriterSemaphoreName};");
         ssb.AppendLine($"{ValueLinkBody.WriterClassName} {this.IRepeatableObject}.NewWriterInternal() => new {ValueLinkBody.WriterClassName}(this);");
     }
