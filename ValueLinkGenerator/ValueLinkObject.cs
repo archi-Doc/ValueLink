@@ -31,7 +31,6 @@ public enum ValueLinkObjectFlag
     Checked = 1 << 2,
 
     // Link object
-    HasLink = 1 << 10, // Has valid link (not ChainType.None)
     HasNotify = 1 << 11, // Has AutoNotify
     CanCreateInstance = 1 << 12, // Can create an instance
     GenerateINotifyPropertyChanged = 1 << 13, // Generate INotifyPropertyChanged
@@ -276,11 +275,6 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         {
             foreach (var x in this.Links)
             {
-                if (x.IsValidLink)
-                {
-                    this.ObjectFlag |= ValueLinkObjectFlag.HasLink;
-                }
-
                 if (x.AutoNotify)
                 {
                     this.ObjectFlag |= ValueLinkObjectFlag.HasNotify;
@@ -452,17 +446,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             baseObject = baseObject.BaseObject;
         }
 
-        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.HasLink))
-        {// Check Goshujin Class / Instance
-            // this.CheckKeyword(this.ObjectAttribute!.GoshujinClass, this.Location);
-            this.CheckKeyword(this.ObjectAttribute!.GoshujinInstance, this.Location);
-            this.GoshujinInstanceIdentifier = this.Identifier.GetIdentifier();
-            this.GoshujinFullName = this.FullName + "." + this.ObjectAttribute!.GoshujinClass;
-            /*if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.EnableLock))
-            {// Withdraw lock feature
-                this.GoshujinLockIdentifier = this.Identifier.GetIdentifier();
-            }*/
-        }
+        // Check Goshujin Class / Instance
+        // this.CheckKeyword(this.ObjectAttribute!.GoshujinClass, this.Location);
+        this.CheckKeyword(this.ObjectAttribute!.GoshujinInstance, this.Location);
+        this.GoshujinInstanceIdentifier = this.Identifier.GetIdentifier();
+        this.GoshujinFullName = this.FullName + "." + this.ObjectAttribute!.GoshujinClass;
 
         // Check Links.
         this.NumberOfValidLinks = 0;
@@ -805,42 +793,27 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             return;
         }
 
-        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.HasLink))
+        string interfaceString = string.Empty;
+        if (this.ObjectAttribute is not null)
         {
-            this.IValueLinkObjectInternal = $"{ValueLinkBody.IValueLinkObjectInternal}<{this.LocalName}.{this.ObjectAttribute?.GoshujinClass}>";
-        }
+            this.IValueLinkObjectInternal = $"{ValueLinkBody.IValueLinkObjectInternal}<{this.LocalName}.{this.ObjectAttribute.GoshujinClass}>";
+            interfaceString = " : " + this.IValueLinkObjectInternal;
 
-        if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatableRead)
-        {
-            this.IRepeatableObject = $"{ValueLinkBody.IRepeatableObject}<{this.SimpleName}.{this.ObjectAttribute?.GoshujinClass}, {this.SimpleName}.{ValueLinkBody.WriterClassName}>";
-            this.RepeatableGoshujin = $"{ValueLinkBody.RepeatableGoshujin}<{this.PrimaryLink?.TypeObject.FullName}, {this.SimpleName}, {this.ObjectAttribute?.GoshujinClass}, {ValueLinkBody.WriterClassName}>";
-        }
-
-        var interfaceString = string.Empty;
-        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateINotifyPropertyChanged))
-        {
-            interfaceString = " : System.ComponentModel.INotifyPropertyChanged";
-        }
-
-        if (this.IValueLinkObjectInternal is not null)
-        {
-            if (string.IsNullOrEmpty(interfaceString))
+            if (this.ObjectAttribute.Isolation == IsolationLevel.RepeatableRead)
             {
-                interfaceString = $" : {this.IValueLinkObjectInternal}";
+                this.IRepeatableObject = $"{ValueLinkBody.IRepeatableObject}<{this.SimpleName}.{this.ObjectAttribute.GoshujinClass}, {this.SimpleName}.{ValueLinkBody.WriterClassName}>";
+                if (this.PrimaryLink is not null)
+                {
+                    this.RepeatableGoshujin = $"{ValueLinkBody.RepeatableGoshujin}<{this.PrimaryLink.TypeObject.FullName}, {this.SimpleName}, {this.ObjectAttribute.GoshujinClass}, {ValueLinkBody.WriterClassName}>";
+                }
             }
-            else
-            {
-                interfaceString += $", {this.IValueLinkObjectInternal}";
-            }
-        }
 
-        if (this.IRepeatableObject is not null)
-        {
-            if (string.IsNullOrEmpty(interfaceString))
+            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateINotifyPropertyChanged))
             {
-                interfaceString = $" : {this.IRepeatableObject}";
+                interfaceString += ", System.ComponentModel.INotifyPropertyChanged";
             }
-            else
+
+            if (this.IRepeatableObject is not null)
             {
                 interfaceString += $", {this.IRepeatableObject}";
             }
@@ -881,19 +854,17 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void Generate2(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.HasLink))
-        {// Generate Goshujin
-            this.GenerateGoshujinClass(ssb, info);
-            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddGoshujinProperty))
-            {
-                this.GenerateGoshujinProperty(ssb, info);
-            }
-
-            ssb.AppendLine($"private {this.ObjectAttribute!.GoshujinClass}? {this.GoshujinInstanceIdentifier};");
-            this.Generate_Add(ssb, info);
-            this.Generate_TryRemove(ssb, info);
-            ssb.AppendLine();
+        // Generate Goshujin
+        this.GenerateGoshujinClass(ssb, info);
+        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddGoshujinProperty))
+        {
+            this.GenerateGoshujinProperty(ssb, info);
         }
+
+        ssb.AppendLine($"private {this.ObjectAttribute!.GoshujinClass}? {this.GoshujinInstanceIdentifier};");
+        this.Generate_Add(ssb, info);
+        this.Generate_TryRemove(ssb, info);
+        ssb.AppendLine();
 
         if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateINotifyPropertyChanged))
         {// Generate PropertyChanged
@@ -1588,18 +1559,15 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 this.GenerateGosjujin_Lock(ssb, info);
             }
 
-            if (this.RepeatableGoshujin is not null)
+            if (this.RepeatableGoshujin is not null && this.PrimaryLink is not null)
             {
-                if (this.PrimaryLink is not null)
-                {
-                    ssb.AppendLine($"protected override {this.SimpleName}? FindFirst({this.PrimaryLink.TypeObject.FullName} key) => this.{this.PrimaryLink.ChainName}.FindFirst(key);");
+                ssb.AppendLine($"protected override {this.SimpleName}? FindFirst({this.PrimaryLink.TypeObject.FullName} key) => this.{this.PrimaryLink.ChainName}.FindFirst(key);");
 
-                    using (var scopeNewObject = ssb.ScopeBrace($"protected override {this.SimpleName} NewObject({this.PrimaryLink.TypeObject.FullName} key)"))
-                    {
-                        ssb.AppendLine($"var obj = new {this.SimpleName}();");
-                        ssb.AppendLine($"obj.{this.PrimaryLink.TargetName} = key;");
-                        ssb.AppendLine($"return obj;");
-                    }
+                using (var scopeNewObject = ssb.ScopeBrace($"protected override {this.SimpleName} NewObject({this.PrimaryLink.TypeObject.FullName} key)"))
+                {
+                    ssb.AppendLine($"var obj = new {this.SimpleName}();");
+                    ssb.AppendLine($"obj.{this.PrimaryLink.TargetName} = key;");
+                    ssb.AppendLine($"return obj;");
                 }
             }
         }
