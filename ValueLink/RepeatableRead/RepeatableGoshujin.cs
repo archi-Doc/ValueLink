@@ -5,102 +5,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Arc.Threading;
 
 #pragma warning disable SA1202 // Elements should be ordered by access
 
 namespace ValueLink;
-
-/// <summary>
-/// Specify the behavior of TryLock function to either retrieve an existing object or create a new one if it does not exist.
-/// </summary>
-public enum TryLockMode
-{
-    /// <summary>
-    /// Retrieves the object that matches the specified key and attempts to lock it.<br/>
-    /// If it does not exist, it returns null.
-    /// </summary>
-    Get,
-
-    /// <summary>
-    /// Creates an object with the specified key and attempts to lock it.<br/>
-    /// If it already exists, it returns null.
-    /// </summary>
-    Create,
-
-    /// <summary>
-    /// Retrieves the object that matches the specified key, or creates it if it does not exist, and attempts to lock it.
-    /// </summary>
-    GetOrCreate,
-}
-
-/// <summary>
-/// A base interface for Repeatable reads.
-/// </summary>
-/// <typeparam name="TGoshujin">The type of goshujin class.</typeparam>
-/// <typeparam name="TWriter">The type of writer class.</typeparam>
-public interface IRepeatableObject<TGoshujin, TWriter>
-    where TGoshujin : class
-    where TWriter : class
-{
-    bool IsObsolete { get; }
-
-    object GoshujinSyncObjectInternal { get; }
-
-    SemaphoreLock WriterSemaphoreInternal { get; }
-
-    TWriter NewWriterInternal();
-
-    public virtual TWriter? TryLock()
-    {
-#if DEBUG
-        if (Monitor.IsEntered(this.GoshujinSyncObjectInternal))
-        {
-            throw new LockOrderException();
-        }
-#endif
-
-        this.WriterSemaphoreInternal.Enter();
-        if (this.IsObsolete)
-        {
-            this.WriterSemaphoreInternal.Exit();
-            return null;
-        }
-
-        return this.NewWriterInternal();
-    }
-
-    ValueTask<TWriter?> TryLockAsync()
-        => this.TryLockAsync(ValueLinkGlobal.LockTimeout, default);
-
-    ValueTask<TWriter?> TryLockAsync(int millisecondsTimeout)
-        => this.TryLockAsync(millisecondsTimeout, default);
-
-    public async ValueTask<TWriter?> TryLockAsync(int millisecondsTimeout, CancellationToken cancellationToken)
-    {
-#if DEBUG
-        if (Monitor.IsEntered(this.GoshujinSyncObjectInternal))
-        {
-            throw new LockOrderException();
-        }
-#endif
-
-        var entered = await this.WriterSemaphoreInternal.EnterAsync(millisecondsTimeout, cancellationToken).ConfigureAwait(false);
-        if (!entered)
-        {
-            return null;
-        }
-        else if (this.IsObsolete)
-        {
-            this.WriterSemaphoreInternal.Exit();
-            return null;
-        }
-        else
-        {
-            return this.NewWriterInternal();
-        }
-    }
-}
 
 /// <summary>
 /// A base interface for Repeatable reads.
@@ -110,7 +18,7 @@ public interface IRepeatableObject<TGoshujin, TWriter>
 /// <typeparam name="TGoshujin">The type of goshujin class.</typeparam>
 /// <typeparam name="TWriter">The type of writer class.</typeparam>
 public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
-    where TObject : class, IRepeatableObject<TGoshujin, TWriter>, IValueLinkObjectInternal<TGoshujin>
+    where TObject : class, IRepeatableObject<TWriter>, IValueLinkObjectInternal<TGoshujin>
     where TGoshujin : RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
     where TWriter : class
 {
@@ -178,7 +86,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
                 }
             }
 
-            if (x.TryLock() is { } writer)
+            if (x.TryLockInternal() is { } writer)
             {
                 return writer;
             }

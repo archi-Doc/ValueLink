@@ -801,7 +801,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             if (this.ObjectAttribute.Isolation == IsolationLevel.RepeatableRead)
             {
-                this.IRepeatableObject = $"{ValueLinkBody.IRepeatableObject}<{this.SimpleName}.{this.ObjectAttribute.GoshujinClass}, {this.SimpleName}.{ValueLinkBody.WriterClassName}>";
+                this.IRepeatableObject = $"{ValueLinkBody.IRepeatableObject}<{this.SimpleName}.{ValueLinkBody.WriterClassName}>";
                 if (this.PrimaryLink is not null)
                 {
                     this.RepeatableGoshujin = $"{ValueLinkBody.RepeatableGoshujin}<{this.PrimaryLink.TypeObject.FullName}, {this.SimpleName}, {this.ObjectAttribute.GoshujinClass}, {ValueLinkBody.WriterClassName}>";
@@ -1233,10 +1233,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         ssb.AppendLine();
         ssb.AppendLine($"public bool {ValueLinkBody.IsObsoleteProperty} {{ get; private set; }}");
 
-        ssb.AppendLine($"public override {ValueLinkBody.WriterClassName}? {ValueLinkBody.TryLockMethodName}() => (({this.IRepeatableObject})this).{ValueLinkBody.TryLockMethodName}();");
-        ssb.AppendLine($"public ValueTask<{ValueLinkBody.WriterClassName}?> {ValueLinkBody.TryLockAsyncMethodName}() => (({this.IRepeatableObject})this).{ValueLinkBody.TryLockAsyncMethodName}();");
-        ssb.AppendLine($"public ValueTask<{ValueLinkBody.WriterClassName}?> {ValueLinkBody.TryLockAsyncMethodName}(int millisecondsTimeout) => (({this.IRepeatableObject})this).{ValueLinkBody.TryLockAsyncMethodName}(millisecondsTimeout);");
-        ssb.AppendLine($"public ValueTask<{ValueLinkBody.WriterClassName}?> {ValueLinkBody.TryLockAsyncMethodName}(int millisecondsTimeout, CancellationToken cancellationToken) => (({this.IRepeatableObject})this).{ValueLinkBody.TryLockAsyncMethodName}(millisecondsTimeout, cancellationToken);");
+        ssb.AppendLine($"public {ValueLinkBody.WriterClassName}? {ValueLinkBody.TryLockMethodName}() => (({this.IRepeatableObject})this).TryLockInternal();");
+        ssb.AppendLine($"public ValueTask<{ValueLinkBody.WriterClassName}?> {ValueLinkBody.TryLockAsyncMethodName}() => (({this.IRepeatableObject})this).TryLockAsyncInternal();");
+        ssb.AppendLine($"public ValueTask<{ValueLinkBody.WriterClassName}?> {ValueLinkBody.TryLockAsyncMethodName}(int millisecondsTimeout) => (({this.IRepeatableObject})this).TryLockAsyncInternal(millisecondsTimeout);");
+        ssb.AppendLine($"public ValueTask<{ValueLinkBody.WriterClassName}?> {ValueLinkBody.TryLockAsyncMethodName}(int millisecondsTimeout, CancellationToken cancellationToken) => (({this.IRepeatableObject})this).TryLockAsyncInternal(millisecondsTimeout, cancellationToken);");
 
         ssb.AppendLine($"private Arc.Threading.SemaphoreLock {ValueLinkBody.WriterSemaphoreName} = new();");
 
