@@ -32,19 +32,26 @@ public partial record RepeatableItem
 
     public int Sold { private set; get; }
 
-    public List<string> CustomerList { private set; get; } = new();
+    public List<int> CustomerList { private set; get; } = new();
+
+    public int[] NumberArray { set; get; } = Array.Empty<int>();
 }
 
 public class RepeatableCustomer
 {
-    public RepeatableCustomer(int name)
+    public RepeatableCustomer(int id)
     {
-        this.Name = $"Customer{name.ToString()}";
+        this.Id = id;
+        this.Name = $"Customer{this.Id.ToString()}";
     }
+
+    public int Id { get; private set; }
 
     public string Name { private set; get; } = string.Empty;
 
     public List<int> ItemList { private set; get; } = new();
+
+    public int[] NumberArray { set; get; } = Array.Empty<int>();
 
     public void Task(RepeatableItem.GoshujinClass g, int numberOfItems, int numberToBuy)
     {
@@ -63,7 +70,7 @@ public class RepeatableCustomer
                     Thread.Sleep(10 + id);
 
                     w.Sold++;
-                    w.CustomerList.Add(this.Name);
+                    w.CustomerList.Add(this.Id);
                     w.Commit();
 
                     numberToBuy--;
@@ -80,6 +87,7 @@ public class IsolationTest2
     public void Test1()
     {
         this.Test2(10, 20, 1, 10);
+        this.Test2(20, 20, 10, 10);
     }
 
     private void Test2(int numberOfItems, int max, int numberOfCustomers, int numberToBuy)
@@ -95,7 +103,6 @@ public class IsolationTest2
         {
             var item = new RepeatableItem(i, max);
             var item2 = g.Add(item);
-            g.TryGet(3, )
             item2.IsNotNull();
             item2!.State.IsValid().IsTrue();
             item.State.IsInvalid().IsTrue();
@@ -115,5 +122,40 @@ public class IsolationTest2
         });
 
         // Check
+        foreach (var c in customers)
+        {
+            c.ItemList.Count.Is(numberToBuy);
+            c.NumberArray = new int[numberToBuy];
+            var n = 0;
+            foreach (var i in c.ItemList)
+            {
+                c.NumberArray[i]++;
+                n++;
+            }
+
+            n.Is(numberToBuy);
+        }
+
+        var items = g.GetArray();
+        items.Count().Is(numberOfItems);
+        foreach (var item in items)
+        {
+            item.Sold.Is(item.CustomerList.Count);
+            item.NumberArray = new int[numberOfCustomers];
+
+            var n = 0;
+            foreach (var i in item.CustomerList)
+            {
+                item.NumberArray[i]++;
+                n++;
+            }
+
+            n.Is(item.Sold);
+
+            for (var i = 0; i < numberOfCustomers; i++)
+            {
+                item.NumberArray[i].Is(customers[i].NumberArray[item.Id]);
+            }
+        }
     }
 }
