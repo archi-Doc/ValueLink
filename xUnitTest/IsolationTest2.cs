@@ -67,7 +67,7 @@ public class RepeatableCustomer
 
                 if (w.Sold < w.Max)
                 {
-                    Thread.Sleep(10 + id);
+                    // Thread.Sleep(10 + id);
 
                     w.Sold++;
                     w.CustomerList.Add(this.Id);
@@ -88,6 +88,7 @@ public class IsolationTest2
     {
         this.Test2(10, 20, 1, 10);
         this.Test2(20, 20, 10, 10);
+        this.Test2(100, 100, 100, 80);
     }
 
     private void Test2(int numberOfItems, int max, int numberOfCustomers, int numberToBuy)
@@ -125,7 +126,7 @@ public class IsolationTest2
         foreach (var c in customers)
         {
             c.ItemList.Count.Is(numberToBuy);
-            c.NumberArray = new int[numberToBuy];
+            c.NumberArray = new int[numberOfItems];
             var n = 0;
             foreach (var i in c.ItemList)
             {
