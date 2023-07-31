@@ -557,6 +557,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 {
                     this.Members ??= new();
                     this.Members.Add(member);
+                    if (member.Linkage is not null)
+                    {
+                        member.Linkage.Member = member;
+                    }
                 }
             }
 
@@ -1178,7 +1182,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void Generate_RepeatableRead_Writer_Commit(ScopingStringBuilder ssb)
     {
-        using (var scopeRollback = ssb.ScopeBrace($"public {this.SimpleName} Commit()"))
+        using (var scopeRollback = ssb.ScopeBrace($"public {this.SimpleName}? Commit()"))
         {
             ssb.AppendLine($"var goshujin = this.original.{this.GoshujinInstanceIdentifier};");
             using (var scopeSame = ssb.ScopeBrace($"if (goshujin == this.Goshujin)"))
@@ -1186,6 +1190,13 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 using (var scopeGoshujin = ssb.ScopeBrace($"if (goshujin is not null)"))
                 {
                     var scopeLock = this.ScopeLock(ssb, "goshujin");
+
+                    // Check primary
+                    if (this.PrimaryLink is { } primaryLink &&
+                        primaryLink.Member is { } primaryMember)
+                    {
+                        ssb.AppendLine($"if (this.{primaryMember.ChangedName} && goshujin.{this.PrimaryLink.ChainName}.ContainsKey(this.Instance.{primaryMember.Object.SimpleName})) return default;");
+                    }
 
                     // Replace instance
                     if (this.Links is not null)
@@ -1217,7 +1228,18 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             {
                 ssb.AppendLine($"var @interface = ({this.IValueLinkObjectInternal})this.Instance;");
                 ssb.AppendLine($"if (goshujin is not null) {{ lock (goshujin.SyncObject) {{ @interface.{ValueLinkBody.GeneratedTryRemoveName}(null); }} }}");
-                ssb.AppendLine($"if (this.Goshujin is not null) {{ lock (this.Goshujin.SyncObject) {{ @interface.{ValueLinkBody.GeneratedAddName}(this.Goshujin); }} }}");
+
+                if (this.PrimaryLink is { } primaryLink &&
+                        primaryLink.Member is { } primaryMember)
+                {
+                    ssb.AppendLine($"if (this.Goshujin is not null) {{ lock (this.Goshujin.SyncObject) {{ if (this.Goshujin.{this.PrimaryLink.ChainName}.ContainsKey(this.Instance.{primaryMember.Object.SimpleName})) return default; else @interface.{ValueLinkBody.GeneratedAddName}(this.Goshujin); }} }}");
+                }
+                else
+                {
+                    ssb.AppendLine($"if (this.Goshujin is not null) {{ lock (this.Goshujin.SyncObject) {{ @interface.{ValueLinkBody.GeneratedAddName}(this.Goshujin); }} }}");
+                }
+
+                // ssb.AppendLine($"if (goshujin is not null) {{ lock (goshujin.SyncObject) {{ this.Instance.{this.GoshujinInstanceIdentifier} = goshujin; @interface.{ValueLinkBody.GeneratedTryRemoveName}(null); this.Instance.{this.GoshujinInstanceIdentifier} = this.Goshujin;}} }}");
             }
 
             // Journal
@@ -1547,7 +1569,15 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
                 using (var scopeNewObject = ssb.ScopeBrace($"protected override {this.SimpleName} NewObject({this.PrimaryLink.TypeObject.FullName} key)"))
                 {
-                    ssb.AppendLine($"var obj = new {this.SimpleName}();");
+                    if (this.TinyhandAttribute?.UseServiceProvider == true)
+                    {
+                        ssb.AppendLine($"var obj = ({this.FullName})TinyhandSerializer.GetService(typeof({this.FullName}));");
+                    }
+                    else
+                    {
+                        ssb.AppendLine($"var obj = new {this.SimpleName}();");
+                    }
+
                     ssb.AppendLine($"obj.{this.PrimaryLink.TargetName} = key;");
                     ssb.AppendLine($"return obj;");
                 }
@@ -2214,6 +2244,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                         ssb.AppendLine($"var @interface = ({this.IValueLinkObjectInternal})this;");
                         ssb.AppendLine($"@interface.{ValueLinkBody.GeneratedTryRemoveName}(null);");
                         ssb.AppendLine($"@interface.{ValueLinkBody.GeneratedAddName}(value);");
+                        ssb.AppendLine($"this.{goshujinInstance} = value;");
                     }
                 }
             }

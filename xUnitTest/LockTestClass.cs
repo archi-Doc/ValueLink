@@ -223,7 +223,7 @@ public class LockTest
         tc2.IntArray = new int[] { 1, 2, 3, };
         var r3 = TestAsync(tc2).Result;
 
-        async Task<IsolationTestClass> TestAsync(IsolationTestClass t)
+        async Task<IsolationTestClass?> TestAsync(IsolationTestClass t)
         {
             using (var writer = await t.TryLockAsync(100))
             {

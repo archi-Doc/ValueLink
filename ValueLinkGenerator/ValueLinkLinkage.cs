@@ -199,6 +199,8 @@ public class Linkage
 
     public ValueLinkObject TypeObject { get; private set; } = default!;
 
+    public Member? Member { get; set; }
+
     public bool Primary { get; private set; }
 
     public bool AutoLink { get; private set; }

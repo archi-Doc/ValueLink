@@ -6,11 +6,13 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Arc.Threading;
+using Tinyhand;
 using ValueLink;
 using Xunit;
 
 namespace xUnitTest;
 
+[TinyhandObject(UseServiceProvider = true, ExplicitKeyOnly = true)]
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 public partial record RepeatableItem
 {
@@ -25,6 +27,7 @@ public partial record RepeatableItem
         this.Max = max;
     }
 
+    [Key(0)]
     [Link(Primary = true, Type = ChainType.Ordered)]
     public int Id { private set; get; }
 

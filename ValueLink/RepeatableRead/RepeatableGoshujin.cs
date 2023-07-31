@@ -46,6 +46,14 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
         return array;
     }
 
+    public bool Contains(TKey key)
+    {
+        lock (this.SyncObject)
+        {
+            return this.FindFirst(key) == null;
+        }
+    }
+
     public TObject? TryGet(TKey key)
     {
         lock (this.SyncObject)

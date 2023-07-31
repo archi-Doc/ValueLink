@@ -118,4 +118,64 @@ public class IsolationTest
             }
         }
     }
+
+    [Fact]
+    public void TestNew()
+    {
+        var g1 = new RepeatableRoom.GoshujinClass();
+        var r1 = g1.Add(new RepeatableRoom(1));
+        r1.IsNotNull();
+
+        using (var r = g1.TryLock(1))
+        {
+            r.IsNotNull();
+        }
+
+        using (var r = g1.TryLock(1, TryLockMode.GetOrCreate))
+        {
+            r.IsNotNull();
+        }
+
+        using (var r = g1.TryLock(1, TryLockMode.Create))
+        {
+            r.IsNull();
+        }
+
+        var rr = new RepeatableRoom(2);
+        var r2 = g1.Add(rr)!;
+        r2.IsNotNull();
+
+        // Id 2 -> 1
+        using (var w = r2.TryLock())
+        {
+            w.IsNotNull();
+            if (w is not null)
+            {
+                
+                w.RoomId = 1;
+                rr = w.Commit();
+                rr.IsNull();
+            }
+        }
+
+        // G1 -> G2
+        var g2 = new RepeatableRoom.GoshujinClass();
+        rr = g2.Add(r1!);
+        rr.IsNotNull();
+        g1.Count.Is(1);
+        g2.Count.Is(1);
+
+        r1 = g1.Add(new RepeatableRoom(1));
+        g1.Count.Is(2);
+        using (var w = g2.TryLock(1))
+        {
+            w.IsNotNull();
+            if (w is not null)
+            {
+                w.Goshujin = g1;
+                rr = w.Commit();
+                rr.IsNull();
+            }
+        }
+    }
 }
