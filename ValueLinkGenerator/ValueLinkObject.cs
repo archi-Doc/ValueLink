@@ -1738,7 +1738,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 return;
             }
 
-            // var lockScope = this.ScopeLock(ssb);
+            ssb.AppendLine("var number = 0;");
+            ssb.AppendLine($"{this.LocalName}[] array;");
+            var lockScope = this.ScopeLock(ssb, ssb.FullObject);
 
             var primaryLink = this.Links.FirstOrDefault(x => x.Primary);
             if (primaryLink != null)
@@ -1751,17 +1753,39 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 this.GenerateGoshujin_TinyhandSerialize_SetIndex(ssb, info);
             }
 
-            this.GenerateGoshujin_TinyhandSerialize_ArrayAndChains(ssb, info);
+            // Chains/Objects
+            ssb.AppendLine("writer.WriteArrayHeader(2);");
 
-            // lockScope?.Dispose();
+            // Chains
+            ssb.AppendLine();
+            ssb.AppendLine($"writer.WriteMapHeader({this.NumberOfValidLinks});");
+            foreach (var x in this.Links!.Where(x => x.IsValidLink))
+            {
+                ssb.AppendLine($"writer.WriteString(\"{x.ChainName}\"u8);");
+                ssb.AppendLine($"writer.WriteArrayHeader({ssb.FullObject}.{x.ChainName}.Count);");
+                using (var scopeFor2 = ssb.ScopeBrace($"foreach (var x in {ssb.FullObject}.{x.ChainName})"))
+                {
+                    ssb.AppendLine($"writer.Write(x.{this.SerializeIndexIdentifier});");
+                }
+            }
+
+            lockScope?.Dispose();
+            ssb.AppendLine();
+
+            // Objects
+            ssb.AppendLine("writer.WriteArrayHeader(number);");
+            ssb.AppendLine($"var formatter = options.Resolver.GetFormatter<{this.LocalName}>();");
+            using (var scopeFor = ssb.ScopeBrace("foreach (var x in array)"))
+            {
+                ssb.AppendLine("formatter.Serialize(ref writer, x, options);");
+            }
         }
     }
 
     internal void GenerateGoshujin_TinyhandSerialize_PrimaryIndex(ScopingStringBuilder ssb, GeneratorInformation info, Linkage link)
     {
         ssb.AppendLine($"var max = {ssb.FullObject}.{link.ChainName}.Count;");
-        ssb.AppendLine("var number = 0;");
-        ssb.AppendLine($"var array = new {this.LocalName}[max];");
+        ssb.AppendLine($"array = new {this.LocalName}[max];");
 
         using (var scopeFor = ssb.ScopeBrace($"foreach (var x in {ssb.FullObject}.{link.ChainName})"))
         {
@@ -1790,8 +1814,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGoshujin_TinyhandSerialize_SetIndex(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        ssb.AppendLine($"var array = new {this.LocalName}[max];");
-        ssb.AppendLine("var number = 0;");
+        ssb.AppendLine($"array = new {this.LocalName}[max];");
 
         foreach (var x in this.Links!.Where(x => x.IsValidLink))
         {
@@ -1812,33 +1835,6 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
 
         ssb.AppendLine();
-    }
-
-    internal void GenerateGoshujin_TinyhandSerialize_ArrayAndChains(ScopingStringBuilder ssb, GeneratorInformation info)
-    {
-        // array header
-        ssb.AppendLine("writer.WriteArrayHeader(2);");
-
-        // array
-        ssb.AppendLine("writer.WriteArrayHeader(number);");
-        ssb.AppendLine($"var formatter = options.Resolver.GetFormatter<{this.LocalName}>();");
-        using (var scopeFor = ssb.ScopeBrace("foreach (var x in array)"))
-        {
-            ssb.AppendLine("formatter.Serialize(ref writer, x, options);");
-        }
-
-        // chains
-        ssb.AppendLine();
-        ssb.AppendLine($"writer.WriteMapHeader({this.NumberOfValidLinks});");
-        foreach (var x in this.Links!.Where(x => x.IsValidLink))
-        {
-            ssb.AppendLine($"writer.WriteString(\"{x.ChainName}\"u8);");
-            ssb.AppendLine($"writer.WriteArrayHeader({ssb.FullObject}.{x.ChainName}.Count);");
-            using (var scopeFor2 = ssb.ScopeBrace($"foreach (var x in {ssb.FullObject}.{x.ChainName})"))
-            {
-                ssb.AppendLine($"writer.Write(x.{this.SerializeIndexIdentifier});");
-            }
-        }
     }
 
     internal void GenerateGoshujin_TinyhandDeserialize(ScopingStringBuilder ssb, GeneratorInformation info)
@@ -1862,12 +1858,16 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 return;
             }
 
-            // length
+            // Length (Chains/Objects)
             ssb.AppendLine("var length = reader.ReadArrayHeader();");
             ssb.AppendLine("if (length < 2) return;");
             ssb.AppendLine();
 
-            // max, array, formatter
+            // Skip chains
+            ssb.AppendLine("var chainsReader = reader.Fork();");
+            ssb.AppendLine("reader.Skip();");
+
+            // Objects: max, array, formatter
             ssb.AppendLine("var max = reader.ReadArrayHeader();");
             ssb.AppendLine($"var array = new {this.LocalName}[max];");
             using (var security = ssb.ScopeSecurityDepth())
@@ -1882,7 +1882,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             ssb.RestoreSecurityDepth();
 
-            // readflag
+            // Read flag
             if (this.Links != null)
             {
                 ssb.AppendLine();
@@ -1892,8 +1892,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 }
             }
 
-            // map, chains
+            // Chains
             ssb.AppendLine();
+            ssb.AppendLine("reader = chainsReader;");
             ssb.AppendLine("var numberOfData = reader.ReadMapHeader2();");
             using (var loop = ssb.ScopeBrace("while (numberOfData-- > 0)"))
             {
