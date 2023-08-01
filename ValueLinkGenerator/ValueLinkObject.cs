@@ -693,13 +693,13 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             ssb.AppendLine($"read{link.ChainName} = true;"); // readflag
         }
 
-        ssb.AppendLine("var len = reader.ReadArrayHeader();");
+        ssb.AppendLine("var len = chainsReader.ReadArrayHeader();");
         ssb.AppendLine($"{ssb.FullObject}.{link.ChainName}.Clear();");
         var prevObject = ssb.FullObject;
         using (var scopeParameter = ssb.ScopeFullObject("x"))
         using (var scopeFor = ssb.ScopeBrace("for (var n = 0; n < len; n++)"))
         {
-            ssb.AppendLine("var i = reader.ReadInt32();");
+            ssb.AppendLine("var i = chainsReader.ReadInt32();");
             ssb.AppendLine("if (i >= max) throw new IndexOutOfRangeException();");
             ssb.AppendLine("var x = array[i];");
             obj.Generate_AddLink(ssb, (GeneratorInformation)info!, link, prevObject);
@@ -1894,14 +1894,14 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             // Chains
             ssb.AppendLine();
-            ssb.AppendLine("reader = chainsReader;");
-            ssb.AppendLine("var numberOfData = reader.ReadMapHeader2();");
+            // ssb.AppendLine("reader = chainsReader;"); // reader -> chainsReader
+            ssb.AppendLine("var numberOfData = chainsReader.ReadMapHeader2();");
             using (var loop = ssb.ScopeBrace("while (numberOfData-- > 0)"))
             {
                 this.DeserializeChainAutomata.Generate(ssb, info);
             }
 
-            // readflag
+            // Read flag
             if (this.Links != null)
             {// autolink unread chains.
                 foreach (var x in this.Links.Where(x => x.IsValidLink && x.AutoLink))
