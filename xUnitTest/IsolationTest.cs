@@ -131,6 +131,11 @@ public class IsolationTest
             r.IsNotNull();
         }
 
+        using (var r = g1.TryLock(1))
+        {// Empty commit
+            r!.Commit().Is(r1);
+        }
+
         using (var r = g1.TryLock(1, TryLockMode.GetOrCreate))
         {
             r.IsNotNull();

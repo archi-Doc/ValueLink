@@ -1084,7 +1084,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             using (var scopeConstructor = ssb.ScopeBrace($"public {ValueLinkBody.WriterClassName}({this.SimpleName} instance)"))
             {
                 ssb.AppendLine("this.original = instance;");
-                ssb.AppendLine($"this.{this.ObjectAttribute!.GoshujinInstance} = instance.{this.ObjectAttribute!.GoshujinInstance};");
+                // ssb.AppendLine($"this.{this.ObjectAttribute!.GoshujinInstance} = instance.{this.ObjectAttribute!.GoshujinInstance};");
             }
 
             ssb.AppendLine();
@@ -1123,7 +1123,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 ssb.AppendLine($"this.original.{ValueLinkBody.WriterSemaphoreName}.Exit();");
             }
 
-            ssb.AppendLine($"public {this.ObjectAttribute!.GoshujinClass}? {this.ObjectAttribute!.GoshujinInstance} {{ get; set;}}");
+            // ssb.AppendLine($"public {this.ObjectAttribute!.GoshujinClass}? {this.ObjectAttribute!.GoshujinInstance} {{ get; set; }}");
+            ssb.AppendLine($"public {this.ObjectAttribute!.GoshujinClass}? {this.ObjectAttribute!.GoshujinInstance} {{ get => this.Instance.{this.GoshujinInstanceIdentifier} ; set => this.Instance.{this.GoshujinInstanceIdentifier} = value; }}");
 
             if (this.Members is not null)
             {
@@ -1149,6 +1150,12 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     {
         using (var scopeRollback = ssb.ScopeBrace($"public {this.SimpleName}? Commit()"))
         {
+            using (var scopeEmptyCommit = ssb.ScopeBrace("if (this.instance is null)"))
+            {
+                ssb.AppendLine("this.original.State = RepeatableObjectState.Valid;");
+                ssb.AppendLine("return this.original;");
+            }
+
             ssb.AppendLine($"var goshujin = this.original.{this.GoshujinInstanceIdentifier};");
             using (var scopeSame = ssb.ScopeBrace($"if (goshujin == this.Goshujin)"))
             {
@@ -1160,7 +1167,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     if (this.PrimaryLink is { } primaryLink &&
                         primaryLink.Member is { } primaryMember)
                     {
-                        ssb.AppendLine($"if (this.{primaryMember.ChangedName} && goshujin.{this.PrimaryLink.ChainName}.ContainsKey(this.Instance.{primaryMember.Object.SimpleName})) return default;");
+                        ssb.AppendLine($"if (this.{primaryMember.ChangedName} && goshujin.{this.PrimaryLink.ChainName}.ContainsKey(this.instance.{primaryMember.Object.SimpleName})) return default;");
                     }
 
                     // Replace instance
@@ -1168,7 +1175,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     {
                         foreach (var x in this.Links)
                         {
-                            ssb.AppendLine($"goshujin.{x.ChainName}.UnsafeReplaceInstance(this.original, this.Instance);");
+                            ssb.AppendLine($"goshujin.{x.ChainName}.UnsafeReplaceInstance(this.original, this.instance);");
                         }
                     }
 
@@ -1179,7 +1186,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                         {
                             if (x.ChangedName is not null)
                             {
-                                ssb.AppendLine($"if (this.{x.ChangedName}) goshujin.{x.Linkage!.ChainName}.Add(this.Instance.{x.Object.SimpleName}, this.Instance);");
+                                ssb.AppendLine($"if (this.{x.ChangedName}) goshujin.{x.Linkage!.ChainName}.Add(this.instance.{x.Object.SimpleName}, this.instance);");
                                 // ssb.AppendLine($"this.{x.ChangedName} = false;");
                             }
                         }
@@ -1191,7 +1198,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             using (var scopeDifferent = ssb.ScopeBrace("else"))
             {
-                // ssb.AppendLine($"var @interface = ({this.IValueLinkObjectInternal})this.Instance;");
+                // ssb.AppendLine($"var @interface = ({this.IValueLinkObjectInternal})this.instance;");
 
                 using (var scopeGoshujin = ssb.ScopeBrace("if (this.Goshujin is not null)"))
                 {
@@ -1200,7 +1207,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                         if (this.PrimaryLink is { } primaryLink &&
                         primaryLink.Member is { } primaryMember)
                         {
-                            ssb.AppendLine($"if (this.Goshujin.{this.PrimaryLink.ChainName}.ContainsKey(this.Instance.{primaryMember.Object.SimpleName})) return default;");
+                            ssb.AppendLine($"if (this.Goshujin.{this.PrimaryLink.ChainName}.ContainsKey(this.instance.{primaryMember.Object.SimpleName})) return default;");
                         }
 
                         if (this.Links is not null)
@@ -1209,12 +1216,12 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                             {
                                 if (!string.IsNullOrEmpty(link.LinkName))
                                 {
-                                    ssb.AppendLine($"this.Instance.{link.LinkName} = default;");
+                                    ssb.AppendLine($"this.instance.{link.LinkName} = default;");
                                 }
                             }
                         }
 
-                        ssb.AppendLine($"(({this.IValueLinkObjectInternal})this.Instance).{ValueLinkBody.GeneratedAddName}(this.Goshujin);");
+                        ssb.AppendLine($"(({this.IValueLinkObjectInternal})this.instance).{ValueLinkBody.GeneratedAddName}(this.Goshujin);");
                     }
                 }
 
@@ -1223,7 +1230,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             // Journal
 
-            ssb.AppendLine($"if (this.instance is not null) {{ this.original.State = {ValueLinkBody.RepeatableObjectState}.Obsolete; this.original = this.instance; this.instance.State = RepeatableObjectState.Valid; }}");
+            ssb.AppendLine($"this.original.State = {ValueLinkBody.RepeatableObjectState}.Obsolete;");
+            ssb.AppendLine("this.original = this.instance;");
+            ssb.AppendLine("this.instance.State = RepeatableObjectState.Valid;");
             ssb.AppendLine("this.Rollback();");
             ssb.AppendLine($"return this.original;");
         }
