@@ -80,7 +80,7 @@ internal class Automata<TObj, TMember>
     public void Generate(ScopingStringBuilder ssb, object? info)
     {
         ssb.AppendLine("ulong key;");
-        ssb.AppendLine("var utf8 = reader.ReadStringSpan();");
+        ssb.AppendLine("var utf8 = chainsReader.ReadStringSpan();");
         using (var c = ssb.ScopeBrace("if (utf8.Length == 0)"))
         {
             ssb.AppendLine("goto SkipLabel;");
@@ -92,7 +92,7 @@ internal class Automata<TObj, TMember>
 
         ssb.AppendLine("continue;");
         ssb.AppendLine("SkipLabel:", false);
-        ssb.AppendLine("reader.Skip();");
+        ssb.AppendLine("chainsReader.Skip();");
     }
 
     private void GenerateCore(ScopingStringBuilder ssb, object? info, Node? node = null)
