@@ -1860,7 +1860,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             // Length (Chains/Objects)
             ssb.AppendLine("var length = reader.ReadArrayHeader();");
-            ssb.AppendLine("if (length < 2) return;");
+            ssb.AppendLine("if (length < 2) throw new TinyhandException(\"ValueLink\");");
             ssb.AppendLine();
 
             // Skip chains
