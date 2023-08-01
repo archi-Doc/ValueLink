@@ -177,5 +177,20 @@ public class IsolationTest
                 rr.IsNull();
             }
         }
+
+        using (var w = g2.TryLock(10, TryLockMode.Create))
+        {
+            w!.Commit();
+        }
+
+        rr = g2.TryGet(10);
+        rr.IsNotNull();
+
+        using (var w = g2.TryLock(11, TryLockMode.Create))
+        {
+        }
+
+        rr = g2.TryGet(11);
+        rr.IsNull();
     }
 }

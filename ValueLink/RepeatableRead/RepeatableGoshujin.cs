@@ -65,9 +65,9 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
 
     public TWriter? TryLock(TKey key, TryLockMode mode = TryLockMode.Get)
     {
+        TObject? x = default;
         while (true)
         {
-            TObject? x = default;
             lock (this.SyncObject)
             {
                 x = this.FindFirst(key);
@@ -81,6 +81,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
                     {// Create, GetOrCreate
                         x = this.NewObject(key);
                         x.AddToGoshujinInternal((TGoshujin)this);
+                        goto Created;
                     }
                 }
                 else
@@ -99,6 +100,10 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
                 return writer;
             }
         }
+
+Created:
+        x.WriterSemaphoreInternal.Enter();
+        return x.NewWriterInternal();
     }
 
     public ValueTask<TWriter?> TryLockAsync(TKey key, TryLockMode mode = TryLockMode.Get) => this.TryLockAsync(key, ValueLinkGlobal.LockTimeout, default, mode);
@@ -107,9 +112,9 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
 
     public async ValueTask<TWriter?> TryLockAsync(TKey key, int millisecondsTimeout, CancellationToken cancellationToken, TryLockMode mode = TryLockMode.Get)
     {
+        TObject? x = default;
         while (true)
         {
-            TObject? x = default;
             lock (this.SyncObject)
             {
                 x = this.FindFirst(key);
@@ -123,6 +128,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
                     {// Create, GetOrCreate
                         x = this.NewObject(key);
                         x.AddToGoshujinInternal((TGoshujin)this);
+                        goto Created;
                     }
                 }
                 else
@@ -135,19 +141,6 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
                     // Get, GetOrCreate
                 }
             }
-
-            /*if (x.WriterSemaphore.TryFastEnter())
-            {
-                if (x.IsObsolete)
-                {
-                    x.WriterSemaphore.Exit();
-                    continue;
-                }
-                else
-                {
-                    return x.NewWriter();
-                }
-            }*/
 
             if (await x.WriterSemaphoreInternal.EnterAsync(millisecondsTimeout, cancellationToken).ConfigureAwait(false))
             {
@@ -170,5 +163,9 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
                 return writer;
             }*/
         }
+
+Created:
+        x.WriterSemaphoreInternal.Enter();
+        return x.NewWriterInternal();
     }
 }
