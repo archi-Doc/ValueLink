@@ -17,9 +17,13 @@ internal partial class ValueClass
     [Key(1, AddProperty = "Name")]
     [Link(Type = ChainType.Ordered, Accessibility = ValueLinkAccessibility.Public)]
     private string name = string.Empty;
+
+    public class Maid : ValueClass
+    {
+    }
 }
 
-    [TinyhandObject]
+[TinyhandObject]
 public partial class GenericClass<T>
 {
     [Key(0)]

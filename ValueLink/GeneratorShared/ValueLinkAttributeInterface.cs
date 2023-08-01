@@ -7,6 +7,29 @@ using Arc.Collections;
 namespace ValueLink;
 
 /// <summary>
+/// Specifies the isolation level of each data.
+/// </summary>
+public enum IsolationLevel
+{
+    /// <summary>
+    /// There is no implementation for isolation.
+    /// </summary>
+    None,
+
+    /// <summary>
+    /// Lock-based concurrency control.<br/>
+    /// lock (goshujin.SyncObject).
+    /// </summary>
+    Serializable,
+
+    /// <summary>
+    /// Same data (primitive types) is guaranteed to be read during the transaction.<br/>
+    /// The class must be a record type to specify this level.
+    /// </summary>
+    RepeatableRead,
+}
+
+/// <summary>
 /// Specifies the type of chain that represents the relationship between values.
 /// </summary>
 public enum ChainType
@@ -105,9 +128,9 @@ public sealed class ValueLinkObjectAttribute : Attribute
     public string ExplicitPropertyChanged { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets a value indicating whether to implement an exclusive access feature to the goshujin class.
+    /// Gets or sets a value indicating the isolation level to be implemented in the goshujin class.
     /// </summary>
-    public bool Lock { get; set; } = false;
+    public IsolationLevel Isolation { get; set; } = IsolationLevel.None;
 
     public ValueLinkObjectAttribute()
     {
@@ -154,9 +177,9 @@ public sealed class LinkAttribute : Attribute
     public ValueLinkAccessibility Accessibility { get; set; } = ValueLinkAccessibility.PublicGetter;
 
     /// <summary>
-    /// Gets or sets a value indicating whether or not to create a value property from the target member [the default is <see langword="false"/>].
+    /// Gets or sets a value indicating whether or not to create a value property from the target member [the default is <see langword="true"/>].
     /// </summary>
-    public bool NoValue { get; set; } = false;
+    public bool AddValue { get; set; } = true;
 
     public LinkAttribute()
     {

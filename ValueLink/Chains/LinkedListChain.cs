@@ -100,6 +100,20 @@ namespace ValueLink
             }
         }
 
+        public void UnsafeReplaceInstance(T previousInstance, T newInstance)
+        {
+            if (this.objectToGoshujin(previousInstance) != this.goshujin)
+            {// Check Goshujin
+                throw new UnmatchedGoshujinException();
+            }
+
+            ref Link link = ref this.objectToLink(previousInstance);
+            if (link.Node != null)
+            {
+                link.Node.UnsafeChangeValue(newInstance);
+            }
+        }
+
         public int Count => this.chain.Count;
 
         /// <summary>

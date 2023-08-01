@@ -3,8 +3,9 @@
 namespace ValueLink;
 
 /// <summary>
-/// A base interface for Goshujin (Owner class).
+/// ValueLink Global variables.
 /// </summary>
-public interface IGoshujin
+public static class ValueLinkGlobal
 {
+    public static int LockTimeout { get; set; } = 1_000;
 }

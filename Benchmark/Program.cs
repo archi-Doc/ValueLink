@@ -21,10 +21,12 @@ namespace Benchmark
 
         public static void Main(string[] args)
         {
-            DebugRun<Serializer.SerializerBenchmark>();
+            DebugRun<IsolationBenchmark>();
 
             var switcher = new BenchmarkSwitcher(new[]
             {
+                typeof(IsolationBenchmark),
+                typeof(CloneClassBenchmark),
                 typeof(Serializer.SerializerBenchmark),
                 typeof(H2HBenchmark),
                 typeof(Draft.DraftBenchmark),

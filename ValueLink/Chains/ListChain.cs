@@ -131,6 +131,20 @@ namespace ValueLink
             return false;
         }
 
+        public void UnsafeReplaceInstance(T previousInstance, T newInstance)
+        {
+            if (this.objectToGoshujin(previousInstance) != this.goshujin)
+            {// Check Goshujin
+                throw new UnmatchedGoshujinException();
+            }
+
+            var index = this.chain.IndexOf(previousInstance);
+            if (index >= 0)
+            {
+                this.chain[index] = newInstance;
+            }
+        }
+
         #endregion
 
         #region IList

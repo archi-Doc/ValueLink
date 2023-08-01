@@ -26,8 +26,18 @@ namespace ValueLink.Generator
         public static readonly string AddedMethodName = "Added"; // void Link name + AddedMethodName()
         public static readonly string RemovedMethodName = "Removed"; // void Link name + RemovedMethodName()
         public static readonly string GeneratedIdentifierName = "__gen_cl_identifier__";
-        public static readonly string GeneratedEnterName = "__gen_cl_enter__";
+        public static readonly string GeneratedAddName = "AddToGoshujinInternal";
+        public static readonly string GeneratedTryRemoveName = "RemoveFromGoshujinInternal";
         public static readonly string GeneratedNullLockName = "__gen_cl_null_lock__";
+        public static readonly string GeneratedGoshujinLockName = "__gen_cl_gosh_lock__";
+        public static readonly string WriterClassName = "WriterClass";
+        public static readonly string TryLockMethodName = "TryLock";
+        public static readonly string TryLockAsyncMethodName = "TryLockAsync";
+        public static readonly string WriterSemaphoreName = "writerSemaphore";
+        public static readonly string RepeatableObjectState = "RepeatableObjectState";
+        public static readonly string IRepeatableObject = "IRepeatableObject";
+        public static readonly string RepeatableGoshujin = "RepeatableGoshujin";
+        public static readonly string IValueLinkObjectInternal = "IValueLinkObjectInternal";
 
         public static readonly DiagnosticDescriptor Error_NotPartial = new DiagnosticDescriptor(
             id: "CLG001", title: "Not a partial class/struct", messageFormat: "ValueLinkObject '{0}' is not a partial class/struct",
@@ -120,6 +130,18 @@ namespace ValueLink.Generator
         public static readonly DiagnosticDescriptor Error_NoPrimaryLink = new DiagnosticDescriptor(
             id: "CLG023", title: "No primary link", messageFormat: "Primary Link of ChainType.Ordered or ChainType.Unordered is required if journaling is enabled",
             category: "ValueLinkGenerator", DiagnosticSeverity.Warning, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Error_MustBeRecord = new DiagnosticDescriptor(
+            id: "CLG024", title: "No primary link", messageFormat: "The target must be a record class when the isolation level is set to RepeatableRead",
+            category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Error_KeywordUsed2 = new DiagnosticDescriptor(
+            id: "CLG025", title: "Keyword used", messageFormat: "Keyword '{0}' is reserved for source generator.'",
+            category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Error_NoDefaultConstructor = new DiagnosticDescriptor(
+            id: "CLG026", title: "No default constructor", messageFormat: "'{0}' must have a default constructor when the isolation level is repeatable read..'",
+            category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public ValueLinkBody(GeneratorExecutionContext context)
             : base(context)
@@ -228,6 +250,8 @@ namespace ValueLink.Generator
             ssb.AddUsing("System.Collections.Generic");
             ssb.AddUsing("System.Diagnostics.CodeAnalysis");
             ssb.AddUsing("System.Runtime.CompilerServices");
+            ssb.AddUsing("System.Threading");
+            ssb.AddUsing("System.Threading.Tasks");
             ssb.AddUsing("Arc.Collections");
             ssb.AddUsing("ValueLink");
             if (tinyhandFlag)
