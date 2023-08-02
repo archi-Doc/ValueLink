@@ -179,3 +179,37 @@ public partial class AdditionalMethodClass
         TotalAge -= this.age;
     }
 }
+
+// An example of an object with the IsolationLevel set to RepeatableRead.
+[TinyhandObject]
+[ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
+public partial record RepeatableData
+{
+    public RepeatableData()
+    {// Default constructor is required.
+    }
+
+    public RepeatableData(int id)
+    {
+        this.Id = id;
+    }
+
+    [Key(0)]
+    [Link(Primary = true, Unique = true, Type = ChainType.Ordered)]
+    public int Id { get; private set; }
+
+    [IgnoreMember]
+    public List<int> IntList { get; private set; } = new();
+
+    public static void Test()
+    {
+        var g = new RepeatableData.GoshujinClass(); // Create a goshujin.
+
+        g.Add(new RepeatableData(0)); // Adds an object with id 0.
+
+        using (var w = g.TryLock(1, TryLockMode.Create))
+        {// Alternative: adds an object with id 1.
+            w?.Commit(); // Commit the change.
+        }
+    }
+}

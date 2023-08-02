@@ -42,7 +42,7 @@ public partial record RepeatableRoom
         [Link(Primary = true, Unique = true, Type = ChainType.Ordered)]
         public DateTime StartTime { get; private set; }
 
-        [Link(Unique = true, Type = ChainType.LinkedList)]
+        [Link(Unique = true, Type = ChainType.Unordered)]
         public DateTime EndTime { get; private set; }
 
         public int UserId { get; private set; }

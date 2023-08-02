@@ -46,6 +46,18 @@ public class Linkage
             }
         }
 
+        if (linkage.Unique)
+        {
+            if (linkage.Type == ChainType.Ordered || linkage.Type == ChainType.Unordered)
+            {
+            }
+            else
+            {
+                obj.Body.AddDiagnostic(ValueLinkBody.Error_UniqueLinkType, attribute.Location);
+                return null;
+            }
+        }
+
         if (linkAttribute.TargetMember != string.Empty)
         {// Check target member
             var target = parent.GetMembers(VisceralTarget.FieldProperty).FirstOrDefault(x => x.SimpleName == linkAttribute.TargetMember);

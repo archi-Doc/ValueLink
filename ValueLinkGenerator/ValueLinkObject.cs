@@ -427,8 +427,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 parent = parent.ContainingObject;
             }
 
-            if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatableRead)
-            {// Default constructor
+            if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatableRead &&
+                this.TinyhandAttribute?.UseServiceProvider != true)
+            {// Default constructor is required
                 if (this.GetMembers(VisceralTarget.Method).Any(a => a.Method_IsConstructor && a.Method_Parameters.Length == 0) != true)
                 {
                     this.Body.ReportDiagnostic(ValueLinkBody.Error_NoDefaultConstructor, this.Location, this.FullName);
