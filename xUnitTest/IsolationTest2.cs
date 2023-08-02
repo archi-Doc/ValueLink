@@ -28,7 +28,7 @@ public partial record RepeatableItem
     }
 
     [Key(0)]
-    [Link(Primary = true, Type = ChainType.Ordered)]
+    [Link(Primary = true, Unique = true, Type = ChainType.Ordered)]
     public int Id { private set; get; }
 
     public int Max { private set; get; }

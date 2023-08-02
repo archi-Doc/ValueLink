@@ -136,7 +136,7 @@ public partial record IsolationTestClass
     }
 
     [Key(0)]
-    [Link(Primary = true, Type = ChainType.Ordered)]
+    [Link(Primary = true, Unique = true, Type = ChainType.Ordered)]
     private int id;
 
     private string name = string.Empty;

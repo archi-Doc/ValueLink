@@ -151,6 +151,12 @@ public sealed class LinkAttribute : Attribute
     public bool Primary { get; set; } = false;
 
     /// <summary>
+    /// Gets or sets a value indicating whether or not the link is a unique link, and all objects maintain their unique values.<br/>
+    /// It is mainly used when the IsolationLevel is RepeatableRead. [the default is <see langword="false"/>].
+    /// </summary>
+    public bool Unique { get; set; } = false;
+
+    /// <summary>
     /// Gets or sets a string value which represents the name used for the linkage interface.
     /// </summary>
     public string Name { get; set; } = string.Empty;

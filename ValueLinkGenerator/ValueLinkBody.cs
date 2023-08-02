@@ -132,7 +132,7 @@ namespace ValueLink.Generator
             category: "ValueLinkGenerator", DiagnosticSeverity.Warning, isEnabledByDefault: true);
 
         public static readonly DiagnosticDescriptor Error_MustBeRecord = new DiagnosticDescriptor(
-            id: "CLG024", title: "No primary link", messageFormat: "The target must be a record class when the isolation level is set to RepeatableRead",
+            id: "CLG024", title: "Record required", messageFormat: "The target must be a record class when the isolation level is set to RepeatableRead",
             category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public static readonly DiagnosticDescriptor Error_KeywordUsed2 = new DiagnosticDescriptor(
@@ -140,7 +140,15 @@ namespace ValueLink.Generator
             category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public static readonly DiagnosticDescriptor Error_NoDefaultConstructor = new DiagnosticDescriptor(
-            id: "CLG026", title: "No default constructor", messageFormat: "'{0}' must have a default constructor when the isolation level is repeatable read..'",
+            id: "CLG026", title: "No default constructor", messageFormat: "'{0}' must have a default constructor when the isolation level is repeatable read'",
+            category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Error_NoUniqueLink = new DiagnosticDescriptor(
+            id: "CLG027", title: "Unique required", messageFormat: "The object must have a unique link when the isolation level is set to RepeatableRead",
+            category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Error_UniqueLinkType = new DiagnosticDescriptor(
+            id: "CLG028", title: "Unique required", messageFormat: "Type needs to be either ChainType.Ordered or ChainType.Unordered for a unique link",
             category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public ValueLinkBody(GeneratorExecutionContext context)

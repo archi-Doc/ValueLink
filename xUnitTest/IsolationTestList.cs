@@ -7,7 +7,7 @@ using Xunit;
 
 namespace xUnitTest;
 
-[ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
+/*[ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 public partial record RepeatableList
 {
     [Link(Type = ChainType.LinkedList, Name = "Main")]
@@ -57,4 +57,4 @@ public class IsolationTestList
         c2.State.Is(RepeatableObjectState.Obsolete);
         array.Contains(c3).IsTrue();
     }
-}
+}*/

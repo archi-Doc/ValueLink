@@ -142,6 +142,8 @@ public sealed class LinkAttributeMock : Attribute
 
     public bool Primary { get; set; } = false;
 
+    public bool Unique { get; set; } = false;
+
     public string Name { get; set; } = string.Empty;
 
     public bool AutoLink { get; set; } = true;
@@ -173,6 +175,12 @@ public sealed class LinkAttributeMock : Attribute
         if (val != null)
         {
             attribute.Primary = (bool)val;
+        }
+
+        val = AttributeHelper.GetValue(-1, nameof(Unique), constructorArguments, namedArguments);
+        if (val != null)
+        {
+            attribute.Unique = (bool)val;
         }
 
         val = AttributeHelper.GetValue(-1, nameof(Name), constructorArguments, namedArguments);

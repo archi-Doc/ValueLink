@@ -50,7 +50,15 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
     {
         lock (this.SyncObject)
         {
-            return this.FindFirst(key) == null;
+            return this.FindFirst(key) != null;
+        }
+    }
+
+    public bool Contains(Func<RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>, bool> predicate)
+    {
+        lock (this.SyncObject)
+        {
+            return predicate(this);
         }
     }
 
@@ -60,6 +68,14 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
         {
             var x = this.FindFirst(key);
             return x;
+        }
+    }
+
+    public TObject? TryGet(Func<RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>, TObject?> predicate)
+    {
+        lock (this.SyncObject)
+        {
+            return predicate(this);
         }
     }
 
@@ -167,5 +183,62 @@ Created:
 Created:
         x.WriterSemaphoreInternal.Enter();
         return x.NewWriterInternal();
+    }
+
+    public TWriter? TryLock(Func<RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>, TObject?> predicate)
+    {
+        TObject? x = default;
+        while (true)
+        {
+            lock (this.SyncObject)
+            {
+                x = predicate(this);
+                if (x is null)
+                {
+                    return default;
+                }
+            }
+
+            if (x.TryLockInternal() is { } writer)
+            {
+                return writer;
+            }
+        }
+    }
+
+    public ValueTask<TWriter?> TryLockAsync(Func<RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>, TObject?> predicate) => this.TryLockAsync(predicate, ValueLinkGlobal.LockTimeout, default);
+
+    public ValueTask<TWriter?> TryLockAsync(Func<RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>, TObject?> predicate, int millisecondsTimeout) => this.TryLockAsync(predicate, millisecondsTimeout, default);
+
+    public async ValueTask<TWriter?> TryLockAsync(Func<RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>, TObject?> predicate, int millisecondsTimeout, CancellationToken cancellationToken)
+    {
+        TObject? x = default;
+        while (true)
+        {
+            lock (this.SyncObject)
+            {
+                x = predicate(this);
+                if (x is null)
+                {
+                    return default;
+                }
+            }
+
+            if (await x.WriterSemaphoreInternal.EnterAsync(millisecondsTimeout, cancellationToken).ConfigureAwait(false))
+            {
+                if (x.State.IsInvalid())
+                {
+                    x.WriterSemaphoreInternal.Exit();
+                }
+                else
+                {
+                    return x.NewWriterInternal();
+                }
+            }
+            else
+            {// Timeout
+                return default;
+            }
+        }
     }
 }

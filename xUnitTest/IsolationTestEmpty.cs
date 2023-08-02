@@ -5,7 +5,7 @@ using Xunit;
 
 namespace xUnitTest;
 
-[ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
+/*[ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 public partial record RepeatableEmpty
 {
     public RepeatableEmpty()
@@ -27,4 +27,4 @@ public class IsolationTestEmpty
         c2!.State.Is(RepeatableObjectState.Valid);
         c3.IsNull();
     }
-}
+}*/

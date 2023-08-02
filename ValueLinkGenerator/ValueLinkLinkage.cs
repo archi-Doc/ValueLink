@@ -33,6 +33,7 @@ public class Linkage
         linkage.Type = linkAttribute.Type;
         linkage.TypeObject = obj.TypeObject;
         linkage.Primary = linkAttribute.Primary;
+        linkage.Unique = linkAttribute.Unique;
         if (obj.Kind.IsValue())
         {
             linkage.Target = obj;
@@ -41,6 +42,18 @@ public class Linkage
             if (linkAttribute.TargetMember != string.Empty)
             {// Target member is only supported for LinkAttribute annotated to the constructor.
                 obj.Body.AddDiagnostic(ValueLinkBody.Error_LinkMember, attribute.Location);
+                return null;
+            }
+        }
+
+        if (linkage.Unique)
+        {
+            if (linkage.Type == ChainType.Ordered || linkage.Type == ChainType.Unordered)
+            {
+            }
+            else
+            {
+                obj.Body.AddDiagnostic(ValueLinkBody.Error_UniqueLinkType, attribute.Location);
                 return null;
             }
         }
@@ -202,6 +215,8 @@ public class Linkage
     public Member? Member { get; set; }
 
     public bool Primary { get; private set; }
+
+    public bool Unique { get; private set; }
 
     public bool AutoLink { get; private set; }
 
