@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
 using ValueLink;
 using Tinyhand;
 
@@ -11,7 +9,7 @@ namespace Sandbox;
 internal partial class ValueClass
 {
     [Key(0, AddProperty = "Id")]
-    [Link(Type = ChainType.Unordered, Primary = true, Accessibility = ValueLinkAccessibility.Public)]
+    [Link(Type = ChainType.Unordered, Primary = true, Unique = true, Accessibility = ValueLinkAccessibility.Public)]
     private int id;
 
     [Key(1, AddProperty = "Name")]
