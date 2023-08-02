@@ -37,6 +37,7 @@ public class Program
 {
     public static void Main(string[] args)
     {
+        RepeatableClass.Test();
         Console.WriteLine("ValueLink Quick Start.");
         Console.WriteLine();
 
