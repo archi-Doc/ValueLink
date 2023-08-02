@@ -38,10 +38,11 @@ public enum ValueLinkObjectFlag
     TinyhandObject = 1 << 15, // Has TinyhandObjectAttribute
     HasLinkAttribute = 1 << 16, // Has LinkAttribute
     HasPrimaryLink = 1 << 17, // Has primary link
-    GenerateJournaling = 1 << 18, // Generate journaling
-    AddSyncObject = 1 << 19,
-    AddLockable = 1 << 20,
-    AddGoshujinProperty = 1 << 21,
+    HasUniqueLink = 1 << 18, // Has unique link
+    GenerateJournaling = 1 << 19, // Generate journaling
+    AddSyncObject = 1 << 20,
+    AddLockable = 1 << 21,
+    AddGoshujinProperty = 1 << 22,
 }
 
 public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
@@ -65,6 +66,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     public List<Member>? Members { get; private set; } = null;
 
     public Linkage? PrimaryLink { get; private set; }
+
+    public Linkage? UniqueLink { get; private set; }
 
     public int NumberOfValidLinks { get; private set; }
 
@@ -492,9 +495,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             }
         }
 
-        // Check primary link
         if (this.Links != null)
         {
+            // Primary link
             this.PrimaryLink = this.Links.FirstOrDefault(x => x.Primary);
             if (this.TinyhandAttribute?.Journaling == true)
             {// Required
@@ -513,6 +516,13 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             {// No primary link
                 this.Body.AddDiagnostic(ValueLinkBody.Warning_NoPrimaryLink, this.Location);
             }
+
+            // Unique link
+            this.UniqueLink = this.Links.FirstOrDefault(x => x.Unique);
+            if (this.UniqueLink is not null)
+            {// Has unique link.
+                this.ObjectFlag |= ValueLinkObjectFlag.HasUniqueLink;
+            }
         }
 
         // Check isolation
@@ -521,6 +531,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             if (!this.IsRecord)
             {
                 this.Body.AddDiagnostic(ValueLinkBody.Error_MustBeRecord, this.Location);
+                return;
+            }
+            else if (!this.ObjectFlag.HasFlag(ValueLinkObjectFlag.HasUniqueLink))
+            {
+                this.Body.AddDiagnostic(ValueLinkBody.Error_NoUniqueLink, this.Location);
                 return;
             }
 
@@ -806,9 +821,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             if (this.ObjectAttribute.Isolation == IsolationLevel.RepeatableRead)
             {
                 this.IRepeatableObject = $"{ValueLinkBody.IRepeatableObject}<{this.SimpleName}.{ValueLinkBody.WriterClassName}>";
-                if (this.PrimaryLink is not null)
+                if (this.UniqueLink is not null)
                 {
-                    this.RepeatableGoshujin = $"{ValueLinkBody.RepeatableGoshujin}<{this.PrimaryLink.TypeObject.FullName}, {this.SimpleName}, {this.ObjectAttribute.GoshujinClass}, {ValueLinkBody.WriterClassName}>";
+                    this.RepeatableGoshujin = $"{ValueLinkBody.RepeatableGoshujin}<{this.UniqueLink.TypeObject.FullName}, {this.SimpleName}, {this.ObjectAttribute.GoshujinClass}, {ValueLinkBody.WriterClassName}>";
                 }
             }
 
@@ -1163,11 +1178,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 {
                     var scopeLock = this.ScopeLock(ssb, "goshujin");
 
-                    // Check primary
-                    if (this.PrimaryLink is { } primaryLink &&
-                        primaryLink.Member is { } primaryMember)
+                    // Check unique
+                    if (this.UniqueLink is { } link &&
+                        link.Member is { } member)
                     {
-                        ssb.AppendLine($"if (this.{primaryMember.ChangedName} && goshujin.{this.PrimaryLink.ChainName}.ContainsKey(this.instance.{primaryMember.Object.SimpleName})) return default;");
+                        ssb.AppendLine($"if (this.{member.ChangedName} && goshujin.{this.UniqueLink.ChainName}.ContainsKey(this.instance.{member.Object.SimpleName})) return default;");
                     }
 
                     // Replace instance
@@ -1204,19 +1219,19 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 {
                     using (var scopeLock = ssb.ScopeBrace("lock (this.Goshujin.SyncObject)"))
                     {
-                        if (this.PrimaryLink is { } primaryLink &&
-                        primaryLink.Member is { } primaryMember)
+                        if (this.UniqueLink is { } link &&
+                        link.Member is { } member)
                         {
-                            ssb.AppendLine($"if (this.Goshujin.{this.PrimaryLink.ChainName}.ContainsKey(this.instance.{primaryMember.Object.SimpleName})) return default;");
+                            ssb.AppendLine($"if (this.Goshujin.{this.UniqueLink.ChainName}.ContainsKey(this.instance.{member.Object.SimpleName})) return default;");
                         }
 
                         if (this.Links is not null)
                         {
-                            foreach (var link in this.Links)
+                            foreach (var ln in this.Links)
                             {
-                                if (!string.IsNullOrEmpty(link.LinkName))
+                                if (!string.IsNullOrEmpty(ln.LinkName))
                                 {
-                                    ssb.AppendLine($"this.instance.{link.LinkName} = default;");
+                                    ssb.AppendLine($"this.instance.{ln.LinkName} = default;");
                                 }
                             }
                         }
@@ -1551,11 +1566,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 this.GenerateGosjujin_Lock(ssb, info);
             }
 
-            if (this.RepeatableGoshujin is not null && this.PrimaryLink is not null)
+            if (this.RepeatableGoshujin is not null && this.UniqueLink is not null)
             {
-                ssb.AppendLine($"protected override {this.SimpleName}? FindFirst({this.PrimaryLink.TypeObject.FullName} key) => this.{this.PrimaryLink.ChainName}.FindFirst(key);");
+                ssb.AppendLine($"protected override {this.SimpleName}? FindFirst({this.UniqueLink.TypeObject.FullName} key) => this.{this.UniqueLink.ChainName}.FindFirst(key);");
 
-                using (var scopeNewObject = ssb.ScopeBrace($"protected override {this.SimpleName} NewObject({this.PrimaryLink.TypeObject.FullName} key)"))
+                using (var scopeNewObject = ssb.ScopeBrace($"protected override {this.SimpleName} NewObject({this.UniqueLink.TypeObject.FullName} key)"))
                 {
                     if (this.TinyhandAttribute?.UseServiceProvider == true)
                     {
@@ -1567,7 +1582,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     }
 
                     ssb.AppendLine($"obj.State = RepeatableObjectState.Created;");
-                    ssb.AppendLine($"obj.{this.PrimaryLink.TargetName} = key;");
+                    ssb.AppendLine($"obj.{this.UniqueLink.TargetName} = key;");
                     ssb.AppendLine($"return obj;");
                 }
             }

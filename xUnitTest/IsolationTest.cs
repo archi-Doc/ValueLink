@@ -20,7 +20,7 @@ public partial record SerializableRoom
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 public partial record RepeatableRoom
 {
-    [Link(Primary = true, Type = ChainType.Ordered, AddValue = false)]
+    [Link(Primary = true, Unique = true, Type = ChainType.Ordered, AddValue = false)]
     public int RoomId { get; private set; }
 
     public Booking.GoshujinClass Bookings { get; private set; } = new();
@@ -39,9 +39,10 @@ public partial record RepeatableRoom
     [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
     public partial record Booking
     {
-        [Link(Primary = true, Type = ChainType.Ordered)]
+        [Link(Primary = true, Unique = true, Type = ChainType.Ordered)]
         public DateTime StartTime { get; private set; }
 
+        [Link(Unique = true, Type = ChainType.LinkedList)]
         public DateTime EndTime { get; private set; }
 
         public int UserId { get; private set; }

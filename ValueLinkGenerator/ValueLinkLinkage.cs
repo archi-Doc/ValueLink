@@ -33,6 +33,7 @@ public class Linkage
         linkage.Type = linkAttribute.Type;
         linkage.TypeObject = obj.TypeObject;
         linkage.Primary = linkAttribute.Primary;
+        linkage.Unique = linkAttribute.Unique;
         if (obj.Kind.IsValue())
         {
             linkage.Target = obj;
@@ -202,6 +203,8 @@ public class Linkage
     public Member? Member { get; set; }
 
     public bool Primary { get; private set; }
+
+    public bool Unique { get; private set; }
 
     public bool AutoLink { get; private set; }
 

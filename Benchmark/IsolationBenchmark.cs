@@ -13,7 +13,7 @@ public partial record IsolationClass
     {
     }
 
-    [Link(Primary = true, Type = ChainType.Ordered)]
+    [Link(Primary = true, Unique = true, Type = ChainType.Ordered)]
     public int Id { get; private set; }
 
     public string Name { get; private set; } = string.Empty;
