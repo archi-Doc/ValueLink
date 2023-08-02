@@ -183,33 +183,100 @@ public partial class AdditionalMethodClass
 // An example of an object with the IsolationLevel set to RepeatableRead.
 [TinyhandObject]
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
-public partial record RepeatableData
+public partial record RepeatableClass
 {
-    public RepeatableData()
+    public RepeatableClass()
     {// Default constructor is required.
     }
 
-    public RepeatableData(int id)
+    public RepeatableClass(int id)
     {
         this.Id = id;
     }
 
+    // A unique link is required for IsolationLevel.RepeatableRead, and a primary link is preferred for TinyhandSerializer.
     [Key(0)]
     [Link(Primary = true, Unique = true, Type = ChainType.Ordered)]
     public int Id { get; private set; }
 
-    [IgnoreMember]
+    [Key(1)]
+    public string Name { get; private set; } = string.Empty;
+
+    [Key(2)]
     public List<int> IntList { get; private set; } = new();
+
+    public override string ToString()
+        => $"Id: {this.Id.ToString()}, Name: {this.Name}";
 
     public static void Test()
     {
-        var g = new RepeatableData.GoshujinClass(); // Create a goshujin.
+        var g = new RepeatableClass.GoshujinClass(); // Create a goshujin.
 
-        g.Add(new RepeatableData(0)); // Adds an object with id 0.
+        g.Add(new RepeatableClass(0)); // Adds an object with id 0.
 
         using (var w = g.TryLock(1, TryLockMode.Create))
         {// Alternative: adds an object with id 1.
             w?.Commit(); // Commit the change.
         }
+
+        var r0 = g.TryGet(0);
+        Console.WriteLine(r0?.ToString()); // Id: 0, Name:
+        Console.WriteLine();
+
+        using (var w = g.TryLock(0))
+        {
+            if (w is not null)
+            {
+                w.Name = "Zero";
+                w.Commit();
+            }
+        }
+
+        Console.WriteLine(r0?.ToString()); // Id: 0, Name:
+        Console.WriteLine(g.TryGet(0)?.ToString()); // Id: 0, Name: Zero
+        Console.WriteLine();
+
+        RepeatableClass[] array;
+        lock (g.SyncObject)
+        {
+            array = g.ToArray();
+            /*using (var w2 = g.TryLock(1))
+            {// To prevent a deadlock, this code will throw an exception.
+            }*/
+        }
+
+        foreach (var x in array)
+        {
+            Console.WriteLine(x.ToString());
+        }
+
+        Console.WriteLine();
+
+        using (var w1 = g.TryLock(1))
+        {
+            if (w1 is not null)
+            {// It is possible to acquire the goshujin lock within writer lock statement.
+             // Please be cautious about the order in which you acquire locks, as it could potentially lead to a deadlock.
+                using (var w0 = g.TryLock(0))
+                {
+                    if (w0 is not null)
+                    {
+                        w1.Name = w0.Name + "One";
+                        w1.Commit();
+
+                        w0.Name = "0";
+                        w0.Commit();
+                    }
+                }
+            }
+        }
+
+        array = g.GetArray();
+        foreach (var x in array)
+        {
+            Console.WriteLine(x.ToString());
+        }
+
+        Console.WriteLine();
     }
 }
