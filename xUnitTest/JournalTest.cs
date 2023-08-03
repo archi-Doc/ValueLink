@@ -46,14 +46,9 @@ public readonly partial struct JournalIdentifier : IComparable<JournalIdentifier
         => this.Id0 == other.Id0 && this.Id1 == other.Id1;
 }
 
-public interface IEquatableObject<T>
-{
-    bool ObjectEquals(T other);
-}
-
 [ValueLinkObject(Isolation = IsolationLevel.Serializable)]
 [TinyhandObject(Journaling = true)]
-public partial record JournalTestClass : IEquatableObject<JournalTestClass>
+public partial record JournalTestClass : IEquatableObject<JournalTestClass>, IEquatableGoshujin<JournalTestClass.GoshujinClass>
 {
     public JournalTestClass()
     {
@@ -78,6 +73,11 @@ public partial record JournalTestClass : IEquatableObject<JournalTestClass>
 
     public bool ObjectEquals(JournalTestClass other)
          => this.id == other.id && this.name == other.name && this.identifier.Equals(other.identifier);
+
+    bool ValueLink.IEquatableGoshujin<xUnitTest.JournalTestClass.GoshujinClass>.GoshujinEquals(xUnitTest.JournalTestClass.GoshujinClass other)
+    {
+        return true;
+    }
 }
 
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
@@ -122,21 +122,6 @@ public class JournalTest
         c2.IsStructuralEqual(c);
     }
 
-    public bool IsGoshujinEqual<TGoshujin, TObject>(TGoshujin g1, TGoshujin g2)
-        where TGoshujin : IGoshujin, IEnumerable<JournalTestClass>
-        where TObject : IEquatableObject<TObject>
-    {
-        foreach (var x in g1)
-        {
-            if (!x.ObjectEquals(y))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     [Fact]
     public void TestGoshujin()
     {
@@ -152,20 +137,12 @@ public class JournalTest
         g2.Add(new JournalTestClass(1, "one"));
         g2.Add(new JournalTestClass(2, "two"));
         g2.Add(new JournalTestClass(3, "3"));
-        foreach (var x in g)
-        {
-            var y = g2.IdChain.FindFirst(x.Id);
-            x.Check(y!).IsTrue();
-        }
+        g.GoshujinEquals(g2).IsTrue();
 
         var journal = tester.GetJournal();
         var g3 = new JournalTestClass.GoshujinClass();
         JournalHelper.ReadJournal(g3, journal).IsTrue();
-        foreach (var x in g)
-        {
-            var y = g3.IdChain.FindFirst(x.Id);
-            x.Check(y!).IsTrue();
-        }
+        g.GoshujinEquals(g3).IsTrue();
 
         g2.IdChain.FindFirst(1)!.Goshujin = null;
         g2.Add(new JournalTestClass(4, "four"));
@@ -174,10 +151,6 @@ public class JournalTest
         journal = tester.GetJournal();
         g3 = new JournalTestClass.GoshujinClass();
         JournalHelper.ReadJournal(g3, journal).IsTrue();
-        foreach (var x in g2)
-        {
-            var y = g3.IdChain.FindFirst(x.Id);
-            x.Check(y!).IsTrue();
-        }
+        g2.GoshujinEquals(g3).IsTrue();
     }
 }

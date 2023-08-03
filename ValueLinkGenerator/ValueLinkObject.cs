@@ -43,6 +43,7 @@ public enum ValueLinkObjectFlag
     AddSyncObject = 1 << 20,
     AddLockable = 1 << 21,
     AddGoshujinProperty = 1 << 22,
+    EquatableObject = 1 << 23, // Has IEquatableObject
 }
 
 public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
@@ -301,6 +302,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         {// Generate INotifyPropertyChanged
             this.ObjectFlag |= ValueLinkObjectFlag.GenerateINotifyPropertyChanged;
             this.PropertyChangedDeclaration = DeclarationCondition.ImplicitlyDeclared;
+        }
+
+        if (this.AllInterfaces.Any(x => x.StartsWith("ValueLink.IEquatableObject")))
+        {
+            this.ObjectFlag |= ValueLinkObjectFlag.EquatableObject;
         }
 
         if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateINotifyPropertyChanged))
@@ -1516,6 +1522,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             goshujinInterface += $", Arc.Threading.ILockable";
         }
 
+        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.EquatableObject))
+        {
+            goshujinInterface += $", ValueLink.IEquatableGoshujin<{this.GoshujinFullName}>";
+        }
+
         /*if (this.RepeatableGoshujin is not null)
         {
             goshujinInterface += $", {this.RepeatableGoshujin}";
@@ -1598,9 +1609,47 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     ssb.AppendLine($"return obj;");
                 }
             }
+
+            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.EquatableObject))
+            {
+                this.GenerateGoshujin_EquatableGoshujin(ssb, info);
+            }
         }
 
         ssb.AppendLine();
+    }
+
+    internal void GenerateGoshujin_EquatableGoshujin(ScopingStringBuilder ssb, GeneratorInformation info)
+    {
+        if (this.PrimaryLink is null && this.UniqueLink is null)
+        {
+            return;
+        }
+
+        using (var scopeMethod = ssb.ScopeBrace($"public bool GoshujinEquals({this.GoshujinFullName} other)"))
+        {
+            if (this.UniqueLink is not null)
+            {
+                using (var scopeForeach = ssb.ScopeBrace("foreach (var x in this)"))
+                {
+                    ssb.AppendLine($"var y = this.{this.UniqueLink.ChainName}.FindFirst(x.{this.UniqueLink.TargetName});");
+                    ssb.AppendLine("if (y is null) return false;");
+                    ssb.AppendLine("if (!y.ObjectEquals(x)) return false;");
+                }
+            }
+            else
+            {
+                ssb.AppendLine("var array = System.Linq.Enumerable.ToArray(this);");
+                ssb.AppendLine("var array2 = System.Linq.Enumerable.ToArray(other);");
+                ssb.AppendLine("if (array.Length != array2.Length) return false;");
+                using (var scopeFor = ssb.ScopeBrace("for (var i = 0; i < array.Length; i++)"))
+                {
+                    ssb.AppendLine("if (!array[i].ObjectEquals(array2[i])) return false;");
+                }
+            }
+
+            ssb.AppendLine("return true;");
+        }
     }
 
     internal void GenerateGoshujin_Constructor(ScopingStringBuilder ssb, GeneratorInformation info)
