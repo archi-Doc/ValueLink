@@ -1632,7 +1632,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             {
                 using (var scopeForeach = ssb.ScopeBrace("foreach (var x in this)"))
                 {
-                    ssb.AppendLine($"var y = this.{this.UniqueLink.ChainName}.FindFirst(x.{this.UniqueLink.TargetName});");
+                    ssb.AppendLine($"var y = other.{this.UniqueLink.ChainName}.FindFirst(x.{this.UniqueLink.TargetName});");
                     ssb.AppendLine("if (y is null) return false;");
                     ssb.AppendLine("if (!y.ObjectEquals(x)) return false;");
                 }

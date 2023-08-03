@@ -5,14 +5,18 @@ using Tinyhand;
 using Xunit;
 using Tinyhand.IO;
 using System;
-using System.Linq;
-using System.Collections.Generic;
 
 namespace xUnitTest;
 
 [TinyhandObject]
 public readonly partial struct JournalIdentifier : IComparable<JournalIdentifier>, IEquatable<JournalIdentifier>
 {
+    public JournalIdentifier(int id)
+    {
+        this.Id0 = id;
+        this.Id1 = id;
+    }
+
     [Key(0)]
     public readonly int Id0;
 
@@ -48,7 +52,7 @@ public readonly partial struct JournalIdentifier : IComparable<JournalIdentifier
 
 [ValueLinkObject(Isolation = IsolationLevel.Serializable)]
 [TinyhandObject(Journaling = true)]
-public partial record JournalTestClass : IEquatableObject<JournalTestClass>, IEquatableGoshujin<JournalTestClass.GoshujinClass>
+public partial record JournalTestClass : IEquatableObject<JournalTestClass>
 {
     public JournalTestClass()
     {
@@ -73,16 +77,11 @@ public partial record JournalTestClass : IEquatableObject<JournalTestClass>, IEq
 
     public bool ObjectEquals(JournalTestClass other)
          => this.id == other.id && this.name == other.name && this.identifier.Equals(other.identifier);
-
-    bool ValueLink.IEquatableGoshujin<xUnitTest.JournalTestClass.GoshujinClass>.GoshujinEquals(xUnitTest.JournalTestClass.GoshujinClass other)
-    {
-        return true;
-    }
 }
 
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 [TinyhandObject(Journaling = true)]
-public partial record JournalTestClass2
+public partial record JournalTestClass2 : IEquatableObject<JournalTestClass2>
 {
     public JournalTestClass2()
     {
@@ -100,6 +99,9 @@ public partial record JournalTestClass2
 
     [Key(1)]
     private string name = string.Empty;
+
+    public bool ObjectEquals(JournalTestClass2 other)
+         => this.id.Equals(other.id) && this.name == other.name;
 }
 
 public class JournalTest
@@ -150,6 +152,38 @@ public class JournalTest
 
         journal = tester.GetJournal();
         g3 = new JournalTestClass.GoshujinClass();
+        JournalHelper.ReadJournal(g3, journal).IsTrue();
+        g2.GoshujinEquals(g3).IsTrue();
+    }
+
+    [Fact]
+    public void TestGoshujin2()
+    {
+        var tester = new JournalTester();
+        var c1 = new JournalTestClass2(new(1), "one");
+        var c2 = new JournalTestClass2(new(2), "two");
+        var c3 = new JournalTestClass2(new(3), "3");
+
+        var g = new JournalTestClass2.GoshujinClass { c1, c2, c3 };
+        var g2 = new JournalTestClass2.GoshujinClass();
+
+        g2.Crystal = tester;
+        g2.Add(new JournalTestClass2(new(1), "one"));
+        g2.Add(new JournalTestClass2(new(2), "two"));
+        g2.Add(new JournalTestClass2(new(3), "3"));
+        g.GoshujinEquals(g2).IsTrue();
+
+        var journal = tester.GetJournal();
+        var g3 = new JournalTestClass2.GoshujinClass();
+        JournalHelper.ReadJournal(g3, journal).IsTrue();
+        g.GoshujinEquals(g3).IsTrue();
+
+        g2.IdChain.FindFirst(new(1))!.Goshujin = null;
+        g2.Add(new JournalTestClass2(new(4), "four"));
+        g2.IdChain.FindFirst(new(3))!.Goshujin = null;
+
+        journal = tester.GetJournal();
+        g3 = new JournalTestClass2.GoshujinClass();
         JournalHelper.ReadJournal(g3, journal).IsTrue();
         g2.GoshujinEquals(g3).IsTrue();
     }
