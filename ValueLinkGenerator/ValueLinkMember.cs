@@ -1,24 +1,26 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
+using System.Linq;
 using Arc.Visceral;
 using Microsoft.CodeAnalysis;
+using Tinyhand.Generator;
 
 namespace ValueLink.Generator;
 
 public class Member
 {
-    public static Member? Create(ValueLinkObject obj, Linkage? linkage)
+    public static Member? Create(ValueLinkObject obj, Linkage? linkage, bool journaling)
     {
         if (obj.SimpleName.Length == 0/* || !char.IsLower(obj.SimpleName[0])*/)
         {
             return null;
         }
 
-        var member = new Member(obj, linkage);
+        var member = new Member(obj, linkage, journaling);
         return member;
     }
 
-    public Member(ValueLinkObject obj, Linkage? linkage)
+    public Member(ValueLinkObject obj, Linkage? linkage, bool journaling)
     {
         this.Object = obj;
         this.Linkage = linkage;
@@ -33,7 +35,12 @@ public class Member
             this.GeneratedName = name;
         }
 
-        this.ChangedName = this.Linkage is null ? null : this.Object.SimpleName + "Changed";
+        // this.ChangedName = this.Linkage is null ? null : this.Object.SimpleName + "Changed";
+        if (this.Linkage is not null ||
+            (journaling && obj.AllAttributes.Any(x => x.FullName == KeyAttributeMock.FullName)))
+        {
+            this.ChangedName = this.Object.SimpleName + "Changed";
+        }
     }
 
     public ValueLinkObject Object { get; private set; }

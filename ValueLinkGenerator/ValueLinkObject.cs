@@ -500,15 +500,6 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         {
             // Primary link
             this.PrimaryLink = this.Links.FirstOrDefault(x => x.Primary);
-            if (this.TinyhandAttribute?.Journaling == true)
-            {// Required
-                if (this.PrimaryLink is null || !this.PrimaryLink.Type.IsLocatable())
-                {
-                    this.Body.AddDiagnostic(ValueLinkBody.Error_NoPrimaryLink, this.Location);
-                    return;
-                }
-            }
-
             if (this.PrimaryLink != null)
             {// Has primary link.
                 this.ObjectFlag |= ValueLinkObjectFlag.HasPrimaryLink;
@@ -523,6 +514,15 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             if (this.UniqueLink is not null)
             {// Has unique link.
                 this.ObjectFlag |= ValueLinkObjectFlag.HasUniqueLink;
+            }
+
+            if (this.TinyhandAttribute?.Journaling == true)
+            {// Required
+                if (this.UniqueLink is null/* || !this.UniqueLink.Type.IsLocatable()*/)
+                {
+                    this.Body.AddDiagnostic(ValueLinkBody.Error_NoUniqueLink2, this.Location);
+                    return;
+                }
             }
         }
 
@@ -549,6 +549,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             }
 
             // Prepare members
+            var journaling = this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournaling);
             foreach (var x in this.GetMembers(VisceralTarget.Field | VisceralTarget.Property))
             {
                 /*if (x.Field_Accessibility == Accessibility.Public ||
@@ -568,7 +569,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     continue;
                 }
 
-                var member = Member.Create(x, this.Links.FirstOrDefault(y => y.Target == x));
+                var member = Member.Create(x, this.Links.FirstOrDefault(y => y.Target == x), journaling);
                 if (member is not null)
                 {
                     this.Members ??= new();
@@ -1001,9 +1002,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     }
                 }
 
-                if (this.PrimaryLink is not null && this.TinyhandAttribute?.Journaling == true)
+                if (this.UniqueLink is not null && this.TinyhandAttribute?.Journaling == true)
                 {
-                    this.CodeJournal2(ssb, this.PrimaryLink.Target);
+                    this.CodeJournal2(ssb, this.UniqueLink.Target);
                 }
 
                 ssb.AppendLine($"this.{goshujinInstance} = null;");
@@ -1202,13 +1203,23 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                         {
                             if (x.ChangedName is not null)
                             {
-                                ssb.AppendLine($"if (this.{x.ChangedName}) goshujin.{x.Linkage!.ChainName}.Add(this.instance.{x.Object.SimpleName}, this.instance);");
+                                if (x.Linkage is not null)
+                                {
+                                    ssb.AppendLine($"if (this.{x.ChangedName}) goshujin.{x.Linkage.ChainName}.Add(this.instance.{x.Object.SimpleName}, this.instance);");
+                                }
+
                                 // ssb.AppendLine($"this.{x.ChangedName} = false;");
                             }
                         }
                     }
 
                     scopeLock?.Dispose();
+
+                    if (this.TinyhandAttribute?.Journaling == true)
+                    {
+                        ssb.AppendLine();
+                        this.CodeJournal3(ssb);
+                    }
                 }
             }
 
@@ -1643,7 +1654,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGosjujin_Journal(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        if (this.PrimaryLink?.Target?.TypeObject is null)
+        if (this.UniqueLink?.Target?.TypeObject is null)
         {
             return;
         }
@@ -1659,10 +1670,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             using (var scopeLocator = ssb.ScopeBrace("if (record == JournalRecord.Locator)"))
             {// Locator
-                var typeObject = this.PrimaryLink.Target.TypeObject;
+                var typeObject = this.UniqueLink.Target.TypeObject;
                 ssb.AppendLine($"var key = {typeObject.CodeReader()};");
                 var keyIsNotNull = typeObject.Kind.IsValueType() ? string.Empty : "key is not null && ";
-                ssb.AppendLine($"if ({keyIsNotNull}this.{this.PrimaryLink.ChainName}.FindFirst(key) is ITinyhandJournal obj)");
+                ssb.AppendLine($"if ({keyIsNotNull}this.{this.UniqueLink.ChainName}.FindFirst(key) is ITinyhandJournal obj)");
 
                 ssb.AppendLine("{");
                 ssb.IncrementIndent();
@@ -1701,10 +1712,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             using (var scopeRemove = ssb.ScopeBrace("else if (record == JournalRecord.Remove)"))
             {// Remove
-                var typeObject = this.PrimaryLink.Target.TypeObject;
+                var typeObject = this.UniqueLink.Target.TypeObject;
                 ssb.AppendLine($"var key = {typeObject.CodeReader()};");
                 var keyIsNotNull = typeObject.Kind.IsValueType() ? string.Empty : "key is not null && ";
-                ssb.AppendLine($"if ({keyIsNotNull}this.{this.PrimaryLink.ChainName}.FindFirst(key) is {{ }} obj)");
+                ssb.AppendLine($"if ({keyIsNotNull}this.{this.UniqueLink.ChainName}.FindFirst(key) is {{ }} obj)");
 
                 ssb.AppendLine("{");
                 ssb.IncrementIndent();

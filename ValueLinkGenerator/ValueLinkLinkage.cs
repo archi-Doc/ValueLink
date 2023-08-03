@@ -48,10 +48,7 @@ public class Linkage
 
         if (linkage.Unique)
         {
-            if (linkage.Type == ChainType.Ordered || linkage.Type == ChainType.Unordered)
-            {
-            }
-            else
+            if (!linkage.Type.IsLocatable())
             {
                 obj.Body.AddDiagnostic(ValueLinkBody.Error_UniqueLinkType, attribute.Location);
                 return null;

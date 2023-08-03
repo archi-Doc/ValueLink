@@ -12,7 +12,7 @@ using Xunit;
 
 namespace xUnitTest;
 
-[TinyhandObject(ExplicitKeyOnly = true)]
+[TinyhandObject(ExplicitKeyOnly = true, Journaling = true)]
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 public partial record RepeatableItem
 {
@@ -38,6 +38,9 @@ public partial record RepeatableItem
     public List<int> CustomerList { private set; get; } = new();
 
     public int[] NumberArray { set; get; } = Array.Empty<int>();
+
+    [Key(1)]
+    private string name = string.Empty;
 }
 
 public class RepeatableCustomer

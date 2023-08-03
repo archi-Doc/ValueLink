@@ -20,7 +20,7 @@ public readonly partial struct JournalIdentifier
 [TinyhandObject(Journaling = true)]
 public partial record JournalTestClass
 {
-    [Link(Type = ChainType.Ordered, Primary = true)]
+    [Link(Type = ChainType.Ordered, Primary = true, Unique = true)]
     [KeyAsName]
     private int id;
 
@@ -37,7 +37,7 @@ public partial record JournalTestClass
 [TinyhandObject(Journaling = true)]
 public partial record JournalTestClass2
 {
-    [Link(Type = ChainType.Ordered, Primary = true)]
+    [Link(Type = ChainType.Ordered, Primary = true, Unique = true)]
     [KeyAsName]
     private JournalIdentifier id;
 

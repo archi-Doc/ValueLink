@@ -127,8 +127,8 @@ namespace ValueLink.Generator
             id: "CLG022", title: "AutoNotify enabled", messageFormat: "Value property is enabled for AutoNotify to work properly",
             category: "ValueLinkGenerator", DiagnosticSeverity.Warning, isEnabledByDefault: true);
 
-        public static readonly DiagnosticDescriptor Error_NoPrimaryLink = new DiagnosticDescriptor(
-            id: "CLG023", title: "No primary link", messageFormat: "Primary Link of ChainType.Ordered or ChainType.Unordered is required if journaling is enabled",
+        public static readonly DiagnosticDescriptor Error_NoUniqueLink2 = new DiagnosticDescriptor(
+            id: "CLG023", title: "No unique link", messageFormat: "Unique link is required when the journaling feature is enabled",
             category: "ValueLinkGenerator", DiagnosticSeverity.Warning, isEnabledByDefault: true);
 
         public static readonly DiagnosticDescriptor Error_MustBeRecord = new DiagnosticDescriptor(
@@ -144,11 +144,11 @@ namespace ValueLink.Generator
             category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public static readonly DiagnosticDescriptor Error_NoUniqueLink = new DiagnosticDescriptor(
-            id: "CLG027", title: "Unique required", messageFormat: "The object must have a unique link when the isolation level is set to RepeatableRead",
+            id: "CLG027", title: "Unique required", messageFormat: "Unique link is required when the isolation level is set to RepeatableRead",
             category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public static readonly DiagnosticDescriptor Error_UniqueLinkType = new DiagnosticDescriptor(
-            id: "CLG028", title: "Unique required", messageFormat: "Type needs to be either ChainType.Ordered or ChainType.Unordered for a unique link",
+            id: "CLG028", title: "Unique link type", messageFormat: "The type of a unique link needs to be either ChainType.Ordered, ChainType.ReverseOrdered or ChainType.Unordered",
             category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public ValueLinkBody(GeneratorExecutionContext context)
