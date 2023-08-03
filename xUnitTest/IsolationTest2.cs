@@ -38,6 +38,9 @@ public partial record RepeatableItem
     public List<int> CustomerList { private set; get; } = new();
 
     public int[] NumberArray { set; get; } = Array.Empty<int>();
+
+    [Key(1)]
+    private string name = string.Empty;
 }
 
 public class RepeatableCustomer

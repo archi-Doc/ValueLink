@@ -141,6 +141,59 @@ internal static class JournalShared
         }
     }
 
+    public static void CodeJournal3(this ValueLinkObject obj, ScopingStringBuilder ssb)
+    {
+        if (obj.Members is null)
+        {
+            return;
+        }
+
+        using (var journalScope = ssb.ScopeBrace("if (this.instance.Crystal is not null && this.instance.Crystal.TryGetJournalWriter(JournalType.Record, this.instance.CurrentPlane, out var writer))"))
+        {
+            // Custom locator
+            using (var customScope = ssb.ScopeBrace($"if (this.instance is Tinyhand.ITinyhandCustomJournal custom)"))
+            {
+                ssb.AppendLine("custom.WriteCustomLocator(ref writer);");
+            }
+
+            foreach (var x in obj.Members)
+            {
+                if (x.ChangedName is not null)
+                {
+                    var memberObject = x.Object;
+                    using (var scopeChanged = ssb.ScopeBrace($"if (this.{x.ChangedName})"))
+                    {
+                        // Locator
+                        /*if (locator is not null &&
+                            memberObject.CodeWriter($"this.{locator.SimpleName}") is { } writeLocator)
+                        {
+                            ssb.AppendLine("writer.Write_Locator();");
+                            ssb.AppendLine(writeLocator);
+                        }*/
+
+                        // Key
+                        var writeKey = memberObject.CodeWriteKey();
+                        if (writeKey is not null)
+                        {
+                            ssb.AppendLine("writer.Write_Key();");
+                            ssb.AppendLine(writeKey);
+                        }
+
+                        // Value
+                        var writeValue = memberObject.CodeWriter($"this.instance.{memberObject.SimpleName}");
+                        if (writeValue is not null)
+                        {
+                            ssb.AppendLine("writer.Write_Value();");
+                            ssb.AppendLine(writeValue);
+                        }
+                    }
+                }
+            }
+
+            ssb.AppendLine("this.instance.Crystal.AddJournal(writer);");
+        }
+    }
+
     public static string? CodeReader(this ValueLinkObject obj)
     {
         var coder = obj.FullName switch
