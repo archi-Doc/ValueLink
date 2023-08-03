@@ -1684,15 +1684,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             using (var scopeAdd = ssb.ScopeBrace("else if (record == JournalRecord.Add)"))
             {// Add
-                ssb.AppendLine("if (reader.TryReadBytes(out var span))");
-                ssb.AppendLine("{");
-                ssb.IncrementIndent();
-
                 ssb.AppendLine("try");
                 ssb.AppendLine("{");
                 ssb.IncrementIndent();
 
-                ssb.AppendLine($"var obj = TinyhandSerializer.DeserializeObject<{this.LocalName}>(span);");
+                ssb.AppendLine($"var obj = TinyhandSerializer.DeserializeObject<{this.LocalName}>(ref reader);");
                 ssb.AppendLine("if (obj is not null)");
                 ssb.AppendLine("{");
                 ssb.IncrementIndent();
@@ -1705,9 +1701,6 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 ssb.DecrementIndent();
                 ssb.AppendLine("}");
                 ssb.AppendLine("catch {}");
-
-                ssb.DecrementIndent();
-                ssb.AppendLine("}");
             }
 
             using (var scopeRemove = ssb.ScopeBrace("else if (record == JournalRecord.Remove)"))
