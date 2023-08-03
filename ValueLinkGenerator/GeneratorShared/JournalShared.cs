@@ -156,6 +156,14 @@ internal static class JournalShared
                 ssb.AppendLine("custom.WriteCustomLocator(ref writer);");
             }
 
+            // Locator
+            if (obj.UniqueLink is not null &&
+                obj.UniqueLink.TypeObject.CodeWriter($"this.instance.{obj.UniqueLink.TargetName}") is { } writeLocator)
+            {
+                ssb.AppendLine("writer.Write_Locator();");
+                ssb.AppendLine(writeLocator);
+            }
+
             foreach (var x in obj.Members)
             {
                 if (x.ChangedName is not null)
@@ -163,14 +171,6 @@ internal static class JournalShared
                     var memberObject = x.Object;
                     using (var scopeChanged = ssb.ScopeBrace($"if (this.{x.ChangedName})"))
                     {
-                        // Locator
-                        /*if (locator is not null &&
-                            memberObject.CodeWriter($"this.{locator.SimpleName}") is { } writeLocator)
-                        {
-                            ssb.AppendLine("writer.Write_Locator();");
-                            ssb.AppendLine(writeLocator);
-                        }*/
-
                         // Key
                         var writeKey = memberObject.CodeWriteKey();
                         if (writeKey is not null)

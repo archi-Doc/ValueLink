@@ -5,6 +5,7 @@ using Tinyhand;
 using Xunit;
 using Tinyhand.IO;
 using System;
+using System.Runtime.CompilerServices;
 
 namespace xUnitTest;
 
@@ -186,5 +187,67 @@ public class JournalTest
         g3 = new JournalTestClass2.GoshujinClass();
         JournalHelper.ReadJournal(g3, journal).IsTrue();
         g2.GoshujinEquals(g3).IsTrue();
+
+        /*using (var w = g2.TryLock(new JournalIdentifier(2)))
+        {
+            w!.Id = new(10);
+            w!.Name = "Ten";
+            w!.Commit();
+        }*/
+
+        using (var w = g2.TryLock(new JournalIdentifier(20), TryLockMode.GetOrCreate))
+        {
+            w!.Name = "20";
+            w!.Commit();
+        }
+
+        journal = tester.GetJournal();
+        g3 = new JournalTestClass2.GoshujinClass();
+        this.ReadJournal(g3, journal).IsTrue();
+        g2.GoshujinEquals(g3).IsTrue();
+    }
+
+    public bool ReadJournal(ITinyhandJournal journalObject, ReadOnlyMemory<byte> data)
+    {
+        var reader = new TinyhandReader(data.Span);
+        var success = true;
+
+        while (reader.Consumed < data.Length)
+        {
+            if (!reader.TryReadRecord(out var length, out var journalType, out var plane))
+            {
+                return false;
+            }
+
+            var fork = reader.Fork();
+            try
+            {
+                if (journalType == JournalType.Record &&
+                    journalObject.CurrentPlane == plane)
+                {
+                    if (journalObject.ReadRecord(ref reader))
+                    {// Success
+                    }
+                    else
+                    {// Failure
+                        success = false;
+                    }
+                }
+                else
+                {
+                }
+            }
+            catch
+            {
+                success = false;
+            }
+            finally
+            {
+                reader = fork;
+                reader.Advance(length);
+            }
+        }
+
+        return success;
     }
 }
