@@ -105,8 +105,139 @@ public partial record JournalTestClass2 : IEquatableObject<JournalTestClass2>
          => this.id.Equals(other.id) && this.name == other.name;
 }
 
+public interface IJournalObject
+{
+    ITinyhandCrystal? Crystal { get; }
+
+    uint Plane { get; }
+
+    IJournalObject? Parent { get; }
+
+    int IntKey { get; protected set; }
+
+    /*public void AddChild(IJournalObject child, int intKey)
+    {
+        child.Parent = this;
+        child.IntKey = intKey;
+    }*/
+
+    public bool TryGetJournalWriter(out TinyhandWriter writer)
+    {
+        if (this.Crystal is null)
+        {
+            writer = default;
+            return false;
+        }
+
+        this.Crystal.TryGetJournalWriter(JournalType.Record, this.Plane, out writer);
+        if (this.Parent == null)
+        {
+            return true;
+        }
+        else
+        {
+            var p2 = this.Parent.Parent;
+            if (p2 is null)
+            {
+                writer.Write_Key();
+                if (this.IntKey >= 0)
+                {
+                    writer.Write(this.IntKey);
+                }
+                else
+                {
+                    this.WriteLocator(ref writer);
+                }
+
+                return true;
+            }
+            else
+            {
+                var p3 = p2.Parent;
+                if (p3 is null)
+                {
+                    writer.Write_Key();
+                    if (this.Parent.IntKey >= 0)
+                    {
+                        writer.Write(this.Parent.IntKey);
+                    }
+                    else
+                    {
+                        this.Parent.WriteLocator(ref writer);
+                    }
+
+                    writer.Write_Key();
+                    if (this.IntKey >= 0)
+                    {
+                        writer.Write(this.IntKey);
+                    }
+                    else
+                    {
+                        this.WriteLocator(ref writer);
+                    }
+
+                    return true;
+                }
+                else
+                {
+                    var p4 = p3.Parent;
+                    if (p4 is null)
+                    {
+                        writer.Write_Key();
+                        if (p2.IntKey >= 0)
+                        {
+                            writer.Write(p2.IntKey);
+                        }
+                        else
+                        {
+                            p2.WriteLocator(ref writer);
+                        }
+
+                        writer.Write_Key();
+                        if (this.Parent.IntKey >= 0)
+                        {
+                            writer.Write(this.Parent.IntKey);
+                        }
+                        else
+                        {
+                            this.Parent.WriteLocator(ref writer);
+                        }
+
+                        writer.Write_Key();
+                        if (this.IntKey >= 0)
+                        {
+                            writer.Write(this.IntKey);
+                        }
+                        else
+                        {
+                            this.WriteLocator(ref writer);
+                        }
+
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public void WriteLocator(ref TinyhandWriter writer)
+    {
+    }
+}
+
 public class JournalTest
 {
+    private void Design()
+    {
+        var j = (IJournalObject)default!;
+        if (j.TryGetJournalWriter())
+        {
+
+        }
+    }
+
     [Fact]
     public void Test1()
     {
