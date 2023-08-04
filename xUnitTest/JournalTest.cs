@@ -5,7 +5,6 @@ using Tinyhand;
 using Xunit;
 using Tinyhand.IO;
 using System;
-using System.Runtime.CompilerServices;
 
 namespace xUnitTest;
 
@@ -129,14 +128,15 @@ public interface IJournalObject
             return false;
         }
 
+        var p = this.Parent;
         this.Crystal.TryGetJournalWriter(JournalType.Record, this.Plane, out writer);
-        if (this.Parent == null)
+        if (p == null)
         {
             return true;
         }
         else
         {
-            var p2 = this.Parent.Parent;
+            var p2 = p.Parent;
             if (p2 is null)
             {
                 writer.Write_Key();
@@ -157,13 +157,13 @@ public interface IJournalObject
                 if (p3 is null)
                 {
                     writer.Write_Key();
-                    if (this.Parent.IntKey >= 0)
+                    if (p.IntKey >= 0)
                     {
-                        writer.Write(this.Parent.IntKey);
+                        writer.Write(p.IntKey);
                     }
                     else
                     {
-                        this.Parent.WriteLocator(ref writer);
+                        p.WriteLocator(ref writer);
                     }
 
                     writer.Write_Key();
@@ -194,13 +194,13 @@ public interface IJournalObject
                         }
 
                         writer.Write_Key();
-                        if (this.Parent.IntKey >= 0)
+                        if (p.IntKey >= 0)
                         {
-                            writer.Write(this.Parent.IntKey);
+                            writer.Write(p.IntKey);
                         }
                         else
                         {
-                            this.Parent.WriteLocator(ref writer);
+                            p.WriteLocator(ref writer);
                         }
 
                         writer.Write_Key();
