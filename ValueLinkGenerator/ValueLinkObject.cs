@@ -1508,7 +1508,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
 
         if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournaling))
-        {// ITinyhandSerialize
+        {// IJournalObject
             goshujinInterface += $", IJournalObject";
         }
 
@@ -1602,6 +1602,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     else
                     {
                         ssb.AppendLine($"var obj = new {this.SimpleName}();");
+                    }
+
+                    if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournaling))
+                    {// IJournalObject
+                        ssb.AppendLine($"(({TinyhandBody.IJournalObject})obj).SetParent(this);");
                     }
 
                     ssb.AppendLine($"obj.State = RepeatableObjectState.Created;");
@@ -1947,6 +1952,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 {
                     ssb.AppendLine("array[n] = formatter.Deserialize(ref reader, options)!;");
                     ssb.AppendLine($"array[n].{this.GoshujinInstanceIdentifier} = {ssb.FullObject};");
+                    if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournaling))
+                    {// IJournalObject
+                        ssb.AppendLine($"(({TinyhandBody.IJournalObject})array[n]).SetParent(v);");
+                    }
                 }
             }
 
