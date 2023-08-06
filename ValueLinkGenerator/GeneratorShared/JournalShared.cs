@@ -75,7 +75,7 @@ internal static class JournalShared
 
     public static void CodeJournal(this ValueLinkObject obj, ScopingStringBuilder ssb, ValueLinkObject? locator)
     {
-        using (var journalScope = ssb.ScopeBrace("if (this.Crystal is not null && this.Crystal.TryGetJournalWriter(JournalType.Record, this.CurrentPlane, out var writer))"))
+        using (var journalScope = ssb.ScopeBrace("if (this.Journal is not null && this.Journal.TryGetJournalWriter(JournalType.Record, out var writer))"))
         {
             // Custom locator
             using (var customScope = ssb.ScopeBrace($"if (this is Tinyhand.ITinyhandCustomJournal custom)"))
@@ -107,13 +107,13 @@ internal static class JournalShared
                 ssb.AppendLine(writeValue);
             }
 
-            ssb.AppendLine("this.Crystal.AddJournal(writer);");
+            ssb.AppendLine("this.Journal.AddJournal(writer);");
         }
     }
 
     public static void CodeJournal2(this ValueLinkObject obj, ScopingStringBuilder ssb, ValueLinkObject? remove)
     {
-        using (var journalScope = ssb.ScopeBrace($"if ({ssb.FullObject}.Crystal is not null && {ssb.FullObject}.Crystal.TryGetJournalWriter(JournalType.Record, {ssb.FullObject}.CurrentPlane, out var writer))"))
+        using (var journalScope = ssb.ScopeBrace($"if ({ssb.FullObject}.Journal is not null && {ssb.FullObject}.Journal.TryGetJournalWriter(JournalType.Record, out var writer))"))
         {
             // Custom locator
             using (var customScope = ssb.ScopeBrace($"if ({ssb.FullObject} is Tinyhand.ITinyhandCustomJournal custom)"))
@@ -137,7 +137,7 @@ internal static class JournalShared
                 ssb.AppendLine(writeRemove);
             }
 
-            ssb.AppendLine($"{ssb.FullObject}.Crystal.AddJournal(writer);");
+            ssb.AppendLine($"{ssb.FullObject}.Journal.AddJournal(writer);");
         }
     }
 
@@ -148,7 +148,7 @@ internal static class JournalShared
             return;
         }
 
-        using (var journalScope = ssb.ScopeBrace("if (this.instance.Crystal is not null && this.instance.Crystal.TryGetJournalWriter(JournalType.Record, this.instance.CurrentPlane, out var writer))"))
+        using (var journalScope = ssb.ScopeBrace("if (this.instance.Journal is not null && this.instance.Journal.TryGetJournalWriter(JournalType.Record, out var writer))"))
         {
             // Custom locator
             using (var customScope = ssb.ScopeBrace($"if (this.instance is Tinyhand.ITinyhandCustomJournal custom)"))
@@ -190,7 +190,7 @@ internal static class JournalShared
                 }
             }
 
-            ssb.AppendLine("this.instance.Crystal.AddJournal(writer);");
+            ssb.AppendLine("this.instance.Journal.AddJournal(writer);");
         }
     }
 

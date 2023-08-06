@@ -104,140 +104,8 @@ public partial record JournalTestClass2 : IEquatableObject<JournalTestClass2>
          => this.id.Equals(other.id) && this.name == other.name;
 }
 
-public interface IJournalObject
-{
-    ITinyhandCrystal? Crystal { get; }
-
-    uint Plane { get; }
-
-    IJournalObject? Parent { get; }
-
-    int IntKey { get; protected set; }
-
-    /*public void AddChild(IJournalObject child, int intKey)
-    {
-        child.Parent = this;
-        child.IntKey = intKey;
-    }*/
-
-    public bool TryGetJournalWriter(out TinyhandWriter writer)
-    {
-        if (this.Crystal is null)
-        {
-            writer = default;
-            return false;
-        }
-
-        var p = this.Parent;
-        this.Crystal.TryGetJournalWriter(JournalType.Record, this.Plane, out writer);
-        if (p == null)
-        {
-            return true;
-        }
-        else
-        {
-            var p2 = p.Parent;
-            if (p2 is null)
-            {
-                writer.Write_Key();
-                if (this.IntKey >= 0)
-                {
-                    writer.Write(this.IntKey);
-                }
-                else
-                {
-                    this.WriteLocator(ref writer);
-                }
-
-                return true;
-            }
-            else
-            {
-                var p3 = p2.Parent;
-                if (p3 is null)
-                {
-                    writer.Write_Key();
-                    if (p.IntKey >= 0)
-                    {
-                        writer.Write(p.IntKey);
-                    }
-                    else
-                    {
-                        p.WriteLocator(ref writer);
-                    }
-
-                    writer.Write_Key();
-                    if (this.IntKey >= 0)
-                    {
-                        writer.Write(this.IntKey);
-                    }
-                    else
-                    {
-                        this.WriteLocator(ref writer);
-                    }
-
-                    return true;
-                }
-                else
-                {
-                    var p4 = p3.Parent;
-                    if (p4 is null)
-                    {
-                        writer.Write_Key();
-                        if (p2.IntKey >= 0)
-                        {
-                            writer.Write(p2.IntKey);
-                        }
-                        else
-                        {
-                            p2.WriteLocator(ref writer);
-                        }
-
-                        writer.Write_Key();
-                        if (p.IntKey >= 0)
-                        {
-                            writer.Write(p.IntKey);
-                        }
-                        else
-                        {
-                            p.WriteLocator(ref writer);
-                        }
-
-                        writer.Write_Key();
-                        if (this.IntKey >= 0)
-                        {
-                            writer.Write(this.IntKey);
-                        }
-                        else
-                        {
-                            this.WriteLocator(ref writer);
-                        }
-
-                        return true;
-                    }
-                }
-            }
-        }
-
-        return false;
-    }
-
-    public void WriteLocator(ref TinyhandWriter writer)
-    {
-    }
-}
-
 public class JournalTest
 {
-    private void Design()
-    {
-        var j = (IJournalObject)default!;
-        if (j.TryGetJournalWriter())
-        {
-
-        }
-    }
-
     [Fact]
     public void Test1()
     {
@@ -245,7 +113,7 @@ public class JournalTest
         var c = new JournalTestClass(1, "one");
 
         var cc = new JournalTestClass();
-        cc.Crystal = tester;
+        cc.Journal = tester;
         cc.Id = c.Id;
         cc.Name = c.Name;
 
@@ -267,7 +135,7 @@ public class JournalTest
         var g = new JournalTestClass.GoshujinClass { c1, c2, c3 };
         var g2 = new JournalTestClass.GoshujinClass();
 
-        g2.Crystal = tester;
+        g2.Journal = tester;
         g2.Add(new JournalTestClass(1, "one"));
         g2.Add(new JournalTestClass(2, "two"));
         g2.Add(new JournalTestClass(3, "3"));
@@ -299,7 +167,7 @@ public class JournalTest
         var g = new JournalTestClass2.GoshujinClass { c1, c2, c3 };
         var g2 = new JournalTestClass2.GoshujinClass();
 
-        g2.Crystal = tester;
+        g2.Journal = tester;
         g2.Add(new JournalTestClass2(new(1), "one"));
         g2.Add(new JournalTestClass2(new(2), "two"));
         g2.Add(new JournalTestClass2(new(3), "3"));
@@ -338,14 +206,14 @@ public class JournalTest
         g2.GoshujinEquals(g3).IsTrue();
     }
 
-    public bool ReadJournal(ITinyhandJournal journalObject, ReadOnlyMemory<byte> data)
+    public bool ReadJournal(IJournalObject journalObject, ReadOnlyMemory<byte> data)
     {
         var reader = new TinyhandReader(data.Span);
         var success = true;
 
         while (reader.Consumed < data.Length)
         {
-            if (!reader.TryReadRecord(out var length, out var journalType, out var plane))
+            if (!reader.TryReadRecord(out var length, out var journalType))
             {
                 return false;
             }
@@ -353,8 +221,7 @@ public class JournalTest
             var fork = reader.Fork();
             try
             {
-                if (journalType == JournalType.Record &&
-                    journalObject.CurrentPlane == plane)
+                if (journalType == JournalType.Record)
                 {
                     if (journalObject.ReadRecord(ref reader))
                     {// Success

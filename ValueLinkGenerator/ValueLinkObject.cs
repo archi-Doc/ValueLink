@@ -944,7 +944,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournaling))
             {
-                ssb.AppendLine($"this.Crystal = g?.Crystal;");
+                ssb.AppendLine($"this.Journal = g?.Journal;");
             }
 
             using (var scopeIfNull2 = ssb.ScopeBrace($"if (g != null)"))
@@ -1219,13 +1219,13 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                         }
                     }
 
-                    scopeLock?.Dispose();
-
                     if (this.TinyhandAttribute?.Journaling == true)
                     {
                         ssb.AppendLine();
                         this.CodeJournal3(ssb);
                     }
+
+                    scopeLock?.Dispose();
                 }
             }
 
@@ -1509,7 +1509,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournaling))
         {// ITinyhandSerialize
-            goshujinInterface += $", ITinyhandJournal";
+            goshujinInterface += $", IJournalObject";
         }
 
         if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSyncObject))
@@ -1710,10 +1710,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         ssb.AppendLine();
 
-        ssb.AppendLine("[IgnoreMember] public ITinyhandCrystal? Crystal { get; set; }");
-        ssb.AppendLine("[IgnoreMember] public uint CurrentPlane { get; set; }");
+        ssb.AppendLine($"[IgnoreMember] public {TinyhandBody.ITinyhandJournal}? Journal {{ get; set; }}");
+        ssb.AppendLine($"[IgnoreMember] {TinyhandBody.IJournalObject}? {TinyhandBody.IJournalObject}.Parent {{ get; set; }}");
+        ssb.AppendLine($"[IgnoreMember] int {TinyhandBody.IJournalObject}.Key {{ get; set; }} = -1;");
 
-        using (var scopeMethod = ssb.ScopeBrace("bool ITinyhandJournal.ReadRecord(ref TinyhandReader reader)"))
+        using (var scopeMethod = ssb.ScopeBrace("bool IJournalObject.ReadRecord(ref TinyhandReader reader)"))
         {
             ssb.AppendLine("var record = reader.Read_Record();");
 
@@ -1722,7 +1723,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 var typeObject = this.UniqueLink.Target.TypeObject;
                 ssb.AppendLine($"var key = {typeObject.CodeReader()};");
                 var keyIsNotNull = typeObject.Kind.IsValueType() ? string.Empty : "key is not null && ";
-                ssb.AppendLine($"if ({keyIsNotNull}this.{this.UniqueLink.ChainName}.FindFirst(key) is ITinyhandJournal obj)");
+                ssb.AppendLine($"if ({keyIsNotNull}this.{this.UniqueLink.ChainName}.FindFirst(key) is IJournalObject obj)");
 
                 ssb.AppendLine("{");
                 ssb.IncrementIndent();
@@ -2049,7 +2050,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
                 if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournaling))
                 {
-                    ssb.AppendLine($"{ssb.FullObject}.Crystal = this.Crystal;");
+                    ssb.AppendLine($"{ssb.FullObject}.Journal = this.Journal;");
                 }
 
                 var scopeLock = this.ScopeLock(ssb, "this");
@@ -2340,7 +2341,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
                     if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournaling))
                     {
-                        ssb.AppendLine($"this.Crystal = value?.Crystal;");
+                        ssb.AppendLine($"this.Journal = value?.Journal;");
                     }
 
                     using (var scopeIfNull2 = ssb.ScopeBrace($"if (value != null)"))
@@ -2409,7 +2410,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
                         if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournaling))
                         {
-                            ssb.AppendLine($"this.Crystal = value?.Crystal;");
+                            ssb.AppendLine($"this.Journal = value?.Journal;");
                         }
 
                         using (var scopeIfNull2 = ssb.ScopeBrace($"if (value != null)"))
