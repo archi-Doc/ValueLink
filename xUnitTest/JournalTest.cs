@@ -91,6 +91,7 @@ public partial record JournalTestClass2 : IEquatableObject<JournalTestClass2>
     {
         this.id = id;
         this.name = name;
+        this.child.Age = id.Id0 + 0.1d;
     }
 
     [Link(Type = ChainType.Ordered, Primary = true, Unique = true)]
@@ -100,8 +101,30 @@ public partial record JournalTestClass2 : IEquatableObject<JournalTestClass2>
     [Key(1)]
     private string name = string.Empty;
 
+    [Key(2)]
+    private JournalChildClass child = new();
+
     public bool ObjectEquals(JournalTestClass2 other)
-         => this.id.Equals(other.id) && this.name == other.name;
+         => this.id.Equals(other.id) && this.name == other.name && this.child.ObjectEquals(other.child);
+}
+
+[TinyhandObject(Journaling = true)]
+public partial record JournalChildClass : IEquatableObject<JournalChildClass>
+{
+    public JournalChildClass()
+    {
+    }
+
+    public JournalChildClass(double age)
+    {
+        this.Age = age;
+    }
+
+    [Key(0)]
+    public double Age { get; set; }
+
+    public bool ObjectEquals(JournalChildClass other)
+        => this.Age == other.Age;
 }
 
 public class JournalTest
@@ -197,6 +220,7 @@ public class JournalTest
         using (var w = g2.TryLock(new JournalIdentifier(20), TryLockMode.GetOrCreate))
         {
             w!.Name = "20";
+            w!.Child.Age = 20.2d;
             w!.Commit();
         }
 
