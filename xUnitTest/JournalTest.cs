@@ -117,14 +117,14 @@ public partial record JournalChildClass : IEquatableObject<JournalChildClass>
 
     public JournalChildClass(double age)
     {
-        this.Age = age;
+        this.age = age;
     }
 
-    [Key(0)]
-    public double Age { get; set; }
+    [Key(0, AddProperty = "Age")]
+    private double age;
 
     public bool ObjectEquals(JournalChildClass other)
-        => this.Age == other.Age;
+        => this.age == other.age;
 }
 
 public class JournalTest
@@ -220,7 +220,8 @@ public class JournalTest
         using (var w = g2.TryLock(new JournalIdentifier(20), TryLockMode.GetOrCreate))
         {
             w!.Name = "20";
-            w!.Child.Age = 20.2d;
+            w!.Id = new(222);
+            //w!.Child.Age = 20.2d;
             w!.Commit();
         }
 

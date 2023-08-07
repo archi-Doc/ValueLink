@@ -73,7 +73,7 @@ internal static class JournalShared
         }
     }
 
-    public static void CodeJournal(this ValueLinkObject obj, ScopingStringBuilder ssb, ValueLinkObject? locator)
+    /*public static void CodeJournal(this ValueLinkObject obj, ScopingStringBuilder ssb, ValueLinkObject? locator)
     {
         using (var journalScope = ssb.ScopeBrace("if (this.Journal is not null && this.Journal.TryGetJournalWriter(JournalType.Record, out var writer))"))
         {
@@ -109,11 +109,11 @@ internal static class JournalShared
 
             ssb.AppendLine("this.Journal.AddJournal(writer);");
         }
-    }
+    }*/
 
     public static void CodeJournal2(this ValueLinkObject obj, ScopingStringBuilder ssb, ValueLinkObject? remove)
     {
-        using (var journalScope = ssb.ScopeBrace($"if ({ssb.FullObject}.Journal is not null && {ssb.FullObject}.Journal.TryGetJournalWriter(JournalType.Record, out var writer))"))
+        using (var journalScope = ssb.ScopeBrace($"if ((({TinyhandBody.IJournalObject}){ssb.FullObject}).TryGetJournalWriter(out var journal, out var writer))"))
         {
             // Custom locator
             using (var customScope = ssb.ScopeBrace($"if ({ssb.FullObject} is Tinyhand.ITinyhandCustomJournal custom)"))
@@ -137,7 +137,7 @@ internal static class JournalShared
                 ssb.AppendLine(writeRemove);
             }
 
-            ssb.AppendLine($"{ssb.FullObject}.Journal.AddJournal(writer);");
+            ssb.AppendLine($"journal.AddJournal(writer);");
         }
     }
 
@@ -148,7 +148,7 @@ internal static class JournalShared
             return;
         }
 
-        using (var journalScope = ssb.ScopeBrace("if (this.instance.Journal is not null && this.instance.Journal.TryGetJournalWriter(JournalType.Record, out var writer))"))
+        using (var journalScope = ssb.ScopeBrace($"if ((({TinyhandBody.IJournalObject})this.instance).TryGetJournalWriter(out var journal, out var writer))"))
         {
             // Custom locator
             using (var customScope = ssb.ScopeBrace($"if (this.instance is Tinyhand.ITinyhandCustomJournal custom)"))
@@ -190,7 +190,7 @@ internal static class JournalShared
                 }
             }
 
-            ssb.AppendLine("this.instance.Journal.AddJournal(writer);");
+            ssb.AppendLine("journal.AddJournal(writer);");
         }
     }
 
