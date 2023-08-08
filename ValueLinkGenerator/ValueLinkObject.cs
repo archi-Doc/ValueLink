@@ -930,7 +930,32 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             this.Generate_EnterGoshujinMethod(ssb, info);
         }
 
+        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournaling))
+        {
+            this.Generate_WriteLocator(ssb, info);
+        }
+
         return;
+    }
+
+    internal void Generate_WriteLocator(ScopingStringBuilder ssb, GeneratorInformation info)
+    {
+        if (this.UniqueLink is null)
+        {
+            return;
+        }
+
+        var writeLocator = this.UniqueLink.TypeObject.CodeWriter($"this.{this.UniqueLink.TargetName}");
+        if (writeLocator is null)
+        {
+            return;
+        }
+
+        using (var scopeMethod = ssb.ScopeBrace($"void {TinyhandBody.IJournalObject}.WriteLocator(ref TinyhandWriter writer)"))
+        {
+            ssb.AppendLine("writer.Write_Locator();");
+            ssb.AppendLine(writeLocator);
+        }
     }
 
     internal void Generate_Add(ScopingStringBuilder ssb, GeneratorInformation info)

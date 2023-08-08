@@ -85,12 +85,17 @@ public partial record JournalTestClass2 : IEquatableObject<JournalTestClass2>
 {
     public JournalTestClass2()
     {
+        this.child = new();
+        ((IJournalObject)this.child).SetParent(this, 2);
     }
 
     public JournalTestClass2(JournalIdentifier id, string name)
     {
         this.id = id;
         this.name = name;
+
+        this.child = new();
+        ((IJournalObject)this.child).SetParent(this, 2);
         this.child.Age = id.Id0 + 0.1d;
     }
 
@@ -102,7 +107,7 @@ public partial record JournalTestClass2 : IEquatableObject<JournalTestClass2>
     private string name = string.Empty;
 
     [Key(2)]
-    private JournalChildClass child = new();
+    private JournalChildClass child;
 
     public bool ObjectEquals(JournalTestClass2 other)
          => this.id.Equals(other.id) && this.name == other.name && this.child.ObjectEquals(other.child);
@@ -221,7 +226,7 @@ public class JournalTest
         {
             w!.Name = "20";
             w!.Id = new(222);
-            //w!.Child.Age = 20.2d;
+            w!.Child.Age = 20.2d; // Caution! Changes to values are reflected immediately (it is not repeatable read).
             w!.Commit();
         }
 
@@ -254,6 +259,9 @@ public class JournalTest
                     else
                     {// Failure
                         success = false;
+
+                        reader = fork;
+                        journalObject.ReadRecord(ref reader);
                     }
                 }
                 else
