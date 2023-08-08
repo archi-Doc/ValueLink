@@ -109,8 +109,11 @@ public partial record JournalTestClass2 : IEquatableObject<JournalTestClass2>
     [Key(2)]
     private JournalChildClass child;
 
+    [Key(3)]
+    private int id2;
+
     public bool ObjectEquals(JournalTestClass2 other)
-         => this.id.Equals(other.id) && this.name == other.name && this.child.ObjectEquals(other.child);
+         => this.id.Equals(other.id) && this.name == other.name && this.child.ObjectEquals(other.child) && this.id2 == other.id2;
 }
 
 [TinyhandObject(Journaling = true)]
@@ -227,7 +230,65 @@ public class JournalTest
             w!.Name = "20";
             w!.Id = new(222);
             w!.Child.Age = 20.2d; // Caution! Changes to values are reflected immediately (it is not repeatable read).
+            w!.Id2 = 2;
             w!.Commit();
+        }
+
+        journal = tester.GetJournal();
+        g3 = new JournalTestClass2.GoshujinClass();
+        this.ReadJournal(g3, journal).IsTrue();
+        g2.GoshujinEquals(g3).IsTrue();
+
+        using (var w = g2.TryLock(new JournalIdentifier(222)))
+        {
+            if (w is not null)
+            {
+                w.Name = "BB";
+                w.Child.Age = 30.2d; // Caution! Changes to values are reflected immediately (it is not repeatable read).
+                w.Commit();
+            }
+        }
+
+        var r = g2.TryGet(new JournalIdentifier(20));
+        if (r is not null)
+        {
+            g2.Remove(r);
+        }
+
+        using (var w = g2.TryLock(new JournalIdentifier(5), TryLockMode.GetOrCreate))
+        {
+            if (w is not null)
+            {
+                w.Name = "Fi";
+                w.Id2 = 5;
+                w.Commit();
+            }
+        }
+
+        using (var w = g2.TryLock(new JournalIdentifier(4)))
+        {
+            if (w is not null)
+            {
+                w.Name = "FF";
+                w.Commit();
+            }
+        }
+
+        using (var w = g2.TryLock(new JournalIdentifier(4)))
+        {
+            if (w is not null)
+            {
+                w.Goshujin = null;
+            }
+        }
+
+        using (var w = g2.TryLock(new JournalIdentifier(4)))
+        {
+            if (w is not null)
+            {
+                w.Goshujin = null;
+                w.Commit();
+            }
         }
 
         journal = tester.GetJournal();

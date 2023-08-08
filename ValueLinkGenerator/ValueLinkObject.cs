@@ -1287,6 +1287,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             }
 
             // Journal
+            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournaling))
+            {
+                ssb.AppendLine($"(({TinyhandBody.IJournalObject})this.instance).SetParent(this.Goshujin);");
+            }
 
             ssb.AppendLine($"this.original.State = {ValueLinkBody.RepeatableObjectState}.Obsolete;");
             ssb.AppendLine("this.original = this.instance;");
