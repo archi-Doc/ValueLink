@@ -158,8 +158,8 @@ internal static class JournalShared
 
             // Locator
             if (obj.UniqueLink is not null &&
-                obj.UniqueLink.TypeObject.CodeWriter($"this.instance.{obj.UniqueLink.TargetName}") is { } writeLocator)
-            {
+                obj.UniqueLink.TypeObject.CodeWriter($"this.original.{obj.UniqueLink.TargetName}") is { } writeLocator)
+            {// this.instance
                 ssb.AppendLine("writer.Write_Locator();");
                 ssb.AppendLine(writeLocator);
             }
