@@ -17,7 +17,7 @@
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.13.7" />
-    <PackageReference Include="Tinyhand" Version="0.55.5" />
+    <PackageReference Include="Tinyhand" Version="0.55.6" />
   </ItemGroup>
 
   <ItemGroup>

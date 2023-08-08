@@ -86,7 +86,6 @@ public partial record JournalTestClass2 : IEquatableObject<JournalTestClass2>
     public JournalTestClass2()
     {
         this.child = new();
-        ((IJournalObject)this.child).SetParent(this, 2);
     }
 
     public JournalTestClass2(JournalIdentifier id, string name)
@@ -95,7 +94,6 @@ public partial record JournalTestClass2 : IEquatableObject<JournalTestClass2>
         this.name = name;
 
         this.child = new();
-        ((IJournalObject)this.child).SetParent(this, 2);
         this.child.Age = id.Id0 + 0.1d;
     }
 
@@ -111,6 +109,9 @@ public partial record JournalTestClass2 : IEquatableObject<JournalTestClass2>
 
     [Key(3)]
     private int id2;
+
+    [Key(4)]
+    private JournalTestClass2.GoshujinClass? children; // = new();
 
     public bool ObjectEquals(JournalTestClass2 other)
          => this.id.Equals(other.id) && this.name == other.name && this.child.ObjectEquals(other.child) && this.id2 == other.id2;
@@ -288,6 +289,46 @@ public class JournalTest
             {
                 w.Goshujin = null;
                 w.Commit();
+            }
+        }
+
+        for (var i = 0; i < 100; i++)
+        {
+            using (var w = g2.TryLock(new JournalIdentifier(i), TryLockMode.GetOrCreate))
+            {
+                if (w is not null)
+                {
+                    w.Commit();
+                }
+            }
+        }
+
+        using (var w = g2.TryLock(new JournalIdentifier(50)))
+        {
+            if (w is not null)
+            {
+                w.Name = "50";
+                w.Id2 = 50;
+
+                using (var w2 = g2.TryLock(new JournalIdentifier(51)))
+                {
+                    if (w2 is not null)
+                    {
+                        w2.Name = "51";
+                        w2.Id2 = 51;
+                        w2.Commit();
+                        w.Commit();
+                    }
+                }
+            }
+        }
+
+        using (var w = g2.TryLock(new JournalIdentifier(60)))
+        {
+            if (w is not null)
+            {
+                // w.Children.Add(new(new(60), "six"));
+                // w.Commit();
             }
         }
 
