@@ -136,7 +136,7 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
 
     public static readonly DiagnosticDescriptor Error_NoUniqueLink2 = new DiagnosticDescriptor(
         id: "CLG023", title: "No unique link", messageFormat: "Unique link is required when the journaling feature is enabled",
-        category: "ValueLinkGenerator", DiagnosticSeverity.Warning, isEnabledByDefault: true);
+        category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor Error_MustBeRecord = new DiagnosticDescriptor(
         id: "CLG024", title: "Record required", messageFormat: "The target must be a record class when the isolation level is set to RepeatableRead",
