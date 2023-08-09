@@ -60,7 +60,7 @@ public class Member
 
     public void GenerateWriterProperty(ScopingStringBuilder ssb)
     {
-        using (var scopeProperty = ssb.ScopeBrace($"public {this.Object.TypeObject?.FullName} {this.GeneratedName}"))
+        using (var scopeProperty = ssb.ScopeBrace($"public {this.Object.TypeObjectWithNullable?.FullNameWithNullable} {this.GeneratedName}"))
         {
             ssb.AppendLine($"get => this.Instance.{this.Object.SimpleName};");
             using (var scopeSetter = ssb.ScopeBrace($"set"))
