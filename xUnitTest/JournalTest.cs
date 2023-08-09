@@ -86,6 +86,7 @@ public partial record JournalTestClass2 : IEquatableObject<JournalTestClass2>
     public JournalTestClass2()
     {
         this.child = new();
+        // ((IJournalObject)this.child).SetParent(this, 2);
     }
 
     public JournalTestClass2(JournalIdentifier id, string name)
@@ -94,6 +95,7 @@ public partial record JournalTestClass2 : IEquatableObject<JournalTestClass2>
         this.name = name;
 
         this.child = new();
+        // ((IJournalObject)this.child).SetParent(this, 2);
         this.child.Age = id.Id0 + 0.1d;
     }
 
@@ -219,12 +221,12 @@ public class JournalTest
         JournalHelper.ReadJournal(g3, journal).IsTrue();
         g2.GoshujinEquals(g3).IsTrue();
 
-        /*using (var w = g2.TryLock(new JournalIdentifier(2)))
+        using (var w = g2.TryLock(new JournalIdentifier(2)))
         {
             w!.Id = new(10);
             w!.Name = "Ten";
             w!.Commit();
-        }*/
+        }
 
         using (var w = g2.TryLock(new JournalIdentifier(20), TryLockMode.GetOrCreate))
         {
@@ -327,8 +329,18 @@ public class JournalTest
         {
             if (w is not null)
             {
-                // w.Children.Add(new(new(60), "six"));
-                // w.Commit();
+                w.Children ??= new();
+                w.Children.Add(new(new(60), "six"));
+                w.Commit();
+
+                using (var w2 = w.Children.TryLock(new JournalIdentifier(10), TryLockMode.GetOrCreate))
+                {
+                    if (w2 is not null)
+                    {
+                        w2.Name = "Y";
+                        w2.Commit();
+                    }
+                }
             }
         }
 
