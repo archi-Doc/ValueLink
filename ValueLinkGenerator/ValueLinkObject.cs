@@ -940,12 +940,13 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void Generate_WriteLocator(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        if (this.UniqueLink is null)
+        if (this.UniqueLink is null ||
+            this.UniqueLink.Target is null)
         {
             return;
         }
 
-        var writeLocator = this.UniqueLink.TypeObject.CodeWriter($"this.{this.UniqueLink.TargetName}");
+        var writeLocator = this.UniqueLink.Target.CodeWriter($"this.{this.UniqueLink.TargetName}");
         if (writeLocator is null)
         {
             return;
