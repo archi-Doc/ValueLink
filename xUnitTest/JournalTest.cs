@@ -138,6 +138,22 @@ public partial record JournalChildClass : IEquatableObject<JournalChildClass>
         => this.age == other.age;
 }
 
+[TinyhandObject(Journaling = true)]
+[ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
+internal partial record StandardData
+{
+    public StandardData()
+    {
+    }
+
+    [Key(0)]
+    [Link(Primary = true, Unique = true, Type = ChainType.Ordered)]
+    private int id;
+
+    [Key(1)]
+    private string name = string.Empty;
+}
+
 public class JournalTest
 {
     [Fact]
