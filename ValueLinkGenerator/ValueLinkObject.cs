@@ -41,7 +41,7 @@ public enum ValueLinkObjectFlag
     HasUniqueLink = 1 << 18, // Has unique link
     GenerateJournaling = 1 << 19, // Generate journaling
     AddSyncObject = 1 << 20,
-    AddLockable = 1 << 21,
+    // AddLockable = 1 << 21,
     AddGoshujinProperty = 1 << 22,
     EquatableObject = 1 << 23, // Has IEquatableObject
 }
@@ -1547,10 +1547,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             goshujinInterface += $", Arc.Threading.ISyncObject";
         }
 
-        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddLockable))
+        /*if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddLockable))
         {// ILockable
             goshujinInterface += $", Arc.Threading.ILockable";
-        }
+        }*/
 
         if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.EquatableObject))
         {
@@ -1614,10 +1614,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 ssb.AppendLine("private object syncObject = new();");
             }
 
-            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddLockable))
+            /*if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddLockable))
             {// ILockable
                 this.GenerateGosjujin_Lock(ssb, info);
-            }
+            }*/
 
             if (this.RepeatableGoshujin is not null && this.UniqueLink is not null)
             {
@@ -1874,7 +1874,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 }
             }
 
-            lockScope?.Dispose();
+            if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatableRead)
+            {
+                lockScope?.Dispose();
+            }
+
             ssb.AppendLine();
 
             // Objects
@@ -1883,6 +1887,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             using (var scopeFor = ssb.ScopeBrace("foreach (var x in array)"))
             {
                 ssb.AppendLine("formatter.Serialize(ref writer, x, options);");
+            }
+
+            if (this.ObjectAttribute?.Isolation != IsolationLevel.RepeatableRead)
+            {
+                lockScope?.Dispose();
             }
         }
     }
