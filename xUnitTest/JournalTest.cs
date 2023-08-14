@@ -382,6 +382,10 @@ public class JournalTest
             var fork = reader.Fork();
             try
             {
+                if (reader.Consumed >= 2500)
+                {
+
+                }
                 if (journalType == JournalType.Record)
                 {
                     if (journalObject.ReadRecord(ref reader))
