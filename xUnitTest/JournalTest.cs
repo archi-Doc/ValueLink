@@ -117,7 +117,48 @@ public partial record JournalTestClass2 : IEquatableObject<JournalTestClass2>
     private JournalTestClass2.GoshujinClass? children; // = new();
 
     public bool ObjectEquals(JournalTestClass2 other)
-         => this.id.Equals(other.id) && this.name == other.name && this.child.ObjectEquals(other.child) && this.id2 == other.id2;
+    {
+        if (!this.id.Equals(other.id))
+        {
+            return false;
+        }
+
+        if (this.name != other.name)
+        {
+            return false;
+        }
+
+        if (!this.child.ObjectEquals(other.child))
+        {
+            return false;
+        }
+
+        if (this.id2 != other.id2)
+        {
+            return false;
+        }
+
+        if (this.children is null)
+        {
+            if (other.children is not null)
+            {
+                return false;
+            }
+        }
+        else
+        {
+            if (other.children is null)
+            {
+                return false;
+            }
+            else if (!this.children.GoshujinEquals(other.children))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }
 
 [TinyhandObject(Journal = true)]
