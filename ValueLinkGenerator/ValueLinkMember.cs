@@ -4,6 +4,7 @@ using System.Linq;
 using Arc.Visceral;
 using Microsoft.CodeAnalysis;
 using Tinyhand.Generator;
+using TinyhandGenerator;
 
 namespace ValueLink.Generator;
 
@@ -41,6 +42,17 @@ public class Member
         {
             this.ChangedName = this.Object.SimpleName + "Changed";
         }
+
+        if (obj.AllAttributes.FirstOrDefault(x => x.FullName == MaxLengthAttributeMock.FullName) is { } objectAttribute)
+        {
+            try
+            {
+                this.MaxLengthAttribute = MaxLengthAttributeMock.FromArray(objectAttribute.ConstructorArguments, objectAttribute.NamedArguments);
+            }
+            catch
+            {
+            }
+        }
     }
 
     public ValueLinkObject Object { get; private set; }
@@ -52,6 +64,8 @@ public class Member
     public string GeneratedName { get; private set; }
 
     public string? ChangedName { get; private set; }
+
+    public MaxLengthAttributeMock? MaxLengthAttribute { get; private set; }
 
     public void GenerateReaderProperty(ScopingStringBuilder ssb)
     {
@@ -65,6 +79,11 @@ public class Member
             ssb.AppendLine($"get => this.Instance.{this.Object.SimpleName};");
             using (var scopeSetter = ssb.ScopeBrace($"set"))
             {
+                if (this.MaxLengthAttribute is not null)
+                {
+                    JournalShared.GenerateValue_MaxLength(ssb, this.Object, this.MaxLengthAttribute);
+                }
+
                 ssb.AppendLine($"this.Instance.{this.Object.SimpleName} = value;");
                 if (this.ChangedName is not null)
                 {
