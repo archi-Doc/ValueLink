@@ -4,7 +4,7 @@ using Tinyhand;
 
 namespace Sandbox;
 
-[TinyhandObject(Journaling = true)]
+[TinyhandObject(Journal = true)]
 [ValueLinkObject]
 internal partial class ValueClass
 {
