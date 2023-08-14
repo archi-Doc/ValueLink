@@ -39,7 +39,7 @@ public enum ValueLinkObjectFlag
     HasLinkAttribute = 1 << 16, // Has LinkAttribute
     HasPrimaryLink = 1 << 17, // Has primary link
     HasUniqueLink = 1 << 18, // Has unique link
-    GenerateJournaling = 1 << 19, // Generate journaling
+    GenerateJournal = 1 << 19, // Generate journaling
     AddSyncObject = 1 << 20,
     // AddLockable = 1 << 21,
     AddGoshujinProperty = 1 << 22,
@@ -220,9 +220,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             }
 
             this.ObjectFlag |= ValueLinkObjectFlag.TinyhandObject;
-            if (this.TinyhandAttribute?.Journaling == true)
+            if (this.TinyhandAttribute?.Journal == true)
             {
-                this.ObjectFlag |= ValueLinkObjectFlag.GenerateJournaling;
+                this.ObjectFlag |= ValueLinkObjectFlag.GenerateJournal;
             }
         }
 
@@ -522,7 +522,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 this.ObjectFlag |= ValueLinkObjectFlag.HasUniqueLink;
             }
 
-            if (this.TinyhandAttribute?.Journaling == true)
+            if (this.TinyhandAttribute?.Journal == true)
             {// Required
                 if (this.UniqueLink is null/* || !this.UniqueLink.Type.IsLocatable()*/)
                 {
@@ -555,7 +555,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             }
 
             // Prepare members
-            var journaling = this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournaling);
+            var journaling = this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournal);
             foreach (var x in this.GetMembers(VisceralTarget.Field | VisceralTarget.Property))
             {
                 /*if (x.Field_Accessibility == Accessibility.Public ||
@@ -930,7 +930,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             this.Generate_EnterGoshujinMethod(ssb, info);
         }
 
-        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournaling))
+        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournal))
         {
             this.Generate_WriteLocator(ssb, info);
         }
@@ -968,7 +968,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         {
             ssb.AppendLine($"this.{goshujinInstance} = g;");
 
-            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournaling))
+            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournal))
             {
                 ssb.AppendLine($"this.Journal = g?.Journal;");
             }
@@ -986,7 +986,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     }
                 }
 
-                if (this.TinyhandAttribute?.Journaling == true)
+                if (this.TinyhandAttribute?.Journal == true)
                 {
                     this.CodeJournal2(ssb, null);
                 }
@@ -1034,7 +1034,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     }
                 }
 
-                if (this.UniqueLink is not null && this.TinyhandAttribute?.Journaling == true)
+                if (this.UniqueLink is not null && this.TinyhandAttribute?.Journal == true)
                 {
                     this.CodeJournal2(ssb, this.UniqueLink.Target);
                 }
@@ -1245,7 +1245,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                         }
                     }
 
-                    if (this.TinyhandAttribute?.Journaling == true)
+                    if (this.TinyhandAttribute?.Journal == true)
                     {
                         ssb.AppendLine();
                         this.CodeJournal3(ssb);
@@ -1288,7 +1288,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             }
 
             // Journal
-            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournaling))
+            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournal))
             {
                 ssb.AppendLine($"(({TinyhandBody.IJournalObject})this.instance).SetParent(this.Goshujin);");
             }
@@ -1537,7 +1537,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             goshujinInterface += $", ITinyhandSerialize<{this.GoshujinFullName}>, ITinyhandReconstruct<{this.GoshujinFullName}>, ITinyhandClone<{this.GoshujinFullName}>, ITinyhandSerialize";
         }
 
-        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournaling))
+        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournal))
         {// IJournalObject
             goshujinInterface += $", IJournalObject";
         }
@@ -1601,7 +1601,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     }
                 }
 
-                if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournaling))
+                if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournal))
                 {
                     this.GenerateGosjujin_Journal(ssb, info);
                 }
@@ -1634,7 +1634,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                         ssb.AppendLine($"var obj = new {this.SimpleName}();");
                     }
 
-                    if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournaling))
+                    if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournal))
                     {// IJournalObject
                         ssb.AppendLine($"(({TinyhandBody.IJournalObject})obj).SetParent(this);");
                     }
@@ -1991,7 +1991,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 {
                     ssb.AppendLine("array[n] = formatter.Deserialize(ref reader, options)!;");
                     ssb.AppendLine($"array[n].{this.GoshujinInstanceIdentifier} = {ssb.FullObject};");
-                    if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournaling))
+                    if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournal))
                     {// IJournalObject
                         ssb.AppendLine($"(({TinyhandBody.IJournalObject})array[n]).SetParent(v);");
                     }
@@ -2096,7 +2096,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             {// No property
                 ssb.AppendLine($"if ({ssb.FullObject}.{this.GoshujinInstanceIdentifier} != null) return false;");
 
-                if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournaling))
+                if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournal))
                 {
                     ssb.AppendLine($"{ssb.FullObject}.Journal = this.Journal;");
                 }
@@ -2203,7 +2203,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     }
                 }
 
-                if (this.PrimaryLink is not null && this.TinyhandAttribute?.Journaling == true)
+                if (this.PrimaryLink is not null && this.TinyhandAttribute?.Journal == true)
                 {
                     this.CodeJournal2(ssb, this.PrimaryLink.Target);
                 }
@@ -2363,7 +2363,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     /*internal void GenerateGoshujinProperty(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        var generateJournal = this.TinyhandAttribute?.Journaling == true;
+        var generateJournal = this.TinyhandAttribute?.Journal == true;
         var goshujin = this.ObjectAttribute!.GoshujinInstance;
         var goshujinInstance = this.GoshujinInstanceIdentifier; // goshujin + "Instance";
 
@@ -2387,7 +2387,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
                     ssb.AppendLine($"this.{goshujinInstance} = value;");
 
-                    if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournaling))
+                    if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournal))
                     {
                         ssb.AppendLine($"this.Journal = value?.Journal;");
                     }
@@ -2419,7 +2419,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     /*internal void GenerateGoshujinProperty(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        var generateJournal = this.TinyhandAttribute?.Journaling == true;
+        var generateJournal = this.TinyhandAttribute?.Journal == true;
         var goshujin = this.ObjectAttribute!.GoshujinInstance;
         var goshujinInstance = this.GoshujinInstanceIdentifier; // goshujin + "Instance";
 
@@ -2456,7 +2456,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                             ssb.AppendLine($"if (this.{goshujinInstance} != value) goto Retry;");
                         }
 
-                        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournaling))
+                        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournal))
                         {
                             ssb.AppendLine($"this.Journal = value?.Journal;");
                         }

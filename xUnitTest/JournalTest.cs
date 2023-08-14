@@ -51,7 +51,7 @@ public readonly partial struct JournalIdentifier : IComparable<JournalIdentifier
 }
 
 [ValueLinkObject(Isolation = IsolationLevel.Serializable)]
-[TinyhandObject(Journaling = true)]
+[TinyhandObject(Journal = true)]
 public partial record JournalTestClass : IEquatableObject<JournalTestClass>
 {
     public JournalTestClass()
@@ -80,7 +80,7 @@ public partial record JournalTestClass : IEquatableObject<JournalTestClass>
 }
 
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
-[TinyhandObject(Journaling = true)]
+[TinyhandObject(Journal = true)]
 public partial record JournalTestClass2 : IEquatableObject<JournalTestClass2>
 {
     public JournalTestClass2()
@@ -119,7 +119,7 @@ public partial record JournalTestClass2 : IEquatableObject<JournalTestClass2>
          => this.id.Equals(other.id) && this.name == other.name && this.child.ObjectEquals(other.child) && this.id2 == other.id2;
 }
 
-[TinyhandObject(Journaling = true)]
+[TinyhandObject(Journal = true)]
 public partial record JournalChildClass : IEquatableObject<JournalChildClass>
 {
     public JournalChildClass()
@@ -138,7 +138,7 @@ public partial record JournalChildClass : IEquatableObject<JournalChildClass>
         => this.age == other.age;
 }
 
-[TinyhandObject(Journaling = true)]
+[TinyhandObject(Journal = true)]
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 internal partial record StandardData
 {
