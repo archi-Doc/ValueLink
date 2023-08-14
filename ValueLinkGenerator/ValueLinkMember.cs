@@ -84,6 +84,17 @@ public class Member
                     JournalShared.GenerateValue_MaxLength(ssb, this.Object, this.MaxLengthAttribute);
                 }
 
+                /*if (this.Object.TypeObject is { } typeObject &&
+                    this.Object.ContainingObject?.TinyhandAttribute?.Journal == true)
+                {
+                    if (typeObject.TinyhandAttribute?.Journal == true ||
+                        typeObject.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournal) == true ||
+                        typeObject.Kind == VisceralObjectKind.Error)
+                    {
+                        ssb.AppendLine($"if (value is {TinyhandBody.IJournalObject} obj) obj.SetParent(this.Instance);");
+                    }
+                }*/
+
                 ssb.AppendLine($"this.Instance.{this.Object.SimpleName} = value;");
                 if (this.ChangedName is not null)
                 {

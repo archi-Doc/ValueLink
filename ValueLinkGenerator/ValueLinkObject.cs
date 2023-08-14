@@ -271,6 +271,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             if (flag && x.TypeObject != null && !x.IsStatic && x.ContainingObject == this)
             { // Valid TypeObject && not static
+                x.TypeObject.Configure();
                 x.Configure();
             }
         }
