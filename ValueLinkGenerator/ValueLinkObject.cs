@@ -576,7 +576,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     continue;
                 }
 
-                var member = Member.Create(x, this.Links.FirstOrDefault(y => y.Target == x), journaling);
+                var member = Member.Create(this, x, this.Links.FirstOrDefault(y => y.Target == x), journaling);
                 if (member is not null)
                 {
                     this.Members ??= new();
@@ -1739,16 +1739,16 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGosjujin_Journal(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        if (this.UniqueLink?.Target?.TypeObject is null)
-        {
-            return;
-        }
-
         ssb.AppendLine();
 
         ssb.AppendLine($"[IgnoreMember] public {TinyhandBody.ITinyhandJournal}? Journal {{ get; set; }}");
         ssb.AppendLine($"[IgnoreMember] {TinyhandBody.IJournalObject}? {TinyhandBody.IJournalObject}.JournalParent {{ get; set; }}");
         ssb.AppendLine($"[IgnoreMember] int {TinyhandBody.IJournalObject}.JournalKey {{ get; set; }} = -1;");
+
+        if (this.UniqueLink?.Target?.TypeObject is null)
+        {
+            return;
+        }
 
         using (var scopeMethod = ssb.ScopeBrace("bool IJournalObject.ReadRecord(ref TinyhandReader reader)"))
         {
