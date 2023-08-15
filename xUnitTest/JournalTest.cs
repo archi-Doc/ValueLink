@@ -164,6 +164,8 @@ public partial record JournalTestClass2 : IEquatableObject<JournalTestClass2>
 [TinyhandObject(Journal = true, ExplicitKeyOnly = true)]
 public partial record JournalTestBase
 {
+    public const int Number = 10;
+
     public JournalTestBase()
     {
     }
@@ -181,6 +183,8 @@ public partial record JournalTestBase
     }
 
     private JournalTestBase? parent;
+
+    private string name = string.Empty;
 }
 
 [TinyhandObject(Journal = true, ExplicitKeyOnly = true)]

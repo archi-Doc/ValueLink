@@ -571,7 +571,26 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 {
                     continue;
                 }
-                else if (x.IsReadOnly)
+                else if (!x.IsSerializable || x.IsReadOnly)
+                {// Not serializable
+                    continue;
+                }
+
+                if (x.Kind == VisceralObjectKind.Field)
+                {
+                    if (x.Field_IsPrivate && x.ContainingObject != this)
+                    {
+                        continue;
+                    }
+                }
+                else if (x.Kind == VisceralObjectKind.Property)
+                {
+                    if (x.Property_IsPrivateSetter && x.ContainingObject != this)
+                    {
+                        continue;
+                    }
+                }
+                else
                 {
                     continue;
                 }
