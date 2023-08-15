@@ -571,7 +571,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 {
                     continue;
                 }
-                else if (x.Kind == VisceralObjectKind.Property && x.IsReadOnly)
+                else if (x.IsReadOnly)
                 {
                     continue;
                 }

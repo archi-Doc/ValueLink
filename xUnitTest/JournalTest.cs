@@ -194,6 +194,9 @@ public partial record JournalTestBase2 : JournalTestBase
     [Key(1)]
     [Link(Primary = true, Unique = true, Type = ChainType.Ordered)]
     public int Id2 { get; set; }
+
+    [Key(2)]
+    public readonly int Id3;
 }
 
 /*[TinyhandObject(Journal = true, ExplicitKeyOnly = true)]
