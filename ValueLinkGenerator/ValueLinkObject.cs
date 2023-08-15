@@ -1747,8 +1747,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         ssb.AppendLine();
 
         ssb.AppendLine($"[IgnoreMember] public {TinyhandBody.ITinyhandJournal}? Journal {{ get; set; }}");
-        ssb.AppendLine($"[IgnoreMember] {TinyhandBody.IJournalObject}? {TinyhandBody.IJournalObject}.Parent {{ get; set; }}");
-        ssb.AppendLine($"[IgnoreMember] int {TinyhandBody.IJournalObject}.Key {{ get; set; }} = -1;");
+        ssb.AppendLine($"[IgnoreMember] {TinyhandBody.IJournalObject}? {TinyhandBody.IJournalObject}.JournalParent {{ get; set; }}");
+        ssb.AppendLine($"[IgnoreMember] int {TinyhandBody.IJournalObject}.JournalKey {{ get; set; }} = -1;");
 
         using (var scopeMethod = ssb.ScopeBrace("bool IJournalObject.ReadRecord(ref TinyhandReader reader)"))
         {
