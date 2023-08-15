@@ -10,31 +10,38 @@ namespace ValueLink.Generator;
 
 public class Member
 {
-    public static Member? Create(ValueLinkObject obj, Linkage? linkage, bool journaling)
+    public static Member? Create(ValueLinkObject parent, ValueLinkObject obj, Linkage? linkage, bool journaling)
     {
         if (obj.SimpleName.Length == 0/* || !char.IsLower(obj.SimpleName[0])*/)
         {
             return null;
         }
 
-        var member = new Member(obj, linkage, journaling);
+        var name = obj.SimpleName;
+        string generatedName;
+        if (char.IsLower(name[0]))
+        {
+            generatedName = name[0].ToString().ToUpper() + name.Substring(1);
+            if (parent.AllMembers.Any(x => x.SimpleName == generatedName))
+            {
+                return null;
+            }
+        }
+        else
+        {
+            generatedName = name;
+        }
+
+        var member = new Member(obj, linkage, journaling, generatedName);
         return member;
     }
 
-    public Member(ValueLinkObject obj, Linkage? linkage, bool journaling)
+    public Member(ValueLinkObject obj, Linkage? linkage, bool journaling, string generatedName)
     {
         this.Object = obj;
         this.Linkage = linkage;
 
-        var name = obj.SimpleName;
-        if (char.IsLower(obj.SimpleName[0]))
-        {
-            this.GeneratedName = name[0].ToString().ToUpper() + name.Substring(1);
-        }
-        else
-        {
-            this.GeneratedName = name;
-        }
+        this.GeneratedName = generatedName;
 
         // this.ChangedName = this.Linkage is null ? null : this.Object.SimpleName + "Changed";
         if (this.Linkage is not null ||

@@ -161,6 +161,54 @@ public partial record JournalTestClass2 : IEquatableObject<JournalTestClass2>
     }
 }
 
+[TinyhandObject(Journal = true, ExplicitKeyOnly = true)]
+public partial record JournalTestBase
+{
+    public JournalTestBase()
+    {
+    }
+
+    [Key(0)]
+    public int Id { get; set; }
+
+    public JournalTestBase? Parent
+    {
+        get => this.parent;
+        set
+        {
+            this.parent = value;
+        }
+    }
+
+    private JournalTestBase? parent;
+}
+
+[TinyhandObject(Journal = true, ExplicitKeyOnly = true)]
+[ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
+public partial record JournalTestBase2 : JournalTestBase
+{
+    public JournalTestBase2()
+    {
+    }
+
+    [Key(1)]
+    [Link(Primary = true, Unique = true, Type = ChainType.Ordered)]
+    public int Id2 { get; set; }
+}
+
+/*[TinyhandObject(Journal = true, ExplicitKeyOnly = true)]
+[ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
+public partial record JournalTestBase3 : JournalTestBase2
+{
+    public JournalTestBase3()
+    {
+    }
+
+    [Key(2)]
+    [Link(Primary = true, Unique = true, Type = ChainType.Ordered)]
+    public int Id3 { get; set; }
+}*/
+
 [TinyhandObject(Journal = true)]
 public partial record JournalChildClass : IEquatableObject<JournalChildClass>
 {
