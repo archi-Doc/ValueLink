@@ -44,6 +44,7 @@ public enum ValueLinkObjectFlag
     // AddLockable = 1 << 21,
     AddGoshujinProperty = 1 << 22,
     EquatableObject = 1 << 23, // Has IEquatableObject
+    AddValueProperty = 1 << 24, // AddValue property
 }
 
 public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
@@ -189,6 +190,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             }
 
             this.ObjectFlag |= ValueLinkObjectFlag.HasLinkAttribute;
+            if (linkage.AddValue)
+            {
+                this.ObjectFlag |= ValueLinkObjectFlag.AddValueProperty;
+            }
+
             if (this.ContainingObject is { } parent)
             {// Add to parent's list
                 if (parent.Links == null)
@@ -625,17 +631,13 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             return;
         }
 
-        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.HasLinkAttribute))
+        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.HasLinkAttribute) &&
+            this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddValueProperty))
         {
             if (!this.IsSerializable || this.IsReadOnly || this.IsInitOnly)
             {// Not serializable
                 this.Body.AddDiagnostic(ValueLinkBody.Error_ReadonlyMember, this.Location, this.SimpleName);
             }
-
-            /*if (this.Kind != VisceralObjectKind.Field)
-            {// Link target must be a field
-                this.Body.AddDiagnostic(ValueLinkBody.Error_LinkTargetNotField, this.Location, this.SimpleName);
-            }*/
 
             if (parent.ObjectFlag.HasFlag(ValueLinkObjectFlag.TinyhandObject))
             {// TinyhandObject
