@@ -63,7 +63,7 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
         category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor Error_ReadonlyMember = new DiagnosticDescriptor(
-        id: "CLG005", title: "Not field", messageFormat: "The the link target '{0}' cannot be readonly or getter-only",
+        id: "CLG005", title: "Readonly", messageFormat: "The the link target '{0}' cannot be set to read-only or getter-only unless AddValue is set to false",
         category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor Error_LinkTargetNameError = new DiagnosticDescriptor(

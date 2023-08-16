@@ -39,6 +39,9 @@ public partial class SerializeClass
     [Key(1)]
     private string name = default!;
 
+    [Link(Type = ChainType.Ordered, AddValue = false)]
+    public int Length => this.name.Length;
+
     public SerializeClass()
     {// Default constructor is required for Tinyhand.
     }
@@ -49,16 +52,23 @@ public partial class SerializeClass
         this.name = name;
     }
 
+    public override string ToString()
+        => $"{this.name}({this.id})";
+
     public static void Test()
     {
         var g = new SerializeClass.GoshujinClass(); // Create a new Goshujin.
-        new SerializeClass(1, "Hoge").Goshujin = g; // Add an object.
+        new SerializeClass(1, "HogeHoge").Goshujin = g; // Add an object.
         new SerializeClass(2, "Fuga").Goshujin = g;
-
-        var array = g.ToArray();
 
         var st = TinyhandSerializer.SerializeToString(g); // Serialize to string.
         var g2 = TinyhandSerializer.Deserialize<SerializeClass.GoshujinClass>(TinyhandSerializer.Serialize(g)); // Serialize to a byte array and deserialize it.
+
+        var array = g.ToArray();
+        foreach (var x in g.LengthChain.ToArray())
+        {
+            Console.WriteLine(x.ToString());
+        }
     }
 }
 
