@@ -165,7 +165,7 @@ internal static class JournalShared
 
     /*public static void CodeJournal(this ValueLinkObject obj, ScopingStringBuilder ssb, ValueLinkObject? locator)
     {
-        using (var journalScope = ssb.ScopeBrace("if (this.Journal is not null && this.Journal.TryGetJournalWriter(JournalType.Record, out var writer))"))
+        using (var journalScope = ssb.ScopeBrace("if (this.Journal is not null && this.Journal.TryGetJournalWriter(JournalType.Record, out var writer, true))"))
         {
             // Custom locator
             using (var customScope = ssb.ScopeBrace($"if (this is Tinyhand.ITinyhandCustomJournal custom)"))
@@ -203,7 +203,7 @@ internal static class JournalShared
 
     public static void CodeJournal2(this ValueLinkObject obj, ScopingStringBuilder ssb, ValueLinkObject? remove)
     {
-        using (var journalScope = ssb.ScopeBrace($"if ((({TinyhandBody.IJournalObject}){ssb.FullObject}).TryGetJournalWriter(out var journal, out var writer, false))"))
+        using (var journalScope = ssb.ScopeBrace($"if (writeJournal && (({TinyhandBody.IJournalObject}){ssb.FullObject}).TryGetJournalWriter(out var journal, out var writer, false))"))
         {
             // Custom locator
             using (var customScope = ssb.ScopeBrace($"if ({ssb.FullObject} is Tinyhand.ITinyhandCustomJournal custom)"))
@@ -238,7 +238,7 @@ internal static class JournalShared
             return;
         }
 
-        using (var journalScope = ssb.ScopeBrace($"if ((({TinyhandBody.IJournalObject})this.original).TryGetJournalWriter(out var journal, out var writer))"))
+        using (var journalScope = ssb.ScopeBrace($"if ((({TinyhandBody.IJournalObject})this.original).TryGetJournalWriter(out var journal, out var writer, true))"))
         {
             // Custom locator
             using (var customScope = ssb.ScopeBrace($"if (this.instance is Tinyhand.ITinyhandCustomJournal custom)"))

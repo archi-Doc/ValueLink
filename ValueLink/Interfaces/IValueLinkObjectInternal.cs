@@ -9,7 +9,7 @@ namespace ValueLink;
 public interface IValueLinkObjectInternal<TGoshujin>
     where TGoshujin : class
 {
-    void AddToGoshujinInternal(TGoshujin? g);
+    void AddToGoshujinInternal(TGoshujin? g, bool writeJournal = true);
 
-    bool RemoveFromGoshujinInternal(TGoshujin? g);
+    bool RemoveFromGoshujinInternal(TGoshujin? g, bool writeJournal = true);
 }
