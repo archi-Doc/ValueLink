@@ -22,6 +22,7 @@ This document may be inaccurate. It would be greatly appreciated if anyone could
 - [Chains](#chains)
 - [Features](#features)
   - [Serialization](#serialization)
+  - [Isolation level](#isolation-level)
   - [Additional methods](#additional-methods)
   - [TargetMember](#targetmember)
   - [AutoNotify](#autonotify)
@@ -430,6 +431,107 @@ new SerializeClass(2, "Fuga").Goshujin = g;
 
 var st = TinyhandSerializer.SerializeToString(g); // Serialize the Goshujin to string.
 var g2 = TinyhandSerializer.Deserialize<SerializeClass.GoshujinClass>(TinyhandSerializer.Serialize(g)); // Serialize to a byte array and deserialize it.
+```
+
+
+
+### Isolation level
+
+ValueLink offers several different isolation levels.
+
+
+
+#### IsolationLevel.None
+
+There is no additional code generated for isolation
+
+
+
+#### IsolationLevel.Serializable
+
+For lock-based concurrency control, the following code is added to the `Goshujin` class.
+
+Please lock the `SyncObject` on the user side to perform exclusive operations.
+
+```csharp
+public object SyncObject { get; }
+```
+
+```csharp
+[ValueLinkObject(Isolation = IsolationLevel.Serializable)]
+public partial record SerializableRoom
+{
+    [Link(Primary = true, Type = ChainType.Ordered, AddValue = false)]
+    public int RoomId { get; set; }
+
+    public SerializableRoom(int roomId)
+    {
+    }
+}
+```
+
+
+
+#### IsolationLevel.RepeatableRead
+
+Unlike the above-mentioned Isolation levels, a lot of code is added.
+
+Essentially, Objects become immutable, allowing for arbitrary reads. To write, you need to retrieve the object by calling `TryLock()` from the `Goshujin` class and then invoke `Commit()`.
+
+```csharp
+// An example of an object with the IsolationLevel set to RepeatableRead.
+[TinyhandObject]
+[ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
+public partial record RepeatableClass
+{// Record class is required for IsolationLevel.RepeatableRead.
+    public RepeatableClass()
+    {// Default constructor is required.
+    }
+
+    public RepeatableClass(int id)
+    {
+        this.Id = id;
+    }
+
+    // A unique link is required for IsolationLevel.RepeatableRead, and a primary link is preferred for TinyhandSerializer.
+    [Key(0)]
+    [Link(Primary = true, Unique = true, Type = ChainType.Ordered)]
+    public int Id { get; private set; }
+
+    [Key(1)]
+    public string Name { get; private set; } = string.Empty;
+
+    [Key(2)]
+    public List<int> IntList { get; private set; } = new();
+
+    public override string ToString()
+        => $"Id: {this.Id.ToString()}, Name: {this.Name}";
+
+    public static void Test()
+    {
+        var g = new RepeatableClass.GoshujinClass(); // Create a goshujin.
+
+        g.Add(new RepeatableClass(0)); // Adds an object with id 0.
+
+        using (var w = g.TryLock(1, TryLockMode.Create))
+        {// Alternative: adds an object with id 1.
+            w?.Commit(); // Commit the change.
+        }
+
+        var r0 = g.TryGet(0);
+        Console.WriteLine(r0?.ToString()); // Id: 0, Name:
+        Console.WriteLine();
+
+        using (var w = g.TryLock(0))
+        {
+            if (w is not null)
+            {
+                w.Name = "Zero";
+                w.Commit();
+            }
+        }
+    }
+}
 ```
 
 

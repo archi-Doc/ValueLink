@@ -945,10 +945,6 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatableRead)
         {
             this.Generate_RepeatableRead(ssb, info);
-        }
-
-        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSyncObject))
-        {
             this.Generate_EnterGoshujinMethod(ssb, info);
         }
 
