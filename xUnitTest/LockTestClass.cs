@@ -205,7 +205,7 @@ public class LockTest
     }
 
     [Fact]
-    public void Test1()
+    public async Task Test1()
     {
         var tc = new LockTestClass();
 
@@ -221,7 +221,7 @@ public class LockTest
         }
 
         tc2.IntArray = new int[] { 1, 2, 3, };
-        var r3 = TestAsync(tc2).Result;
+        var r3 = await TestAsync(tc2);
 
         async Task<IsolationTestClass?> TestAsync(IsolationTestClass t)
         {

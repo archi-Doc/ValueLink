@@ -194,7 +194,7 @@ public partial class AdditionalMethodClass
 [TinyhandObject]
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 public partial record RepeatableClass
-{
+{// Record class is required for IsolationLevel.RepeatableRead.
     public RepeatableClass()
     {// Default constructor is required.
     }
