@@ -24,6 +24,10 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
 {
     public abstract object SyncObject { get; }
 
+    public abstract RepeatableGoshujinState State { get; }
+
+    public abstract int LockCount { get; internal set; }
+
     protected abstract TObject? FindFirst(TKey key);
 
     protected abstract TObject NewObject(TKey key);
@@ -86,6 +90,11 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
         {
             lock (this.SyncObject)
             {
+                if (this.State.IsInvalid())
+                {
+                    return null;
+                }
+
                 x = this.FindFirst(key);
                 if (x is null)
                 {// No object
@@ -133,6 +142,11 @@ Created:
         {
             lock (this.SyncObject)
             {
+                if (this.State.IsInvalid())
+                {
+                    return null;
+                }
+
                 x = this.FindFirst(key);
                 if (x is null)
                 {// No object
@@ -192,6 +206,11 @@ Created:
         {
             lock (this.SyncObject)
             {
+                if (this.State.IsInvalid())
+                {
+                    return null;
+                }
+
                 x = predicate(this);
                 if (x is null)
                 {
@@ -217,6 +236,11 @@ Created:
         {
             lock (this.SyncObject)
             {
+                if (this.State.IsInvalid())
+                {
+                    return null;
+                }
+
                 x = predicate(this);
                 if (x is null)
                 {
