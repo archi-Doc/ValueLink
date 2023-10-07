@@ -26,8 +26,6 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
 
     public abstract RepeatableGoshujinState State { get; }
 
-    public abstract int LockCount { get; internal set; }
-
     protected abstract TObject? FindFirst(TKey key);
 
     protected abstract TObject NewObject(TKey key);
@@ -90,7 +88,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
         {
             lock (this.SyncObject)
             {
-                if (this.State.IsInvalid())
+                if (!this.State.IsValid)
                 {
                     return null;
                 }
@@ -106,7 +104,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
                     {// Create, GetOrCreate
                         x = this.NewObject(key);
                         x.AddToGoshujinInternal((TGoshujin)this);
-                        goto Created;
+                        goto Created; // Exit lock (this.SyncObject)
                     }
                 }
                 else
@@ -142,7 +140,7 @@ Created:
         {
             lock (this.SyncObject)
             {
-                if (this.State.IsInvalid())
+                if (!this.State.IsValid)
                 {
                     return null;
                 }
@@ -158,7 +156,7 @@ Created:
                     {// Create, GetOrCreate
                         x = this.NewObject(key);
                         x.AddToGoshujinInternal((TGoshujin)this);
-                        goto Created;
+                        goto Created; // Exit lock (this.SyncObject)
                     }
                 }
                 else
@@ -206,7 +204,7 @@ Created:
         {
             lock (this.SyncObject)
             {
-                if (this.State.IsInvalid())
+                if (!this.State.IsValid)
                 {
                     return null;
                 }
@@ -236,7 +234,7 @@ Created:
         {
             lock (this.SyncObject)
             {
-                if (this.State.IsInvalid())
+                if (!this.State.IsValid)
                 {
                     return null;
                 }

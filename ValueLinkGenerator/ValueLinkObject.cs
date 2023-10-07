@@ -1655,6 +1655,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 var overridePrefix = this.RepeatableGoshujin is null ? string.Empty : "override ";
                 ssb.AppendLine($"public {overridePrefix}object SyncObject => this.syncObject;");
                 ssb.AppendLine("private object syncObject = new();");
+                ssb.AppendLine($"public {overridePrefix}RepeatableGoshujinState State => this.state;");
+                ssb.AppendLine("private RepeatableGoshujinState state = default;");
             }
 
             /*if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddLockable))

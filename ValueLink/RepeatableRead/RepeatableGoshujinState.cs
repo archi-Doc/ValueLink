@@ -1,24 +1,43 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
+using System.Threading;
+
 namespace ValueLink;
 
-/// <summary>
-/// Represents the state of the goshujin.
-/// </summary>
-public enum RepeatableGoshujinState
+public struct RepeatableGoshujinState
 {
-    /// <summary>
-    /// The goshujin is in a valid state.
-    /// </summary>
-    Valid,
+    public RepeatableGoshujinState()
+    {
+    }
 
-    /// <summary>
-    /// The goshujin is unloading.
-    /// </summary>
-    Unloading,
+    private int count;
 
-    /// <summary>
-    /// The goshujin is not in a valid state because it has been unloaded.
-    /// </summary>
-    Obsolete,
+    public bool IsValid => Volatile.Read(ref this.count) >= 0;
+
+    public bool CanUnload => Volatile.Read(ref this.count) == 0;
+
+    internal bool TryLock()
+    {
+        int value;
+        do
+        {
+            value = this.count;
+            if (value < 0)
+            {
+                return false;
+            }
+        }
+        while (Interlocked.CompareExchange(ref this.count, value + 1, value) != value);
+        return true;
+    }
+
+    internal void Release()
+    {
+        Interlocked.Decrement(ref this.count);
+    }
+
+    internal void ForceUnload()
+    {
+        Volatile.Write(ref this.count, -1);
+    }
 }
