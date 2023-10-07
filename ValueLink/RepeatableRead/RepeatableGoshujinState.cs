@@ -31,6 +31,25 @@ public struct RepeatableGoshujinState
         return true;
     }
 
+    public bool TryUnload()
+    {
+        int value;
+        do
+        {
+            value = this.count;
+            if (value > 0)
+            {
+                return false;
+            }
+            else if (value < 0)
+            {
+                return true;
+            }
+        }
+        while (Interlocked.CompareExchange(ref this.count, -1, 0) != 0);
+        return true;
+    }
+
     public void Release()
     {
         Interlocked.Decrement(ref this.count);

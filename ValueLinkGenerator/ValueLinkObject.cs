@@ -1898,6 +1898,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             ssb.AppendLine($"{this.LocalName}[] array;");
             var lockScope = this.ScopeLock(ssb, ssb.FullObject);
 
+            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSyncObject))
+            {
+                ssb.AppendLine($"if (options.HasUnloadFlag) {ssb.FullObject}.State.ForceUnload();");
+            }
+
             var primaryLink = this.Links.FirstOrDefault(x => x.Primary);
             if (primaryLink != null)
             {// Primary link
