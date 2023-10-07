@@ -1207,13 +1207,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             using (var scopeDispose = ssb.ScopeBrace($"public void Dispose()"))
             {
                 ssb.AppendLine($"var goshujin = this.original.{this.GoshujinInstanceIdentifier};");
-                using (var scopeCreated = ssb.ScopeBrace($"if (this.original.State == RepeatableObjectState.Created)"))
-                {
-                    ssb.AppendLine($"if (goshujin is not null) {{ lock (goshujin.SyncObject) {{ (({this.IValueLinkObjectInternal})this.original).{ValueLinkBody.GeneratedTryRemoveName}(null); }} }}");
-                }
+                ssb.AppendLine($"if (goshujin is not null) {{ lock (goshujin.SyncObject) {{ if (this.original.State == RepeatableObjectState.Created) (({this.IValueLinkObjectInternal})this.original).{ValueLinkBody.GeneratedTryRemoveName}(null); goshujin.State.Release(); }} }}");
 
                 ssb.AppendLine($"this.original.{ValueLinkBody.WriterSemaphoreName}.Exit();");
-                ssb.AppendLine($"goshujin?.State.Release();");
             }
 
             // ssb.AppendLine($"public {this.ObjectAttribute!.GoshujinClass}? {this.ObjectAttribute!.GoshujinInstance} {{ get; set; }}");
