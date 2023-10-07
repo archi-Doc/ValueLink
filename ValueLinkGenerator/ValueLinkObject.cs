@@ -1206,13 +1206,14 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             using (var scopeDispose = ssb.ScopeBrace($"public void Dispose()"))
             {
+                ssb.AppendLine($"var goshujin = this.original.{this.GoshujinInstanceIdentifier};");
                 using (var scopeCreated = ssb.ScopeBrace($"if (this.original.State == RepeatableObjectState.Created)"))
                 {
-                    ssb.AppendLine($"var goshujin = this.original.{this.GoshujinInstanceIdentifier};");
                     ssb.AppendLine($"if (goshujin is not null) {{ lock (goshujin.SyncObject) {{ (({this.IValueLinkObjectInternal})this.original).{ValueLinkBody.GeneratedTryRemoveName}(null); }} }}");
                 }
 
                 ssb.AppendLine($"this.original.{ValueLinkBody.WriterSemaphoreName}.Exit();");
+                ssb.AppendLine($"goshujin?.State.Release();");
             }
 
             // ssb.AppendLine($"public {this.ObjectAttribute!.GoshujinClass}? {this.ObjectAttribute!.GoshujinInstance} {{ get; set; }}");
@@ -1312,6 +1313,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                             ssb.AppendLine($"if (this.Goshujin.{this.UniqueLink.ChainName}.ContainsKey(this.instance.{member.Object.SimpleName})) return default;");
                         }
 
+                        ssb.AppendLine($"if (!this.Goshujin.State.TryLock()) return default;");
+
                         if (this.Links is not null)
                         {
                             foreach (var ln in this.Links)
@@ -1327,7 +1330,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     }
                 }
 
-                ssb.AppendLine($"if (goshujin is not null) {{ lock (goshujin.SyncObject) {{ (({this.IValueLinkObjectInternal})this.original).{ValueLinkBody.GeneratedTryRemoveName}(null); }} }}");
+                ssb.AppendLine($"if (goshujin is not null) {{ lock (goshujin.SyncObject) {{ (({this.IValueLinkObjectInternal})this.original).{ValueLinkBody.GeneratedTryRemoveName}(null); goshujin.State.Release(); }} }}");
             }
 
             // Journal

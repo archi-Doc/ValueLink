@@ -16,7 +16,7 @@ public struct RepeatableGoshujinState
 
     public bool CanUnload => Volatile.Read(ref this.count) == 0;
 
-    internal bool TryLock()
+    public bool TryLock()
     {
         int value;
         do
@@ -31,12 +31,12 @@ public struct RepeatableGoshujinState
         return true;
     }
 
-    internal void Release()
+    public void Release()
     {
         Interlocked.Decrement(ref this.count);
     }
 
-    internal void ForceUnload()
+    public void ForceUnload()
     {
         Volatile.Write(ref this.count, -1);
     }

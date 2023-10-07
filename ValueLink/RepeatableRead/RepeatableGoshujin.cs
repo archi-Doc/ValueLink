@@ -88,11 +88,6 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
         {
             lock (this.SyncObject)
             {
-                if (!this.State.IsValid)
-                {
-                    return null;
-                }
-
                 x = this.FindFirst(key);
                 if (x is null)
                 {// No object
@@ -102,6 +97,11 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
                     }
                     else
                     {// Create, GetOrCreate
+                        if (!this.State.TryLock())
+                        {
+                            return default;
+                        }
+
                         x = this.NewObject(key);
                         x.AddToGoshujinInternal((TGoshujin)this);
                         goto Created; // Exit lock (this.SyncObject)
@@ -118,15 +118,24 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
                 }
             }
 
+            if (!this.State.TryLock())
+            {
+                return default;
+            }
+
             if (x.TryLockInternal() is { } writer)
             {
-                return writer;
+                return writer; // Success (Get)
+            }
+            else
+            {
+                this.State.Release();
             }
         }
 
 Created:
         x.WriterSemaphoreInternal.Enter();
-        return x.NewWriterInternal();
+        return x.NewWriterInternal(); // Success (Create)
     }
 
     public ValueTask<TWriter?> TryLockAsync(TKey key, TryLockMode mode = TryLockMode.Get) => this.TryLockAsync(key, ValueLinkGlobal.LockTimeout, default, mode);
@@ -140,11 +149,6 @@ Created:
         {
             lock (this.SyncObject)
             {
-                if (!this.State.IsValid)
-                {
-                    return null;
-                }
-
                 x = this.FindFirst(key);
                 if (x is null)
                 {// No object
@@ -154,6 +158,11 @@ Created:
                     }
                     else
                     {// Create, GetOrCreate
+                        if (!this.State.TryLock())
+                        {
+                            return default;
+                        }
+
                         x = this.NewObject(key);
                         x.AddToGoshujinInternal((TGoshujin)this);
                         goto Created; // Exit lock (this.SyncObject)
@@ -170,31 +179,33 @@ Created:
                 }
             }
 
+            if (!this.State.TryLock())
+            {
+                return default;
+            }
+
             if (await x.WriterSemaphoreInternal.EnterAsync(millisecondsTimeout, cancellationToken).ConfigureAwait(false))
             {
                 if (x.State.IsInvalid())
                 {
                     x.WriterSemaphoreInternal.Exit();
+                    this.State.Release();
                 }
                 else
                 {
-                    return x.NewWriterInternal();
+                    return x.NewWriterInternal(); // Success (Get)
                 }
             }
             else
             {// Timeout
+                this.State.Release();
                 return default;
             }
-
-            /*if (await x.TryLockAsync(millisecondsTimeout, cancellationToken).ConfigureAwait(false) is { } writer)
-            {
-                return writer;
-            }*/
         }
 
 Created:
         x.WriterSemaphoreInternal.Enter();
-        return x.NewWriterInternal();
+        return x.NewWriterInternal(); // Success (Create)
     }
 
     public TWriter? TryLock(Func<RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>, TObject?> predicate)
@@ -204,11 +215,6 @@ Created:
         {
             lock (this.SyncObject)
             {
-                if (!this.State.IsValid)
-                {
-                    return null;
-                }
-
                 x = predicate(this);
                 if (x is null)
                 {
@@ -216,9 +222,18 @@ Created:
                 }
             }
 
+            if (!this.State.TryLock())
+            {
+                return default;
+            }
+
             if (x.TryLockInternal() is { } writer)
             {
-                return writer;
+                return writer; // Success (Get)
+            }
+            else
+            {
+                this.State.Release();
             }
         }
     }
@@ -234,11 +249,6 @@ Created:
         {
             lock (this.SyncObject)
             {
-                if (!this.State.IsValid)
-                {
-                    return null;
-                }
-
                 x = predicate(this);
                 if (x is null)
                 {
@@ -246,19 +256,26 @@ Created:
                 }
             }
 
+            if (!this.State.TryLock())
+            {
+                return default;
+            }
+
             if (await x.WriterSemaphoreInternal.EnterAsync(millisecondsTimeout, cancellationToken).ConfigureAwait(false))
             {
                 if (x.State.IsInvalid())
                 {
                     x.WriterSemaphoreInternal.Exit();
+                    this.State.Release();
                 }
                 else
                 {
-                    return x.NewWriterInternal();
+                    return x.NewWriterInternal(); // Success (Get)
                 }
             }
             else
             {// Timeout
+                this.State.Release();
                 return default;
             }
         }
