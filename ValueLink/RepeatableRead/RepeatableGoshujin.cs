@@ -126,7 +126,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
                 }
             }
 
-            if (x.TryLockInternal() is { } writer)
+            if (x.TryLockInternal(null) is { } writer)
             {
                 return writer; // Success (Get)
             }
@@ -201,7 +201,7 @@ Created:
                 }
             }
             else
-            {// Timeout
+            {// Timeout/Canceled
                 ((IGoshujinSemaphore)this).LockAndRelease(ref count);
                 return default;
             }
@@ -222,18 +222,20 @@ Created:
             {
                 x = predicate(this);
                 if (x is null)
-                {
+                {// No object
                     ((IGoshujinSemaphore)this).Release(ref count);
                     return default;
                 }
+                else
+                {// Exists
+                    if (!((IGoshujinSemaphore)this).TryAcquire(ref count))
+                    {
+                        return default;
+                    }
+                }
             }
 
-            if (!((IGoshujinSemaphore)this).TryAcquire(ref count))
-            {
-                return default;
-            }
-
-            if (x.TryLockInternal() is { } writer)
+            if (x.TryLockInternal(null) is { } writer)
             {
                 return writer; // Success (Get)
             }

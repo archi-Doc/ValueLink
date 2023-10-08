@@ -39,19 +39,13 @@ public interface IGoshujinSemaphore
         }
     }
 
-    /// <summary>
-    /// Try to acquire the resource.<br/>
-    /// You can call this method multiple times, but the maximum count for acquiring resources is 1.
-    /// </summary>
-    /// <param name="count">The count of resources acquired at the current moment.</param>
-    /// <returns>true: success, false: failure/invalid.</returns>
-    public bool LockAndTryAcquire(ref int count)
+    /*public bool LockAndTryAcquire(ref int count)
     {
         lock (this.SyncObject)
         {
             return this.TryAcquire(ref count);
         }
-    }
+    }*/
 
     public bool TryAcquireOne()
     {
@@ -66,9 +60,25 @@ public interface IGoshujinSemaphore
         }
     }
 
+    public bool LockAndTryAcquireOne()
+    {
+        lock (this.SyncObject)
+        {
+            return this.TryAcquireOne();
+        }
+    }
+
     public void ReleaseOne()
     {
-        this.SemaphoreCount -= 1;
+        this.SemaphoreCount--;
+    }
+
+    public void LockAndReleaseOne()
+    {
+        lock (this.SyncObject)
+        {
+            this.ReleaseOne();
+        }
     }
 
     /// <summary>
