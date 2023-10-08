@@ -14,48 +14,95 @@ public interface IGoshujinSemaphore
     public bool CanUnload
         => this.SemaphoreCount == 0;
 
-    public bool TryAcquire()
+    /// <summary>
+    /// Try to acquire the resource.<br/>
+    /// You can call this method multiple times, but the maximum count for acquiring resources is 1.
+    /// </summary>
+    /// <param name="count">The count of resources acquired at the current moment.</param>
+    /// <returns>true: success, false: failure/invalid.</returns>
+    public bool TryAcquire(ref int count)
     {
         if (this.SemaphoreCount < 0)
+        {// Invalid
+            count = 0;
+            return false;
+        }
+        else if (count > 0)
+        {// Already acquired
+            return true;
+        }
+        else
+        {// Acquire 1
+            this.SemaphoreCount++;
+            count = 1;
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// Try to acquire the resource.<br/>
+    /// You can call this method multiple times, but the maximum count for acquiring resources is 1.
+    /// </summary>
+    /// <param name="count">The count of resources acquired at the current moment.</param>
+    /// <returns>true: success, false: failure/invalid.</returns>
+    public bool LockAndTryAcquire(ref int count)
+    {
+        lock (this.SyncObject)
         {
+            return this.TryAcquire(ref count);
+        }
+    }
+
+    public bool TryAcquireOne()
+    {
+        if (this.SemaphoreCount < 0)
+        {// Invalid
             return false;
         }
         else
-        {
+        {// Acquire 1
             this.SemaphoreCount++;
             return true;
         }
     }
 
-    public bool LockAndTryAcquire()
+    public void ReleaseOne()
     {
-        lock (this.SyncObject)
-        {
-            return this.TryAcquire();
-        }
+        this.SemaphoreCount -= 1;
     }
 
-    public void Release(int count)
+    /// <summary>
+    /// Release the acquired resource.<br/>
+    /// </summary>
+    /// <param name="count">The count of resources acquired.</param>
+    public void Release(ref int count)
     {
         this.SemaphoreCount -= count;
+        count = 0;
     }
 
-    public void LockAndRelease(int count)
+    public void LockAndRelease(ref int count)
     {
+        if (count == 0)
+        {
+            return;
+        }
+
         lock (this.SyncObject)
         {
-            this.Release(count);
+            this.Release(ref count);
         }
     }
 
     public bool TryUnload()
     {
         if (this.SemaphoreCount > 0)
-        {
+        {// Acquired
             return false;
         }
         else
-        {
+        {// Can unload
+            this.SemaphoreCount = -1;
             return true;
         }
     }

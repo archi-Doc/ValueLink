@@ -4,6 +4,7 @@ using System.Threading;
 
 namespace ValueLink;
 
+/*
 public struct RepeatableGoshujinState
 {
     public RepeatableGoshujinState()
@@ -60,3 +61,4 @@ public struct RepeatableGoshujinState
         Volatile.Write(ref this.count, -1);
     }
 }
+*/

@@ -1207,7 +1207,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             using (var scopeDispose = ssb.ScopeBrace($"public void Dispose()"))
             {
                 ssb.AppendLine($"var goshujin = this.original.{this.GoshujinInstanceIdentifier};");
-                ssb.AppendLine($"if (goshujin is not null) {{ lock (goshujin.SyncObject) {{ if (this.original.State == RepeatableObjectState.Created) (({this.IValueLinkObjectInternal})this.original).{ValueLinkBody.GeneratedTryRemoveName}(null); goshujin.State.Release(); }} }}");
+                ssb.AppendLine($"if (goshujin is not null) {{ lock (goshujin.SyncObject) {{ if (this.original.State == RepeatableObjectState.Created) (({this.IValueLinkObjectInternal})this.original).{ValueLinkBody.GeneratedTryRemoveName}(null); (({ValueLinkBody.IGoshujinSemaphore})goshujin).ReleaseOne(); }} }}");
 
                 ssb.AppendLine($"this.original.{ValueLinkBody.WriterSemaphoreName}.Exit();");
             }
@@ -1309,7 +1309,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                             ssb.AppendLine($"if (this.Goshujin.{this.UniqueLink.ChainName}.ContainsKey(this.instance.{member.Object.SimpleName})) return default;");
                         }
 
-                        ssb.AppendLine($"if (!this.Goshujin.State.TryLock()) return default;");
+                        ssb.AppendLine($"if (!(({ValueLinkBody.IGoshujinSemaphore})this.Goshujin).TryAcquireOne()) return default;");
 
                         if (this.Links is not null)
                         {
@@ -1326,7 +1326,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     }
                 }
 
-                ssb.AppendLine($"if (goshujin is not null) {{ lock (goshujin.SyncObject) {{ (({this.IValueLinkObjectInternal})this.original).{ValueLinkBody.GeneratedTryRemoveName}(null); goshujin.State.Release(); }} }}");
+                ssb.AppendLine($"if (goshujin is not null) {{ lock (goshujin.SyncObject) {{ (({this.IValueLinkObjectInternal})this.original).{ValueLinkBody.GeneratedTryRemoveName}(null); (({ValueLinkBody.IGoshujinSemaphore})goshujin).ReleaseOne(); }} }}");
             }
 
             // Journal
@@ -1586,7 +1586,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSyncObject))
         {// ISyncObject
-            goshujinInterface += $", Arc.Threading.ISyncObject";
+            goshujinInterface += $", Arc.Threading.ISyncObject, {ValueLinkBody.IGoshujinSemaphore}";
         }
 
         /*if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddLockable))
@@ -1654,8 +1654,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 var overridePrefix = this.RepeatableGoshujin is null ? string.Empty : "override ";
                 ssb.AppendLine($"public {overridePrefix}object SyncObject => this.syncObject;");
                 ssb.AppendLine("private object syncObject = new();");
-                ssb.AppendLine($"public {overridePrefix}RepeatableGoshujinState State => this.state;");
-                ssb.AppendLine("private RepeatableGoshujinState state = default;");
+                ssb.AppendLine($"object {ValueLinkBody.IGoshujinSemaphore}.SyncObject => this.syncObject;");
+                ssb.AppendLine($"int {ValueLinkBody.IGoshujinSemaphore}.SemaphoreCount {{ get; set; }}");
             }
 
             /*if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddLockable))
@@ -1896,7 +1896,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSyncObject))
             {
-                ssb.AppendLine($"if (options.HasUnloadFlag) {ssb.FullObject}.State.ForceUnload();");
+                ssb.AppendLine($"if (options.HasUnloadFlag) (({ValueLinkBody.IGoshujinSemaphore}){ssb.FullObject}).ForceUnload();");
             }
 
             var primaryLink = this.Links.FirstOrDefault(x => x.Primary);
