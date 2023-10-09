@@ -23,7 +23,7 @@ public interface IRepeatableObject<TWriter>
 
     TWriter NewWriterInternal();
 
-    public TWriter? TryLockInternal()
+    public TWriter? TryLockInternal(IGoshujinSemaphore? semaphore)
     {
 #if DEBUG
         if (Monitor.IsEntered(this.GoshujinSyncObjectInternal))
@@ -32,23 +32,29 @@ public interface IRepeatableObject<TWriter>
         }
 #endif
 
+        if (semaphore?.LockAndTryAcquireOne() == false)
+        {
+            return null;
+        }
+
         this.WriterSemaphoreInternal.Enter();
         if (this.State.IsInvalid())
         {
             this.WriterSemaphoreInternal.Exit();
+            semaphore?.LockAndReleaseOne();
             return null;
         }
 
         return this.NewWriterInternal();
     }
 
-    ValueTask<TWriter?> TryLockAsyncInternal()
-        => this.TryLockAsyncInternal(ValueLinkGlobal.LockTimeout, default);
+    ValueTask<TWriter?> TryLockAsyncInternal(IGoshujinSemaphore? semaphore)
+        => this.TryLockAsyncInternal(semaphore, ValueLinkGlobal.LockTimeout, default);
 
-    ValueTask<TWriter?> TryLockAsyncInternal(int millisecondsTimeout)
-        => this.TryLockAsyncInternal(millisecondsTimeout, default);
+    ValueTask<TWriter?> TryLockAsyncInternal(IGoshujinSemaphore? semaphore, int millisecondsTimeout)
+        => this.TryLockAsyncInternal(semaphore, millisecondsTimeout, default);
 
-    public async ValueTask<TWriter?> TryLockAsyncInternal(int millisecondsTimeout, CancellationToken cancellationToken)
+    public async ValueTask<TWriter?> TryLockAsyncInternal(IGoshujinSemaphore? semaphore, int millisecondsTimeout, CancellationToken cancellationToken)
     {
 #if DEBUG
         if (Monitor.IsEntered(this.GoshujinSyncObjectInternal))
@@ -57,14 +63,21 @@ public interface IRepeatableObject<TWriter>
         }
 #endif
 
+        if (semaphore?.LockAndTryAcquireOne() == false)
+        {
+            return null;
+        }
+
         var entered = await this.WriterSemaphoreInternal.EnterAsync(millisecondsTimeout, cancellationToken).ConfigureAwait(false);
         if (!entered)
         {
+            semaphore?.LockAndReleaseOne();
             return null;
         }
         else if (this.State.IsInvalid())
         {
             this.WriterSemaphoreInternal.Exit();
+            semaphore?.LockAndReleaseOne();
             return null;
         }
         else

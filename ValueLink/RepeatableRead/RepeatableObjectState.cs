@@ -22,12 +22,3 @@ public enum RepeatableObjectState
     /// </summary>
     Created,
 }
-
-public static class RepeatableReadExtension
-{
-    public static bool IsValid(this RepeatableObjectState state)
-        => state == RepeatableObjectState.Valid;
-
-    public static bool IsInvalid(this RepeatableObjectState state)
-        => state != RepeatableObjectState.Valid;
-}

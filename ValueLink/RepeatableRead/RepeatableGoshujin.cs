@@ -82,6 +82,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
     public TWriter? TryLock(TKey key, TryLockMode mode = TryLockMode.Get)
     {
         TObject? x = default;
+        int count = 0;
         while (true)
         {
             lock (this.SyncObject)
@@ -91,35 +92,49 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
                 {// No object
                     if (mode == TryLockMode.Get)
                     {// Get
+                        ((IGoshujinSemaphore)this).Release(ref count);
                         return default;
                     }
                     else
                     {// Create, GetOrCreate
+                        if (!((IGoshujinSemaphore)this).TryAcquire(ref count))
+                        {
+                            return default;
+                        }
+
                         x = this.NewObject(key);
                         x.AddToGoshujinInternal((TGoshujin)this);
-                        goto Created;
+                        goto Created; // Exit lock (this.SyncObject)
                     }
                 }
                 else
                 {// Exists
                     if (mode == TryLockMode.Create)
                     {// Create
+                        ((IGoshujinSemaphore)this).Release(ref count);
                         return default;
                     }
+                    else
+                    {// Get, GetOrCreate
+                        if (!((IGoshujinSemaphore)this).TryAcquire(ref count))
+                        {
+                            return default;
+                        }
 
-                    // Get, GetOrCreate
+                        // Exit lock (this.SyncObject)
+                    }
                 }
             }
 
-            if (x.TryLockInternal() is { } writer)
+            if (x.TryLockInternal(null) is { } writer)
             {
-                return writer;
+                return writer; // Success (Get)
             }
         }
 
 Created:
         x.WriterSemaphoreInternal.Enter();
-        return x.NewWriterInternal();
+        return x.NewWriterInternal(); // Success (Create)
     }
 
     public ValueTask<TWriter?> TryLockAsync(TKey key, TryLockMode mode = TryLockMode.Get) => this.TryLockAsync(key, ValueLinkGlobal.LockTimeout, default, mode);
@@ -129,6 +144,7 @@ Created:
     public async ValueTask<TWriter?> TryLockAsync(TKey key, int millisecondsTimeout, CancellationToken cancellationToken, TryLockMode mode = TryLockMode.Get)
     {
         TObject? x = default;
+        int count = 0;
         while (true)
         {
             lock (this.SyncObject)
@@ -138,23 +154,37 @@ Created:
                 {// No object
                     if (mode == TryLockMode.Get)
                     {// Get
+                        ((IGoshujinSemaphore)this).Release(ref count);
                         return default;
                     }
                     else
                     {// Create, GetOrCreate
+                        if (!((IGoshujinSemaphore)this).TryAcquire(ref count))
+                        {
+                            return default;
+                        }
+
                         x = this.NewObject(key);
                         x.AddToGoshujinInternal((TGoshujin)this);
-                        goto Created;
+                        goto Created; // Exit lock (this.SyncObject)
                     }
                 }
                 else
                 {// Exists
                     if (mode == TryLockMode.Create)
                     {// Create
+                        ((IGoshujinSemaphore)this).Release(ref count);
                         return default;
                     }
+                    else
+                    {// Get, GetOrCreate
+                        if (!((IGoshujinSemaphore)this).TryAcquire(ref count))
+                        {
+                            return default;
+                        }
 
-                    // Get, GetOrCreate
+                        // Exit lock (this.SyncObject)
+                    }
                 }
             }
 
@@ -163,45 +193,51 @@ Created:
                 if (x.State.IsInvalid())
                 {
                     x.WriterSemaphoreInternal.Exit();
+                    ((IGoshujinSemaphore)this).LockAndRelease(ref count);
                 }
                 else
                 {
-                    return x.NewWriterInternal();
+                    return x.NewWriterInternal(); // Success (Get)
                 }
             }
             else
-            {// Timeout
+            {// Timeout/Canceled
+                ((IGoshujinSemaphore)this).LockAndRelease(ref count);
                 return default;
             }
-
-            /*if (await x.TryLockAsync(millisecondsTimeout, cancellationToken).ConfigureAwait(false) is { } writer)
-            {
-                return writer;
-            }*/
         }
 
 Created:
         x.WriterSemaphoreInternal.Enter();
-        return x.NewWriterInternal();
+        return x.NewWriterInternal(); // Success (Create)
     }
 
     public TWriter? TryLock(Func<RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>, TObject?> predicate)
     {
         TObject? x = default;
+        int count = 0;
         while (true)
         {
             lock (this.SyncObject)
             {
                 x = predicate(this);
                 if (x is null)
-                {
+                {// No object
+                    ((IGoshujinSemaphore)this).Release(ref count);
                     return default;
+                }
+                else
+                {// Exists
+                    if (!((IGoshujinSemaphore)this).TryAcquire(ref count))
+                    {
+                        return default;
+                    }
                 }
             }
 
-            if (x.TryLockInternal() is { } writer)
+            if (x.TryLockInternal(null) is { } writer)
             {
-                return writer;
+                return writer; // Success (Get)
             }
         }
     }
@@ -213,14 +249,23 @@ Created:
     public async ValueTask<TWriter?> TryLockAsync(Func<RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>, TObject?> predicate, int millisecondsTimeout, CancellationToken cancellationToken)
     {
         TObject? x = default;
+        int count = 0;
         while (true)
         {
             lock (this.SyncObject)
             {
                 x = predicate(this);
                 if (x is null)
-                {
+                {// No object
+                    ((IGoshujinSemaphore)this).Release(ref count);
                     return default;
+                }
+                else
+                {// Exists
+                    if (!((IGoshujinSemaphore)this).TryAcquire(ref count))
+                    {
+                        return default;
+                    }
                 }
             }
 
@@ -229,14 +274,16 @@ Created:
                 if (x.State.IsInvalid())
                 {
                     x.WriterSemaphoreInternal.Exit();
+                    ((IGoshujinSemaphore)this).LockAndRelease(ref count);
                 }
                 else
                 {
-                    return x.NewWriterInternal();
+                    return x.NewWriterInternal(); // Success (Get)
                 }
             }
             else
             {// Timeout
+                ((IGoshujinSemaphore)this).LockAndRelease(ref count);
                 return default;
             }
         }

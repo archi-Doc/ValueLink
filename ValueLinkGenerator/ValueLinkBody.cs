@@ -46,6 +46,7 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
     public static readonly string IRepeatableObject = "IRepeatableObject";
     public static readonly string RepeatableGoshujin = "RepeatableGoshujin";
     public static readonly string IValueLinkObjectInternal = "IValueLinkObjectInternal";
+    public static readonly string IGoshujinSemaphore = "ValueLink.IGoshujinSemaphore";
 
     public static readonly DiagnosticDescriptor Error_NotPartial = new DiagnosticDescriptor(
         id: "CLG001", title: "Not a partial class/struct", messageFormat: "ValueLinkObject '{0}' is not a partial class/struct",

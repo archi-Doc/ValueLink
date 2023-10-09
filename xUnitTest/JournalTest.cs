@@ -461,6 +461,17 @@ public class JournalTest
         g3 = new JournalTestClass2.GoshujinClass();
         this.ReadJournal(g3, journal).IsTrue();
         g2.GoshujinEquals(g3).IsTrue();
+
+        ((IGoshujinSemaphore)g2).State.Is(GoshujinState.Valid);
+        ((IGoshujinSemaphore)g2).SemaphoreCount.Is(0);
+
+        var bin = TinyhandSerializer.Serialize(g2);
+        ((IGoshujinSemaphore)g2).State.Is(GoshujinState.Valid);
+
+        ((IGoshujinSemaphore)g2).LockAndTryUnload(out var state).IsTrue();
+        state.Is(GoshujinState.Unloading);
+        bin = TinyhandSerializer.Serialize(g2, TinyhandSerializerOptions.Unload);
+        ((IGoshujinSemaphore)g2).State.Is(GoshujinState.Obsolete);
     }
 
     public bool ReadJournal(IJournalObject journalObject, ReadOnlyMemory<byte> data)
