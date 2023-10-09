@@ -118,6 +118,8 @@ public class IsolationTest2
         lock (g.SyncObject)
         {
             g.Count.Is(numberOfItems);
+            ((IGoshujinSemaphore)g).State.Is(GoshujinState.Valid);
+            ((IGoshujinSemaphore)g).SemaphoreCount.Is(0);
         }
 
         // Task

@@ -6,13 +6,15 @@ public interface IGoshujinSemaphore
 {
     public object SyncObject { get; }
 
+    public GoshujinState State { get; set; }
+
     public int SemaphoreCount { get; set; }
 
     public bool IsValid
-        => this.SemaphoreCount >= 0;
+        => this.State == GoshujinState.Valid;
 
     public bool CanUnload
-        => this.SemaphoreCount == 0;
+        => this.State == GoshujinState.Valid && this.SemaphoreCount == 0;
 
     /// <summary>
     /// Try to acquire the resource.<br/>
@@ -22,8 +24,9 @@ public interface IGoshujinSemaphore
     /// <returns>true: success, false: failure/invalid.</returns>
     public bool TryAcquire(ref int count)
     {
-        if (this.SemaphoreCount < 0)
-        {// Invalid
+        if (!this.IsValid)
+        {// Invalid (Unloading/Obsolete)
+            this.SemaphoreCount -= count;
             count = 0;
             return false;
         }
@@ -39,18 +42,10 @@ public interface IGoshujinSemaphore
         }
     }
 
-    /*public bool LockAndTryAcquire(ref int count)
-    {
-        lock (this.SyncObject)
-        {
-            return this.TryAcquire(ref count);
-        }
-    }*/
-
     public bool TryAcquireOne()
     {
-        if (this.SemaphoreCount < 0)
-        {// Invalid
+        if (!this.IsValid)
+        {// Invalid (Unloading/Obsolete)
             return false;
         }
         else
@@ -104,21 +99,39 @@ public interface IGoshujinSemaphore
         }
     }
 
-    public bool TryUnload()
+    public bool LockAndTryUnload(out GoshujinState state)
     {
-        if (this.SemaphoreCount > 0)
-        {// Acquired
-            return false;
+        var result = false;
+        lock (this.SyncObject)
+        {
+            if (!this.IsValid)
+            {// Invalid (Unloading/Obsolete)
+            }
+            else if (this.SemaphoreCount > 0)
+            {// Acquired
+            }
+            else
+            {// Can unload
+                this.State = GoshujinState.Unloading;
+                result = true;
+            }
+
+            state = this.State;
         }
-        else
-        {// Can unload
-            this.SemaphoreCount = -1;
-            return true;
-        }
+
+        return result;
     }
 
-    public void ForceUnload()
+    public void SetObsolete()
     {
-        this.SemaphoreCount = -1;
+        this.State = GoshujinState.Obsolete;
+    }
+
+    public void LockAndForceUnload()
+    {
+        lock (this.SyncObject)
+        {
+            this.State = GoshujinState.Unloading;
+        }
     }
 }

@@ -1653,9 +1653,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSyncObject))
             {
                 var overridePrefix = this.RepeatableGoshujin is null ? string.Empty : "override ";
-                ssb.AppendLine($"public {overridePrefix}object SyncObject => this.syncObject;");
                 ssb.AppendLine("private object syncObject = new();");
+                ssb.AppendLine($"public {overridePrefix}object SyncObject => this.syncObject;");
                 ssb.AppendLine($"object {ValueLinkBody.IGoshujinSemaphore}.SyncObject => this.syncObject;");
+                ssb.AppendLine($"GoshujinState {ValueLinkBody.IGoshujinSemaphore}.State {{ get; set; }}");
                 ssb.AppendLine($"int {ValueLinkBody.IGoshujinSemaphore}.SemaphoreCount {{ get; set; }}");
             }
 
@@ -1895,11 +1896,6 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             ssb.AppendLine($"{this.LocalName}[] array;");
             var lockScope = this.ScopeLock(ssb, ssb.FullObject);
 
-            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSyncObject))
-            {
-                ssb.AppendLine($"if (options.HasUnloadFlag) (({ValueLinkBody.IGoshujinSemaphore}){ssb.FullObject}).ForceUnload();");
-            }
-
             var primaryLink = this.Links.FirstOrDefault(x => x.Primary);
             if (primaryLink != null)
             {// Primary link
@@ -1925,6 +1921,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 {
                     ssb.AppendLine($"writer.Write(x.{this.SerializeIndexIdentifier});");
                 }
+            }
+
+            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSyncObject))
+            {
+                ssb.AppendLine($"if (options.HasUnloadFlag) (({ValueLinkBody.IGoshujinSemaphore}){ssb.FullObject}).SetObsolete();");
             }
 
             if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatableRead)
