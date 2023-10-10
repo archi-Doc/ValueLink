@@ -4,6 +4,25 @@ using Tinyhand;
 
 namespace Sandbox;
 
+
+[TinyhandObject(ExplicitKeyOnly = true, Journal = true)]
+[ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
+public partial record RepeatableItem
+{
+    public RepeatableItem()
+    {
+    }
+
+    public RepeatableItem(int id)
+    {
+        this.Id = id;
+    }
+
+    [Key(0)]
+    [Link(Primary = true, Unique = true, Type = ChainType.Ordered)]
+    public int Id { private set; get; }
+}
+
 [TinyhandObject(Journal = true)]
 [ValueLinkObject]
 internal partial class ValueClass

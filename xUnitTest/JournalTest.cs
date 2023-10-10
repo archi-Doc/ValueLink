@@ -86,7 +86,7 @@ public partial record JournalTestClass2 : IEquatableObject<JournalTestClass2>
     public JournalTestClass2()
     {
         this.child = new();
-        // ((IJournalObject)this.child).SetParent(this, 2);
+        // ((ITreeObject)this.child).SetParent(this, 2);
     }
 
     public JournalTestClass2(JournalIdentifier id, string name)
@@ -95,7 +95,7 @@ public partial record JournalTestClass2 : IEquatableObject<JournalTestClass2>
         this.name = name;
 
         this.child = new();
-        // ((IJournalObject)this.child).SetParent(this, 2);
+        // ((ITreeObject)this.child).SetParent(this, 2);
         this.child.Age = id.Id0 + 0.1d;
     }
 
@@ -260,7 +260,7 @@ public class JournalTest
         var c = new JournalTestClass(1, "one");
 
         var cc = new JournalTestClass();
-        cc.Journal = tester;
+        cc.TreeRoot = tester;
         cc.Id = c.Id;
         cc.Name = c.Name;
 
@@ -282,7 +282,7 @@ public class JournalTest
         var g = new JournalTestClass.GoshujinClass { c1, c2, c3 };
         var g2 = new JournalTestClass.GoshujinClass();
 
-        g2.Journal = tester;
+        g2.TreeRoot = tester;
         g2.Add(new JournalTestClass(1, "one"));
         g2.Add(new JournalTestClass(2, "two"));
         g2.Add(new JournalTestClass(3, "3"));
@@ -314,7 +314,7 @@ public class JournalTest
         var g = new JournalTestClass2.GoshujinClass { c1, c2, c3 };
         var g2 = new JournalTestClass2.GoshujinClass();
 
-        g2.Journal = tester;
+        g2.TreeRoot = tester;
         g2.Add(new JournalTestClass2(new(1), "one"));
         g2.Add(new JournalTestClass2(new(2), "two"));
         g2.Add(new JournalTestClass2(new(3), "3"));
@@ -474,7 +474,7 @@ public class JournalTest
         ((IGoshujinSemaphore)g2).State.Is(GoshujinState.Obsolete);
     }
 
-    public bool ReadJournal(IJournalObject journalObject, ReadOnlyMemory<byte> data)
+    public bool ReadJournal(ITreeObject treeObject, ReadOnlyMemory<byte> data)
     {
         var reader = new TinyhandReader(data.Span);
         var success = true;
@@ -491,7 +491,7 @@ public class JournalTest
             {
                 if (journalType == JournalType.Record)
                 {
-                    if (journalObject.ReadRecord(ref reader))
+                    if (treeObject.ReadRecord(ref reader))
                     {// Success
                     }
                     else
@@ -499,7 +499,7 @@ public class JournalTest
                         success = false;
 
                         reader = fork;
-                        journalObject.ReadRecord(ref reader);
+                        treeObject.ReadRecord(ref reader);
                     }
                 }
                 else
