@@ -33,14 +33,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
         TObject[] array;
         lock (this.SyncObject)
         {
-            if (this is IEnumerable<TObject> e)
-            {
-                array = e.ToArray();
-            }
-            else
-            {
-                array = Array.Empty<TObject>();
-            }
+            array = (this is IEnumerable<TObject> e) ? e.ToArray() : Array.Empty<TObject>();
         }
 
         return array;

@@ -19,8 +19,8 @@ namespace ValueLink.Generator;
 
 public static class TinyhandBody
 {
-    public static readonly string ITinyhandJournal = "ITinyhandJournal";
-    public static readonly string IJournalObject = "IJournalObject";
+    public static readonly string ITreeRoot = "ITreeRoot";
+    public static readonly string ITreeObject = "ITreeObject";
     public static readonly string ITinyhandCustomJournal = "ITinyhandCustomJournal";
 }
 
@@ -266,6 +266,7 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
         ssb.AddUsing("System.Collections");
         ssb.AddUsing("System.Collections.Generic");
         ssb.AddUsing("System.Diagnostics.CodeAnalysis");
+        ssb.AddUsing("System.Linq");
         ssb.AddUsing("System.Runtime.CompilerServices");
         ssb.AddUsing("System.Threading");
         ssb.AddUsing("System.Threading.Tasks");

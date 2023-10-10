@@ -127,6 +127,11 @@ public interface IGoshujinSemaphore
         this.State = GoshujinState.Obsolete;
     }
 
+    public void SetUnloading()
+    {
+        this.State = GoshujinState.Unloading;
+    }
+
     public void LockAndForceUnload()
     {
         lock (this.SyncObject)
