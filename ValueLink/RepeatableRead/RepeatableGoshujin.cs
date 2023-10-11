@@ -25,9 +25,9 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IG
 {
     public abstract object SyncObject { get; }
 
-    public abstract GoshujinState State { get; set; }
+    public GoshujinState State { get; set; }
 
-    public abstract int SemaphoreCount { get; set; }
+    public int SemaphoreCount { get; set; }
 
     protected abstract TObject? FindFirst(TKey key);
 
@@ -35,25 +35,20 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IG
 
     protected async Task<bool> GoshujinSave(UnloadMode unloadMode)
     {
-        if (this is not IGoshujinSemaphore s)
-        {
-            return true;
-        }
-
         TObject[] array;
         lock (this.SyncObject)
         {
-            if (s.State == GoshujinState.Obsolete)
+            if (this.State == GoshujinState.Obsolete)
             {
                 return true;
             }
-            else if (unloadMode == UnloadMode.TryUnload && s.SemaphoreCount > 0)
+            else if (unloadMode == UnloadMode.TryUnload && this.SemaphoreCount > 0)
             {
                 return false;
             }
             else if (unloadMode != UnloadMode.NoUnload)
             {
-                s.SetUnloading();
+                ((IGoshujinSemaphore)this).SetUnloading();
             }
 
             array = (this is IEnumerable<TObject> e) ? e.ToArray() : Array.Empty<TObject>();
@@ -69,7 +64,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IG
 
         if (unloadMode != UnloadMode.NoUnload)
         {
-            s.SetObsolete();
+            ((IGoshujinSemaphore)this).SetObsolete();
         }
 
         return true;
@@ -77,15 +72,10 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IG
 
     protected void GoshujinDelete()
     {
-        if (this is not ValueLink.IGoshujinSemaphore s)
-        {
-            return;
-        }
-
         TObject[] array;
         lock (this.SyncObject)
         {
-            s.SetObsolete();
+            ((IGoshujinSemaphore)this).SetObsolete();
             array = (this is IEnumerable<TObject> e) ? e.ToArray() : Array.Empty<TObject>();
         }
 
