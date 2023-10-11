@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Tinyhand;
 
 #pragma warning disable SA1202 // Elements should be ordered by access
 
@@ -17,16 +18,78 @@ namespace ValueLink;
 /// <typeparam name="TObject">The type of object class.</typeparam>
 /// <typeparam name="TGoshujin">The type of goshujin class.</typeparam>
 /// <typeparam name="TWriter">The type of writer class.</typeparam>
-public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
+public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IGoshujinSemaphore
     where TObject : class, IRepeatableObject<TWriter>, IValueLinkObjectInternal<TGoshujin>
     where TGoshujin : RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
     where TWriter : class
 {
     public abstract object SyncObject { get; }
 
+    public GoshujinState State { get; set; }
+
+    public int SemaphoreCount { get; set; }
+
     protected abstract TObject? FindFirst(TKey key);
 
     protected abstract TObject NewObject(TKey key);
+
+    protected async Task<bool> GoshujinSave(UnloadMode unloadMode)
+    {
+        TObject[] array;
+        lock (this.SyncObject)
+        {
+            if (this.State == GoshujinState.Obsolete)
+            {// Unloaded or deleted.
+                return true;
+            }
+            else if (unloadMode != UnloadMode.NoUnload)
+            {// TryUnload or ForceUnload
+                ((IGoshujinSemaphore)this).SetUnloading();
+                if (unloadMode == UnloadMode.TryUnload && this.SemaphoreCount > 0)
+                {// Acquired.
+                    return false;
+                }
+            }
+
+            array = (this is IEnumerable<TObject> e) ? e.ToArray() : Array.Empty<TObject>();
+        }
+
+        foreach (var x in array)
+        {
+            if (x is ITreeObject y && await y.Save(unloadMode).ConfigureAwait(false) == false)
+            {
+                return false;
+            }
+        }
+
+        if (unloadMode != UnloadMode.NoUnload)
+        {// Unloaded
+            lock (this.SyncObject)
+            {
+                ((IGoshujinSemaphore)this).SetObsolete();
+            }
+        }
+
+        return true;
+    }
+
+    protected void GoshujinDelete()
+    {
+        TObject[] array;
+        lock (this.SyncObject)
+        {
+            ((IGoshujinSemaphore)this).SetObsolete();
+            array = (this is IEnumerable<TObject> e) ? e.ToArray() : Array.Empty<TObject>();
+        }
+
+        foreach (var x in array)
+        {
+            if (x is ITreeObject y)
+            {
+                y.Delete();
+            }
+        }
+    }
 
     public TObject[] GetArray()
     {

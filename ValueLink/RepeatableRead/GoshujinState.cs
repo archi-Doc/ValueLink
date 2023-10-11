@@ -18,7 +18,7 @@ public enum GoshujinState
     Unloading,
 
     /// <summary>
-    /// The goshujin is not in a valid state because it has been unloaded.
+    /// The goshujin is not in a valid state because it has been unloaded or deleted.
     /// </summary>
     Obsolete,
 }

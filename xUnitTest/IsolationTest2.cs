@@ -16,7 +16,6 @@ namespace xUnitTest;
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 public partial record RepeatableItem
 {
-
     public RepeatableItem()
     {
     }

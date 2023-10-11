@@ -95,6 +95,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     public string? RepeatableGoshujin;
 
+    public string? SerializableGoshujin;
+
     public ValueLinkObject? ClosedGenericHint { get; private set; }
 
     internal Automata<ValueLinkObject, Linkage>? DeserializeChainAutomata { get; private set; }
@@ -856,6 +858,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     this.RepeatableGoshujin = $"{ValueLinkBody.RepeatableGoshujin}<{this.UniqueLink.TypeObject.FullName}, {this.SimpleName}, {this.ObjectAttribute.GoshujinClass}, {ValueLinkBody.WriterClassName}>";
                 }
             }
+            else if (this.ObjectAttribute.Isolation == IsolationLevel.Serializable)
+            {
+                this.SerializableGoshujin = $"{ValueLinkBody.SerializableGoshujin}<{this.SimpleName}, {this.ObjectAttribute.GoshujinClass}>";
+            }
 
             if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateINotifyPropertyChanged))
             {
@@ -1566,6 +1572,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         {
             goshujinInterface = $" : {this.RepeatableGoshujin}, IGoshujin";
         }
+        else if (this.SerializableGoshujin is not null)
+        {
+            goshujinInterface = $" : {this.SerializableGoshujin}, IGoshujin";
+        }
         else
         {
             goshujinInterface = " : IGoshujin";
@@ -1653,12 +1663,12 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSyncObject))
             {
-                var overridePrefix = this.RepeatableGoshujin is null ? string.Empty : "override ";
+                var overridePrefix = (this.RepeatableGoshujin is null && this.SerializableGoshujin is null) ? string.Empty : "override ";
                 ssb.AppendLine("private object syncObject = new();");
                 ssb.AppendLine($"public {overridePrefix}object SyncObject => this.syncObject;");
                 ssb.AppendLine($"object {ValueLinkBody.IGoshujinSemaphore}.SyncObject => this.syncObject;");
-                ssb.AppendLine($"GoshujinState {ValueLinkBody.IGoshujinSemaphore}.State {{ get; set; }}");
-                ssb.AppendLine($"int {ValueLinkBody.IGoshujinSemaphore}.SemaphoreCount {{ get; set; }}");
+                // ssb.AppendLine($"GoshujinState {ValueLinkBody.IGoshujinSemaphore}.State {{ get; set; }}");
+                // ssb.AppendLine($"int {ValueLinkBody.IGoshujinSemaphore}.SemaphoreCount {{ get; set; }}");
             }
 
             /*if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddLockable))
@@ -1795,64 +1805,66 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         this.GenerateGosjujin_Tree_ReadRecord(ssb, info);
 
-        this.GenerateGosjujin_Tree_Save(ssb, info);
-        this.GenerateGosjujin_Tree_Delete(ssb, info);
-        this.GenerateGosjujin_Tree_NotifyDataChanged(ssb, info);
+        if (this.ObjectAttribute?.Isolation == IsolationLevel.Serializable ||
+            this.ObjectAttribute?.Isolation == IsolationLevel.RepeatableRead)
+        {
+            this.GenerateGosjujin_Tree_Save(ssb, info);
+            this.GenerateGosjujin_Tree_Delete(ssb, info);
+            this.GenerateGosjujin_Tree_NotifyDataChanged(ssb, info);
+        }
     }
 
     internal void GenerateGosjujin_Tree_Save(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatableRead)
+        ssb.AppendLine($"Task<bool> {TinyhandBody.ITreeObject}.Save(UnloadMode unloadMode) => this.GoshujinSave(unloadMode);");
+
+        /*using (var scopeMethod = ssb.ScopeBrace($"async Task<bool> {TinyhandBody.ITreeObject}.Save(UnloadMode unloadMode)"))
         {
-            using (var scopeMethod = ssb.ScopeBrace($"async Task<bool> {TinyhandBody.ITreeObject}.Save(UnloadMode unloadMode)"))
+            ssb.AppendLine($"if (this is not {ValueLinkBody.IGoshujinSemaphore} s) return true;");
+
+            ssb.AppendLine($"{this.LocalName}[] array;");
+            var scopeLock = this.ScopeLock(ssb, "this");
+
+            ssb.AppendLine("if (s.State == GoshujinState.Obsolete) return true;"); // Obsolete
+            ssb.AppendLine("else if (unloadMode == UnloadMode.TryUnload && s.SemaphoreCount > 0) return false;"); // Acquired
+            ssb.AppendLine("else if (unloadMode != UnloadMode.NoUnload) s.SetUnloading();");
+
+            ssb.AppendLine("array = this.ToArray();");
+
+            scopeLock?.Dispose();
+
+            using (var scopeForeach = ssb.ScopeBrace($"foreach (var x in array)"))
             {
-                ssb.AppendLine($"if (this is not {ValueLinkBody.IGoshujinSemaphore} s) return true;");
-
-                ssb.AppendLine($"{this.LocalName}[] array;");
-                var scopeLock = this.ScopeLock(ssb, "this");
-
-                ssb.AppendLine("if (s.State == GoshujinState.Obsolete) return true;"); // Obsolete
-                ssb.AppendLine("else if (unloadMode == UnloadMode.TryUnload && s.SemaphoreCount > 0) return false;"); // Acquired
-                ssb.AppendLine("else if (unloadMode != UnloadMode.NoUnload) s.SetUnloading();");
-
-                ssb.AppendLine("array = this.ToArray();");
-
-                scopeLock?.Dispose();
-
-                using (var scopeForeach = ssb.ScopeBrace($"foreach (var x in array)"))
-                {
-                    ssb.AppendLine($"if (x is {TinyhandBody.ITreeObject} y && await y.Save(unloadMode).ConfigureAwait(false) == false) return false;");
-                }
-
-                ssb.AppendLine("if (unloadMode != UnloadMode.NoUnload) s.SetObsolete();");
-                ssb.AppendLine("return true;");
+                ssb.AppendLine($"if (x is {TinyhandBody.ITreeObject} y && await y.Save(unloadMode).ConfigureAwait(false) == false) return false;");
             }
-        }
+
+            ssb.AppendLine("if (unloadMode != UnloadMode.NoUnload) s.SetObsolete();");
+            ssb.AppendLine("return true;");
+        }*/
     }
 
     internal void GenerateGosjujin_Tree_Delete(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatableRead)
+        ssb.AppendLine($"void {TinyhandBody.ITreeObject}.Delete() => this.GoshujinDelete();");
+
+        /*using (var scopeMethod = ssb.ScopeBrace($"void {TinyhandBody.ITreeObject}.Delete()"))
         {
-            using (var scopeMethod = ssb.ScopeBrace($"void {TinyhandBody.ITreeObject}.Delete()"))
+            ssb.AppendLine($"if (this is not {ValueLinkBody.IGoshujinSemaphore} s) return;");
+
+            ssb.AppendLine($"{this.LocalName}[] array;");
+            var scopeLock = this.ScopeLock(ssb, "this");
+
+            ssb.AppendLine($"s.SetObsolete();");
+            // ssb.AppendLine($"array = (this is IEnumerable<{this.LocalName}> e) ? e.ToArray() : Array.Empty<{this.LocalName}>();");
+            ssb.AppendLine("array = this.ToArray();");
+
+            scopeLock?.Dispose();
+
+            using (var scopeForeach = ssb.ScopeBrace($"foreach (var x in array)"))
             {
-                ssb.AppendLine($"if (this is not {ValueLinkBody.IGoshujinSemaphore} s) return;");
-
-                ssb.AppendLine($"{this.LocalName}[] array;");
-                var scopeLock = this.ScopeLock(ssb, "this");
-
-                ssb.AppendLine($"s.SetObsolete();");
-                // ssb.AppendLine($"array = (this is IEnumerable<{this.LocalName}> e) ? e.ToArray() : Array.Empty<{this.LocalName}>();");
-                ssb.AppendLine("array = this.ToArray();");
-
-                scopeLock?.Dispose();
-
-                using (var scopeForeach = ssb.ScopeBrace($"foreach (var x in array)"))
-                {
-                    ssb.AppendLine($"if (x is {TinyhandBody.ITreeObject} y) y.Delete();");
-                }
+                ssb.AppendLine($"if (x is {TinyhandBody.ITreeObject} y) y.Delete();");
             }
-        }
+        }*/
     }
 
     internal void GenerateGosjujin_Tree_NotifyDataChanged(ScopingStringBuilder ssb, GeneratorInformation info)
