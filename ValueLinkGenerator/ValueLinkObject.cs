@@ -1804,7 +1804,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     {
         if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatableRead)
         {
-            using (var scopeMethod = ssb.ScopeBrace($"async Task<bool> {TinyhandBody.ITreeObject}.Save(UnloadMode unloadMode)"))
+            ssb.AppendLine($"Task<bool> {TinyhandBody.ITreeObject}.Save(UnloadMode unloadMode) => this.GoshujinSave(unloadMode);");
+
+            /*using (var scopeMethod = ssb.ScopeBrace($"async Task<bool> {TinyhandBody.ITreeObject}.Save(UnloadMode unloadMode)"))
             {
                 ssb.AppendLine($"if (this is not {ValueLinkBody.IGoshujinSemaphore} s) return true;");
 
@@ -1826,7 +1828,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
                 ssb.AppendLine("if (unloadMode != UnloadMode.NoUnload) s.SetObsolete();");
                 ssb.AppendLine("return true;");
-            }
+            }*/
         }
     }
 
