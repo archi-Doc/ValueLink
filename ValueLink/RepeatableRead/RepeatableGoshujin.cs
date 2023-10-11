@@ -39,16 +39,16 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IG
         lock (this.SyncObject)
         {
             if (this.State == GoshujinState.Obsolete)
-            {
+            {// Unloaded or deleted.
                 return true;
             }
-            else if (unloadMode == UnloadMode.TryUnload && this.SemaphoreCount > 0)
-            {
-                return false;
-            }
             else if (unloadMode != UnloadMode.NoUnload)
-            {
+            {// TryUnload or ForceUnload
                 ((IGoshujinSemaphore)this).SetUnloading();
+                if (unloadMode == UnloadMode.TryUnload && this.SemaphoreCount > 0)
+                {// Acquired.
+                    return false;
+                }
             }
 
             array = (this is IEnumerable<TObject> e) ? e.ToArray() : Array.Empty<TObject>();
@@ -63,8 +63,11 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IG
         }
 
         if (unloadMode != UnloadMode.NoUnload)
-        {
-            ((IGoshujinSemaphore)this).SetObsolete();
+        {// Unloaded
+            lock (this.SyncObject)
+            {
+                ((IGoshujinSemaphore)this).SetObsolete();
+            }
         }
 
         return true;

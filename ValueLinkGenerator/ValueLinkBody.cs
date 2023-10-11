@@ -44,6 +44,7 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
     public static readonly string WriterSemaphoreName = "writerSemaphore";
     public static readonly string RepeatableObjectState = "RepeatableObjectState";
     public static readonly string IRepeatableObject = "IRepeatableObject";
+    public static readonly string SerializableGoshujin = "SerializableGoshujin";
     public static readonly string RepeatableGoshujin = "RepeatableGoshujin";
     public static readonly string IValueLinkObjectInternal = "IValueLinkObjectInternal";
     public static readonly string IGoshujinSemaphore = "ValueLink.IGoshujinSemaphore";

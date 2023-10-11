@@ -107,13 +107,16 @@ public interface IGoshujinSemaphore
             if (!this.IsValid)
             {// Invalid (Unloading/Obsolete)
             }
-            else if (this.SemaphoreCount > 0)
-            {// Acquired
-            }
             else
-            {// Can unload
+            {// Valid
                 this.State = GoshujinState.Unloading;
-                result = true;
+                if (this.SemaphoreCount > 0)
+                {// Acquired
+                }
+                else
+                {// Can unload
+                    result = true;
+                }
             }
 
             state = this.State;
