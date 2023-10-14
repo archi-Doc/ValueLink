@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Arc.Visceral;
 using Microsoft.CodeAnalysis;
@@ -163,74 +164,75 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             return;
         }
 
-        // ValueLinkObjectAttribute
-        if (this.AllAttributes.FirstOrDefault(x => x.FullName == ValueLinkObjectAttributeMock.FullName) is { } objectAttribute)
+        foreach (var attribute in this.AllAttributes)
         {
-            this.Location = objectAttribute.Location;
-            try
-            {
-                this.ObjectAttribute = ValueLinkObjectAttributeMock.FromArray(objectAttribute.ConstructorArguments, objectAttribute.NamedArguments);
-
-                // Goshujin Class / Instance
-                this.ObjectAttribute.GoshujinClass = (this.ObjectAttribute.GoshujinClass != string.Empty) ? this.ObjectAttribute.GoshujinClass : ValueLinkBody.DefaultGoshujinClass;
-                this.ObjectAttribute.GoshujinInstance = (this.ObjectAttribute.GoshujinInstance != string.Empty) ? this.ObjectAttribute.GoshujinInstance : ValueLinkBody.DefaultGoshujinInstance;
-                this.ObjectAttribute.ExplicitPropertyChanged = (this.ObjectAttribute.ExplicitPropertyChanged != string.Empty) ? this.ObjectAttribute.ExplicitPropertyChanged : ValueLinkBody.ExplicitPropertyChanged;
-            }
-            catch (InvalidCastException)
-            {
-                this.Body.ReportDiagnostic(ValueLinkBody.Error_AttributePropertyError, objectAttribute.Location);
-            }
-        }
-
-        // Linkage
-        foreach (var linkAttribute in this.AllAttributes.Where(x => x.FullName == LinkAttributeMock.FullName))
-        {
-            var linkage = Linkage.Create(this, linkAttribute);
-            if (linkage == null)
-            {
-                continue;
-            }
-
-            this.ObjectFlag |= ValueLinkObjectFlag.HasLinkAttribute;
-            if (linkage.AddValue)
-            {
-                this.ObjectFlag |= ValueLinkObjectFlag.AddValueProperty;
-            }
-
-            if (this.ContainingObject is { } parent)
-            {// Add to parent's list
-                if (parent.Links == null)
+            if (attribute.FullName == ValueLinkObjectAttributeMock.FullName)
+            {// ValueLinkObjectAttribute
+                this.Location = attribute.Location;
+                try
                 {
-                    parent.Links = new();
+                    this.ObjectAttribute = ValueLinkObjectAttributeMock.FromArray(attribute.ConstructorArguments, attribute.NamedArguments);
+
+                    // Goshujin Class / Instance
+                    this.ObjectAttribute.GoshujinClass = (this.ObjectAttribute.GoshujinClass != string.Empty) ? this.ObjectAttribute.GoshujinClass : ValueLinkBody.DefaultGoshujinClass;
+                    this.ObjectAttribute.GoshujinInstance = (this.ObjectAttribute.GoshujinInstance != string.Empty) ? this.ObjectAttribute.GoshujinInstance : ValueLinkBody.DefaultGoshujinInstance;
+                    this.ObjectAttribute.ExplicitPropertyChanged = (this.ObjectAttribute.ExplicitPropertyChanged != string.Empty) ? this.ObjectAttribute.ExplicitPropertyChanged : ValueLinkBody.ExplicitPropertyChanged;
+                }
+                catch (InvalidCastException)
+                {
+                    this.Body.ReportDiagnostic(ValueLinkBody.Error_AttributePropertyError, attribute.Location);
+                }
+            }
+            else if (attribute.FullName == LinkAttributeMock.FullName)
+            {// Linkage
+                var linkage = Linkage.Create(this, attribute);
+                if (linkage == null)
+                {
+                    continue;
                 }
 
-                if (linkage.Target != null && parent.Links.FirstOrDefault(x => x.Target == linkage.Target) is { } mainLink)
+                this.ObjectFlag |= ValueLinkObjectFlag.HasLinkAttribute;
+                if (linkage.AddValue)
                 {
-                    // Multiple linkages.
-                    linkage.MainLink = mainLink;
-                    linkage.ValueName = mainLink.ValueName;
+                    this.ObjectFlag |= ValueLinkObjectFlag.AddValueProperty;
                 }
 
-                parent.Links.Add(linkage);
-            }
-        }
+                if (this.ContainingObject is { } parent)
+                {// Add to parent's list
+                    if (parent.Links == null)
+                    {
+                        parent.Links = new();
+                    }
 
-        // TinyhandObjectAttribute
-        if (this.AllAttributes.FirstOrDefault(x => x.FullName == TinyhandObjectAttributeMock.FullName) is { } tinyhandAttribute)
-        {
-            try
-            {
-                this.TinyhandAttribute = TinyhandObjectAttributeMock.FromArray(tinyhandAttribute.ConstructorArguments, tinyhandAttribute.NamedArguments);
-            }
-            catch (InvalidCastException)
-            {
-                this.Body.ReportDiagnostic(ValueLinkBody.Error_AttributePropertyError, tinyhandAttribute.Location);
-            }
+                    if (linkage.Target != null && parent.Links.FirstOrDefault(x => x.Target == linkage.Target) is { } mainLink)
+                    {
+                        // Multiple linkages.
+                        linkage.MainLink = mainLink;
+                        linkage.ValueName = mainLink.ValueName;
+                    }
 
-            this.ObjectFlag |= ValueLinkObjectFlag.TinyhandObject;
-            if (this.TinyhandAttribute?.Journal == true)
-            {
-                this.ObjectFlag |= ValueLinkObjectFlag.GenerateJournal;
+                    parent.Links.Add(linkage);
+                }
+            }
+            else if (attribute.FullName == TinyhandObjectAttributeMock.FullName)
+            {// TinyhandObjectAttribute
+                try
+                {
+                    this.TinyhandAttribute = TinyhandObjectAttributeMock.FromArray(attribute.ConstructorArguments, attribute.NamedArguments);
+                }
+                catch (InvalidCastException)
+                {
+                    this.Body.ReportDiagnostic(ValueLinkBody.Error_AttributePropertyError, attribute.Location);
+                }
+
+                this.ObjectFlag |= ValueLinkObjectFlag.TinyhandObject;
+                if (this.TinyhandAttribute?.Journal == true)
+                {
+                    this.ObjectFlag |= ValueLinkObjectFlag.GenerateJournal;
+                }
+            }
+            else if (attribute.FullName == KeyAttributeMock.FullName)
+            {// KeyAttribute
             }
         }
 
