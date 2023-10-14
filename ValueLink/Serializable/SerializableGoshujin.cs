@@ -62,7 +62,7 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : IGoshujinSemaph
         return Task.FromResult(true);
     }
 
-    protected void GoshujinDelete()
+    protected void GoshujinErase()
     {
         TObject[] array;
         lock (this.SyncObject)
@@ -74,7 +74,7 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : IGoshujinSemaph
             {
                 if (x is ITreeObject y)
                 {
-                    y.Delete();
+                    y.Erase();
                 }
             }
         }

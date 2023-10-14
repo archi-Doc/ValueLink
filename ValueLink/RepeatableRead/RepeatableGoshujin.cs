@@ -73,7 +73,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IG
         return true;
     }
 
-    protected void GoshujinDelete()
+    protected void GoshujinErase()
     {
         TObject[] array;
         lock (this.SyncObject)
@@ -86,7 +86,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IG
         {
             if (x is ITreeObject y)
             {
-                y.Delete();
+                y.Erase();
             }
         }
     }

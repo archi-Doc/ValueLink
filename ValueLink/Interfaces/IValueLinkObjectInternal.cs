@@ -11,5 +11,5 @@ public interface IValueLinkObjectInternal<TGoshujin>
 {
     void AddToGoshujinInternal(TGoshujin? g, bool writeJournal = true);
 
-    bool RemoveFromGoshujinInternal(TGoshujin? g, bool writeJournal = true);
+    bool RemoveFromGoshujinInternal(TGoshujin? g, bool erase, bool writeJournal = true);
 }
