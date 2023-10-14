@@ -44,11 +44,12 @@ public class PropertyAccessibilityTest
     public void Test1()
     {
         var g = new PropertyAccessibilityClass.GoshujinClass();
-        using (var w = g.TryLock(1)!)
+        using (var w = g.TryLock(1, TryLockMode.GetOrCreate)!)
         {
             w.B = 1;
             // w.C = 2;
             w.X = "One";
+            w.Commit();
         }
 
         var r = g.TryGet(0);
