@@ -19,7 +19,12 @@ public class Member
 
         var name = obj.SimpleName;
         string generatedName;
-        if (char.IsLower(name[0]))
+        if (obj.KeyAttribute is not null &&
+            !string.IsNullOrEmpty(obj.KeyAttribute.AddProperty))
+        {
+            generatedName = obj.KeyAttribute.AddProperty;
+        }
+        else if (char.IsLower(name[0]))
         {
             generatedName = name[0].ToString().ToUpper() + name.Substring(1);
             if (parent.AllMembers.Any(x => x.SimpleName == generatedName))
@@ -47,7 +52,10 @@ public class Member
         if (this.Linkage is not null ||
             (journaling && obj.AllAttributes.Any(x => x.FullName == KeyAttributeMock.FullName)))
         {
-            this.ChangedName = this.Object.SimpleName + "Changed";
+            if (!this.Object.IsGetterOnlyProperty)
+            {
+                this.ChangedName = this.Object.SimpleName + "Changed";
+            }
         }
 
         if (obj.AllAttributes.FirstOrDefault(x => x.FullName == MaxLengthAttributeMock.FullName) is { } objectAttribute)
