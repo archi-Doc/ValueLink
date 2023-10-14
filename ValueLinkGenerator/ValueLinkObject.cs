@@ -1728,7 +1728,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 {
                     ssb.AppendLine($"var y = other.{this.UniqueLink.ChainName}.FindFirst(x.{this.UniqueLink.TargetName});");
                     ssb.AppendLine("if (y is null) return false;");
-                    ssb.AppendLine("if (!y.ObjectEquals(x)) return false;");
+                    ssb.AppendLine($"if (!((ValueLink.IEquatableObject<{this.SimpleName}>)y).ObjectEquals(x)) return false;");
                 }
             }
             else

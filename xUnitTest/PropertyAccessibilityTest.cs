@@ -1,15 +1,18 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using Tinyhand;
+using ValueLink;
 using Xunit;
 
 namespace xUnitTest;
 
 [TinyhandObject]
-public partial class PropertyAccessibilityClass
+[ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
+public partial record PropertyAccessibilityClass : IEquatableObject<PropertyAccessibilityClass>
 {
-    [Key(0, AddProperty = "A", PropertyAccessibility = PropertyAccessibility.PublicSetter)]
-    private int _a;
+    [Key(0, AddProperty = "Id", PropertyAccessibility = PropertyAccessibility.PublicSetter)]
+    [Link(Unique = true, Primary = true, Type = ChainType.Unordered)]
+    private int _id;
 
     [Key(1, AddProperty = "B", PropertyAccessibility = PropertyAccessibility.ProtectedSetter)]
     private int _b;
@@ -21,11 +24,10 @@ public partial class PropertyAccessibilityClass
     [MaxLength(10)]
     private string _x = string.Empty;
 
-    [Key(4, AddProperty = "Y", PropertyAccessibility = PropertyAccessibility.GetterOnly)]
-    [MaxLength(10)] // This attribute is invalid because the property is getter-only.
-    private string _y = string.Empty;
-
-    public void SetB(int b) => this.B = b;
+    bool IEquatableObject<PropertyAccessibilityClass>.ObjectEquals(PropertyAccessibilityClass other)
+    {
+        return this._id == other._id && this._b == other._b && this._c == other._c && this._x == other._x;
+    }
 }
 
 public class PropertyAccessibilityTest
@@ -33,13 +35,13 @@ public class PropertyAccessibilityTest
     [Fact]
     public void Test1()
     {
-        var c = new PropertyAccessibilityClass();
-        c.A = 1;
-        c.SetB(2);
-        c.X = "Test";
+        var g = new PropertyAccessibilityClass.GoshujinClass();
+        using (var w = g.TryLock(1)!)
+        {
+        }
 
-        var b = TinyhandSerializer.Serialize(c);
-        var c2 = TinyhandSerializer.Deserialize<PropertyAccessibilityClass>(b);
-        c.IsStructuralEqual(c2);
+        var b = TinyhandSerializer.Serialize(g);
+        var g2 = TinyhandSerializer.Deserialize<PropertyAccessibilityClass.GoshujinClass>(b);
+        g.GoshujinEquals(g2!).IsTrue();
     }
 }
