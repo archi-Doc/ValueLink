@@ -62,6 +62,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     public TinyhandObjectAttributeMock? TinyhandAttribute { get; private set; }
 
+    public KeyAttributeMock? KeyAttribute { get; private set; }
+
+    public bool IsGetterOnlyProperty => this.KeyAttribute?.PropertyAccessibility == PropertyAccessibility.GetterOnly;
+
     public DeclarationCondition PropertyChangedDeclaration { get; private set; }
 
     public List<Linkage>? Links { get; private set; } = null;
@@ -233,6 +237,14 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             }
             else if (attribute.FullName == KeyAttributeMock.FullName)
             {// KeyAttribute
+                try
+                {
+                    this.KeyAttribute = KeyAttributeMock.FromArray(attribute.ConstructorArguments, attribute.NamedArguments);
+                }
+                catch (InvalidCastException)
+                {
+                    this.Body.ReportDiagnostic(ValueLinkBody.Error_AttributePropertyError, attribute.Location);
+                }
             }
         }
 
@@ -1227,18 +1239,19 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             {
                 foreach (var x in this.Members)
                 {
-                    x.GenerateWriterProperty(ssb);
-                    if (x.ChangedName is not null)
+                    if (x.Object.KeyAttribute?.PropertyAccessibility == PropertyAccessibility.GetterOnly)
+                    {// getter-only
+                        x.GenerateReaderProperty(ssb);
+                    }
+                    else
                     {
-                        ssb.AppendLine($"private bool {x.ChangedName};");
+                        x.GenerateWriterProperty(ssb);
+                        if (x.ChangedName is not null)
+                        {
+                            ssb.AppendLine($"private bool {x.ChangedName};");
+                        }
                     }
                 }
-
-                /*ssb.AppendLine();
-                foreach (var x in this.Members)
-                {
-                    x.GenerateWriterProperty(ssb);
-                }*/
             }
         }
     }
@@ -1262,7 +1275,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
                     // Check unique
                     if (this.UniqueLink is { } link &&
-                        link.Member is { } member)
+                        link.Member is { } member &&
+                        member.ChangedName is not null)
                     {
                         ssb.AppendLine($"if (this.{member.ChangedName} && goshujin.{this.UniqueLink.ChainName}.ContainsKey(this.instance.{member.Object.SimpleName})) return default;");
                     }

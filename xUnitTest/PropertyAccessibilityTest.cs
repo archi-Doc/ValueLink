@@ -24,6 +24,14 @@ public partial record PropertyAccessibilityClass : IEquatableObject<PropertyAcce
     [MaxLength(10)]
     private string _x = string.Empty;
 
+    [Key(4, AddProperty = "Y", PropertyAccessibility = PropertyAccessibility.GetterOnly)]
+    [Link(Type = ChainType.Unordered)]
+    private string _y = string.Empty;
+
+    [Key(5, AddProperty = "Z", PropertyAccessibility = PropertyAccessibility.PublicSetter)]
+    [Link(Type = ChainType.Ordered)]
+    private string _z = string.Empty;
+
     bool IEquatableObject<PropertyAccessibilityClass>.ObjectEquals(PropertyAccessibilityClass other)
     {
         return this._id == other._id && this._b == other._b && this._c == other._c && this._x == other._x;
@@ -38,7 +46,15 @@ public class PropertyAccessibilityTest
         var g = new PropertyAccessibilityClass.GoshujinClass();
         using (var w = g.TryLock(1)!)
         {
+            w.B = 1;
+            // w.C = 2;
+            w.X = "One";
         }
+
+        var r = g.TryGet(0);
+        r.IsNull();
+        r = g.TryGet(1);
+        r.IsNotNull();
 
         var b = TinyhandSerializer.Serialize(g);
         var g2 = TinyhandSerializer.Deserialize<PropertyAccessibilityClass.GoshujinClass>(b);
