@@ -1339,7 +1339,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournal))
             {
                 ssb.AppendLine($"(({TinyhandBody.ITreeObject})this.instance).SetParent(this.Goshujin);");
-                ssb.AppendLine("this.Goshujin?.NotifyDataChanged();");
+                // ssb.AppendLine("this.Goshujin?.NotifyDataChanged();");
             }
 
             ssb.AppendLine($"this.original.State = {ValueLinkBody.RepeatableObjectState}.Obsolete;");
@@ -1810,7 +1810,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         {
             this.GenerateGosjujin_Tree_Save(ssb, info);
             this.GenerateGosjujin_Tree_Delete(ssb, info);
-            this.GenerateGosjujin_Tree_NotifyDataChanged(ssb, info);
+            // this.GenerateGosjujin_Tree_NotifyDataChanged(ssb, info);
         }
     }
 
