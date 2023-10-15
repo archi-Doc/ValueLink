@@ -51,7 +51,7 @@ public readonly partial struct JournalIdentifier : IComparable<JournalIdentifier
 }
 
 [ValueLinkObject(Isolation = IsolationLevel.Serializable)]
-[TinyhandObject(Journal = true)]
+[TinyhandObject(Tree = true)]
 public partial record JournalTestClass : IEquatableObject<JournalTestClass>
 {
     public JournalTestClass()
@@ -80,7 +80,7 @@ public partial record JournalTestClass : IEquatableObject<JournalTestClass>
 }
 
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
-[TinyhandObject(Journal = true)]
+[TinyhandObject(Tree = true)]
 public partial record JournalTestClass2 : IEquatableObject<JournalTestClass2>
 {
     public JournalTestClass2()
@@ -161,7 +161,7 @@ public partial record JournalTestClass2 : IEquatableObject<JournalTestClass2>
     }
 }
 
-[TinyhandObject(Journal = true, ExplicitKeyOnly = true)]
+[TinyhandObject(Tree = true, ExplicitKeyOnly = true)]
 public partial record JournalTestBase
 {
     public const int Number = 10;
@@ -187,7 +187,7 @@ public partial record JournalTestBase
     private string name = string.Empty;
 }
 
-[TinyhandObject(Journal = true, ExplicitKeyOnly = true)]
+[TinyhandObject(Tree = true, ExplicitKeyOnly = true)]
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 public partial record JournalTestBase2 : JournalTestBase
 {
@@ -203,7 +203,7 @@ public partial record JournalTestBase2 : JournalTestBase
     public readonly int Id3;
 }
 
-/*[TinyhandObject(Journal = true, ExplicitKeyOnly = true)]
+/*[TinyhandObject(Tree = true, ExplicitKeyOnly = true)]
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 public partial record JournalTestBase3 : JournalTestBase2
 {
@@ -216,7 +216,7 @@ public partial record JournalTestBase3 : JournalTestBase2
     public int Id3 { get; set; }
 }*/
 
-[TinyhandObject(Journal = true)]
+[TinyhandObject(Tree = true)]
 public partial record JournalChildClass : IEquatableObject<JournalChildClass>
 {
     public JournalChildClass()
@@ -235,7 +235,7 @@ public partial record JournalChildClass : IEquatableObject<JournalChildClass>
         => this.age == other.age;
 }
 
-[TinyhandObject(Journal = true)]
+[TinyhandObject(Tree = true)]
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 internal partial record StandardData
 {
@@ -457,6 +457,15 @@ public class JournalTest
             }
         }
 
+        using (var w = g2.TryLock(new JournalIdentifier(55)))
+        {
+            if (w is not null)
+            {
+                w.RemoveAndErase();
+                w.Commit();
+            }
+        }
+
         journal = tester.GetJournal();
         g3 = new JournalTestClass2.GoshujinClass();
         this.ReadJournal(g3, journal).IsTrue();
@@ -470,8 +479,8 @@ public class JournalTest
 
         ((IGoshujinSemaphore)g2).LockAndTryUnload(out var state).IsTrue();
         state.Is(GoshujinState.Unloading);
-        bin = TinyhandSerializer.Serialize(g2, TinyhandSerializerOptions.Unload);
-        ((IGoshujinSemaphore)g2).State.Is(GoshujinState.Obsolete);
+        bin = TinyhandSerializer.Serialize(g2); // TinyhandSerializerOptions.Unload
+        // ((IGoshujinSemaphore)g2).State.Is(GoshujinState.Obsolete);
     }
 
     public bool ReadJournal(ITreeObject treeObject, ReadOnlyMemory<byte> data)

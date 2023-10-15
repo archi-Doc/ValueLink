@@ -100,9 +100,9 @@ public class Member
                 }
 
                 /*if (this.Object.TypeObject is { } typeObject &&
-                    this.Object.ContainingObject?.TinyhandAttribute?.Journal == true)
+                    this.Object.ContainingObject?.TinyhandAttribute?.Tree == true)
                 {
-                    if (typeObject.TinyhandAttribute?.Journal == true ||
+                    if (typeObject.TinyhandAttribute?.Tree == true ||
                         typeObject.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournal) == true ||
                         typeObject.Kind == VisceralObjectKind.Error)
                     {

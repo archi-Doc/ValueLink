@@ -5,7 +5,7 @@ using Tinyhand;
 namespace Sandbox;
 
 
-[TinyhandObject(ExplicitKeyOnly = true, Journal = true)]
+[TinyhandObject(ExplicitKeyOnly = true, Tree = true)]
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 public partial record RepeatableItem
 {
@@ -23,7 +23,7 @@ public partial record RepeatableItem
     public int Id { private set; get; }
 }
 
-[TinyhandObject(Journal = true)]
+[TinyhandObject(Tree = true)]
 [ValueLinkObject]
 internal partial class ValueClass
 {

@@ -40,7 +40,7 @@ public enum ValueLinkObjectFlag
     HasLinkAttribute = 1 << 16, // Has LinkAttribute
     HasPrimaryLink = 1 << 17, // Has primary link
     HasUniqueLink = 1 << 18, // Has unique link
-    GenerateJournal = 1 << 19, // Generate journaling
+    TreeEnabled = 1 << 19, // Tree
     AddSyncObject = 1 << 20,
     // AddLockable = 1 << 21,
     AddGoshujinProperty = 1 << 22,
@@ -230,9 +230,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 }
 
                 this.ObjectFlag |= ValueLinkObjectFlag.TinyhandObject;
-                if (this.TinyhandAttribute?.Journal == true)
+                if (this.TinyhandAttribute?.Tree == true)
                 {
-                    this.ObjectFlag |= ValueLinkObjectFlag.GenerateJournal;
+                    this.ObjectFlag |= ValueLinkObjectFlag.TreeEnabled;
                 }
             }
             else if (attribute.FullName == KeyAttributeMock.FullName)
@@ -545,7 +545,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 this.ObjectFlag |= ValueLinkObjectFlag.HasUniqueLink;
             }
 
-            if (this.TinyhandAttribute?.Journal == true)
+            if (this.TinyhandAttribute?.Tree == true)
             {// Required
                 if (this.UniqueLink is null/* || !this.UniqueLink.Type.IsLocatable()*/)
                 {
@@ -578,7 +578,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             }
 
             // Prepare members
-            var journaling = this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournal);
+            var journaling = this.ObjectFlag.HasFlag(ValueLinkObjectFlag.TreeEnabled);
             foreach (var x in this.GetMembers(VisceralTarget.Field | VisceralTarget.Property))
             {
                 /*if (x.Field_Accessibility == Accessibility.Public ||
@@ -968,7 +968,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             this.Generate_EnterGoshujinMethod(ssb, info);
         }
 
-        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournal))
+        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.TreeEnabled))
         {
             this.Generate_WriteLocator(ssb, info);
         }
@@ -1025,7 +1025,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         {
             ssb.AppendLine($"this.{goshujinInstance} = g;");
 
-            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournal))
+            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.TreeEnabled))
             {
                 ssb.AppendLine($"(({TinyhandBody.ITreeObject})this).SetParent(g);");
             }
@@ -1043,7 +1043,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     }
                 }
 
-                if (this.TinyhandAttribute?.Journal == true)
+                if (this.TinyhandAttribute?.Tree == true)
                 {
                     this.CodeJournal2(ssb, null);
                 }
@@ -1055,7 +1055,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     {
         var goshujinInstance = this.GoshujinInstanceIdentifier; // goshujin + "Instance";
 
-        using (var enterScope = ssb.ScopeBrace($"bool {this.IValueLinkObjectInternal}.{ValueLinkBody.GeneratedTryRemoveName}({this.ObjectAttribute!.GoshujinClass}? g, bool writeJournal)"))
+        using (var enterScope = ssb.ScopeBrace($"bool {this.IValueLinkObjectInternal}.{ValueLinkBody.GeneratedTryRemoveName}({this.ObjectAttribute!.GoshujinClass}? g, bool erase, bool writeJournal)"))
         using (var scopeParamter = ssb.ScopeObject("this"))
         {
             /*if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSyncObject))
@@ -1091,14 +1091,14 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     }
                 }
 
-                if (this.UniqueLink is not null && this.TinyhandAttribute?.Journal == true)
+                if (this.UniqueLink is not null && this.TinyhandAttribute?.Tree == true)
                 {
                     this.CodeJournal2(ssb, this.UniqueLink.Target);
                 }
 
                 ssb.AppendLine($"this.{goshujinInstance} = null;");
 
-                if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournal))
+                if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.TreeEnabled))
                 {
                     ssb.AppendLine($"(({TinyhandBody.ITreeObject})this).SetParent(null);");
                 }
@@ -1155,7 +1155,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     internal void Generate_RepeatableRead(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         // this.Generate_RepeatableRead_Reader(ssb, info);
-        this.Generate_RepeatableRead_Writer(ssb, info);
+        this.Generate_RepeatableRead_WriterClass(ssb, info);
         this.Generate_RepeatableRead_Other(ssb, info);
     }
 
@@ -1187,7 +1187,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
     }*/
 
-    internal void Generate_RepeatableRead_Writer(ScopingStringBuilder ssb, GeneratorInformation info)
+    internal void Generate_RepeatableRead_WriterClass(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         ssb.AppendLine();
 
@@ -1204,14 +1204,17 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             ssb.AppendLine($"public {this.SimpleName} Instance => this.instance ??= this.original with {{ }};");
             ssb.AppendLine($"private {this.SimpleName} original;");
             ssb.AppendLine($"private {this.SimpleName}? instance;");
+            ssb.AppendLine($"private bool __erase_flag__;");
 
             ssb.AppendLine();
 
-            this.Generate_RepeatableRead_Writer_Commit(ssb);
+            this.Generate_RepeatableRead_WriterClass_Commit(ssb);
 
+            ssb.AppendLine($"public void RemoveAndErase() => this.__erase_flag__ = true;");
             using (var scopeRollback = ssb.ScopeBrace($"public void Rollback()"))
             {
                 ssb.AppendLine("this.instance = null;");
+                ssb.AppendLine("this.__erase_flag__ = false;");
                 if (this.Members is not null)
                 {
                     foreach (var x in this.Members)
@@ -1227,7 +1230,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             using (var scopeDispose = ssb.ScopeBrace($"public void Dispose()"))
             {
                 ssb.AppendLine($"var goshujin = this.original.{this.GoshujinInstanceIdentifier};");
-                ssb.AppendLine($"if (goshujin is not null) {{ lock (goshujin.SyncObject) {{ if (this.original.State == RepeatableObjectState.Created) (({this.IValueLinkObjectInternal})this.original).{ValueLinkBody.GeneratedTryRemoveName}(null); (({ValueLinkBody.IGoshujinSemaphore})goshujin).ReleaseOne(); }} }}");
+                ssb.AppendLine($"if (goshujin is not null) {{ lock (goshujin.SyncObject) {{ if (this.original.State == RepeatableObjectState.Created) (({this.IValueLinkObjectInternal})this.original).{ValueLinkBody.GeneratedTryRemoveName}(null, false, false); (({ValueLinkBody.IGoshujinSemaphore})goshujin).ReleaseOne(); }} }}");
 
                 ssb.AppendLine($"this.original.{ValueLinkBody.WriterSemaphoreName}.Exit();");
             }
@@ -1256,16 +1259,25 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
     }
 
-    internal void Generate_RepeatableRead_Writer_Commit(ScopingStringBuilder ssb)
+    internal void Generate_RepeatableRead_WriterClass_Commit(ScopingStringBuilder ssb)
     {
         using (var scopeRollback = ssb.ScopeBrace($"public {this.SimpleName}? Commit()"))
         {
             using (var scopeEmptyCommit = ssb.ScopeBrace("if (this.instance is null)"))
             {
-                ssb.AppendLine("this.original.State = RepeatableObjectState.Valid;");
-                ssb.AppendLine("return this.original;");
+                using (var scopeEraseFlag = ssb.ScopeBrace("if (this.__erase_flag__)"))
+                {
+                    ssb.AppendLine("this.instance ??= this.original with { };");
+                }
+
+                using (var scopeEraseFlag = ssb.ScopeBrace("else"))
+                {
+                    ssb.AppendLine("this.original.State = RepeatableObjectState.Valid;");
+                    ssb.AppendLine("return this.original;");
+                }
             }
 
+            ssb.AppendLine($"if (this.__erase_flag__) this.instance.{this.GoshujinInstanceIdentifier} = null;");
             ssb.AppendLine($"var goshujin = this.original.{this.GoshujinInstanceIdentifier};");
             using (var scopeSame = ssb.ScopeBrace($"if (goshujin == this.Goshujin)"))
             {
@@ -1307,7 +1319,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                         }
                     }
 
-                    if (this.TinyhandAttribute?.Journal == true)
+                    if (this.TinyhandAttribute?.Tree == true)
                     {
                         ssb.AppendLine();
                         this.CodeJournal3(ssb);
@@ -1348,19 +1360,32 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     }
                 }
 
-                ssb.AppendLine($"if (goshujin is not null) {{ lock (goshujin.SyncObject) {{ (({this.IValueLinkObjectInternal})this.original).{ValueLinkBody.GeneratedTryRemoveName}(null); (({ValueLinkBody.IGoshujinSemaphore})goshujin).ReleaseOne(); }} }}");
+                ssb.AppendLine($"if (goshujin is not null) {{ lock (goshujin.SyncObject) {{ (({this.IValueLinkObjectInternal})this.original).{ValueLinkBody.GeneratedTryRemoveName}(null, this.__erase_flag__); (({ValueLinkBody.IGoshujinSemaphore})goshujin).ReleaseOne(); }} }}");
             }
 
-            // Journal
-            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournal))
+            // Tree
+            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.TreeEnabled))
             {
                 ssb.AppendLine($"(({TinyhandBody.ITreeObject})this.instance).SetParent(this.Goshujin);");
-                // ssb.AppendLine("this.Goshujin?.NotifyDataChanged();");
             }
 
             ssb.AppendLine($"this.original.State = {ValueLinkBody.RepeatableObjectState}.Obsolete;");
             ssb.AppendLine("this.original = this.instance;");
-            ssb.AppendLine("this.instance.State = RepeatableObjectState.Valid;");
+
+            using (var scopeDelete = ssb.ScopeBrace($"if (this.__erase_flag__)"))
+            {
+                ssb.AppendLine("this.instance.State = RepeatableObjectState.Obsolete;");
+                if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.TreeEnabled))
+                {
+                    ssb.AppendLine($"(({TinyhandBody.ITreeObject})this.instance).Erase();");
+                }
+            }
+
+            using (var scopeElse = ssb.ScopeBrace($"else"))
+            {
+                ssb.AppendLine("this.instance.State = RepeatableObjectState.Valid;");
+            }
+
             ssb.AppendLine("this.Rollback();");
             ssb.AppendLine($"return this.original;");
         }
@@ -1607,7 +1632,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             goshujinInterface += $", ITinyhandSerialize<{this.GoshujinFullName}>, ITinyhandReconstruct<{this.GoshujinFullName}>, ITinyhandClone<{this.GoshujinFullName}>, ITinyhandSerialize";
         }
 
-        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournal))
+        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.TreeEnabled))
         {// ITreeObject
             goshujinInterface += $", ITreeObject";
         }
@@ -1671,7 +1696,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     }
                 }
 
-                if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournal))
+                if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.TreeEnabled))
                 {
                     this.GenerateGosjujin_Tree(ssb, info);
                 }
@@ -1707,7 +1732,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                         ssb.AppendLine($"var obj = new {this.SimpleName}();");
                     }
 
-                    if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournal))
+                    if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.TreeEnabled))
                     {// ITreeObject
                         ssb.AppendLine($"(({TinyhandBody.ITreeObject})obj).SetParent(this);");
                     }
@@ -1861,9 +1886,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGosjujin_Tree_Delete(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        ssb.AppendLine($"void {TinyhandBody.ITreeObject}.Delete() => this.GoshujinDelete();");
+        ssb.AppendLine($"void {TinyhandBody.ITreeObject}.Erase() => this.GoshujinErase();");
 
-        /*using (var scopeMethod = ssb.ScopeBrace($"void {TinyhandBody.ITreeObject}.Delete()"))
+        /*using (var scopeMethod = ssb.ScopeBrace($"void {TinyhandBody.ITreeObject}.Erase()"))
         {
             ssb.AppendLine($"if (this is not {ValueLinkBody.IGoshujinSemaphore} s) return;");
 
@@ -1878,7 +1903,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             using (var scopeForeach = ssb.ScopeBrace($"foreach (var x in array)"))
             {
-                ssb.AppendLine($"if (x is {TinyhandBody.ITreeObject} y) y.Delete();");
+                ssb.AppendLine($"if (x is {TinyhandBody.ITreeObject} y) y.Erase();");
             }
         }*/
     }
@@ -1924,7 +1949,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 ssb.AppendLine("{");
                 ssb.IncrementIndent();
 
-                ssb.AppendLine($"if (this.{this.UniqueLink.ChainName}.FindFirst(obj.{this.UniqueLink.TargetName}) is {this.IValueLinkObjectInternal} old) old.{ValueLinkBody.GeneratedTryRemoveName}(null, false);");
+                ssb.AppendLine($"if (this.{this.UniqueLink.ChainName}.FindFirst(obj.{this.UniqueLink.TargetName}) is {this.IValueLinkObjectInternal} old) old.{ValueLinkBody.GeneratedTryRemoveName}(null, false, false);");
 
                 ssb.AppendLine($"(({this.IValueLinkObjectInternal})obj).{ValueLinkBody.GeneratedAddName}(this, false);");
                 ssb.AppendLine("return true;");
@@ -1936,7 +1961,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 ssb.AppendLine("catch {}");
             }
 
-            using (var scopeRemove = ssb.ScopeBrace("else if (record == JournalRecord.Remove)"))
+            using (var scopeRemove = ssb.ScopeBrace("else if (record == JournalRecord.Remove || record == JournalRecord.RemoveAndErase)"))
             {// Remove
                 var typeObject = this.UniqueLink.Target.TypeObject;
                 ssb.AppendLine($"var key = {typeObject.CodeReader()};");
@@ -1945,7 +1970,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
                 ssb.AppendLine("{");
                 ssb.IncrementIndent();
-                ssb.AppendLine($"obj.{ValueLinkBody.GeneratedTryRemoveName}(null, false);");
+                ssb.AppendLine($"obj.{ValueLinkBody.GeneratedTryRemoveName}(null, record == JournalRecord.RemoveAndErase, false);");
                 ssb.AppendLine("return true;");
                 ssb.DecrementIndent();
                 ssb.AppendLine("}");
@@ -2021,10 +2046,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 }
             }
 
-            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSyncObject))
+            /*if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSyncObject))
             {
                 ssb.AppendLine($"if (options.HasUnloadFlag) (({ValueLinkBody.IGoshujinSemaphore}){ssb.FullObject}).SetObsolete();");
-            }
+            }*/
 
             if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatableRead)
             {
@@ -2143,7 +2168,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 {
                     ssb.AppendLine("array[n] = formatter.Deserialize(ref reader, options)!;");
                     ssb.AppendLine($"array[n].{this.GoshujinInstanceIdentifier} = {ssb.FullObject};");
-                    if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournal))
+                    if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.TreeEnabled))
                     {// ITreeObject
                         ssb.AppendLine($"(({TinyhandBody.ITreeObject})array[n]).SetParent(v);");
                     }
@@ -2248,9 +2273,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             {// No property
                 ssb.AppendLine($"if ({ssb.FullObject}.{this.GoshujinInstanceIdentifier} != null) return false;");
 
-                if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournal))
+                if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.TreeEnabled))
                 {
-                    ssb.AppendLine($"{ssb.FullObject}.Journal = this.Journal;");
+                    ssb.AppendLine($"{ssb.FullObject}.TreeRoot = this.TreeRoot;");
                 }
 
                 var scopeLock = this.ScopeLock(ssb, "this");
@@ -2314,7 +2339,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
         else
         {
-            ssb.AppendLine($"public bool Remove({this.LocalName} x) => (({this.IValueLinkObjectInternal})x).{ValueLinkBody.GeneratedTryRemoveName}(this);");
+            ssb.AppendLine($"public bool Remove({this.LocalName} x) => (({this.IValueLinkObjectInternal})x).{ValueLinkBody.GeneratedTryRemoveName}(this, false);");
         }
 
         /*using (var scopeParameter = ssb.ScopeObject("x"))
@@ -2355,7 +2380,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     }
                 }
 
-                if (this.PrimaryLink is not null && this.TinyhandAttribute?.Journal == true)
+                if (this.PrimaryLink is not null && this.TinyhandAttribute?.Tree == true)
                 {
                     this.CodeJournal2(ssb, this.PrimaryLink.Target);
                 }
@@ -2518,7 +2543,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     using (var scopeParamter = ssb.ScopeObject("this"))
                     {
                         ssb.AppendLine($"var @interface = ({this.IValueLinkObjectInternal})this;");
-                        ssb.AppendLine($"@interface.{ValueLinkBody.GeneratedTryRemoveName}(null);");
+                        ssb.AppendLine($"@interface.{ValueLinkBody.GeneratedTryRemoveName}(null, false);");
                         ssb.AppendLine($"@interface.{ValueLinkBody.GeneratedAddName}(value);");
                         ssb.AppendLine($"this.{goshujinInstance} = value;");
                     }
@@ -2531,7 +2556,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     /*internal void GenerateGoshujinProperty(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        var generateJournal = this.TinyhandAttribute?.Journal == true;
+        var generateJournal = this.TinyhandAttribute?.Tree == true;
         var goshujin = this.ObjectAttribute!.GoshujinInstance;
         var goshujinInstance = this.GoshujinInstanceIdentifier; // goshujin + "Instance";
 
@@ -2557,7 +2582,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
                     if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournal))
                     {
-                        ssb.AppendLine($"this.Journal = value?.Journal;");
+                        ssb.AppendLine($"this.TreeRoot = value?.TreeRoot;");
                     }
 
                     using (var scopeIfNull2 = ssb.ScopeBrace($"if (value != null)"))
@@ -2587,7 +2612,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     /*internal void GenerateGoshujinProperty(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        var generateJournal = this.TinyhandAttribute?.Journal == true;
+        var generateJournal = this.TinyhandAttribute?.TreeRoot == true;
         var goshujin = this.ObjectAttribute!.GoshujinInstance;
         var goshujinInstance = this.GoshujinInstanceIdentifier; // goshujin + "Instance";
 
@@ -2624,9 +2649,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                             ssb.AppendLine($"if (this.{goshujinInstance} != value) goto Retry;");
                         }
 
-                        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournal))
+                        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.TreeEnabled))
                         {
-                            ssb.AppendLine($"this.Journal = value?.Journal;");
+                            ssb.AppendLine($"this.Tree = value?.Tree;");
                         }
 
                         using (var scopeIfNull2 = ssb.ScopeBrace($"if (value != null)"))
