@@ -1208,7 +1208,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             ssb.AppendLine();
 
-            this.Generate_RepeatableRead_Writer_Commit(ssb);
+            this.Generate_RepeatableRead_WriterClass_Commit(ssb);
 
             ssb.AppendLine($"public void RemoveAndErase() => this.__erase_flag__ = true;");
             using (var scopeRollback = ssb.ScopeBrace($"public void Rollback()"))
@@ -1259,14 +1259,22 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
     }
 
-    internal void Generate_RepeatableRead_Writer_Commit(ScopingStringBuilder ssb)
+    internal void Generate_RepeatableRead_WriterClass_Commit(ScopingStringBuilder ssb)
     {
         using (var scopeRollback = ssb.ScopeBrace($"public {this.SimpleName}? Commit()"))
         {
             using (var scopeEmptyCommit = ssb.ScopeBrace("if (this.instance is null)"))
             {
-                ssb.AppendLine("this.original.State = RepeatableObjectState.Valid;");
-                ssb.AppendLine("return this.original;");
+                using (var scopeEraseFlag = ssb.ScopeBrace("if (this.__erase_flag__)"))
+                {
+                    ssb.AppendLine("this.instance ??= this.original with { };");
+                }
+
+                using (var scopeEraseFlag = ssb.ScopeBrace("else"))
+                {
+                    ssb.AppendLine("this.original.State = RepeatableObjectState.Valid;");
+                    ssb.AppendLine("return this.original;");
+                }
             }
 
             ssb.AppendLine($"if (this.__erase_flag__) this.instance.{this.GoshujinInstanceIdentifier} = null;");
@@ -2038,10 +2046,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 }
             }
 
-            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSyncObject))
+            /*if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSyncObject))
             {
                 ssb.AppendLine($"if (options.HasUnloadFlag) (({ValueLinkBody.IGoshujinSemaphore}){ssb.FullObject}).SetObsolete();");
-            }
+            }*/
 
             if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatableRead)
             {

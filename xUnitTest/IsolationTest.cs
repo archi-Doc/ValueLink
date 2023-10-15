@@ -218,5 +218,14 @@ public class IsolationTest
 
         rr = g2.TryGet(10);
         rr.IsNull();
+
+        using (var w = g2.TryLock(10, TryLockMode.Create)!)
+        {
+            w.RemoveAndErase();
+            w.Commit();
+        }
+
+        rr = g2.TryGet(10);
+        rr.IsNull();
     }
 }
