@@ -1922,7 +1922,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         using (var scopeMethod = ssb.ScopeBrace($"bool {TinyhandBody.ITreeObject}.ReadRecord(ref TinyhandReader reader)"))
         {
-            ssb.AppendLine("var record = reader.Read_Record();");
+            ssb.AppendLine("if (!reader.TryRead(out JournalRecord record)) return false;");
 
             using (var scopeLocator = ssb.ScopeBrace("if (record == JournalRecord.Locator)"))
             {// Locator
