@@ -51,7 +51,7 @@ public readonly partial struct JournalIdentifier : IComparable<JournalIdentifier
 }
 
 [ValueLinkObject(Isolation = IsolationLevel.Serializable)]
-[TinyhandObject(Tree = true)]
+[TinyhandObject(Structual = true)]
 public partial record JournalTestClass : IEquatableObject<JournalTestClass>
 {
     public JournalTestClass()
@@ -80,13 +80,13 @@ public partial record JournalTestClass : IEquatableObject<JournalTestClass>
 }
 
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
-[TinyhandObject(Tree = true)]
+[TinyhandObject(Structual = true)]
 public partial record JournalTestClass2 : IEquatableObject<JournalTestClass2>
 {
     public JournalTestClass2()
     {
         this.child = new();
-        // ((ITreeObject)this.child).SetParent(this, 2);
+        // ((IStructualObject)this.child).SetParent(this, 2);
     }
 
     public JournalTestClass2(JournalIdentifier id, string name)
@@ -95,7 +95,7 @@ public partial record JournalTestClass2 : IEquatableObject<JournalTestClass2>
         this.name = name;
 
         this.child = new();
-        // ((ITreeObject)this.child).SetParent(this, 2);
+        // ((IStructualObject)this.child).SetParent(this, 2);
         this.child.Age = id.Id0 + 0.1d;
     }
 
@@ -161,7 +161,7 @@ public partial record JournalTestClass2 : IEquatableObject<JournalTestClass2>
     }
 }
 
-[TinyhandObject(Tree = true, ExplicitKeyOnly = true)]
+[TinyhandObject(Structual = true, ExplicitKeyOnly = true)]
 public partial record JournalTestBase
 {
     public const int Number = 10;
@@ -187,7 +187,7 @@ public partial record JournalTestBase
     private string name = string.Empty;
 }
 
-[TinyhandObject(Tree = true, ExplicitKeyOnly = true)]
+[TinyhandObject(Structual = true, ExplicitKeyOnly = true)]
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 public partial record JournalTestBase2 : JournalTestBase
 {
@@ -203,7 +203,7 @@ public partial record JournalTestBase2 : JournalTestBase
     public readonly int Id3;
 }
 
-/*[TinyhandObject(Tree = true, ExplicitKeyOnly = true)]
+/*[TinyhandObject(Structual = true, ExplicitKeyOnly = true)]
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 public partial record JournalTestBase3 : JournalTestBase2
 {
@@ -216,7 +216,7 @@ public partial record JournalTestBase3 : JournalTestBase2
     public int Id3 { get; set; }
 }*/
 
-[TinyhandObject(Tree = true)]
+[TinyhandObject(Structual = true)]
 public partial record JournalChildClass : IEquatableObject<JournalChildClass>
 {
     public JournalChildClass()
@@ -235,7 +235,7 @@ public partial record JournalChildClass : IEquatableObject<JournalChildClass>
         => this.age == other.age;
 }
 
-[TinyhandObject(Tree = true)]
+[TinyhandObject(Structual = true)]
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 internal partial record StandardData
 {
@@ -260,7 +260,7 @@ public class JournalTest
         var c = new JournalTestClass(1, "one");
 
         var cc = new JournalTestClass();
-        cc.TreeRoot = tester;
+        cc.StructualRoot = tester;
         cc.Id = c.Id;
         cc.Name = c.Name;
 
@@ -282,7 +282,7 @@ public class JournalTest
         var g = new JournalTestClass.GoshujinClass { c1, c2, c3 };
         var g2 = new JournalTestClass.GoshujinClass();
 
-        g2.TreeRoot = tester;
+        g2.StructualRoot = tester;
         g2.Add(new JournalTestClass(1, "one"));
         g2.Add(new JournalTestClass(2, "two"));
         g2.Add(new JournalTestClass(3, "3"));
@@ -314,7 +314,7 @@ public class JournalTest
         var g = new JournalTestClass2.GoshujinClass { c1, c2, c3 };
         var g2 = new JournalTestClass2.GoshujinClass();
 
-        g2.TreeRoot = tester;
+        g2.StructualRoot = tester;
         g2.Add(new JournalTestClass2(new(1), "one"));
         g2.Add(new JournalTestClass2(new(2), "two"));
         g2.Add(new JournalTestClass2(new(3), "3"));
@@ -483,7 +483,7 @@ public class JournalTest
         // ((IGoshujinSemaphore)g2).State.Is(GoshujinState.Obsolete);
     }
 
-    public bool ReadJournal(ITreeObject treeObject, ReadOnlyMemory<byte> data)
+    public bool ReadJournal(IStructualObject obj, ReadOnlyMemory<byte> data)
     {
         var reader = new TinyhandReader(data.Span);
         var success = true;
@@ -500,7 +500,7 @@ public class JournalTest
             {
                 if (journalType == JournalType.Record)
                 {
-                    if (treeObject.ReadRecord(ref reader))
+                    if (obj.ReadRecord(ref reader))
                     {// Success
                     }
                     else
@@ -508,7 +508,7 @@ public class JournalTest
                         success = false;
 
                         reader = fork;
-                        treeObject.ReadRecord(ref reader);
+                        obj.ReadRecord(ref reader);
                     }
                 }
                 else

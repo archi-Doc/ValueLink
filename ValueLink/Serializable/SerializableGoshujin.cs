@@ -47,7 +47,7 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : IGoshujinSemaph
 
             foreach (var x in array)
             {
-                if (x is ITreeObject y && y.Save(unloadMode).Result == false)
+                if (x is IStructualObject y && y.Save(unloadMode).Result == false)
                 {
                     return Task.FromResult(false);
                 }
@@ -72,7 +72,7 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : IGoshujinSemaph
 
             foreach (var x in array)
             {
-                if (x is ITreeObject y)
+                if (x is IStructualObject y)
                 {
                     y.Erase();
                 }

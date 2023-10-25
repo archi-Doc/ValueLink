@@ -165,7 +165,7 @@ internal static class JournalShared
 
     public static void CodeJournal2(this ValueLinkObject obj, ScopingStringBuilder ssb, ValueLinkObject? remove)
     {
-        using (var journalScope = ssb.ScopeBrace($"if (writeJournal && (({TinyhandBody.ITreeObject}){ssb.FullObject}).TryGetJournalWriter(out var root, out var writer, false))"))
+        using (var journalScope = ssb.ScopeBrace($"if (writeJournal && (({TinyhandBody.IStructualObject}){ssb.FullObject}).TryGetJournalWriter(out var root, out var writer, false))"))
         {
             // Custom locator
             using (var customScope = ssb.ScopeBrace($"if ({ssb.FullObject} is Tinyhand.ITinyhandCustomJournal custom)"))
@@ -201,7 +201,7 @@ internal static class JournalShared
             return;
         }
 
-        using (var journalScope = ssb.ScopeBrace($"if ((({TinyhandBody.ITreeObject})this.original).TryGetJournalWriter(out var root, out var writer, true))"))
+        using (var journalScope = ssb.ScopeBrace($"if ((({TinyhandBody.IStructualObject})this.original).TryGetJournalWriter(out var root, out var writer, true))"))
         {
             // Custom locator
             using (var customScope = ssb.ScopeBrace($"if (this.instance is Tinyhand.ITinyhandCustomJournal custom)"))
@@ -265,7 +265,6 @@ internal static class JournalShared
             "string" => "reader.ReadString()",
             "float" => "reader.ReadSingle()",
             "double" => "reader.ReadDouble()",
-            "System.DateTime" => "reader.ReadDateTime()",
 
             _ => null,
         };
@@ -293,29 +292,9 @@ internal static class JournalShared
         else if (name == "bool" || name == "byte" || name == "sbyte" || name == "ushort" ||
             name == "short" || name == "uint" || name == "int" || name == "ulong" ||
             name == "long" || name == "char" || name == "string" || name == "float" ||
-            name == "double" || name == "System.DateTime")
+            name == "double")
         {
             return $"writer.Write({valueString});";
-        }
-        else if (obj.TypeObject?.Kind == VisceralObjectKind.Enum)
-        {
-            var coder = obj.TypeObject.Enum_UnderlyingTypeObject?.FullName switch
-            {
-                "sbyte" => $"var ev = {valueString}; writer.Write(Unsafe.As<{name}, sbyte>(ref ev));",
-                "byte" => $"var ev = {valueString}; writer.Write(Unsafe.As<{name}, byte>(ref ev));",
-                "short" => $"var ev = {valueString}; writer.Write(Unsafe.As<{name}, short>(ref ev));",
-                "ushort" => $"var ev = {valueString}; writer.Write(Unsafe.As<{name}, ushort>(ref ev));",
-                "int" => $"var ev = {valueString}; writer.Write(Unsafe.As<{name}, int>(ref ev));",
-                "uint" => $"var ev = {valueString}; writer.Write(Unsafe.As<{name}, uint>(ref ev));",
-                "long" => $"var ev = {valueString}; writer.Write(Unsafe.As<{name}, long>(ref ev));",
-                "ulong" => $"var ev = {valueString}; writer.Write(Unsafe.As<{name}, ulong>(ref ev));",
-                _ => null,
-            };
-
-            if (coder is not null)
-            {
-                return coder;
-            }
         }
 
         if (obj.AllAttributes.Any(x => x.FullName == TinyhandObjectAttributeMock.FullName))
