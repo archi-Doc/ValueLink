@@ -106,7 +106,7 @@ public class Member
                         typeObject.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateJournal) == true ||
                         typeObject.Kind == VisceralObjectKind.Error)
                     {
-                        ssb.AppendLine($"if (value is {TinyhandBody.ITreeObject} obj) obj.SetParent(this.Instance);");
+                        ssb.AppendLine($"if (value is {TinyhandBody.IStructualObject} obj) obj.SetParent(this.Instance);");
                     }
                 }*/
 

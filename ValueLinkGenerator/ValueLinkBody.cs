@@ -19,8 +19,8 @@ namespace ValueLink.Generator;
 
 public static class TinyhandBody
 {
-    public static readonly string ITreeRoot = "ITreeRoot";
-    public static readonly string ITreeObject = "ITreeObject";
+    public static readonly string IStructualRoot = "IStructualRoot";
+    public static readonly string IStructualObject = "IStructualObject";
     public static readonly string ITinyhandCustomJournal = "ITinyhandCustomJournal";
 }
 

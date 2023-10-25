@@ -30,12 +30,12 @@
 
   <ItemGroup>
     <PackageReference Include="Arc.Collections" Version="1.7.1" />
-    <PackageReference Include="Arc.Threading" Version="0.25.1" />
+    <PackageReference Include="Arc.Threading" Version="0.25.2" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.435">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Tinyhand" Version="0.65.0" />
+    <PackageReference Include="Tinyhand" Version="0.67.0" />
   </ItemGroup>
 
 </Project>

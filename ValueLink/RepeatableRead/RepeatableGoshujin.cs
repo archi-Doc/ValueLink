@@ -56,7 +56,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IG
 
         foreach (var x in array)
         {
-            if (x is ITreeObject y && await y.Save(unloadMode).ConfigureAwait(false) == false)
+            if (x is IStructualObject y && await y.Save(unloadMode).ConfigureAwait(false) == false)
             {
                 return false;
             }
@@ -84,7 +84,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IG
 
         foreach (var x in array)
         {
-            if (x is ITreeObject y)
+            if (x is IStructualObject y)
             {
                 y.Erase();
             }
