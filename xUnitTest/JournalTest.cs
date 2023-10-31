@@ -260,7 +260,7 @@ public class JournalTest
         var c = new JournalTestClass(1, "one");
 
         var cc = new JournalTestClass();
-        cc.StructualRoot = tester;
+        ((IStructualObject)cc).StructualRoot = tester;
         cc.Id = c.Id;
         cc.Name = c.Name;
 
