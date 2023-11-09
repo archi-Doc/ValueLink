@@ -59,7 +59,7 @@ namespace ValueLink
         /// </summary>
         /// <param name="key">The key of the object to add.</param>
         /// <param name="obj">The object to add.</param>
-        public void Add(TKey key, TObj obj)
+        public void Add(TKey? key, TObj obj)
         {
             if (this.objectToGoshujin(obj) != this.goshujin)
             {// Check Goshujin
