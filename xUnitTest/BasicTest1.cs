@@ -29,7 +29,7 @@ public partial class TestClass1 : IComparable<TestClass1>
 
     [Link(Type = ChainType.Ordered)]
     [Key("NM")]
-    private string Name = default!;
+    private string? Name = default!;
 
     [Link(Type = ChainType.Ordered)]
     [KeyAsName]

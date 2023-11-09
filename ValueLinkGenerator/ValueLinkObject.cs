@@ -1471,13 +1471,13 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     internal void GenerateLink_Property(ScopingStringBuilder ssb, GeneratorInformation info, Linkage main, Linkage[] sub)
     {
         var target = main.Target;
-        if (target == null || target.TypeObject == null)
+        if (target == null || target.TypeObject == null || target.TypeObjectWithNullable == null)
         {
             return;
         }
 
         var accessibility = VisceralHelper.GetterSetterAccessibilityToPropertyString(main.GetterAccessibility, main.SetterAccessibility);
-        using (var scopeProperty = ssb.ScopeBrace($"{accessibility.Property}{target.TypeObject.FullName} {main.ValueName}"))
+        using (var scopeProperty = ssb.ScopeBrace($"{accessibility.Property}{target.TypeObjectWithNullable.FullNameWithNullable} {main.ValueName}"))
         {
             ssb.AppendLine($"{accessibility.Getter}get => this.{main.TargetName};");
             using (var scopeSet = ssb.ScopeBrace($"{accessibility.Setter}set"))
@@ -1539,7 +1539,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
         else if (x.RequiresTarget && x.Target != null && x.Target.TypeObject != null)
         {
-            ssb.AppendLine($"{x.GetterAccessibility.AccessibilityToString()} {x.Type.ChainTypeToName()}<{x.Target!.TypeObject!.FullName}, {this.LocalName}>.Link {x.LinkName};");
+            ssb.AppendLine($"{x.GetterAccessibility.AccessibilityToString()} {x.Type.ChainTypeToName()}<{x.Target!.TypeObjectWithNullable!.FullNameWithNullable}, {this.LocalName}>.Link {x.LinkName};");
         }
         else
         {
@@ -2507,7 +2507,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             }
             else if (link.Type == ChainType.Ordered || link.Type == ChainType.ReverseOrdered || link.Type == ChainType.Unordered)
             {
-                ssb.AppendLine($"public {link.Type.ChainTypeToName()}<{link.Target!.TypeObject!.FullName}, {this.LocalName}> {link.ChainName} {{ get; }}");
+                ssb.AppendLine($"public {link.Type.ChainTypeToName()}<{link.Target!.TypeObjectWithNullable!.FullNameWithNullable}, {this.LocalName}> {link.ChainName} {{ get; }}");
             }
             else
             {
