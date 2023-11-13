@@ -1856,6 +1856,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         {
             this.GenerateGosjujin_Structual_Save(ssb, info);
             this.GenerateGosjujin_Structual_Delete(ssb, info);
+            this.GenerateGosjujin_Structual_SetParent(ssb, info);
             // this.GenerateGosjujin_Structual_NotifyDataChanged(ssb, info);
         }
     }
@@ -1887,6 +1888,20 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             ssb.AppendLine("if (unloadMode != UnloadMode.NoUnload) s.SetObsolete();");
             ssb.AppendLine("return true;");
         }*/
+    }
+
+    internal void GenerateGosjujin_Structual_SetParent(ScopingStringBuilder ssb, GeneratorInformation info)
+    {
+        if (this.PrimaryLink is not null)
+        {
+            using (var scopeMethod = ssb.ScopeBrace("void SetParent(IStructualObject? parent, int key = -1)"))
+            {
+                using (var scopeFor = ssb.ScopeBrace($"foreach (var x in this.{this.PrimaryLink.ChainName})"))
+                {
+                    ssb.AppendLine("((IStructualObject)x).SetParentActual(parent, key);");
+                }
+            }
+        }
     }
 
     internal void GenerateGosjujin_Structual_Delete(ScopingStringBuilder ssb, GeneratorInformation info)
@@ -2173,10 +2188,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 {
                     ssb.AppendLine("array[n] = formatter.Deserialize(ref reader, options)!;");
                     ssb.AppendLine($"array[n].{this.GoshujinInstanceIdentifier} = {ssb.FullObject};");
-                    if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.StructualEnabled))
+                    /*if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.StructualEnabled))
                     {// IStructualObject
-                        ssb.AppendLine($"(({TinyhandBody.IStructualObject})array[n]).SetParent(v);");
-                    }
+                        ssb.AppendLine($"(({TinyhandBody.IStructualObject})array[n]).SetParent(v);"); // -> SetParent()
+                    }*/
                 }
             }
 
