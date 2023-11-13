@@ -1894,11 +1894,12 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     {
         if (this.PrimaryLink is not null)
         {
-            using (var scopeMethod = ssb.ScopeBrace("void SetParent(IStructualObject? parent, int key = -1)"))
+            using (var scopeMethod = ssb.ScopeBrace($"void {TinyhandBody.IStructualObject}.SetParent({TinyhandBody.IStructualObject}? parent, int key)"))
             {
+                ssb.AppendLine($"(({TinyhandBody.IStructualObject})this).SetParentActual(parent, key);");
                 using (var scopeFor = ssb.ScopeBrace($"foreach (var x in this.{this.PrimaryLink.ChainName})"))
                 {
-                    ssb.AppendLine("((IStructualObject)x).SetParentActual(parent, key);");
+                    ssb.AppendLine($"(({TinyhandBody.IStructualObject})x).SetParent(this);");
                 }
             }
         }
