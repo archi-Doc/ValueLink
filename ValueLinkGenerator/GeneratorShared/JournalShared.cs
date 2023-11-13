@@ -163,14 +163,21 @@ internal static class JournalShared
         }
     }
 
-    public static void CodeJournal2(this ValueLinkObject obj, ScopingStringBuilder ssb, ValueLinkObject? remove)
+    public static void CodeJournal2(this ValueLinkObject obj, ScopingStringBuilder ssb, ValueLinkObject? remove, InterfaceImplementation customJournal)
     {
         using (var journalScope = ssb.ScopeBrace($"if (writeJournal && (({TinyhandBody.IStructualObject}){ssb.FullObject}).TryGetJournalWriter(out var root, out var writer, false))"))
         {
             // Custom locator
-            using (var customScope = ssb.ScopeBrace($"if ({ssb.FullObject} is Tinyhand.ITinyhandCustomJournal custom)"))
+            if (customJournal == InterfaceImplementation.Unknown)
             {
-                ssb.AppendLine("custom.WriteCustomLocator(ref writer);");
+                using (var customScope = ssb.ScopeBrace($"if ({ssb.FullObject} is {TinyhandBody.ITinyhandCustomJournal} custom)"))
+                {
+                    ssb.AppendLine("custom.WriteCustomLocator(ref writer);");
+                }
+            }
+            else if (customJournal == InterfaceImplementation.Implemented)
+            {
+                ssb.AppendLine($"(({TinyhandBody.ITinyhandCustomJournal}){ssb.FullObject}).WriteCustomLocator(ref writer);");
             }
 
             // Add
@@ -194,7 +201,7 @@ internal static class JournalShared
         }
     }
 
-    public static void CodeJournal3(this ValueLinkObject obj, ScopingStringBuilder ssb)
+    public static void CodeJournal3(this ValueLinkObject obj, ScopingStringBuilder ssb, InterfaceImplementation customJournal)
     {
         if (obj.Members is null)
         {
@@ -204,9 +211,16 @@ internal static class JournalShared
         using (var journalScope = ssb.ScopeBrace($"if ((({TinyhandBody.IStructualObject})this.original).TryGetJournalWriter(out var root, out var writer, true))"))
         {
             // Custom locator
-            using (var customScope = ssb.ScopeBrace($"if (this.instance is Tinyhand.ITinyhandCustomJournal custom)"))
+            if (customJournal == InterfaceImplementation.Unknown)
             {
-                ssb.AppendLine("custom.WriteCustomLocator(ref writer);");
+                using (var customScope = ssb.ScopeBrace($"if (this.instance is {TinyhandBody.ITinyhandCustomJournal} custom)"))
+                {
+                    ssb.AppendLine("custom.WriteCustomLocator(ref writer);");
+                }
+            }
+            else if (customJournal == InterfaceImplementation.Implemented)
+            {
+                ssb.AppendLine($"(({TinyhandBody.ITinyhandCustomJournal})this.instance).WriteCustomLocator(ref writer);");
             }
 
             // Locator

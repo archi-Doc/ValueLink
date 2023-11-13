@@ -62,6 +62,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     public TinyhandObjectAttributeMock? TinyhandAttribute { get; private set; }
 
+    public InterfaceImplementation ITinyhandCustomJournalImplementation { get; private set; }
+
     public KeyAttributeMock? KeyAttribute { get; private set; }
 
     public bool IsGetterOnlyProperty => this.KeyAttribute?.PropertyAccessibility == PropertyAccessibility.GetterOnly;
@@ -478,6 +480,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             baseObject = baseObject.BaseObject;
         }
+
+        // ITinyhandCustomJournalImplementation
+        this.ITinyhandCustomJournalImplementation = this.GetInterfaceImplementation(TinyhandBody.ITinyhandCustomJournal);
 
         // Check Goshujin Class / Instance
         // this.CheckKeyword(this.ObjectAttribute!.GoshujinClass, this.Location);
@@ -1045,7 +1050,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
                 if (this.TinyhandAttribute?.Structual == true)
                 {
-                    this.CodeJournal2(ssb, null);
+                    this.CodeJournal2(ssb, null, this.ITinyhandCustomJournalImplementation);
                 }
             }
         }
@@ -1093,7 +1098,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
                 if (this.UniqueLink is not null && this.TinyhandAttribute?.Structual == true)
                 {
-                    this.CodeJournal2(ssb, this.UniqueLink.Target);
+                    this.CodeJournal2(ssb, this.UniqueLink.Target, this.ITinyhandCustomJournalImplementation);
                 }
 
                 ssb.AppendLine($"this.{goshujinInstance} = null;");
@@ -1322,7 +1327,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     if (this.TinyhandAttribute?.Structual == true)
                     {
                         ssb.AppendLine();
-                        this.CodeJournal3(ssb);
+                        this.CodeJournal3(ssb, this.ITinyhandCustomJournalImplementation);
                     }
 
                     scopeLock?.Dispose();
