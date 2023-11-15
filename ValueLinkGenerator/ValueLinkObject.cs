@@ -2259,9 +2259,17 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     internal void GenerateGoshujin_TinyhandITinyhandSerialize(ScopingStringBuilder ssb, GeneratorInformation info)
     {// ITinyhandSerialize
         ssb.AppendLine("void ITinyhandSerialize.Deserialize(ref TinyhandReader reader, TinyhandSerializerOptions options)");
-        ssb.AppendLine("    => TinyhandSerializer.DeserializeObject(ref reader, ref Unsafe.AsRef(this)!, options);");
+        if (this.Kind.IsReferenceType())
+        {
+            ssb.AppendLine("{ var rt = this; TinyhandSerializer.DeserializeObject(ref reader, ref rt, options); }");
+        }
+        else
+        {
+            ssb.AppendLine("  => TinyhandSerializer.DeserializeObject(ref reader, ref Unsafe.AsRef(in this)!, options);");
+        }
+
         ssb.AppendLine("void ITinyhandSerialize.Serialize(ref TinyhandWriter writer, TinyhandSerializerOptions options)");
-        ssb.AppendLine("    => TinyhandSerializer.SerializeObject(ref writer, this, options);");
+        ssb.AppendLine("  => TinyhandSerializer.SerializeObject(ref writer, this, options);");
     }
 
     internal void GenerateGoshujin_Add(ScopingStringBuilder ssb, GeneratorInformation info)
