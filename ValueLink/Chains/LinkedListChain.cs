@@ -46,12 +46,21 @@ namespace ValueLink
             }
 
             ref Link link = ref this.objectToLink(obj);
-            if (link.Node != null)
+            /*if (link.Node != null)
             {
                 this.chain.Remove(link.Node);
             }
 
-            link.Node = this.chain.AddFirst(obj);
+            link.Node = this.chain.AddFirst(obj);*/
+
+            if (link.Node != null)
+            {
+                this.chain.MoveToFirst(link.Node);
+            }
+            else
+            {
+                link.Node = this.chain.AddLast(obj);
+            }
         }
 
         /// <summary>
@@ -66,12 +75,21 @@ namespace ValueLink
             }
 
             ref Link link = ref this.objectToLink(obj);
-            if (link.Node != null)
+            /*if (link.Node != null)
             {
                 this.chain.Remove(link.Node);
             }
 
-            link.Node = this.chain.AddLast(obj);
+            link.Node = this.chain.AddLast(obj);*/
+
+            if (link.Node != null)
+            {
+                this.chain.MoveToLast(link.Node);
+            }
+            else
+            {
+                link.Node = this.chain.AddLast(obj);
+            }
         }
 
         /// <summary>
