@@ -110,7 +110,7 @@ public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     }
 
     /// <summary>
-    /// Removes the specific object from the chain.
+    /// Removes the specified object from the chain.
     /// <br/>O(log n) operation.
     /// </summary>
     /// <param name="obj">The object to remove from the chain. </param>

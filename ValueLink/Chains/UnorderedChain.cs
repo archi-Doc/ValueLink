@@ -80,7 +80,7 @@ public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     }
 
     /// <summary>
-    /// Removes the specific object from the chain.
+    /// Removes the specified object from the chain.
     /// <br/>O(1) operation.
     /// </summary>
     /// <param name="obj">The object to remove from the chain. </param>
