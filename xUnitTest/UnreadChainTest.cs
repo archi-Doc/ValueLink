@@ -8,102 +8,101 @@ using Tinyhand;
 using Xunit;
 using Tinyhand.IO;
 
-namespace xUnitTest
-{
-    [TinyhandObject]
-    [ValueLinkObject]
-    public partial class UnreadChainTestClass
-    {// For versioning
-        [Key(0)]
-        [Link(Primary = true, Type = ChainType.Ordered)]
-        public int Id { get; set; }
+namespace xUnitTest;
 
-        [Key(1)]
-        [Link(Type = ChainType.Ordered)]
-        public int Id2 { get; set; }
+[TinyhandObject]
+[ValueLinkObject]
+public partial class UnreadChainTestClass
+{// For versioning
+    [Key(0)]
+    [Link(Primary = true, Type = ChainType.Ordered)]
+    public int Id { get; set; }
 
-        [Key(2)]
-        [Link(Type = ChainType.Ordered, AutoLink = false)]
-        public int Id3 { get; set; }
+    [Key(1)]
+    [Link(Type = ChainType.Ordered)]
+    public int Id2 { get; set; }
 
-        public UnreadChainTestClass()
-        {
-        }
+    [Key(2)]
+    [Link(Type = ChainType.Ordered, AutoLink = false)]
+    public int Id3 { get; set; }
 
-        public UnreadChainTestClass(int id)
-        {
-            this.Id = id;
-            this.Id2 = id;
-            this.Id3 = id;
-        }
-    }
-
-    [TinyhandObject]
-    [ValueLinkObject]
-    public partial class UnreadChainTestClass2
-    {// For versioning
-        [Key(0)]
-        [Link(Primary = true, Type = ChainType.Ordered)]
-        public int Id { get; set; }
-
-        [Key(1)]
-        // [Link(Type = ChainType.Ordered)]
-        public int Id2 { get; set; }
-
-        [Key(2)]
-        // [Link(Type = ChainType.Ordered, AutoLink = false)]
-        public int Id3 { get; set; }
-
-        public UnreadChainTestClass2()
-        {
-        }
-
-        public UnreadChainTestClass2(int id)
-        {
-            this.Id = id;
-            this.Id2 = id;
-            this.Id3 = id;
-        }
-    }
-
-    public class UnreadChainTest
+    public UnreadChainTestClass()
     {
-        [Fact]
-        public void Test1()
-        {
-            var g = new UnreadChainTestClass.GoshujinClass();
+    }
 
-            new UnreadChainTestClass(1).Goshujin = g;
-            new UnreadChainTestClass(2).Goshujin = g;
-            new UnreadChainTestClass(-2).Goshujin = g;
-            new UnreadChainTestClass(3).Goshujin = g;
+    public UnreadChainTestClass(int id)
+    {
+        this.Id = id;
+        this.Id2 = id;
+        this.Id3 = id;
+    }
+}
 
-            g.IdChain.Select(x => x.IdValue).SequenceEqual(new int[] { -2, 1, 2, 3, }).IsTrue();
-            g.Id2Chain.Select(x => x.Id2Value).SequenceEqual(new int[] { -2, 1, 2, 3, }).IsTrue();
-            g.Id3Chain.Select(x => x.Id3Value).SequenceEqual(new int[] { }).IsTrue();
+[TinyhandObject]
+[ValueLinkObject]
+public partial class UnreadChainTestClass2
+{// For versioning
+    [Key(0)]
+    [Link(Primary = true, Type = ChainType.Ordered)]
+    public int Id { get; set; }
 
-            foreach (var x in g)
-            {// Manual link
-                g.Id3Chain.Add(x.Id3, x);
-            }
+    [Key(1)]
+    // [Link(Type = ChainType.Ordered)]
+    public int Id2 { get; set; }
 
-            g.Id3Chain.Select(x => x.Id3Value).SequenceEqual(new int[] { -2, 1, 2, 3, }).IsTrue();
+    [Key(2)]
+    // [Link(Type = ChainType.Ordered, AutoLink = false)]
+    public int Id3 { get; set; }
 
-            // g -> g2
-            var g2 = TinyhandSerializer.Deserialize<UnreadChainTestClass.GoshujinClass>(TinyhandSerializer.Serialize(g));
-            g2!.IdChain.Select(x => x.IdValue).SequenceEqual(new int[] { -2, 1, 2, 3, }).IsTrue();
-            g2!.Id2Chain.Select(x => x.Id2Value).SequenceEqual(new int[] { -2, 1, 2, 3, }).IsTrue();
-            g2!.Id3Chain.Select(x => x.Id3Value).SequenceEqual(new int[] { -2, 1, 2, 3, }).IsTrue();
+    public UnreadChainTestClass2()
+    {
+    }
 
-            // g(UnreadChainTestClass) -> g3(UnreadChainTestClass2)
-            var g3 = TinyhandSerializer.Deserialize<UnreadChainTestClass2.GoshujinClass>(TinyhandSerializer.Serialize(g));
-            g3!.IdChain.Select(x => x.IdValue).SequenceEqual(new int[] { -2, 1, 2, 3, }).IsTrue();
+    public UnreadChainTestClass2(int id)
+    {
+        this.Id = id;
+        this.Id2 = id;
+        this.Id3 = id;
+    }
+}
 
-            // g3(UnreadChainTestClass2) -> g2(UnreadChainTestClass)
-            g2 = TinyhandSerializer.Deserialize<UnreadChainTestClass.GoshujinClass>(TinyhandSerializer.Serialize(g3));
-            g2!.IdChain.Select(x => x.IdValue).SequenceEqual(new int[] { -2, 1, 2, 3, }).IsTrue();
-            g2!.Id2Chain.Select(x => x.Id2Value).SequenceEqual(new int[] { -2, 1, 2, 3, }).IsTrue();
-            g2!.Id3Chain.Select(x => x.Id3Value).SequenceEqual(new int[] { }).IsTrue();
+public class UnreadChainTest
+{
+    [Fact]
+    public void Test1()
+    {
+        var g = new UnreadChainTestClass.GoshujinClass();
+
+        new UnreadChainTestClass(1).Goshujin = g;
+        new UnreadChainTestClass(2).Goshujin = g;
+        new UnreadChainTestClass(-2).Goshujin = g;
+        new UnreadChainTestClass(3).Goshujin = g;
+
+        g.IdChain.Select(x => x.IdValue).SequenceEqual(new int[] { -2, 1, 2, 3, }).IsTrue();
+        g.Id2Chain.Select(x => x.Id2Value).SequenceEqual(new int[] { -2, 1, 2, 3, }).IsTrue();
+        g.Id3Chain.Select(x => x.Id3Value).SequenceEqual(new int[] { }).IsTrue();
+
+        foreach (var x in g)
+        {// Manual link
+            g.Id3Chain.Add(x.Id3, x);
         }
+
+        g.Id3Chain.Select(x => x.Id3Value).SequenceEqual(new int[] { -2, 1, 2, 3, }).IsTrue();
+
+        // g -> g2
+        var g2 = TinyhandSerializer.Deserialize<UnreadChainTestClass.GoshujinClass>(TinyhandSerializer.Serialize(g));
+        g2!.IdChain.Select(x => x.IdValue).SequenceEqual(new int[] { -2, 1, 2, 3, }).IsTrue();
+        g2!.Id2Chain.Select(x => x.Id2Value).SequenceEqual(new int[] { -2, 1, 2, 3, }).IsTrue();
+        g2!.Id3Chain.Select(x => x.Id3Value).SequenceEqual(new int[] { -2, 1, 2, 3, }).IsTrue();
+
+        // g(UnreadChainTestClass) -> g3(UnreadChainTestClass2)
+        var g3 = TinyhandSerializer.Deserialize<UnreadChainTestClass2.GoshujinClass>(TinyhandSerializer.Serialize(g));
+        g3!.IdChain.Select(x => x.IdValue).SequenceEqual(new int[] { -2, 1, 2, 3, }).IsTrue();
+
+        // g3(UnreadChainTestClass2) -> g2(UnreadChainTestClass)
+        g2 = TinyhandSerializer.Deserialize<UnreadChainTestClass.GoshujinClass>(TinyhandSerializer.Serialize(g3));
+        g2!.IdChain.Select(x => x.IdValue).SequenceEqual(new int[] { -2, 1, 2, 3, }).IsTrue();
+        g2!.Id2Chain.Select(x => x.Id2Value).SequenceEqual(new int[] { -2, 1, 2, 3, }).IsTrue();
+        g2!.Id3Chain.Select(x => x.Id3Value).SequenceEqual(new int[] { }).IsTrue();
     }
 }
