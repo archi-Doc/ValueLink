@@ -10,24 +10,26 @@ using Arc.Collections;
 
 namespace ValueLink;
 
+/*
 /// <summary>
 /// Represents a doubly linked list of objects.
 /// <br/>Structure: Doubly linked list.
 /// </summary>
 /// <typeparam name="T">The type of objects in the list.</typeparam>
-public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
+public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
+    where T : class
 {
     public delegate IGoshujin? ObjectToGoshujinDelegete(T obj);
 
     public delegate ref Link ObjectToLinkDelegete(T obj);
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="LinkedListChain{T}"/> class (Doubly linked list).
+    /// Initializes a new instance of the <see cref="SlidingListChain{T}"/> class (<see cref="SlidingList{T}"/> (Array)).
     /// </summary>
     /// <param name="goshujin">The instance of Goshujin.</param>
     /// <param name="objectToGoshujin">ObjectToGoshujinDelegete.</param>
     /// <param name="objectToLink">ObjectToLinkDelegete.</param>
-    public LinkedListChain(IGoshujin goshujin, ObjectToGoshujinDelegete objectToGoshujin, ObjectToLinkDelegete objectToLink)
+    public SlidingListChain(IGoshujin goshujin, ObjectToGoshujinDelegete objectToGoshujin, ObjectToLinkDelegete objectToLink)
     {
         this.goshujin = goshujin;
         this.objectToGoshujin = objectToGoshujin;
@@ -35,39 +37,11 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
     }
 
     /// <summary>
-    /// Adds a new object at the start of the list.
-    /// </summary>
-    /// <param name="obj">The new object to add at the start of the list.</param>
-    public void AddFirst(T obj)
-    {
-        if (this.objectToGoshujin(obj) != this.goshujin)
-        {// Check Goshujin
-            throw new UnmatchedGoshujinException();
-        }
-
-        ref Link link = ref this.objectToLink(obj);
-        /*if (link.Node != null)
-        {
-            this.chain.Remove(link.Node);
-        }
-
-        link.Node = this.chain.AddFirst(obj);*/
-
-        if (link.Node != null)
-        {
-            this.chain.MoveToFirst(link.Node);
-        }
-        else
-        {
-            link.Node = this.chain.AddLast(obj);
-        }
-    }
-
-    /// <summary>
     /// Adds a new object to the end of the list.
     /// </summary>
     /// <param name="obj">The new object that will be added to the end of the list.</param>
-    public void AddLast(T obj)
+    /// <returns><see langword="true"/>; Success.</returns>
+    public bool AddLast(T obj)
     {
         if (this.objectToGoshujin(obj) != this.goshujin)
         {// Check Goshujin
@@ -75,20 +49,14 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
         }
 
         ref Link link = ref this.objectToLink(obj);
-        /*if (link.Node != null)
+        if (link.Position >= 0)
         {
-            this.chain.Remove(link.Node);
-        }
-
-        link.Node = this.chain.AddLast(obj);*/
-
-        if (link.Node != null)
-        {
-            this.chain.MoveToLast(link.Node);
+            return false;
         }
         else
         {
-            link.Node = this.chain.AddLast(obj);
+            link.Position = this.chain.TryAdd(obj);
+            return link.Position >= 0;
         }
     }
 
@@ -96,8 +64,8 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
     /// Removes the specified object from the list.
     /// <br/>O(1) operation.
     /// </summary>
-    /// <param name="obj">The object that will be removed from the list. </param>
-    /// <returns>true if item is successfully removed.</returns>
+    /// <param name="obj">The object that will be removed from the list.</param>
+    /// <returns><see langword="true"/>; The object is successfully removed.</returns>
     public bool Remove(T obj)
     {
         if (this.objectToGoshujin(obj) != this.goshujin)
@@ -106,11 +74,11 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
         }
 
         ref Link link = ref this.objectToLink(obj);
-        if (link.Node != null)
+        if (link.Position >= 0)
         {
-            this.chain.Remove(link.Node);
-            link.Node = null;
-            return true;
+            var result = this.chain.Remove(link.Position);
+            link.Position = -1;
+            return result;
         }
         else
         {
@@ -132,17 +100,15 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
         }
     }
 
+    public int Capacity => this.chain.Capacity;
+
     public int Count => this.chain.Count;
 
-    /// <summary>
-    /// Gets the first object.
-    /// </summary>
-    public T? First => this.chain.First == null ? default(T) : this.chain.First.Value;
+    public bool Resize(int size) => this.chain.Resize(size);
 
-    /// <summary>
-    /// Gets the last object.
-    /// </summary>
-    public T? Last => this.chain.Last == null ? default(T) : this.chain.Last.Value;
+    public T? Get(int position) => this.chain.Get(position);
+
+    public T? FirstOrDefault => this.chain.FirstOrDefault;
 
     /// <summary>
     /// Finds the first node that contains the specified value.
@@ -166,23 +132,13 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
     private IGoshujin goshujin;
     private ObjectToGoshujinDelegete objectToGoshujin;
     private ObjectToLinkDelegete objectToLink;
-    private UnorderedLinkedList<T> chain = new();
+    private SlidingList<T> chain = new(0);
 
     public struct Link : ILink<T>
     {
-        public bool IsLinked => this.Node != null;
+        public bool IsLinked => this.Position >= 0;
 
-        /// <summary>
-        /// Gets the previous object.
-        /// </summary>
-        public T? Previous => this.Node == null || this.Node.Previous == null ? default(T) : this.Node.Previous.Value;
-
-        /// <summary>
-        /// Gets the next object.
-        /// </summary>
-        public T? Next => this.Node == null || this.Node.Next == null ? default(T) : this.Node.Next.Value;
-
-        internal UnorderedLinkedList<T>.Node? Node { get; set; }
+        public int Position { get; internal set; }
     }
 
     #region ICollection
@@ -193,22 +149,17 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
     public bool IsReadOnly => false;
 
     /// <summary>
-    /// Removes all objects from the collection.
+    /// Removes all objects from the list.
     /// </summary>
     public void Clear()
     {
-        UnorderedLinkedList<T>.Node? node;
-        while (true)
+        var array = this.chain.ToArray();
+        foreach (var x in array)
         {
-            node = this.chain.Last;
-            if (node == null)
+            if (x is not null)
             {
-                break;
+                this.Remove(x);
             }
-
-            ref Link link = ref this.objectToLink(node.Value);
-            this.chain.Remove(node.Value);
-            link.Node = null;
         }
     }
 
@@ -220,9 +171,9 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
 
     #endregion
 
-    public UnorderedLinkedList<T>.Enumerator GetEnumerator() => this.chain.GetEnumerator();
+    public SlidingList<T>.Enumerator GetEnumerator() => this.chain.GetEnumerator();
 
     IEnumerator<T> IEnumerable<T>.GetEnumerator() => this.chain.GetEnumerator();
 
     System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => this.chain.GetEnumerator();
-}
+}*/
