@@ -38,6 +38,23 @@ public partial record PropertyAccessibilityClass : IEquatableObject<PropertyAcce
     }
 }
 
+[ValueLinkObject]
+public partial record AccessibilityTestClass
+{
+    public AccessibilityTestClass()
+    {
+    }
+
+    [Link(Type = ChainType.Unordered, Accessibility = ValueLinkAccessibility.Public)]
+    public int Id { get; set; }
+
+    [Link(Type = ChainType.Unordered, Accessibility = ValueLinkAccessibility.Protected)]
+    public string Name { get; set; } = string.Empty;
+
+    [Link(Type = ChainType.Ordered, Accessibility = ValueLinkAccessibility.Private)]
+    public double Age { get; set; }
+}
+
 public class PropertyAccessibilityTest
 {
     [Fact]

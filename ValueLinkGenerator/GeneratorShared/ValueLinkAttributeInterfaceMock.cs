@@ -34,6 +34,8 @@ public enum ValueLinkAccessibility
 {
     PublicGetter,
     Public,
+    Protected,
+    Private,
     Inherit,
 }
 
@@ -94,6 +96,8 @@ public sealed class ValueLinkObjectAttributeMock : Attribute
 
     public IsolationLevel Isolation { get; set; } = IsolationLevel.None;
 
+    // public bool PrivateLink { get; set; } = false;
+
     public ValueLinkObjectAttributeMock()
     {
     }
@@ -126,6 +130,12 @@ public sealed class ValueLinkObjectAttributeMock : Attribute
         {
             attribute.Isolation = (IsolationLevel)val;
         }
+
+        /*val = AttributeHelper.GetValue(-1, nameof(PrivateLink), constructorArguments, namedArguments);
+        if (val != null)
+        {
+            attribute.PrivateLink = (bool)val;
+        }*/
 
         return attribute;
     }
