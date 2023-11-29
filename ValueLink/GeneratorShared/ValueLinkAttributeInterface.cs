@@ -104,6 +104,16 @@ public enum ValueLinkAccessibility
     Public,
 
     /// <summary>
+    /// Value/Link members have protected getter/setter.
+    /// </summary>
+    Protected,
+
+    /// <summary>
+    /// Value/Link members have private getter/setter.
+    /// </summary>
+    Private,
+
+    /// <summary>
     /// The accessibility of Value/Link members is exactly the same as it's target member.
     /// </summary>
     Inherit,
@@ -131,6 +141,11 @@ public sealed class ValueLinkObjectAttribute : Attribute
     /// Gets or sets a value indicating the isolation level to be implemented in the goshujin class.
     /// </summary>
     public IsolationLevel Isolation { get; set; } = IsolationLevel.None;
+
+    /* /// <summary>
+    /// Gets or sets a value indicating whether or not to make the link property a private member [the default is <see langword="false"/>].
+    /// </summary>
+    public bool PrivateLink { get; set; } = false;*/
 
     public ValueLinkObjectAttribute()
     {

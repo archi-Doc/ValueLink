@@ -160,6 +160,16 @@ public class Linkage
                 linkage.GetterAccessibility = Microsoft.CodeAnalysis.Accessibility.Public;
                 linkage.SetterAccessibility = Microsoft.CodeAnalysis.Accessibility.Public;
             }
+            else if (linkage.Accessibility == ValueLinkAccessibility.Protected)
+            {
+                linkage.GetterAccessibility = Microsoft.CodeAnalysis.Accessibility.Protected;
+                linkage.SetterAccessibility = Microsoft.CodeAnalysis.Accessibility.Protected;
+            }
+            else if (linkage.Accessibility == ValueLinkAccessibility.Private)
+            {
+                linkage.GetterAccessibility = Microsoft.CodeAnalysis.Accessibility.Private;
+                linkage.SetterAccessibility = Microsoft.CodeAnalysis.Accessibility.Private;
+            }
         }
 
         // No value
