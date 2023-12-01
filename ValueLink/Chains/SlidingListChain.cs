@@ -60,6 +60,42 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     }
 
     /// <summary>
+    /// Inserts an object into the specified position in the list. If insertion is not possible, returns <see langword="false"/>.
+    /// </summary>
+    /// <param name="position">The position of the object.</param>
+    /// <param name="obj">The new object that will be added to the list.</param>
+    /// <returns><see langword="true"/>; Success.</returns>
+    public bool Set(int position, T obj)
+    {
+        if (this.objectToGoshujin(obj) != this.goshujin)
+        {// Check Goshujin
+            throw new UnmatchedGoshujinException();
+        }
+
+        ref Link link = ref this.objectToLink(obj);
+        if (link.IsLinked)
+        {
+            return false;
+        }
+
+        if (this.chain.Get(position) is { } prev)
+        {
+            ref Link prevLink = ref this.objectToLink(prev);
+            prevLink.Position = -1;
+        }
+
+        if (this.chain.Set(position, obj))
+        {
+            link.Position = position;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
     /// Removes the specified object from the list.
     /// <br/>O(1) operation.
     /// </summary>
@@ -99,17 +135,49 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
         }
     }
 
+    /// <summary>
+    /// Gets the maximum number of elements that <see cref="SlidingListChain{T}"/> can hold.
+    /// </summary>
     public int Capacity => this.chain.Capacity;
 
+    /// <summary>
+    /// Gets the number of elements contained in the <see cref="SlidingListChain{T}"/>.
+    /// </summary>
     public int Count => this.chain.Count;
 
-    public bool Resize(int size) => this.chain.Resize(size);
+    /// <summary>
+    /// Changes the number of elements of the <see cref="SlidingListChain{T}"/> to the specified new size.
+    /// </summary>
+    /// <param name="capacity">The new size of the <see cref="SlidingListChain{T}"/>.</param>
+    /// <returns><see langword="true"/>; Success.</returns>
+    public bool Resize(int capacity) => this.chain.Resize(capacity);
 
+    /// <summary>
+    /// Gets the object at the specified position.
+    /// </summary>
+    /// <param name="position">The position of the object.</param>
+    /// <returns>The object.</returns>
     public T? Get(int position) => this.chain.Get(position);
 
-    public bool Set(int position, T value) => this.chain.Set(position, value);
+    /// <summary>
+    /// Gets a value indicating whether there is space in the <see cref="SlidingListChain{T}"/> and if a new element can be added.
+    /// </summary>
+    public bool CanAdd => this.chain.CanAdd;
 
+    /// <summary>
+    /// Gets the first element of the <see cref="SlidingListChain{T}"/>, or a default value if the <see cref="SlidingListChain{T}"/> contains no elements.
+    /// </summary>
     public T? FirstOrDefault => this.chain.FirstOrDefault;
+
+    /// <summary>
+    /// Gets the position of the first element contained in the <see cref="SlidingListChain{T}"/>.
+    /// </summary>
+    public int StartPosition => this.chain.StartPosition;
+
+    /// <summary>
+    /// Gets the position of the last element contained in the <see cref="SlidingListChain{T}"/>.
+    /// </summary>
+    public int EndPosition => this.chain.EndPosition;
 
     /// <summary>
     /// Finds the first node that contains the specified value.
