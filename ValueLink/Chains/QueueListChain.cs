@@ -115,9 +115,10 @@ public class QueueListChain<T> : IReadOnlyCollection<T>, ICollection
     }
 
     /// <summary>
-    /// Adds an object to the end of the <see cref="QueueListChain{T}"/>.
+    /// Adds an object to the end of the <see cref="QueueListChain{T}"/>.<br/>
+    /// If already present in the queue, move it to the end.
     /// </summary>
-    /// <param name="obj">The object to add to the <see cref="QueueListChain{T}"/>. The value can be null for reference types.</param>
+    /// <param name="obj">The object to add to the <see cref="QueueListChain{T}"/>. </param>
     public void Enqueue(T obj)
     {
         if (this.objectToGoshujin(obj) != this.goshujin)
@@ -132,6 +133,25 @@ public class QueueListChain<T> : IReadOnlyCollection<T>, ICollection
         }
 
         link.Node = this.chain.AddLast(obj);
+    }
+
+    /// <summary>
+    /// Adds an object to the end of the <see cref="QueueListChain{T}"/>.<br/>
+    /// If already present in the queue, do not change its position.
+    /// </summary>
+    /// <param name="obj">The object to add to the <see cref="QueueListChain{T}"/>. </param>
+    public void TryEnqueue(T obj)
+    {
+        if (this.objectToGoshujin(obj) != this.goshujin)
+        {// Check Goshujin
+            throw new UnmatchedGoshujinException();
+        }
+
+        ref Link link = ref this.objectToLink(obj);
+        if (link.Node is null)
+        {
+            link.Node = this.chain.AddLast(obj);
+        }
     }
 
     /// <summary>

@@ -35,7 +35,8 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
     }
 
     /// <summary>
-    /// Adds a new object at the start of the list.
+    /// Adds a new object at the start of the list.<br/>
+    /// If already present in the list, move it to the start.
     /// </summary>
     /// <param name="obj">The new object to add at the start of the list.</param>
     public void AddFirst(T obj)
@@ -64,7 +65,8 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
     }
 
     /// <summary>
-    /// Adds a new object to the end of the list.
+    /// Adds a new object to the end of the list.<br/>
+    /// If already present in the list, move it to the end.
     /// </summary>
     /// <param name="obj">The new object that will be added to the end of the list.</param>
     public void AddLast(T obj)
@@ -87,6 +89,44 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
             this.chain.MoveToLast(link.Node);
         }
         else
+        {
+            link.Node = this.chain.AddLast(obj);
+        }
+    }
+
+    /// <summary>
+    /// Adds a new object at the start of the list.<br/>
+    /// If already present in the list, do not change its position.
+    /// </summary>
+    /// <param name="obj">The new object to add at the start of the list.</param>
+    public void TryAddFirst(T obj)
+    {
+        if (this.objectToGoshujin(obj) != this.goshujin)
+        {// Check Goshujin
+            throw new UnmatchedGoshujinException();
+        }
+
+        ref Link link = ref this.objectToLink(obj);
+        if (link.Node is null)
+        {
+            link.Node = this.chain.AddLast(obj);
+        }
+    }
+
+    /// <summary>
+    /// Adds a new object to the end of the list.<br/>
+    /// If already present in the list, do not change its position.
+    /// </summary>
+    /// <param name="obj">The new object that will be added to the end of the list.</param>
+    public void TryAddLast(T obj)
+    {
+        if (this.objectToGoshujin(obj) != this.goshujin)
+        {// Check Goshujin
+            throw new UnmatchedGoshujinException();
+        }
+
+        ref Link link = ref this.objectToLink(obj);
+        if (link.Node is null)
         {
             link.Node = this.chain.AddLast(obj);
         }
