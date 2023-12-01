@@ -115,7 +115,8 @@ public class StackListChain<T> : IReadOnlyCollection<T>, ICollection
     }
 
     /// <summary>
-    /// Inserts an object at the top of the <see cref="StackListChain{T}"/>.
+    /// Inserts an object at the top of the <see cref="StackListChain{T}"/>.<br/>
+    /// If already present in the stack, move it to the top.
     /// </summary>
     /// <param name="obj">The object to push onto the <see cref="StackListChain{T}"/>. The value can be null for reference types.</param>
     public void Push(T obj)
@@ -132,6 +133,25 @@ public class StackListChain<T> : IReadOnlyCollection<T>, ICollection
         }
 
         link.Node = this.chain.AddLast(obj);
+    }
+
+    /// <summary>
+    /// Inserts an object at the top of the <see cref="StackListChain{T}"/>.<br/>
+    /// If already present in the stack, do not change its position.
+    /// </summary>
+    /// <param name="obj">The object to push onto the <see cref="StackListChain{T}"/>. The value can be null for reference types.</param>
+    public void TryPush(T obj)
+    {
+        if (this.objectToGoshujin(obj) != this.goshujin)
+        {// Check Goshujin
+            throw new UnmatchedGoshujinException();
+        }
+
+        ref Link link = ref this.objectToLink(obj);
+        if (link.Node is null)
+        {
+            link.Node = this.chain.AddLast(obj);
+        }
     }
 
     /// <summary>
