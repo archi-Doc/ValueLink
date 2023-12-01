@@ -22,6 +22,7 @@ public static class GeneratorHelper
         ChainType.ReverseOrdered => "OrderedChain",
         ChainType.Unordered => "UnorderedChain",
         ChainType.Observable => "ObservableChain",
+        ChainType.SlidingList => "SlidingListChain",
         _ => string.Empty,
     };
 }

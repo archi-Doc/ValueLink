@@ -102,6 +102,10 @@ public class Linkage
         if (linkage.IsValidLink || linkage.AutoNotify)
         {// Valid link type or AutoNotify
             linkage.AutoLink = linkAttribute.AutoLink;
+            if (linkAttribute.Type == ChainType.SlidingList)
+            {
+                linkage.AutoLink = false;
+            }
 
             if (linkAttribute.Name == string.Empty)
             {
