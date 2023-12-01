@@ -10,7 +10,6 @@ using Arc.Collections;
 
 namespace ValueLink;
 
-/*
 /// <summary>
 /// Represents a doubly linked list of objects.
 /// <br/>Structure: Doubly linked list.
@@ -37,11 +36,11 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     }
 
     /// <summary>
-    /// Adds a new object to the end of the list.
+    /// Inserts an object into an available space in the list. If insertion is not possible, returns -1.
     /// </summary>
-    /// <param name="obj">The new object that will be added to the end of the list.</param>
+    /// <param name="obj">The new object that will be added to the list.</param>
     /// <returns><see langword="true"/>; Success.</returns>
-    public bool AddLast(T obj)
+    public bool Add(T obj)
     {
         if (this.objectToGoshujin(obj) != this.goshujin)
         {// Check Goshujin
@@ -55,7 +54,7 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
         }
         else
         {
-            link.Position = this.chain.TryAdd(obj);
+            link.Position = this.chain.Add(obj);
             return link.Position >= 0;
         }
     }
@@ -94,9 +93,9 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
         }
 
         ref Link link = ref this.objectToLink(previousInstance);
-        if (link.Node != null)
+        if (link.Position >= 0)
         {
-            link.Node.UnsafeChangeValue(newInstance);
+            this.chain.Set(link.Position, newInstance);
         }
     }
 
@@ -107,6 +106,8 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     public bool Resize(int size) => this.chain.Resize(size);
 
     public T? Get(int position) => this.chain.Get(position);
+
+    public bool Set(int position, T value) => this.chain.Set(position, value);
 
     public T? FirstOrDefault => this.chain.FirstOrDefault;
 
@@ -176,4 +177,4 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     IEnumerator<T> IEnumerable<T>.GetEnumerator() => this.chain.GetEnumerator();
 
     System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => this.chain.GetEnumerator();
-}*/
+}
