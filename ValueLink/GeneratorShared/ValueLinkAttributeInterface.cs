@@ -86,6 +86,12 @@ public enum ChainType
     /// <br/>Structure: Collection(Array) (<see cref="ObservableCollection{T}"/>).
     /// </summary>
     Observable,
+
+    /// <summary>
+    /// Represents a sliding list of objects (<see cref="SlidingListChain{T}"/>).
+    /// <br/>Structure: Array (<see cref="SlidingList{T}"/>).
+    /// </summary>
+    SlidingList,
 }
 
 /// <summary>

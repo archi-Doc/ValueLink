@@ -21,6 +21,7 @@ public enum ChainType
     ReverseOrdered,
     Unordered,
     Observable,
+    SlidingList,
 }
 
 public enum IsolationLevel

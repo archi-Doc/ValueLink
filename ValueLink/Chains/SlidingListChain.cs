@@ -48,14 +48,14 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
         }
 
         ref Link link = ref this.objectToLink(obj);
-        if (link.Position >= 0)
+        if (link.IsLinked)
         {
             return false;
         }
         else
         {
             link.Position = this.chain.Add(obj);
-            return link.Position >= 0;
+            return link.IsLinked;
         }
     }
 
@@ -73,7 +73,7 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
         }
 
         ref Link link = ref this.objectToLink(obj);
-        if (link.Position >= 0)
+        if (link.IsLinked)
         {
             var result = this.chain.Remove(link.Position);
             link.Position = -1;
@@ -93,7 +93,7 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
         }
 
         ref Link link = ref this.objectToLink(previousInstance);
-        if (link.Position >= 0)
+        if (link.IsLinked)
         {
             this.chain.Set(link.Position, newInstance);
         }
@@ -137,9 +137,15 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
 
     public struct Link : ILink<T>
     {
-        public bool IsLinked => this.Position >= 0;
+        public bool IsLinked => this.rawPosition > 0;
 
-        public int Position { get; internal set; }
+        public int Position
+        {
+            get => this.rawPosition - 1;
+            internal set => this.rawPosition = value + 1;
+        }
+
+        private int rawPosition;
     }
 
     #region ICollection
