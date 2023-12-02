@@ -2550,7 +2550,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         var goshujin = this.ObjectAttribute!.GoshujinInstance;
         var goshujinInstance = this.GoshujinInstanceIdentifier; // goshujin + "Instance";
 
-        using (var scopeProperty = ssb.ScopeBrace($"public {this.ObjectAttribute!.GoshujinClass}? {goshujin}"))
+        var goshujinAccessibility = this.ObjectAttribute!.Restricted ? "internal " : "public ";
+        using (var scopeProperty = ssb.ScopeBrace($"{goshujinAccessibility}{this.ObjectAttribute!.GoshujinClass}? {goshujin}"))
         {
             ssb.AppendLine($"get => this.{goshujinInstance};");
             if (this.ObjectAttribute.Isolation == IsolationLevel.RepeatableRead)

@@ -55,8 +55,31 @@ public partial record AccessibilityTestClass
     public double Age { get; set; }
 }
 
+[ValueLinkObject(Restricted = true)]
+public partial record AccessibilityTestClass2
+{
+    public AccessibilityTestClass2()
+    {
+    }
+
+    [Link(Type = ChainType.Unordered, Accessibility = ValueLinkAccessibility.Public)]
+    public int Id { get; set; }
+
+    [Link(Type = ChainType.Unordered)]
+    public string Name { get; set; } = string.Empty;
+
+    [Link(Type = ChainType.Ordered)]
+    public double Age { get; set; }
+}
+
 public class PropertyAccessibilityTest
 {
+    [Fact]
+    public void Test2()
+    {
+        var c = new AccessibilityTestClass2();
+    }
+
     [Fact]
     public void Test1()
     {
