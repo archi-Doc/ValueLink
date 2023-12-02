@@ -148,10 +148,10 @@ public sealed class ValueLinkObjectAttribute : Attribute
     /// </summary>
     public IsolationLevel Isolation { get; set; } = IsolationLevel.None;
 
-    /* /// <summary>
-    /// Gets or sets a value indicating whether or not to make the link property a private member [the default is <see langword="false"/>].
+    /// <summary>
+    /// Gets or sets a value indicating whether or not to make the object rectricted <br/>(sets Goshujin's accessibility to 'internal', ensuring all links have 'AddValue' set to false and their accessibility specified as 'Private') [the default is <see langword="false"/>].
     /// </summary>
-    public bool PrivateLink { get; set; } = false;*/
+    public bool Restricted { get; set; } = false;
 
     public ValueLinkObjectAttribute()
     {

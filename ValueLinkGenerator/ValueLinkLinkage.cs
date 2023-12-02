@@ -14,7 +14,8 @@ public class Linkage
         LinkAttributeMock linkAttribute;
         try
         {
-            linkAttribute = LinkAttributeMock.FromArray(attribute.ConstructorArguments, attribute.NamedArguments);
+            var restricted = obj.ContainingObject?.ObjectAttribute?.Restricted == true;
+            linkAttribute = LinkAttributeMock.FromArray(restricted, attribute.ConstructorArguments, attribute.NamedArguments);
         }
         catch (InvalidCastException)
         {

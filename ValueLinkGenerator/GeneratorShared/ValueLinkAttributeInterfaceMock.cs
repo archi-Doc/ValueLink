@@ -97,7 +97,7 @@ public sealed class ValueLinkObjectAttributeMock : Attribute
 
     public IsolationLevel Isolation { get; set; } = IsolationLevel.None;
 
-    // public bool PrivateLink { get; set; } = false;
+    public bool Restricted { get; set; } = false;
 
     public ValueLinkObjectAttributeMock()
     {
@@ -132,11 +132,11 @@ public sealed class ValueLinkObjectAttributeMock : Attribute
             attribute.Isolation = (IsolationLevel)val;
         }
 
-        /*val = AttributeHelper.GetValue(-1, nameof(PrivateLink), constructorArguments, namedArguments);
+        val = AttributeHelper.GetValue(-1, nameof(Restricted), constructorArguments, namedArguments);
         if (val != null)
         {
-            attribute.PrivateLink = (bool)val;
-        }*/
+            attribute.Restricted = (bool)val;
+        }
 
         return attribute;
     }
@@ -167,13 +167,18 @@ public sealed class LinkAttributeMock : Attribute
 
     public bool AddValue { get; set; } = true;
 
-    public LinkAttributeMock()
+    public LinkAttributeMock(bool rectricted)
     {
+        if (rectricted)
+        {
+            this.Accessibility = ValueLinkAccessibility.Private;
+            this.AddValue = false;
+        }
     }
 
-    public static LinkAttributeMock FromArray(object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
+    public static LinkAttributeMock FromArray(bool rectricted, object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
     {
-        var attribute = new LinkAttributeMock();
+        var attribute = new LinkAttributeMock(rectricted);
         object? val;
 
         val = AttributeHelper.GetValue(-1, nameof(Type), constructorArguments, namedArguments);
