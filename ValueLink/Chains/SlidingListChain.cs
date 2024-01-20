@@ -145,9 +145,14 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     /// </summary>
     public int Consumed => this.chain.Consumed;
 
-    int ICollection.Count => this.chain.Consumed;
+    /// <summary>
+    /// Gets the number of elements contained in the <see cref="SlidingListChain{T}"/>.
+    /// </summary>
+    public int Count => this.chain.Consumed;
 
-    int IReadOnlyCollection<T>.Count => this.chain.Consumed;
+    // int ICollection.Count => this.chain.Consumed;
+
+    // int IReadOnlyCollection<T>.Count => this.chain.Consumed;
 
     /// <summary>
     /// Changes the number of elements of the <see cref="SlidingListChain{T}"/> to the specified new size.
