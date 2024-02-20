@@ -119,6 +119,9 @@ public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
         }
     }
 
+    public (UnorderedMultiMap<TKey, TObj>.Node[] Nodes, int Max) UnsafeGetNodes()
+        => this.chain.UnsafeGetNodes();
+
     public int Count => this.chain.Count;
 
     /// <summary>
