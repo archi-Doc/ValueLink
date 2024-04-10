@@ -7,16 +7,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Generated\*" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\ValueLinkGenerator\ValueLinkGenerator.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
     <ProjectReference Include="..\ValueLink\ValueLink.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Tinyhand" Version="0.71.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Generated\*" />
   </ItemGroup>
 
 </Project>

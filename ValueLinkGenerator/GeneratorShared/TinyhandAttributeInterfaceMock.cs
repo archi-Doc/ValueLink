@@ -41,6 +41,13 @@ public static class AttributeHelper
     }
 }
 
+public sealed class TinyhandUnionAttributeMock
+{
+    public static readonly string SimpleName = "TinyhandUnion";
+    public static readonly string Name = SimpleName + "Attribute";
+    public static readonly string FullName = "Tinyhand." + Name;
+}
+
 public sealed class TinyhandObjectAttributeMock
 {
     public static readonly string SimpleName = "TinyhandObject";

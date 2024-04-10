@@ -237,6 +237,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     this.ObjectFlag |= ValueLinkObjectFlag.StructualEnabled;
                 }
             }
+            else if (attribute.FullName == TinyhandUnionAttributeMock.FullName)
+            {
+                this.ObjectFlag |= ValueLinkObjectFlag.TinyhandObject;
+            }
             else if (attribute.FullName == KeyAttributeMock.FullName)
             {// KeyAttribute
                 try
@@ -433,10 +437,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     public void CheckObject()
     {
-        if (!this.IsAbstractOrInterface)
+        /*if (!this.IsAbstractOrInterface)
         {
             this.ObjectFlag |= ValueLinkObjectFlag.CanCreateInstance;
-        }
+        }*/
 
         if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.CanCreateInstance))
         {// Type which can create an instance
@@ -858,10 +862,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         {
             return;
         }
-        else if (this.IsAbstractOrInterface)
+
+        /*else if (this.IsAbstractOrInterface)
         {
             return;
-        }
+        }-*/
 
         string interfaceString = string.Empty;
         if (this.ObjectAttribute is not null)

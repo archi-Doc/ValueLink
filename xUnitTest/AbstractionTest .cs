@@ -8,9 +8,9 @@ using Xunit;
 
 namespace xUnitTest;
 
-[TinyhandObject]
+/*[TinyhandObject]
 [ValueLinkObject]
-public partial class AbstractTestClass
+public abstract partial class AbstractTestClass
 {
     [Key(0)]
     [Link(Primary = true, Type = ChainType.Ordered)]
@@ -24,7 +24,7 @@ public partial class AbstractTestClass
     {
         this.Id = id;
     }
-}
+}*/
 
 public class AbstractionTest
 {
