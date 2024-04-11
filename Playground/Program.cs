@@ -59,6 +59,28 @@ public partial class NonAbstractTestClass2 : AbstractTestClass
     }
 }
 
+[TinyhandObject]
+[ValueLinkObject(Isolation = IsolationLevel.Serializable)]
+public sealed partial class GenericTestClass<TClass>
+    where TClass : AbstractTestClass
+{
+    [Link(Primary = true, TargetMember = "Id", Type = ChainType.Ordered)]
+    public GenericTestClass(TClass target)
+    {
+        this.Target = target;
+    }
+
+    private GenericTestClass()
+    {
+        this.Target = default!;
+    }
+
+    [Key(0)]
+    public TClass Target { get; private set; }
+
+    public int Id => this.Target.Id;
+}
+
 internal class Program
 {
     static void Main(string[] args)

@@ -876,15 +876,15 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             if (this.ObjectAttribute.Isolation == IsolationLevel.RepeatableRead)
             {
-                this.IRepeatableObject = $"{ValueLinkBody.IRepeatableObject}<{this.SimpleName}.{ValueLinkBody.WriterClassName}>";
+                this.IRepeatableObject = $"{ValueLinkBody.IRepeatableObject}<{this.LocalName}.{ValueLinkBody.WriterClassName}>";
                 if (this.UniqueLink is not null)
                 {
-                    this.RepeatableGoshujin = $"{ValueLinkBody.RepeatableGoshujin}<{this.UniqueLink.TypeObject.FullName}, {this.SimpleName}, {this.ObjectAttribute.GoshujinClass}, {ValueLinkBody.WriterClassName}>";
+                    this.RepeatableGoshujin = $"{ValueLinkBody.RepeatableGoshujin}<{this.UniqueLink.TypeObject.FullName}, {this.LocalName}, {this.ObjectAttribute.GoshujinClass}, {ValueLinkBody.WriterClassName}>";
                 }
             }
             else if (this.ObjectAttribute.Isolation == IsolationLevel.Serializable)
             {
-                this.SerializableGoshujin = $"{ValueLinkBody.SerializableGoshujin}<{this.SimpleName}, {this.ObjectAttribute.GoshujinClass}>";
+                this.SerializableGoshujin = $"{ValueLinkBody.SerializableGoshujin}<{this.LocalName}, {this.ObjectAttribute.GoshujinClass}>";
             }
 
             if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateINotifyPropertyChanged))
@@ -1203,7 +1203,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         using (var scopeClass = ssb.ScopeBrace($"public partial class {ValueLinkBody.WriterClassName} : IDisposable"))
         {
-            using (var scopeConstructor = ssb.ScopeBrace($"public {ValueLinkBody.WriterClassName}({this.SimpleName} instance)"))
+            using (var scopeConstructor = ssb.ScopeBrace($"public {ValueLinkBody.WriterClassName}({this.LocalName} instance)"))
             {
                 ssb.AppendLine("this.original = instance;");
                 // ssb.AppendLine($"this.{this.ObjectAttribute!.GoshujinInstance} = instance.{this.ObjectAttribute!.GoshujinInstance};");
@@ -1211,9 +1211,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             ssb.AppendLine();
 
-            ssb.AppendLine($"public {this.SimpleName} Instance => this.instance ??= this.original with {{ }};");
-            ssb.AppendLine($"private {this.SimpleName} original;");
-            ssb.AppendLine($"private {this.SimpleName}? instance;");
+            ssb.AppendLine($"public {this.LocalName} Instance => this.instance ??= this.original with {{ }};");
+            ssb.AppendLine($"private {this.LocalName} original;");
+            ssb.AppendLine($"private {this.LocalName}? instance;");
             ssb.AppendLine($"private bool __erase_flag__;");
 
             ssb.AppendLine();
@@ -1271,7 +1271,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void Generate_RepeatableRead_WriterClass_Commit(ScopingStringBuilder ssb)
     {
-        using (var scopeRollback = ssb.ScopeBrace($"public {this.SimpleName}? Commit()"))
+        using (var scopeRollback = ssb.ScopeBrace($"public {this.LocalName}? Commit()"))
         {
             using (var scopeEmptyCommit = ssb.ScopeBrace("if (this.instance is null)"))
             {
@@ -1729,9 +1729,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             if (this.RepeatableGoshujin is not null && this.UniqueLink is not null)
             {
-                ssb.AppendLine($"protected override {this.SimpleName}? FindFirst({this.UniqueLink.TypeObject.FullName} key) => this.{this.UniqueLink.ChainName}.FindFirst(key);");
+                ssb.AppendLine($"protected override {this.LocalName}? FindFirst({this.UniqueLink.TypeObject.FullName} key) => this.{this.UniqueLink.ChainName}.FindFirst(key);");
 
-                using (var scopeNewObject = ssb.ScopeBrace($"protected override {this.SimpleName} NewObject({this.UniqueLink.TypeObject.FullName} key)"))
+                using (var scopeNewObject = ssb.ScopeBrace($"protected override {this.LocalName} NewObject({this.UniqueLink.TypeObject.FullName} key)"))
                 {
                     if (this.TinyhandAttribute?.UseServiceProvider == true)
                     {
@@ -1739,7 +1739,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     }
                     else
                     {
-                        ssb.AppendLine($"var obj = new {this.SimpleName}();");
+                        ssb.AppendLine($"var obj = new {this.LocalName}();");
                     }
 
                     if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.StructualEnabled))
@@ -1779,7 +1779,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 {
                     ssb.AppendLine($"var y = other.{this.UniqueLink.ChainName}.FindFirst(x.{this.UniqueLink.TargetName});");
                     ssb.AppendLine("if (y is null) return false;");
-                    ssb.AppendLine($"if (!((ValueLink.IEquatableObject<{this.SimpleName}>)y).ObjectEquals(x)) return false;");
+                    ssb.AppendLine($"if (!((ValueLink.IEquatableObject<{this.LocalName}>)y).ObjectEquals(x)) return false;");
                 }
             }
             else
