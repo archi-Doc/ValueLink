@@ -185,6 +185,11 @@ public class Linkage
             obj.Body.AddDiagnostic(ValueLinkBody.Warning_AutoNotifyEnabled, attribute.Location);
         }
 
+        if (linkage.SetterAccessibility == Microsoft.CodeAnalysis.Accessibility.NotApplicable)
+        {// Value property will not be added since the setter is unavailable.
+            linkage.AddValue = false;
+        }
+
         if (!string.IsNullOrEmpty(linkage.LinkName))
         {// Methods (Predicate, Adding, Removing)
             var predicateName = linkage.LinkName + ValueLinkBody.PredicateMethodName;

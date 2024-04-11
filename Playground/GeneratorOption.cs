@@ -4,10 +4,10 @@ using System;
 using Tinyhand;
 using ValueLink;
 
-namespace Sandbox;
+namespace xUnitTest;
 
-// [TinyhandGeneratorOption(AttachDebugger = false, GenerateToFile = true)]
 [ValueLinkGeneratorOption(AttachDebugger = false, GenerateToFile = false)]
+[TinyhandGeneratorOption(AttachDebugger = false, GenerateToFile = false)]
 internal class GeneratorOption
 {
 }
