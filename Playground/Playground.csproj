@@ -12,10 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Tinyhand" Version="0.71.2" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Compile Remove="Generated\*" />
   </ItemGroup>
 
