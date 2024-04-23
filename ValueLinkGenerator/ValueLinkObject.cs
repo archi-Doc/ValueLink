@@ -916,7 +916,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 interfaceString += $", {this.IRepeatableObject}";
             }
 
-            interfaceString += $", {ValueLinkBody.IObjectToGoshujin}";
+            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddGoshujinProperty))
+            {
+                interfaceString += $", {ValueLinkBody.IObjectToGoshujin}";
+            }
         }
 
         using (var cls = ssb.ScopeBrace($"{this.AccessibilityName} partial {this.KindName} {this.LocalName}{interfaceString}"))

@@ -19,6 +19,7 @@ namespace ValueLink;
 /// </summary>
 /// <typeparam name="T">The type of elements in the list.</typeparam>
 public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCollectionChanged, INotifyPropertyChanged
+    where T : IObjectToGoshujin
 {
     public delegate IGoshujin? ObjectToGoshujinDelegete(T obj);
 
@@ -33,14 +34,12 @@ public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCo
     public ObservableChain(IGoshujin goshujin, ObjectToGoshujinDelegete objectToGoshujin, ObjectToLinkDelegete objectToLink)
     {
         this.goshujin = goshujin;
-        this.objectToGoshujin = objectToGoshujin;
         this.objectToLink = objectToLink;
     }
 
     public int Count => this.chain.Count;
 
     private IGoshujin goshujin;
-    private ObjectToGoshujinDelegete objectToGoshujin;
     private ObjectToLinkDelegete objectToLink;
     private ObservableCollection<T> chain = new();
 
@@ -79,7 +78,7 @@ public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCo
     /// <param name="obj">The object to be added to the end of the list.</param>
     public void Add(T obj)
     {
-        if (this.objectToGoshujin(obj) != this.goshujin)
+        if (obj.Goshujin != this.goshujin)
         {// Check Goshujin
             throw new UnmatchedGoshujinException();
         }
@@ -137,7 +136,7 @@ public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCo
     /// <returns>true if item is successfully removed.</returns>
     public bool Remove(T obj)
     {
-        if (this.objectToGoshujin(obj) != this.goshujin)
+        if (obj.Goshujin != this.goshujin)
         {// Check Goshujin
             throw new UnmatchedGoshujinException();
         }
@@ -188,7 +187,7 @@ public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCo
     /// <param name="obj">The object to insert.</param>
     public void Insert(int index, T obj)
     {
-        if (this.objectToGoshujin(obj) != this.goshujin)
+        if (obj.Goshujin != this.goshujin)
         {// Check Goshujin
             throw new UnmatchedGoshujinException();
         }

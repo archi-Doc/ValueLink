@@ -16,7 +16,7 @@ namespace ValueLink;
 /// </summary>
 /// <typeparam name="T">The type of objects in the list.</typeparam>
 public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
-    where T : class
+    where T : class, IObjectToGoshujin
 {
     public delegate IGoshujin? ObjectToGoshujinDelegete(T obj);
 
@@ -31,7 +31,6 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     public SlidingListChain(IGoshujin goshujin, ObjectToGoshujinDelegete objectToGoshujin, ObjectToLinkDelegete objectToLink)
     {
         this.goshujin = goshujin;
-        this.objectToGoshujin = objectToGoshujin;
         this.objectToLink = objectToLink;
     }
 
@@ -42,7 +41,7 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     /// <returns><see langword="true"/>; Success.</returns>
     public bool Add(T obj)
     {
-        if (this.objectToGoshujin(obj) != this.goshujin)
+        if (obj.Goshujin != this.goshujin)
         {// Check Goshujin
             throw new UnmatchedGoshujinException();
         }
@@ -67,7 +66,7 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     /// <returns><see langword="true"/>; Success.</returns>
     public bool Set(int position, T obj)
     {
-        if (this.objectToGoshujin(obj) != this.goshujin)
+        if (obj.Goshujin != this.goshujin)
         {// Check Goshujin
             throw new UnmatchedGoshujinException();
         }
@@ -103,7 +102,7 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     /// <returns><see langword="true"/>; The object is successfully removed.</returns>
     public bool Remove(T obj)
     {
-        if (this.objectToGoshujin(obj) != this.goshujin)
+        if (obj.Goshujin != this.goshujin)
         {// Check Goshujin
             throw new UnmatchedGoshujinException();
         }
@@ -123,7 +122,7 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
 
     public void UnsafeReplaceInstance(T previousInstance, T newInstance)
     {
-        if (this.objectToGoshujin(previousInstance) != this.goshujin)
+        if (previousInstance.Goshujin != this.goshujin)
         {// Check Goshujin
             throw new UnmatchedGoshujinException();
         }
@@ -208,7 +207,6 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     }
 
     private IGoshujin goshujin;
-    private ObjectToGoshujinDelegete objectToGoshujin;
     private ObjectToLinkDelegete objectToLink;
     private SlidingList<T> chain = new(0);
 

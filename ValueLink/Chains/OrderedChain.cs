@@ -17,6 +17,7 @@ namespace ValueLink;
 /// <typeparam name="TKey">The type of keys in the collection.</typeparam>
 /// <typeparam name="TObj">The type of objects in the collection.</typeparam>
 public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
+    where TObj : IObjectToGoshujin
 {
     public delegate IGoshujin? ObjectToGoshujinDelegete(TObj obj);
 
@@ -36,7 +37,6 @@ public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     {
         this.chain = new(reverse);
         this.goshujin = goshujin;
-        this.objectToGoshujin = objectToGoshujin;
         this.objectToLink = objectToLink;
         this.objectToKey = objectToKey;
         this.Reverse = reverse;
@@ -53,13 +53,12 @@ public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     {
         this.chain = new(reverse);
         this.goshujin = goshujin;
-        this.objectToGoshujin = objectToGoshujin;
         this.objectToLink = objectToLink;
     }
 
     /*public void Add(TObj obj)
     {
-        if (this.objectToGoshujin(obj) != this.goshujin)
+        if (obj.Goshujin != this.goshujin)
         {// Check Goshujin
             throw new UnmatchedGoshujinException();
         }
@@ -91,7 +90,7 @@ public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     /// <param name="obj">The object to add.</param>
     public void Add(TKey key, TObj obj)
     {
-        if (this.objectToGoshujin(obj) != this.goshujin)
+        if (obj.Goshujin != this.goshujin)
         {// Check Goshujin
             throw new UnmatchedGoshujinException();
         }
@@ -117,7 +116,7 @@ public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     /// <returns>true if item is successfully removed.</returns>
     public bool Remove(TObj obj)
     {
-        if (this.objectToGoshujin(obj) != this.goshujin)
+        if (obj.Goshujin != this.goshujin)
         {// Check Goshujin
             throw new UnmatchedGoshujinException();
         }
@@ -137,7 +136,7 @@ public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
 
     public void UnsafeReplaceInstance(TObj previousInstance, TObj newInstance)
     {
-        if (this.objectToGoshujin(previousInstance) != this.goshujin)
+        if (previousInstance.Goshujin != this.goshujin)
         {// Check Goshujin
             throw new UnmatchedGoshujinException();
         }
@@ -257,7 +256,6 @@ public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     public bool Reverse { get; }
 
     private IGoshujin goshujin;
-    private ObjectToGoshujinDelegete objectToGoshujin;
     private ObjectToLinkDelegete objectToLink;
     private ObjectToKeyDelegete? objectToKey;
     private OrderedMultiMap<TKey, TObj> chain;

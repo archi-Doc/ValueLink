@@ -16,6 +16,7 @@ namespace ValueLink;
 /// </summary>
 /// <typeparam name="T">The type of objects in the list.</typeparam>
 public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
+    where T : IObjectToGoshujin
 {
     public delegate IGoshujin? ObjectToGoshujinDelegete(T obj);
 
@@ -30,7 +31,6 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
     public LinkedListChain(IGoshujin goshujin, ObjectToGoshujinDelegete objectToGoshujin, ObjectToLinkDelegete objectToLink)
     {
         this.goshujin = goshujin;
-        this.objectToGoshujin = objectToGoshujin;
         this.objectToLink = objectToLink;
     }
 
@@ -41,7 +41,7 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
     /// <param name="obj">The new object to add at the start of the list.</param>
     public void AddFirst(T obj)
     {
-        if (this.objectToGoshujin(obj) != this.goshujin)
+        if (obj.Goshujin != this.goshujin)
         {// Check Goshujin
             throw new UnmatchedGoshujinException();
         }
@@ -71,7 +71,7 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
     /// <param name="obj">The new object that will be added to the end of the list.</param>
     public void AddLast(T obj)
     {
-        if (this.objectToGoshujin(obj) != this.goshujin)
+        if (obj.Goshujin != this.goshujin)
         {// Check Goshujin
             throw new UnmatchedGoshujinException();
         }
@@ -101,7 +101,7 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
     /// <param name="obj">The new object to add at the start of the list.</param>
     public void TryAddFirst(T obj)
     {
-        if (this.objectToGoshujin(obj) != this.goshujin)
+        if (obj.Goshujin != this.goshujin)
         {// Check Goshujin
             throw new UnmatchedGoshujinException();
         }
@@ -120,7 +120,7 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
     /// <param name="obj">The new object that will be added to the end of the list.</param>
     public void TryAddLast(T obj)
     {
-        if (this.objectToGoshujin(obj) != this.goshujin)
+        if (obj.Goshujin != this.goshujin)
         {// Check Goshujin
             throw new UnmatchedGoshujinException();
         }
@@ -140,7 +140,7 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
     /// <returns>true if item is successfully removed.</returns>
     public bool Remove(T obj)
     {
-        if (this.objectToGoshujin(obj) != this.goshujin)
+        if (obj.Goshujin != this.goshujin)
         {// Check Goshujin
             throw new UnmatchedGoshujinException();
         }
@@ -160,7 +160,7 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
 
     public void UnsafeReplaceInstance(T previousInstance, T newInstance)
     {
-        if (this.objectToGoshujin(previousInstance) != this.goshujin)
+        if (previousInstance.Goshujin != this.goshujin)
         {// Check Goshujin
             throw new UnmatchedGoshujinException();
         }
@@ -204,7 +204,6 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
     }
 
     private IGoshujin goshujin;
-    private ObjectToGoshujinDelegete objectToGoshujin;
     private ObjectToLinkDelegete objectToLink;
     private UnorderedLinkedList<T> chain = new();
 

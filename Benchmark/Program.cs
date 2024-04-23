@@ -27,9 +27,7 @@ public class Program
         {
             typeof(IsolationBenchmark),
             typeof(CloneClassBenchmark),
-            typeof(Serializer.SerializerBenchmark),
             typeof(H2HBenchmark),
-            typeof(Draft.DraftBenchmark),
         });
 
         switcher.Run(args);

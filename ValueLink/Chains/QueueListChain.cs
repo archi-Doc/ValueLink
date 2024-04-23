@@ -17,6 +17,7 @@ namespace ValueLink;
 /// </summary>
 /// <typeparam name="T">Specifies the type of objects in the queue.</typeparam>
 public class QueueListChain<T> : IReadOnlyCollection<T>, ICollection
+    where T : IObjectToGoshujin
 {
     public delegate IGoshujin? ObjectToGoshujinDelegete(T obj);
 
@@ -31,7 +32,6 @@ public class QueueListChain<T> : IReadOnlyCollection<T>, ICollection
     public QueueListChain(IGoshujin goshujin, ObjectToGoshujinDelegete objectToGoshujin, ObjectToLinkDelegete objectToLink)
     {
         this.goshujin = goshujin;
-        this.objectToGoshujin = objectToGoshujin;
         this.objectToLink = objectToLink;
     }
 
@@ -121,7 +121,7 @@ public class QueueListChain<T> : IReadOnlyCollection<T>, ICollection
     /// <param name="obj">The object to add to the <see cref="QueueListChain{T}"/>. </param>
     public void Enqueue(T obj)
     {
-        if (this.objectToGoshujin(obj) != this.goshujin)
+        if (obj.Goshujin != this.goshujin)
         {// Check Goshujin
             throw new UnmatchedGoshujinException();
         }
@@ -142,7 +142,7 @@ public class QueueListChain<T> : IReadOnlyCollection<T>, ICollection
     /// <param name="obj">The object to add to the <see cref="QueueListChain{T}"/>. </param>
     public void TryEnqueue(T obj)
     {
-        if (this.objectToGoshujin(obj) != this.goshujin)
+        if (obj.Goshujin != this.goshujin)
         {// Check Goshujin
             throw new UnmatchedGoshujinException();
         }
@@ -161,7 +161,7 @@ public class QueueListChain<T> : IReadOnlyCollection<T>, ICollection
     /// <returns>true if the object is successfully removed.</returns>
     public bool Remove(T obj)
     {
-        if (this.objectToGoshujin(obj) != this.goshujin)
+        if (obj.Goshujin != this.goshujin)
         {// Check Goshujin
             throw new UnmatchedGoshujinException();
         }
@@ -181,7 +181,7 @@ public class QueueListChain<T> : IReadOnlyCollection<T>, ICollection
 
     public void UnsafeReplaceInstance(T previousInstance, T newInstance)
     {
-        if (this.objectToGoshujin(previousInstance) != this.goshujin)
+        if (previousInstance.Goshujin != this.goshujin)
         {// Check Goshujin
             throw new UnmatchedGoshujinException();
         }
@@ -194,7 +194,6 @@ public class QueueListChain<T> : IReadOnlyCollection<T>, ICollection
     }
 
     private IGoshujin goshujin;
-    private ObjectToGoshujinDelegete objectToGoshujin;
     private ObjectToLinkDelegete objectToLink;
     private UnorderedLinkedList<T> chain = new();
 
