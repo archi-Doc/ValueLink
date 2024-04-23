@@ -79,28 +79,16 @@ public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
         }
     }
 
+    /// <summary>
+    /// Adds a new object to the collection.
+    /// <br/>O(1) operation.
+    /// </summary>
+    /// <param name="key">The key of the object to add.</param>
+    /// <param name="obj">The object to add.</param>
+    /// <param name="link">The reference to a link that holds node information in the chain.</param>
     public void Add(TKey key, TObj obj, ref Link link)
-    {//
+    {
         if (this.objectToGoshujin(obj) != this.goshujin)
-        {// Check Goshujin
-            throw new UnmatchedGoshujinException();
-        }
-
-        if (link.IsLinked)
-        {
-            this.chain.SetNodeKey(link.NodeIndex, key);
-        }
-        else
-        {
-            var result = this.chain.Add(key, obj);
-            link.NodeIndex = result.NodeIndex;
-        }
-    }
-
-    public void Add2<T>(TKey key, T obj, ref Link link)
-        where T : IObjectToGoshujin
-    {//
-        if (obj.Goshujin != this.goshujin)
         {// Check Goshujin
             throw new UnmatchedGoshujinException();
         }

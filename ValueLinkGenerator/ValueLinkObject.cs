@@ -1106,20 +1106,17 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 {
                     foreach (var link in this.Links.Where(a => a.IsValidLink))
                     {
+                        var refLink = link.SharedChain ? $", ref {ssb.FullObject}.{link.LinkName}" : string.Empty;
                         if (link.RemovedMethodName != null)
                         {
-                            using (var scopeRemove = ssb.ScopeBrace($"if (this.{goshujinInstance}.{link.ChainName}.Remove({ssb.FullObject}))"))
+                            using (var scopeRemove = ssb.ScopeBrace($"if (this.{goshujinInstance}.{link.ChainName}.Remove({ssb.FullObject}{refLink}))"))
                             {
                                 ssb.AppendLine($"this.{link.RemovedMethodName}();");
                             }
                         }
-                        else if (link.SharedChain)
-                        {//
-                            ssb.AppendLine($"this.{goshujinInstance}.{link.ChainName}.Remove({ssb.FullObject}, ref this.{link.LinkName});");
-                        }
                         else
                         {
-                            ssb.AppendLine($"this.{goshujinInstance}.{link.ChainName}.Remove({ssb.FullObject});");
+                            ssb.AppendLine($"this.{goshujinInstance}.{link.ChainName}.Remove({ssb.FullObject}{refLink});");
                         }
                     }
                 }
@@ -1607,32 +1604,26 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             scopePredicate = ssb.ScopeBrace($"if ({ssb.FullObject}.{link.PredicateMethodName}())");
         }
 
+        var refLink = link.SharedChain ? $", ref {ssb.FullObject}.{link.LinkName}" : string.Empty;
         if (link.Type == ChainType.Ordered || link.Type == ChainType.ReverseOrdered || link.Type == ChainType.Unordered)
         {
-            if (link.SharedChain)
-            {//
-                ssb.AppendLine($"{prefix}.{link.ChainName}.Add({ssb.FullObject}.{link.Target!.SimpleName}, {ssb.FullObject}, ref {ssb.FullObject}.{link.LinkName});");
-            }
-            else
-            {
-                ssb.AppendLine($"{prefix}.{link.ChainName}.Add({ssb.FullObject}.{link.Target!.SimpleName}, {ssb.FullObject});");
-            }
+            ssb.AppendLine($"{prefix}.{link.ChainName}.Add({ssb.FullObject}.{link.Target!.SimpleName}, {ssb.FullObject}{refLink});");
         }
         else if (link.Type == ChainType.LinkedList)
         {
-            ssb.AppendLine($"{prefix}.{link.ChainName}.AddLast({ssb.FullObject});");
+            ssb.AppendLine($"{prefix}.{link.ChainName}.AddLast({ssb.FullObject}{refLink});");
         }
         else if (link.Type == ChainType.StackList)
         {
-            ssb.AppendLine($"{prefix}.{link.ChainName}.Push({ssb.FullObject});");
+            ssb.AppendLine($"{prefix}.{link.ChainName}.Push({ssb.FullObject}{refLink});");
         }
         else if (link.Type == ChainType.QueueList)
         {
-            ssb.AppendLine($"{prefix}.{link.ChainName}.Enqueue({ssb.FullObject});");
+            ssb.AppendLine($"{prefix}.{link.ChainName}.Enqueue({ssb.FullObject}{refLink});");
         }
         else
         {
-            ssb.AppendLine($"{prefix}.{link.ChainName}.Add({ssb.FullObject});");
+            ssb.AppendLine($"{prefix}.{link.ChainName}.Add({ssb.FullObject}{refLink});");
         }
 
         if (link.AddedMethodName != null)
