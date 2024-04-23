@@ -35,6 +35,16 @@ public class Linkage
         linkage.TypeObject = obj.TypeObject;
         linkage.Primary = linkAttribute.Primary;
         linkage.Unique = linkAttribute.Unique;
+        // linkage.SharedChain = linkAttribute.SharedChain;
+
+        if (!string.IsNullOrEmpty(linkAttribute.SharedChain))
+        {
+            linkage.SharedChain = true;
+            linkage.Type = ChainType.None;
+            linkage.Primary = false;
+            linkage.Unique = false;
+        }
+
         if (obj.Kind.IsValue())
         {
             linkage.Target = obj;
@@ -99,8 +109,8 @@ public class Linkage
             obj = target!;
         }
 
-        linkage.AutoNotify = linkAttribute.AutoNotify;//
-        if (linkage.IsValidLink || linkage.AutoNotify)
+        linkage.AutoNotify = linkAttribute.AutoNotify;
+        if (linkage.IsValidLink || linkage.AutoNotify || !string.IsNullOrEmpty(linkAttribute.SharedChain))
         {// Valid link type or AutoNotify
             linkage.AutoLink = linkAttribute.AutoLink;
             if (linkAttribute.Type == ChainType.SlidingList)
@@ -139,6 +149,11 @@ public class Linkage
             {
                 linkage.LinkName = linkAttribute.Name + "Link";
                 linkage.ChainName = linkAttribute.Name + "Chain";
+            }
+            else if (!string.IsNullOrEmpty(linkAttribute.SharedChain))
+            {
+                linkage.LinkName = linkAttribute.Name + "Link";
+                linkage.ChainName = linkAttribute.SharedChain;
             }
         }
 
@@ -251,7 +266,15 @@ public class Linkage
 
     public string ChainName { get; private set; } = string.Empty; // ListChain<int> IdChain
 
-    public bool IsValidLink => this.Type != ChainType.None;
+    public bool SharedChain { get; private set; } = false;
+
+    // public string SharedChain { get; private set; } = string.Empty;
+
+    public bool IsValidLink
+        => this.Type != ChainType.None;
+
+    public bool IsSharedOrInvalid
+        => this.SharedChain || this.Type == ChainType.None;
 
     public bool RequiresTarget => this.Type == ChainType.Ordered || this.Type == ChainType.ReverseOrdered || this.Type == ChainType.Unordered;
 
@@ -266,6 +289,11 @@ public class Linkage
     public string? AddedMethodName { get; set; }
 
     public string? RemovedMethodName { get; set; }
+
+    internal void SetChainType(ChainType chainType)
+    {
+        this.Type = chainType;
+    }
 
     internal void SetRepeatableRead()
     {

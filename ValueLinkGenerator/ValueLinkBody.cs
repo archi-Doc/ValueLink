@@ -161,6 +161,14 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
         id: "CLG028", title: "Unique link type", messageFormat: "The type of a unique link needs to be either ChainType.Ordered, ChainType.ReverseOrdered or ChainType.Unordered",
         category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
+    public static readonly DiagnosticDescriptor Error_NoChain = new DiagnosticDescriptor(
+        id: "CLG029", title: "No chain", messageFormat: "There is no chain available for sharing",
+        category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor Error_InconsistentType = new DiagnosticDescriptor(
+        id: "CLG030", title: "Inconsistent type", messageFormat: "The type of members sharing the chain must be identical",
+        category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
     public ValueLinkBody(GeneratorExecutionContext context)
         : base(context)
     {

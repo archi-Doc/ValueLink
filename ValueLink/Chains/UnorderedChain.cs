@@ -79,6 +79,24 @@ public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
         }
     }
 
+    public void Add(TKey key, TObj obj, ref Link link)
+    {//
+        if (this.objectToGoshujin(obj) != this.goshujin)
+        {// Check Goshujin
+            throw new UnmatchedGoshujinException();
+        }
+
+        if (link.IsLinked)
+        {
+            this.chain.SetNodeKey(link.NodeIndex, key);
+        }
+        else
+        {
+            var result = this.chain.Add(key, obj);
+            link.NodeIndex = result.NodeIndex;
+        }
+    }
+
     /// <summary>
     /// Removes the specified object from the chain.
     /// <br/>O(1) operation.

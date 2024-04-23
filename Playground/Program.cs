@@ -10,9 +10,10 @@ public partial class SharedChainTestClass
     [Link(Primary = true, Type = ChainType.Unordered)]
     public int PrimaryId { get; set; }
 
-    [Link(SharedChain = "NameChain")]
+    [Link(SharedChain = "PrimaryIdChain")]
     public int SecondaryId { get; set; }
 
+    [Link(Type = ChainType.Unordered)]
     public string Name { get; set; } = string.Empty;
 
     public SharedChainTestClass(int primaryId, int secondaryId, string name)

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Xml.Linq;
 using Arc.Visceral;
 using Microsoft.CodeAnalysis;
 using Tinyhand.Generator;
@@ -531,6 +532,24 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                         this.Body.AddDiagnostic(ValueLinkBody.Error_NoNotifyTarget, x.Location);
                     }
                 }
+
+                // Shared chain
+                if (x.SharedChain)
+                {
+                    var linkage = this.Links.FirstOrDefault(y => !y.SharedChain && y.ChainName == x.ChainName);
+                    if (linkage is null)
+                    {// No chain
+                        this.Body.AddDiagnostic(ValueLinkBody.Error_NoChain, x.Location);
+                    }
+                    else if (linkage.TypeObject != x.TypeObject)
+                    {// Types do not match
+                        this.Body.AddDiagnostic(ValueLinkBody.Error_InconsistentType, x.Location);
+                    }
+                    else
+                    {
+                        x.SetChainType(linkage.Type);
+                    }
+                }
             }
         }
 
@@ -726,7 +745,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
 
         this.DeserializeChainAutomata = new(this, GenerateDeserializeChain);
-        foreach (var x in this.Links.Where(x => x.IsValidLink))
+        foreach (var x in this.Links.Where(x => x.IsValidLink && !x.SharedChain))
         {
             var ret = this.DeserializeChainAutomata.AddNode(x.ChainName, x);
             if (ret.KeyResized)
@@ -1808,12 +1827,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             foreach (var link in this.Links)
             {
-                if (link.Type == ChainType.None)
+                if (link.IsSharedOrInvalid)
                 {
                     continue;
                 }
-
-                if (link.Type == ChainType.ReverseOrdered)
+                else if (link.Type == ChainType.ReverseOrdered)
                 {
                     ssb.AppendLine($"this.{link.ChainName} = new(this, static x => x.{this.GoshujinInstanceIdentifier}, static x => ref x.{link.LinkName}, true);");
                 }
@@ -2509,7 +2527,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
                 foreach (var link in this.Links)
                 {
-                    if (link.Type == ChainType.None)
+                    if (link.IsSharedOrInvalid)
                     {
                         continue;
                     }
@@ -2535,7 +2553,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         foreach (var link in this.Links)
         {
-            if (link.Type == ChainType.None)
+            if (link.IsSharedOrInvalid)
             {
                 continue;
             }
