@@ -12,8 +12,8 @@ using Arc.Collections;
 namespace ValueLink;
 
 /// <summary>
-/// Represents a variable size last-in-first-out (LIFO) collection of objects of the same specified type.
-/// <br/>Structure: Doubly linked list.
+/// Represents a variable size last-in-first-out (LIFO) collection of objects of the same specified type.<br/>
+/// Structure: Doubly linked list.
 /// </summary>
 /// <typeparam name="T">Specifies the type of objects in the stack.</typeparam>
 public class StackListChain<T> : IReadOnlyCollection<T>, ICollection

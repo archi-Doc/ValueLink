@@ -11,8 +11,8 @@ using Arc.Collections;
 namespace ValueLink;
 
 /// <summary>
-/// Represents a collection of objects that is maintained in sorted order.
-/// <br/>Structure: Red-Black Tree + Linked List.
+/// Represents a collection of objects that is maintained in sorted order.<br/>
+/// Structure: Red-Black Tree + Linked List.
 /// </summary>
 /// <typeparam name="TKey">The type of keys in the collection.</typeparam>
 /// <typeparam name="TObj">The type of objects in the collection.</typeparam>

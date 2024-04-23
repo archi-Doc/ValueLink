@@ -12,8 +12,8 @@ using Arc.Collections;
 namespace ValueLink;
 
 /// <summary>
-/// Represents a collection of objects stored in a hash table.
-/// <br/>Structure: Hash table.
+/// Represents a collection of objects stored in a hash table.<br/>
+/// Structure: Hash table.
 /// </summary>
 /// <typeparam name="TKey">The type of keys in the collection.</typeparam>
 /// <typeparam name="TObj">The type of objects in the collection.</typeparam>
@@ -82,6 +82,25 @@ public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     public void Add(TKey key, TObj obj, ref Link link)
     {//
         if (this.objectToGoshujin(obj) != this.goshujin)
+        {// Check Goshujin
+            throw new UnmatchedGoshujinException();
+        }
+
+        if (link.IsLinked)
+        {
+            this.chain.SetNodeKey(link.NodeIndex, key);
+        }
+        else
+        {
+            var result = this.chain.Add(key, obj);
+            link.NodeIndex = result.NodeIndex;
+        }
+    }
+
+    public void Add2<T>(TKey key, T obj, ref Link link)
+        where T : IObjectToGoshujin
+    {//
+        if (obj.Goshujin != this.goshujin)
         {// Check Goshujin
             throw new UnmatchedGoshujinException();
         }

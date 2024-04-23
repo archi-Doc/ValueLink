@@ -12,8 +12,8 @@ using Arc.Collections;
 namespace ValueLink;
 
 /// <summary>
-/// Represents a first-in, first-out (FIFO) collection of objects.
-/// <br/>Structure: Doubly linked list.
+/// Represents a first-in, first-out (FIFO) collection of objects.<br/>
+/// Structure: Doubly linked list.
 /// </summary>
 /// <typeparam name="T">Specifies the type of objects in the queue.</typeparam>
 public class QueueListChain<T> : IReadOnlyCollection<T>, ICollection

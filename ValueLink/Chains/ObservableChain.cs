@@ -14,8 +14,8 @@ using Arc.Collections;
 namespace ValueLink;
 
 /// <summary>
-/// Represents an observable collection of objects that can be accessed by index.
-/// <br/>Structure: ObservableCollection (Array).
+/// Represents an observable collection of objects that can be accessed by index.<br/>
+/// Structure: ObservableCollection (Array).
 /// </summary>
 /// <typeparam name="T">The type of elements in the list.</typeparam>
 public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCollectionChanged, INotifyPropertyChanged

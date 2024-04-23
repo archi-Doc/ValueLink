@@ -11,8 +11,8 @@ using Arc.Collections;
 namespace ValueLink;
 
 /// <summary>
-/// Represents a doubly linked list of objects.
-/// <br/>Structure: Doubly linked list.
+/// Represents a doubly linked list of objects.<br/>
+/// Structure: Doubly linked list.
 /// </summary>
 /// <typeparam name="T">The type of objects in the list.</typeparam>
 public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection

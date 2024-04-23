@@ -9,8 +9,8 @@ using Arc.Collections;
 namespace ValueLink;
 
 /// <summary>
-/// Represents a list of objects that can be accessed by index.
-/// <br/>Structure: Array.
+/// Represents a list of objects that can be accessed by index.<br/>
+/// Structure: Array.
 /// </summary>
 /// <typeparam name="T">The type of elements in the list.</typeparam>
 public class ListChain<T> : IList<T>, IReadOnlyList<T>
