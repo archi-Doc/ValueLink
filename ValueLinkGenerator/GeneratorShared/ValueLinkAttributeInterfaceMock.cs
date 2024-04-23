@@ -163,7 +163,7 @@ public sealed class LinkAttributeMock : Attribute
 
     public string TargetMember { get; set; } = string.Empty;
 
-    public string SharedChain { get; set; } = string.Empty;
+    public string UnsafeTargetChain { get; set; } = string.Empty;
 
     public ValueLinkAccessibility Accessibility { get; set; } = ValueLinkAccessibility.PublicGetter;
 
@@ -231,10 +231,10 @@ public sealed class LinkAttributeMock : Attribute
             attribute.Accessibility = (ValueLinkAccessibility)val;
         }
 
-        val = AttributeHelper.GetValue(-1, nameof(SharedChain), constructorArguments, namedArguments);
+        val = AttributeHelper.GetValue(-1, nameof(UnsafeTargetChain), constructorArguments, namedArguments);
         if (val != null)
         {
-            attribute.SharedChain = (string)val;
+            attribute.UnsafeTargetChain = (string)val;
         }
 
         val = AttributeHelper.GetValue(-1, nameof(AddValue), constructorArguments, namedArguments);

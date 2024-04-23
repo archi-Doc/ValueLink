@@ -534,9 +534,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 }
 
                 // Shared chain
-                if (x.SharedChain)
+                if (x.UnsafeTargetChain)
                 {
-                    var linkage = this.Links.FirstOrDefault(y => !y.SharedChain && y.ChainName == x.ChainName);
+                    var linkage = this.Links.FirstOrDefault(y => !y.UnsafeTargetChain && y.ChainName == x.ChainName);
                     if (linkage is null)
                     {// No chain
                         this.Body.AddDiagnostic(ValueLinkBody.Error_NoChain, x.Location);
@@ -745,7 +745,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
 
         this.DeserializeChainAutomata = new(this, GenerateDeserializeChain);
-        foreach (var x in this.Links.Where(x => x.IsValidLink && !x.SharedChain))
+        foreach (var x in this.Links.Where(x => x.IsValidLink && !x.UnsafeTargetChain))
         {
             var ret = this.DeserializeChainAutomata.AddNode(x.ChainName, x);
             if (ret.KeyResized)
@@ -1106,7 +1106,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 {
                     foreach (var link in this.Links.Where(a => a.IsValidLink))
                     {
-                        var refLink = link.SharedChain ? $", ref {ssb.FullObject}.{link.LinkName}" : string.Empty;
+                        var refLink = link.UnsafeTargetChain ? $", ref {ssb.FullObject}.{link.LinkName}" : string.Empty;
                         if (link.RemovedMethodName != null)
                         {
                             using (var scopeRemove = ssb.ScopeBrace($"if (this.{goshujinInstance}.{link.ChainName}.Remove({ssb.FullObject}{refLink}))"))
@@ -1604,7 +1604,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             scopePredicate = ssb.ScopeBrace($"if ({ssb.FullObject}.{link.PredicateMethodName}())");
         }
 
-        var refLink = link.SharedChain ? $", ref {ssb.FullObject}.{link.LinkName}" : string.Empty;
+        var refLink = link.UnsafeTargetChain ? $", ref {ssb.FullObject}.{link.LinkName}" : string.Empty;
         if (link.Type == ChainType.Ordered || link.Type == ChainType.ReverseOrdered || link.Type == ChainType.Unordered)
         {
             ssb.AppendLine($"{prefix}.{link.ChainName}.Add({ssb.FullObject}.{link.Target!.SimpleName}, {ssb.FullObject}{refLink});");

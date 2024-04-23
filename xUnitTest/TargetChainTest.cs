@@ -1,8 +1,9 @@
-﻿using System;
-using Tinyhand;
-using ValueLink;
+﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
-namespace Playground;
+using ValueLink;
+using Xunit;
+
+namespace xUnitTest;
 
 [ValueLinkObject]
 public partial class TargetChainTestClass
@@ -24,12 +25,11 @@ public partial class TargetChainTestClass
     }
 }
 
-internal class Program
+public class SharedChainTest
 {
-    static void Main(string[] args)
+    [Fact]
+    public void Test1()
     {
-        Console.WriteLine("Hello, World!");
-
         var g = new TargetChainTestClass.GoshujinClass();
         var tc = new TargetChainTestClass(1, 2, "A");
         var tc2 = new TargetChainTestClass(2, 3, "B");
@@ -37,12 +37,22 @@ internal class Program
         g.Add(tc);
         g.Add(tc2);
 
-        var c = g.PrimaryIdChain.FindFirst(0);
-        c = g.PrimaryIdChain.FindFirst(1)!;
-        // c = g.PrimaryIdChain.FindFirst(2)!;
-        var c2 = g.PrimaryIdChain.FindFirst(3);
+        var c = g.PrimaryIdChain.FindFirst(1)!;
+        c.Name.Is("A");
+        c = g.PrimaryIdChain.FindFirst(2)!;
+        c.IsNotNull();
+
+        c = g.PrimaryIdChain.FindFirst(3)!;
+        c.Name.Is("B");
 
         c.Goshujin = default;
-        c = g.PrimaryIdChain.FindFirst(2);
+
+        g.PrimaryIdChain.FindFirst(3).IsNull();
+        c = g.PrimaryIdChain.FindFirst(2)!;
+        c.IsNotNull();
+        c.Name.Is("A");
+
+        c.Goshujin = default;
+        g.Count.Is(0);
     }
 }
