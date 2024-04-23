@@ -5,10 +5,8 @@ using ValueLink;
 namespace Playground;
 
 [ValueLinkObject]
-public partial class SharedChainTestClass : IObjectToGoshujin
+public partial class SharedChainTestClass
 {
-    IGoshujin? IObjectToGoshujin.Goshujin => this.Goshujin;
-
     [Link(Primary = true, Type = ChainType.Unordered)]
     public int PrimaryId { get; set; }
 
