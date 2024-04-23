@@ -915,6 +915,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             {
                 interfaceString += $", {this.IRepeatableObject}";
             }
+
+            interfaceString += $", {ValueLinkBody.IObjectToGoshujin}";
         }
 
         using (var cls = ssb.ScopeBrace($"{this.AccessibilityName} partial {this.KindName} {this.LocalName}{interfaceString}"))
@@ -2583,6 +2585,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     {
         var goshujin = this.ObjectAttribute!.GoshujinInstance;
         var goshujinInstance = this.GoshujinInstanceIdentifier; // goshujin + "Instance";
+
+        ssb.AppendLine($"IGoshujin? {ValueLinkBody.IObjectToGoshujin}.Goshujin => this.{goshujin};");
 
         var goshujinAccessibility = this.ObjectAttribute!.Restricted ? "internal " : "public ";
         using (var scopeProperty = ssb.ScopeBrace($"{goshujinAccessibility}{this.ObjectAttribute!.GoshujinClass}? {goshujin}"))

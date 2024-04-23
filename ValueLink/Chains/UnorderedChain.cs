@@ -4,7 +4,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using Arc.Collections;
 
 #pragma warning disable SA1124 // Do not use regions
@@ -18,6 +17,7 @@ namespace ValueLink;
 /// <typeparam name="TKey">The type of keys in the collection.</typeparam>
 /// <typeparam name="TObj">The type of objects in the collection.</typeparam>
 public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
+    where TObj : IObjectToGoshujin
 {
     public delegate IGoshujin? ObjectToGoshujinDelegete(TObj obj);
 
@@ -61,7 +61,7 @@ public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     /// <param name="obj">The object to add.</param>
     public void Add(TKey key, TObj obj)
     {
-        if (this.objectToGoshujin(obj) != this.goshujin)
+        if (obj.Goshujin != this.goshujin)
         {// Check Goshujin
             throw new UnmatchedGoshujinException();
         }
@@ -82,25 +82,6 @@ public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     public void Add(TKey key, TObj obj, ref Link link)
     {//
         if (this.objectToGoshujin(obj) != this.goshujin)
-        {// Check Goshujin
-            throw new UnmatchedGoshujinException();
-        }
-
-        if (link.IsLinked)
-        {
-            this.chain.SetNodeKey(link.NodeIndex, key);
-        }
-        else
-        {
-            var result = this.chain.Add(key, obj);
-            link.NodeIndex = result.NodeIndex;
-        }
-    }
-
-    public void Add2<T>(TKey key, T obj, ref Link link)
-        where T : IObjectToGoshujin
-    {//
-        if (obj.Goshujin != this.goshujin)
         {// Check Goshujin
             throw new UnmatchedGoshujinException();
         }
