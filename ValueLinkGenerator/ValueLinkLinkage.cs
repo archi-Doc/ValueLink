@@ -99,7 +99,7 @@ public class Linkage
             obj = target!;
         }
 
-        linkage.AutoNotify = linkAttribute.AutoNotify;
+        linkage.AutoNotify = linkAttribute.AutoNotify;//
         if (linkage.IsValidLink || linkage.AutoNotify)
         {// Valid link type or AutoNotify
             linkage.AutoLink = linkAttribute.AutoLink;
