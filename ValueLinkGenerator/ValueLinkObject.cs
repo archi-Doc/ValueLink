@@ -1113,6 +1113,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                                 ssb.AppendLine($"this.{link.RemovedMethodName}();");
                             }
                         }
+                        else if (link.SharedChain)
+                        {//
+                            ssb.AppendLine($"this.{goshujinInstance}.{link.ChainName}.Remove({ssb.FullObject}, ref this.{link.LinkName});");
+                        }
                         else
                         {
                             ssb.AppendLine($"this.{goshujinInstance}.{link.ChainName}.Remove({ssb.FullObject});");
@@ -1605,7 +1609,14 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         if (link.Type == ChainType.Ordered || link.Type == ChainType.ReverseOrdered || link.Type == ChainType.Unordered)
         {
-            ssb.AppendLine($"{prefix}.{link.ChainName}.Add({ssb.FullObject}.{link.Target!.SimpleName}, {ssb.FullObject});");
+            if (link.SharedChain)
+            {//
+                ssb.AppendLine($"{prefix}.{link.ChainName}.Add({ssb.FullObject}.{link.Target!.SimpleName}, {ssb.FullObject}, ref {ssb.FullObject}.{link.LinkName});");
+            }
+            else
+            {
+                ssb.AppendLine($"{prefix}.{link.ChainName}.Add({ssb.FullObject}.{link.Target!.SimpleName}, {ssb.FullObject});");
+            }
         }
         else if (link.Type == ChainType.LinkedList)
         {

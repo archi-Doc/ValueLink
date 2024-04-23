@@ -123,6 +123,25 @@ public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
         }
     }
 
+    public bool Remove(TObj obj, ref Link link)
+    {
+        if (this.objectToGoshujin(obj) != this.goshujin)
+        {// Check Goshujin
+            throw new UnmatchedGoshujinException();
+        }
+
+        if (link.IsLinked)
+        {
+            this.chain.RemoveNode(link.NodeIndex);
+            link.RawIndex = 0;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
     public void UnsafeReplaceInstance(TObj previousInstance, TObj newInstance)
     {
         if (this.objectToGoshujin(previousInstance) != this.goshujin)
