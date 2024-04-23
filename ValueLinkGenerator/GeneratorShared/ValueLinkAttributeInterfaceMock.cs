@@ -163,6 +163,8 @@ public sealed class LinkAttributeMock : Attribute
 
     public string TargetMember { get; set; } = string.Empty;
 
+    public string UnsafeTargetChain { get; set; } = string.Empty;
+
     public ValueLinkAccessibility Accessibility { get; set; } = ValueLinkAccessibility.PublicGetter;
 
     public bool AddValue { get; set; } = true;
@@ -227,6 +229,12 @@ public sealed class LinkAttributeMock : Attribute
         if (val != null)
         {
             attribute.Accessibility = (ValueLinkAccessibility)val;
+        }
+
+        val = AttributeHelper.GetValue(-1, nameof(UnsafeTargetChain), constructorArguments, namedArguments);
+        if (val != null)
+        {
+            attribute.UnsafeTargetChain = (string)val;
         }
 
         val = AttributeHelper.GetValue(-1, nameof(AddValue), constructorArguments, namedArguments);

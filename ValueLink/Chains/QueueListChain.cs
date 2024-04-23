@@ -12,8 +12,8 @@ using Arc.Collections;
 namespace ValueLink;
 
 /// <summary>
-/// Represents a first-in, first-out (FIFO) collection of objects.
-/// <br/>Structure: Doubly linked list.
+/// Represents a first-in, first-out (FIFO) collection of objects.<br/>
+/// Structure: Doubly linked list.
 /// </summary>
 /// <typeparam name="T">Specifies the type of objects in the queue.</typeparam>
 public class QueueListChain<T> : IReadOnlyCollection<T>, ICollection
@@ -137,6 +137,27 @@ public class QueueListChain<T> : IReadOnlyCollection<T>, ICollection
 
     /// <summary>
     /// Adds an object to the end of the <see cref="QueueListChain{T}"/>.<br/>
+    /// If already present in the queue, move it to the end.
+    /// </summary>
+    /// <param name="obj">The object to add to the <see cref="QueueListChain{T}"/>. </param>
+    /// <param name="link">The reference to a link that holds node information in the chain.</param>
+    public void Enqueue(T obj, ref Link link)
+    {
+        if (this.objectToGoshujin(obj) != this.goshujin)
+        {// Check Goshujin
+            throw new UnmatchedGoshujinException();
+        }
+
+        if (link.Node != null)
+        {
+            this.chain.Remove(link.Node);
+        }
+
+        link.Node = this.chain.AddLast(obj);
+    }
+
+    /// <summary>
+    /// Adds an object to the end of the <see cref="QueueListChain{T}"/>.<br/>
     /// If already present in the queue, do not change its position.
     /// </summary>
     /// <param name="obj">The object to add to the <see cref="QueueListChain{T}"/>. </param>
@@ -167,6 +188,31 @@ public class QueueListChain<T> : IReadOnlyCollection<T>, ICollection
         }
 
         ref Link link = ref this.objectToLink(obj);
+        if (link.Node != null)
+        {
+            this.chain.Remove(link.Node);
+            link.Node = null;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Removes the specified object from the <see cref="QueueListChain{T}"/>.
+    /// </summary>
+    /// <param name="obj">The object to remove from the <see cref="QueueListChain{T}"/>.</param>
+    /// <param name="link">The reference to a link that holds node information in the chain.</param>
+    /// <returns>true if the object is successfully removed.</returns>
+    public bool Remove(T obj, ref Link link)
+    {
+        if (this.objectToGoshujin(obj) != this.goshujin)
+        {// Check Goshujin
+            throw new UnmatchedGoshujinException();
+        }
+
         if (link.Node != null)
         {
             this.chain.Remove(link.Node);

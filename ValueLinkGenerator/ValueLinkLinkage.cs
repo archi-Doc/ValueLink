@@ -35,6 +35,15 @@ public class Linkage
         linkage.TypeObject = obj.TypeObject;
         linkage.Primary = linkAttribute.Primary;
         linkage.Unique = linkAttribute.Unique;
+
+        if (!string.IsNullOrEmpty(linkAttribute.UnsafeTargetChain))
+        {
+            linkage.UnsafeTargetChain = true;
+            linkage.Type = ChainType.None;
+            linkage.Primary = false;
+            linkage.Unique = false;
+        }
+
         if (obj.Kind.IsValue())
         {
             linkage.Target = obj;
@@ -100,7 +109,7 @@ public class Linkage
         }
 
         linkage.AutoNotify = linkAttribute.AutoNotify;
-        if (linkage.IsValidLink || linkage.AutoNotify)
+        if (linkage.IsValidLink || linkage.AutoNotify || !string.IsNullOrEmpty(linkAttribute.UnsafeTargetChain))
         {// Valid link type or AutoNotify
             linkage.AutoLink = linkAttribute.AutoLink;
             if (linkAttribute.Type == ChainType.SlidingList)
@@ -139,6 +148,11 @@ public class Linkage
             {
                 linkage.LinkName = linkAttribute.Name + "Link";
                 linkage.ChainName = linkAttribute.Name + "Chain";
+            }
+            else if (!string.IsNullOrEmpty(linkAttribute.UnsafeTargetChain))
+            {
+                linkage.LinkName = linkAttribute.Name + "Link";
+                linkage.ChainName = linkAttribute.UnsafeTargetChain;
             }
         }
 
@@ -251,7 +265,13 @@ public class Linkage
 
     public string ChainName { get; private set; } = string.Empty; // ListChain<int> IdChain
 
-    public bool IsValidLink => this.Type != ChainType.None;
+    public bool UnsafeTargetChain { get; private set; } = false;
+
+    public bool IsValidLink
+        => this.Type != ChainType.None;
+
+    public bool IsSharedOrInvalid
+        => this.UnsafeTargetChain || this.Type == ChainType.None;
 
     public bool RequiresTarget => this.Type == ChainType.Ordered || this.Type == ChainType.ReverseOrdered || this.Type == ChainType.Unordered;
 
@@ -266,6 +286,11 @@ public class Linkage
     public string? AddedMethodName { get; set; }
 
     public string? RemovedMethodName { get; set; }
+
+    internal void SetChainType(ChainType chainType)
+    {
+        this.Type = chainType;
+    }
 
     internal void SetRepeatableRead()
     {

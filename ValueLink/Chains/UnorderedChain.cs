@@ -12,8 +12,8 @@ using Arc.Collections;
 namespace ValueLink;
 
 /// <summary>
-/// Represents a collection of objects stored in a hash table.
-/// <br/>Structure: Hash table.
+/// Represents a collection of objects stored in a hash table.<br/>
+/// Structure: Hash table.
 /// </summary>
 /// <typeparam name="TKey">The type of keys in the collection.</typeparam>
 /// <typeparam name="TObj">The type of objects in the collection.</typeparam>
@@ -80,6 +80,31 @@ public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     }
 
     /// <summary>
+    /// Adds a new object to the collection.
+    /// <br/>O(1) operation.
+    /// </summary>
+    /// <param name="key">The key of the object to add.</param>
+    /// <param name="obj">The object to add.</param>
+    /// <param name="link">The reference to a link that holds node information in the chain.</param>
+    public void Add(TKey key, TObj obj, ref Link link)
+    {
+        if (this.objectToGoshujin(obj) != this.goshujin)
+        {// Check Goshujin
+            throw new UnmatchedGoshujinException();
+        }
+
+        if (link.IsLinked)
+        {
+            this.chain.SetNodeKey(link.NodeIndex, key);
+        }
+        else
+        {
+            var result = this.chain.Add(key, obj);
+            link.NodeIndex = result.NodeIndex;
+        }
+    }
+
+    /// <summary>
     /// Removes the specified object from the chain.
     /// <br/>O(1) operation.
     /// </summary>
@@ -93,6 +118,32 @@ public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
         }
 
         ref Link link = ref this.objectToLink(obj);
+        if (link.IsLinked)
+        {
+            this.chain.RemoveNode(link.NodeIndex);
+            link.RawIndex = 0;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Removes the specified object from the chain.
+    /// <br/>O(1) operation.
+    /// </summary>
+    /// <param name="obj">The object to remove from the chain. </param>
+    /// <param name="link">The reference to a link that holds node information in the chain.</param>
+    /// <returns>true if item is successfully removed.</returns>
+    public bool Remove(TObj obj, ref Link link)
+    {
+        if (this.objectToGoshujin(obj) != this.goshujin)
+        {// Check Goshujin
+            throw new UnmatchedGoshujinException();
+        }
+
         if (link.IsLinked)
         {
             this.chain.RemoveNode(link.NodeIndex);

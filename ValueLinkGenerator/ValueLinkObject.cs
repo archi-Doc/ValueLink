@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Xml.Linq;
 using Arc.Visceral;
 using Microsoft.CodeAnalysis;
 using Tinyhand.Generator;
@@ -531,6 +532,24 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                         this.Body.AddDiagnostic(ValueLinkBody.Error_NoNotifyTarget, x.Location);
                     }
                 }
+
+                // Shared chain
+                if (x.UnsafeTargetChain)
+                {
+                    var linkage = this.Links.FirstOrDefault(y => !y.UnsafeTargetChain && y.ChainName == x.ChainName);
+                    if (linkage is null)
+                    {// No chain
+                        this.Body.AddDiagnostic(ValueLinkBody.Error_NoChain, x.Location);
+                    }
+                    else if (linkage.TypeObject != x.TypeObject)
+                    {// Types do not match
+                        this.Body.AddDiagnostic(ValueLinkBody.Error_InconsistentType, x.Location);
+                    }
+                    else
+                    {
+                        x.SetChainType(linkage.Type);
+                    }
+                }
             }
         }
 
@@ -726,7 +745,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
 
         this.DeserializeChainAutomata = new(this, GenerateDeserializeChain);
-        foreach (var x in this.Links.Where(x => x.IsValidLink))
+        foreach (var x in this.Links.Where(x => x.IsValidLink && !x.UnsafeTargetChain))
         {
             var ret = this.DeserializeChainAutomata.AddNode(x.ChainName, x);
             if (ret.KeyResized)
@@ -1087,16 +1106,17 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 {
                     foreach (var link in this.Links.Where(a => a.IsValidLink))
                     {
+                        var refLink = link.UnsafeTargetChain ? $", ref {ssb.FullObject}.{link.LinkName}" : string.Empty;
                         if (link.RemovedMethodName != null)
                         {
-                            using (var scopeRemove = ssb.ScopeBrace($"if (this.{goshujinInstance}.{link.ChainName}.Remove({ssb.FullObject}))"))
+                            using (var scopeRemove = ssb.ScopeBrace($"if (this.{goshujinInstance}.{link.ChainName}.Remove({ssb.FullObject}{refLink}))"))
                             {
                                 ssb.AppendLine($"this.{link.RemovedMethodName}();");
                             }
                         }
                         else
                         {
-                            ssb.AppendLine($"this.{goshujinInstance}.{link.ChainName}.Remove({ssb.FullObject});");
+                            ssb.AppendLine($"this.{goshujinInstance}.{link.ChainName}.Remove({ssb.FullObject}{refLink});");
                         }
                     }
                 }
@@ -1481,7 +1501,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     internal void GenerateLink_Property(ScopingStringBuilder ssb, GeneratorInformation info, Linkage main, Linkage[] sub)
     {
         var target = main.Target;
-        if (target == null || target.TypeObject == null || target.TypeObjectWithNullable == null)
+        if (target == null || target.TypeObject == null || target.TypeObjectWithNullable == null || string.IsNullOrEmpty(main.ValueName))
         {
             return;
         }
@@ -1584,25 +1604,26 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             scopePredicate = ssb.ScopeBrace($"if ({ssb.FullObject}.{link.PredicateMethodName}())");
         }
 
+        var refLink = link.UnsafeTargetChain ? $", ref {ssb.FullObject}.{link.LinkName}" : string.Empty;
         if (link.Type == ChainType.Ordered || link.Type == ChainType.ReverseOrdered || link.Type == ChainType.Unordered)
         {
-            ssb.AppendLine($"{prefix}.{link.ChainName}.Add({ssb.FullObject}.{link.Target!.SimpleName}, {ssb.FullObject});");
+            ssb.AppendLine($"{prefix}.{link.ChainName}.Add({ssb.FullObject}.{link.Target!.SimpleName}, {ssb.FullObject}{refLink});");
         }
         else if (link.Type == ChainType.LinkedList)
         {
-            ssb.AppendLine($"{prefix}.{link.ChainName}.AddLast({ssb.FullObject});");
+            ssb.AppendLine($"{prefix}.{link.ChainName}.AddLast({ssb.FullObject}{refLink});");
         }
         else if (link.Type == ChainType.StackList)
         {
-            ssb.AppendLine($"{prefix}.{link.ChainName}.Push({ssb.FullObject});");
+            ssb.AppendLine($"{prefix}.{link.ChainName}.Push({ssb.FullObject}{refLink});");
         }
         else if (link.Type == ChainType.QueueList)
         {
-            ssb.AppendLine($"{prefix}.{link.ChainName}.Enqueue({ssb.FullObject});");
+            ssb.AppendLine($"{prefix}.{link.ChainName}.Enqueue({ssb.FullObject}{refLink});");
         }
         else
         {
-            ssb.AppendLine($"{prefix}.{link.ChainName}.Add({ssb.FullObject});");
+            ssb.AppendLine($"{prefix}.{link.ChainName}.Add({ssb.FullObject}{refLink});");
         }
 
         if (link.AddedMethodName != null)
@@ -1808,12 +1829,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             foreach (var link in this.Links)
             {
-                if (link.Type == ChainType.None)
+                if (link.IsSharedOrInvalid)
                 {
                     continue;
                 }
-
-                if (link.Type == ChainType.ReverseOrdered)
+                else if (link.Type == ChainType.ReverseOrdered)
                 {
                     ssb.AppendLine($"this.{link.ChainName} = new(this, static x => x.{this.GoshujinInstanceIdentifier}, static x => ref x.{link.LinkName}, true);");
                 }
@@ -2509,7 +2529,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
                 foreach (var link in this.Links)
                 {
-                    if (link.Type == ChainType.None)
+                    if (link.IsSharedOrInvalid)
                     {
                         continue;
                     }
@@ -2535,7 +2555,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         foreach (var link in this.Links)
         {
-            if (link.Type == ChainType.None)
+            if (link.IsSharedOrInvalid)
             {
                 continue;
             }
