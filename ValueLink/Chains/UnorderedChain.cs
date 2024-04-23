@@ -130,6 +130,13 @@ public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
         }
     }
 
+    /// <summary>
+    /// Removes the specified object from the chain.
+    /// <br/>O(1) operation.
+    /// </summary>
+    /// <param name="obj">The object to remove from the chain. </param>
+    /// <param name="link">The reference to a link that holds node information in the chain.</param>
+    /// <returns>true if item is successfully removed.</returns>
     public bool Remove(TObj obj, ref Link link)
     {
         if (this.objectToGoshujin(obj) != this.goshujin)

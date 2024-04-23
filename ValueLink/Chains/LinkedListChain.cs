@@ -95,6 +95,29 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
     }
 
     /// <summary>
+    /// Adds a new object to the end of the list.<br/>
+    /// If already present in the list, move it to the end.
+    /// </summary>
+    /// <param name="obj">The new object that will be added to the end of the list.</param>
+    /// <param name="link">The reference to a link that holds node information in the chain.</param>
+    public void AddLast(T obj, ref Link link)
+    {
+        if (this.objectToGoshujin(obj) != this.goshujin)
+        {// Check Goshujin
+            throw new UnmatchedGoshujinException();
+        }
+
+        if (link.Node != null)
+        {
+            this.chain.MoveToLast(link.Node);
+        }
+        else
+        {
+            link.Node = this.chain.AddLast(obj);
+        }
+    }
+
+    /// <summary>
     /// Adds a new object at the start of the list.<br/>
     /// If already present in the list, do not change its position.
     /// </summary>
@@ -146,6 +169,32 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
         }
 
         ref Link link = ref this.objectToLink(obj);
+        if (link.Node != null)
+        {
+            this.chain.Remove(link.Node);
+            link.Node = null;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Removes the specified object from the list.
+    /// <br/>O(1) operation.
+    /// </summary>
+    /// <param name="obj">The object that will be removed from the list. </param>
+    /// <param name="link">The reference to a link that holds node information in the chain.</param>
+    /// <returns>true if item is successfully removed.</returns>
+    public bool Remove(T obj, ref Link link)
+    {
+        if (this.objectToGoshujin(obj) != this.goshujin)
+        {// Check Goshujin
+            throw new UnmatchedGoshujinException();
+        }
+
         if (link.Node != null)
         {
             this.chain.Remove(link.Node);

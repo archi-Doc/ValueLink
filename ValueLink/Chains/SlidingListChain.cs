@@ -60,6 +60,30 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     }
 
     /// <summary>
+    /// Inserts an object into an available space in the list. If insertion is not possible, returns -1.
+    /// </summary>
+    /// <param name="obj">The new object that will be added to the list.</param>
+    /// <param name="link">The reference to a link that holds node information in the chain.</param>
+    /// <returns><see langword="true"/>; Success.</returns>
+    public bool Add(T obj, ref Link link)
+    {
+        if (this.objectToGoshujin(obj) != this.goshujin)
+        {// Check Goshujin
+            throw new UnmatchedGoshujinException();
+        }
+
+        if (link.IsLinked)
+        {
+            return false;
+        }
+        else
+        {
+            link.Position = this.chain.Add(obj);
+            return link.IsLinked;
+        }
+    }
+
+    /// <summary>
     /// Inserts an object into the specified position in the list. If insertion is not possible, returns <see langword="false"/>.
     /// </summary>
     /// <param name="position">The position of the object.</param>
@@ -109,6 +133,32 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
         }
 
         ref Link link = ref this.objectToLink(obj);
+        if (link.IsLinked)
+        {
+            var result = this.chain.Remove(link.Position);
+            link.Position = -1;
+            return result;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Removes the specified object from the list.
+    /// <br/>O(1) operation.
+    /// </summary>
+    /// <param name="obj">The object that will be removed from the list.</param>
+    /// <param name="link">The reference to a link that holds node information in the chain.</param>
+    /// <returns><see langword="true"/>; The object is successfully removed.</returns>
+    public bool Remove(T obj, ref Link link)
+    {
+        if (this.objectToGoshujin(obj) != this.goshujin)
+        {// Check Goshujin
+            throw new UnmatchedGoshujinException();
+        }
+
         if (link.IsLinked)
         {
             var result = this.chain.Remove(link.Position);

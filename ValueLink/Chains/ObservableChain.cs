@@ -95,6 +95,28 @@ public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCo
     }
 
     /// <summary>
+    /// Adds an object to the end of the collection.
+    /// <br/>O(1) operation.
+    /// </summary>
+    /// <param name="obj">The object to be added to the end of the list.</param>
+    /// <param name="link">The reference to a link that holds node information in the chain.</param>
+    public void Add(T obj, ref Link link)
+    {
+        if (this.objectToGoshujin(obj) != this.goshujin)
+        {// Check Goshujin
+            throw new UnmatchedGoshujinException();
+        }
+
+        if (link.IsLinked)
+        {
+            this.chain.Remove(obj);
+        }
+
+        this.chain.Add(obj);
+        link.IsLinked = true;
+    }
+
+    /// <summary>
     /// Removes all objects from the collection.
     /// </summary>
     public void Clear()
@@ -136,6 +158,30 @@ public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCo
     /// <param name="obj">The object to remove from the <see cref="UnorderedList{T}"/>. </param>
     /// <returns>true if item is successfully removed.</returns>
     public bool Remove(T obj)
+    {
+        if (this.objectToGoshujin(obj) != this.goshujin)
+        {// Check Goshujin
+            throw new UnmatchedGoshujinException();
+        }
+
+        var index = this.IndexOf(obj);
+        if (index >= 0)
+        {
+            this.RemoveAt(index);
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Removes the first occurrence of a specific object from the <see cref="UnorderedList{T}"/>.
+    /// <br/>O(n) operation.
+    /// </summary>
+    /// <param name="obj">The object to remove from the <see cref="UnorderedList{T}"/>. </param>
+    /// <param name="link">The reference to a link that holds node information in the chain.</param>
+    /// <returns>true if item is successfully removed.</returns>
+    public bool Remove(T obj, ref Link link)
     {
         if (this.objectToGoshujin(obj) != this.goshujin)
         {// Check Goshujin

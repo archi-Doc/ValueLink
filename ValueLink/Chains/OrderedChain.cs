@@ -110,6 +110,31 @@ public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     }
 
     /// <summary>
+    /// Adds a new object to the collection.
+    /// <br/>O(log n) operation.
+    /// </summary>
+    /// <param name="key">The key of the object to add.</param>
+    /// <param name="obj">The object to add.</param>
+    /// <param name="link">The reference to a link that holds node information in the chain.</param>
+    public void Add(TKey key, TObj obj, ref Link link)
+    {
+        if (this.objectToGoshujin(obj) != this.goshujin)
+        {// Check Goshujin
+            throw new UnmatchedGoshujinException();
+        }
+
+        if (link.Node != null)
+        {
+            this.chain.SetNodeKey(link.Node, key);
+        }
+        else
+        {
+            var result = this.chain.Add(key, obj);
+            link.Node = result.Node;
+        }
+    }
+
+    /// <summary>
     /// Removes the specified object from the chain.
     /// <br/>O(log n) operation.
     /// </summary>
@@ -123,6 +148,32 @@ public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
         }
 
         ref Link link = ref this.objectToLink(obj);
+        if (link.Node != null)
+        {
+            this.chain.RemoveNode(link.Node);
+            link.Node = null;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Removes the specified object from the chain.
+    /// <br/>O(log n) operation.
+    /// </summary>
+    /// <param name="obj">The object to remove from the chain. </param>
+    /// <param name="link">The reference to a link that holds node information in the chain.</param>
+    /// <returns>true if item is successfully removed.</returns>
+    public bool Remove(TObj obj, ref Link link)
+    {
+        if (this.objectToGoshujin(obj) != this.goshujin)
+        {// Check Goshujin
+            throw new UnmatchedGoshujinException();
+        }
+
         if (link.Node != null)
         {
             this.chain.RemoveNode(link.Node);
