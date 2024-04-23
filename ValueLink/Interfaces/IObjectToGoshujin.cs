@@ -12,3 +12,14 @@ public interface IObjectToGoshujin
     /// </summary>
     IGoshujin? Goshujin { get; }
 }
+
+public interface IObjectToGoshujin<TLink>
+    where TLink : ILink<IObjectToGoshujin<TLink>>
+{
+    /// <summary>
+    /// Gets a Goshujin instance.
+    /// </summary>
+    IGoshujin? Goshujin { get; }
+
+    TLink Link { get; }
+}
