@@ -40,56 +40,57 @@ public enum ChainType
     None,
 
     /// <summary>
-    /// Represents a list of objects (<see cref="ListChain{T}"/>).
-    /// <br/>Structure: Array (<see cref="UnorderedList{T}"/>).
+    /// Represents a list of objects (<see cref="ListChain{T}"/>).<br/>
+    /// Structure: Array (<see cref="UnorderedList{T}"/>).<br/>
+    /// List is not recommended due to the time-consuming nature of adding and removing objects.
     /// </summary>
     List,
 
     /// <summary>
-    /// Represents a doubly linked list of objects (<see cref="LinkedListChain{T}"/>).
-    /// <br/>Structure: Doubly linked list (<see cref="UnorderedLinkedList{T}"/>).
+    /// Represents a doubly linked list of objects (<see cref="LinkedListChain{T}"/>).<br/>
+    /// Structure: Doubly linked list (<see cref="UnorderedLinkedList{T}"/>).
     /// </summary>
     LinkedList,
 
     /// <summary>
-    /// Represents a stack list (<see cref="StackListChain{T}"/>).
-    /// <br/>Structure: Doubly linked list (<see cref="UnorderedLinkedList{T}"/>).
+    /// Represents a stack list (<see cref="StackListChain{T}"/>).<br/>
+    /// Structure: Doubly linked list (<see cref="UnorderedLinkedList{T}"/>).
     /// </summary>
     StackList,
 
     /// <summary>
-    /// Represents a queue list (<see cref="QueueListChain{T}"/>).
-    /// <br/>Structure: Doubly linked list (<see cref="UnorderedLinkedList{T}"/>).
+    /// Represents a queue list (<see cref="QueueListChain{T}"/>).<br/>
+    /// Structure: Doubly linked list (<see cref="UnorderedLinkedList{T}"/>).
     /// </summary>
     QueueList,
 
     /// <summary>
-    /// Represents a collection of sorted objects (<see cref="OrderedChain{TKey, TValue}"/>).
-    /// <br/>Structure: Red-Black Tree + Linked List (<see cref="OrderedMultiMap{TKey, TValue}"/>).
+    /// Represents a collection of sorted objects (<see cref="OrderedChain{TKey, TValue}"/>).<br/>
+    /// Structure: Red-Black Tree + Linked List (<see cref="OrderedMultiMap{TKey, TValue}"/>).
     /// </summary>
     Ordered,
 
     /// <summary>
-    /// Represents a collection of objects sorted in reverse order (<see cref="OrderedChain{TKey, TValue}"/>).
-    /// <br/>Structure: Red-Black Tree + Linked List (<see cref="OrderedMultiMap{TKey, TValue}"/>).
+    /// Represents a collection of objects sorted in reverse order (<see cref="OrderedChain{TKey, TValue}"/>).<br/>
+    /// Structure: Red-Black Tree + Linked List (<see cref="OrderedMultiMap{TKey, TValue}"/>).
     /// </summary>
     ReverseOrdered,
 
     /// <summary>
-    /// Represents a collection of objects stored in a hash table (<see cref="UnorderedChain{TKey, TValue}"/>).
-    /// <br/>Structure: Hash table (<see cref="UnorderedMultiMap{TKey, TValue}"/>).
+    /// Represents a collection of objects stored in a hash table (<see cref="UnorderedChain{TKey, TValue}"/>).<br/>
+    /// Structure: Hash table (<see cref="UnorderedMultiMap{TKey, TValue}"/>).
     /// </summary>
     Unordered,
 
     /// <summary>
-    /// Represents an observable collection of objects. (<see cref="ObservableChain{T}"/>).
-    /// <br/>Structure: Collection(Array) (<see cref="ObservableCollection{T}"/>).
+    /// Represents an observable collection of objects. (<see cref="ObservableChain{T}"/>).<br/>
+    /// Structure: Collection(Array) (<see cref="ObservableCollection{T}"/>).
     /// </summary>
     Observable,
 
     /// <summary>
-    /// Represents a sliding list of objects (<see cref="SlidingListChain{T}"/>).
-    /// <br/>Structure: Array (<see cref="SlidingList{T}"/>).
+    /// Represents a sliding list of objects (<see cref="SlidingListChain{T}"/>).<br/>
+    /// Structure: Array (<see cref="SlidingList{T}"/>).
     /// </summary>
     SlidingList,
 }
@@ -199,8 +200,9 @@ public sealed class LinkAttribute : Attribute
     public string TargetMember { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets a string value which represents the name of the chain used in sharing.<br/>
-    /// e.g. PrimaryIdChain.
+    /// Gets or sets a string value which represents the name of the chain used in sharing (e.g. PrimaryIdChain).<br/>
+    /// Instead of creating a member-specific chain, create a link that references another chain.<br/>
+    /// To safely add or remove from the chain, it is necessary to reference the link.
     /// </summary>
     public string UnsafeTargetChain { get; set; } = string.Empty;
 
