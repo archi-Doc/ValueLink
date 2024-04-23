@@ -199,6 +199,12 @@ public sealed class LinkAttribute : Attribute
     public string TargetMember { get; set; } = string.Empty;
 
     /// <summary>
+    /// Gets or sets a string value which represents the name of the chain used in sharing.<br/>
+    /// e.g. PrimaryIdChain.
+    /// </summary>
+    public string SharedChain { get; set; } = string.Empty;
+
+    /// <summary>
     /// Gets or sets a value which specifies the accessibility of generated Value/Link members [the default is <see cref="ValueLinkAccessibility.PublicGetter"/>].
     /// </summary>
     public ValueLinkAccessibility Accessibility { get; set; } = ValueLinkAccessibility.PublicGetter;
