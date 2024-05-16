@@ -1,5 +1,10 @@
 ﻿namespace Tinyhand.Integrality;
 
-public class IntegralityContext
+public record class IntegralityContext
 {
+    public IntegralityContext()
+    {
+    }
+
+    public int DefaultRetryCount { get; init; } = 3;
 }

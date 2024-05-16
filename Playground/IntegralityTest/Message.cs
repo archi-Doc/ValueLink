@@ -1,5 +1,6 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
+using System.Runtime.CompilerServices;
 using Tinyhand;
 using ValueLink;
 
@@ -52,4 +53,19 @@ public partial class Message
     private ulong integralityHash;
 
     #endregion
+
+    public bool Validate()
+    {
+        return true;
+    }
+
+    public void ClearIntegralityHash()
+        => this.integralityHash = 0;
+
+    public void SetIntegralityHash()
+    {
+    }
+
+    public override string ToString()
+        => $"{this.messageBoardIdentifier}-{this.identifier}({this.signedMics}) {this.name} {this.content}";
 }
