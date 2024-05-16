@@ -1,25 +1,6 @@
-﻿namespace Playground;
+﻿using Tinyhand.Integrality;
 
-public class IntegralityEngine
-{
-    public IntegralityEngine()
-    {
-    }
-
-    public int Level { get; private set; }
-
-    public void GetIdentity(IIntegrality integrality)
-    {
-        if (this.Level == 0)
-        {// Get root hash
-            var rootHash = integrality.GetRootHash();
-        }
-    }
-}
-
-public class IntegralityContext
-{
-}
+namespace Playground;
 
 public class Test1
 {
@@ -33,13 +14,4 @@ public class Test1
         var difference = engine.GetDifference();
         engine.Integrate(difference);*/
     }
-}
-
-public interface IIntegrality
-{// Exaltation of the Integrality by Baxter.
-    ulong RootHash { get; set; }
-
-    ulong GetRootHash();
-
-    void ClearRootHash();
 }
