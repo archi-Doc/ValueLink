@@ -2,6 +2,7 @@
 
 using System.Runtime.CompilerServices;
 using Tinyhand;
+using Tinyhand.IO;
 using ValueLink;
 
 namespace Playground;
