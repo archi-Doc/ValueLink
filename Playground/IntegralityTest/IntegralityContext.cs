@@ -1,6 +1,6 @@
 ﻿namespace Tinyhand.Integrality;
 
-public record class IntegralityContext<T> : IIntegralityContext
+public class IntegralityContext<T> : IntegralityContext
     where T : IStructualObject
 {
     public IntegralityContext()
@@ -12,6 +12,6 @@ public record class IntegralityContext<T> : IIntegralityContext
     public int MaxLength { get; init; } = 4 * 1024 * 1024;
 }
 
-public interface IIntegralityContext
+public abstract class IntegralityContext
 {
 }

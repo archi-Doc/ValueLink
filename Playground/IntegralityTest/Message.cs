@@ -2,10 +2,16 @@
 
 using System.Runtime.CompilerServices;
 using Tinyhand;
+using Tinyhand.Integrality;
 using Tinyhand.IO;
 using ValueLink;
 
 namespace Playground;
+
+public class TestIntegralityContext : IntegralityContext<Message.GoshujinClass>
+{
+    public static readonly IntegralityContext Instance = new TestIntegralityContext();
+}
 
 [TinyhandObject(Structual = true)]
 [ValueLinkObject(Isolation = IsolationLevel.Serializable)]

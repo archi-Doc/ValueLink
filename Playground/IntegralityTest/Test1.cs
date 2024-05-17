@@ -11,6 +11,8 @@ public class Test1
         g.Add(new(2, 2, "B", "bbb", 2));
 
         var engine = new IntegralityEngine<Message.GoshujinClass>();
+        engine.Context = new TestIntegralityContext();
+
         /*var identity = engine.GetIdentity(g);
         var difference = engine.GetDifference();
         engine.Integrate(difference);*/

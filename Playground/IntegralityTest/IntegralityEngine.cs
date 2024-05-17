@@ -5,9 +5,19 @@ namespace Tinyhand.Integrality;
 public class IntegralityEngine<T>
     where T : IStructualObject
 {// Integrate/Differentiate
+    private static IntegralityContext<T> defaultContext;
+
+    static IntegralityEngine()
+    {
+        defaultContext = new();
+    }
+
     public IntegralityEngine()
     {
+        this.Context = defaultContext;
     }
+
+    public IntegralityContext<T> Context { get; set; }
 
     public int Level { get; private set; }
 
