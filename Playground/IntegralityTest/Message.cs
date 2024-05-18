@@ -1,5 +1,8 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
+using System;
+using System.Buffers;
+using System.Net.Http;
 using System.Runtime.CompilerServices;
 using Arc.Crypto;
 using Tinyhand;
@@ -18,6 +21,32 @@ public partial class Message : IIntegrality
     public const int MaxTitleLength = 100;
     public const int MaxNameLength = 50;
     public const int MaxContentLength = 4_000;
+
+    public partial class GoshujinClass : IIntegrality
+    {
+        private ulong integralityHash;
+
+        void IIntegrality.ClearIntegralityHash()
+        => this.integralityHash = 0;
+
+        ulong IIntegrality.GetIntegralityHash()
+        {
+            if (this.integralityHash != 0)
+            {
+                return this.integralityHash;
+            }
+
+            var length = (sizeof(ulong) + sizeof(ulong)) * this.Count;
+            byte[]? rent = null;
+            Span<byte> span = length <= 4096 ?
+                stackalloc byte[length] : (rent = ArrayPool<byte>.Shared.Rent(length));
+
+            var s = span;//
+            lock (this.syncObject)
+            {
+            }
+        }
+    }
 
     public Message()
     {
@@ -68,7 +97,7 @@ public partial class Message : IIntegrality
         => this.integralityHash = 0;
 
     ulong IIntegrality.GetIntegralityHash()
-        => this.integralityHash != 0 ? this.integralityHash : this.integralityHash = Arc.Crypto.XxHash3.Hash64([]);
+        => this.integralityHash != 0 ? this.integralityHash : this.integralityHash = TinyhandSerializer.GetXxHash3(this);
 
     public override string ToString()
         => $"{this.messageBoardIdentifier}-{this.identifier}({this.signedMics}) {this.name} {this.content}";
