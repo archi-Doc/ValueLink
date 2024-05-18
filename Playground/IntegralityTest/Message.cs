@@ -2,13 +2,9 @@
 
 using System;
 using System.Buffers;
-using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using Arc.Crypto;
 using Tinyhand;
-using Tinyhand.Integrality;
-using Tinyhand.IO;
 using ValueLink;
 
 namespace Playground;
@@ -17,19 +13,16 @@ namespace Playground;
 
 [TinyhandObject]
 [ValueLinkObject(Isolation = IsolationLevel.Serializable, Integrality = true)]
-public partial class Message : IIntegrality
+public partial class Message
 {
     public const int MaxTitleLength = 100;
     public const int MaxNameLength = 50;
     public const int MaxContentLength = 4_000;
 
-    public partial class GoshujinClass : IIntegrality
+    /*public partial class GoshujinClass : IIntegrality
     {
         private ulong integralityHash;
-
-        void IIntegrality.ClearIntegralityHash()
-        => this.integralityHash = 0;
-
+        void IIntegrality.ClearIntegralityHash() => this.integralityHash = 0;
         ulong IIntegrality.GetIntegralityHash()
         {
             if (this.integralityHash != 0) return this.integralityHash;
@@ -37,16 +30,16 @@ public partial class Message : IIntegrality
             byte[]? rent = null;
             lock (this.syncObject)
             {
-                var keyLength = Marshal.SizeOf(typeof(ulong));
+                var keyLength = Unsafe.SizeOf<ulong>();
                 var length = (keyLength + sizeof(ulong)) * this.Count;
                 Span<byte> span = length <= 4096 ?
                 stackalloc byte[length] : (rent = ArrayPool<byte>.Shared.Rent(length));
                 var s = span;
                 foreach (var x in this.IdentifierChain)
                 {
-                    MemoryMarshal.Write(s, x.identifier);
+                    Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(s), x.identifier);
                     s = s.Slice(keyLength);
-                    MemoryMarshal.Write(s, ((IIntegrality)x).GetIntegralityHash());
+                    Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(s), ((IIntegrality)x).GetIntegralityHash());
                 }
 
                 this.integralityHash = Arc.Crypto.XxHash3.Hash64(span);
@@ -55,7 +48,7 @@ public partial class Message : IIntegrality
             if (rent is not null) ArrayPool<byte>.Shared.Return(rent);
             return this.integralityHash;
         }
-    }
+    }*/
 
     public Message()
     {
@@ -93,20 +86,12 @@ public partial class Message : IIntegrality
     [Link(Type = ChainType.Ordered, AddValue = false)]
     public long SignedMics => signedMics;
 
-    private ulong integralityHash;
-
     #endregion
 
     public bool Validate()
     {
         return true;
     }
-
-    void IIntegrality.ClearIntegralityHash()
-        => this.integralityHash = 0;
-
-    ulong IIntegrality.GetIntegralityHash()
-        => this.integralityHash != 0 ? this.integralityHash : this.integralityHash = TinyhandSerializer.GetXxHash3(this);
 
     public override string ToString()
         => $"{this.messageBoardIdentifier}-{this.identifier}({this.signedMics}) {this.name} {this.content}";

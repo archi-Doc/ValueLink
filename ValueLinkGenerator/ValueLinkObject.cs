@@ -42,8 +42,8 @@ public enum ValueLinkObjectFlag
     HasPrimaryLink = 1 << 17, // Has primary link
     HasUniqueLink = 1 << 18, // Has unique link
     StructualEnabled = 1 << 19, // Structual
-    AddSyncObject = 1 << 20,
-    // AddLockable = 1 << 21,
+    IntegralityEnabled = 1 << 20, // Integrality
+    AddSyncObject = 1 << 21,
     AddGoshujinProperty = 1 << 22,
     EquatableObject = 1 << 23, // Has IEquatableObject
     AddValueProperty = 1 << 24, // AddValue property
@@ -270,6 +270,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             else
             {// None
                 this.ObjectFlag |= ValueLinkObjectFlag.AddGoshujinProperty;
+            }
+
+            if (this.ObjectAttribute.Integrality)
+            { // Integrality
+                this.ObjectFlag |= ValueLinkObjectFlag.IntegralityEnabled;
             }
 
             this.ConfigureObject();
@@ -657,6 +662,16 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 }
             }
 
+            // Check integrality
+            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.IntegralityEnabled))
+            {
+                if (this.UniqueLink is null ||
+                    this.UniqueLink.TypeObject.Kind != VisceralObjectKind.Struct)
+                {
+
+                }
+            }
+
             // Check keywords
             // this.CheckKeyword2(ValueLinkBody.ReaderStructName, this.Location);
             this.CheckKeyword2(ValueLinkBody.WriterClassName, this.Location);
@@ -915,13 +930,18 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             {
                 interfaceString += $", {this.IRepeatableObject}";
             }
+
+            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.IntegralityEnabled))
+            {
+                interfaceString += $", {ValueLinkBody.IIntegrality}";
+            }
         }
 
         using (var cls = ssb.ScopeBrace($"{this.AccessibilityName} partial {this.KindName} {this.LocalName}{interfaceString}"))
         {
             if (this.ObjectAttribute != null)
             {
-                this.Generate2(ssb, info);
+                this.GenerateObject(ssb, info);
             }
 
             /*foreach (var x in this.ConstructedObjects)
@@ -950,7 +970,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
     }
 
-    internal void Generate2(ScopingStringBuilder ssb, GeneratorInformation info)
+    internal void GenerateObject(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         // Generate Goshujin
         this.GenerateGoshujinClass(ssb, info);
@@ -1002,7 +1022,19 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             this.Generate_WriteLocator(ssb, info);
         }
 
+        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.IntegralityEnabled))
+        {
+            this.GenerateObject_Integrality(ssb, info);
+        }
+
         return;
+    }
+
+    internal void GenerateObject_Integrality(ScopingStringBuilder ssb, GeneratorInformation info)
+    {
+        ssb.AppendLine("private ulong integralityHash;");
+        ssb.AppendLine("void IIntegrality.ClearIntegralityHash() => this.integralityHash = 0;");
+        ssb.AppendLine("ulong IIntegrality.GetIntegralityHash() => this.integralityHash != 0 ? this.integralityHash : this.integralityHash = TinyhandSerializer.GetXxHash3(this);");
     }
 
     internal void Generate_WriteLocator(ScopingStringBuilder ssb, GeneratorInformation info)

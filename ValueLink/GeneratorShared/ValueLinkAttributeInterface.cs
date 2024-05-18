@@ -156,6 +156,7 @@ public sealed class ValueLinkObjectAttribute : Attribute
 
     /// <summary>
     /// Gets or sets a value indicating whether or not to enable the Integrality feature (a function for synchronizing data).<br/>
+    /// The object must have a unique link, and its type must be either a primitive type or a struct.<br/>
     /// <see cref="IsolationLevel"/> must be either <see cref="IsolationLevel.None"/> or <see cref="IsolationLevel.Serializable"/>.
     /// </summary>
     public bool Integrality { get; set; } = false;
