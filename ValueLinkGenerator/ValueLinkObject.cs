@@ -1841,6 +1841,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             return;
         }
 
+        ssb.AppendLine();
         ssb.AppendLine("private ulong integralityHash;");
         ssb.AppendLine("void IIntegrality.ClearIntegralityHash() => this.integralityHash = 0;");
 
@@ -1858,9 +1859,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             using (var scopeFor = ssb.ScopeBrace($"foreach (var x in this.{this.UniqueLink.ChainName})"))
             {
-                ssb.AppendLine($"Unsafe.WriteUnaligned(ref System.Runtime.InteropServices.MemoryMarshal.GetReference(s), x.{this.UniqueLink.TargetName});");
+                ssb.AppendLine($"Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(s), x.{this.UniqueLink.TargetName});");
                 ssb.AppendLine("s = s.Slice(keyLength);");
-                ssb.AppendLine("Unsafe.WriteUnaligned(ref System.Runtime.InteropServices.MemoryMarshal.GetReference(s), ((IIntegrality)x).GetIntegralityHash());");
+                ssb.AppendLine("Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(s), ((IIntegrality)x).GetIntegralityHash());");
+                ssb.AppendLine("s = s.Slice(sizeof(ulong));");
             }
 
             ssb.AppendLine("this.integralityHash = Arc.Crypto.XxHash3.Hash64(span);");

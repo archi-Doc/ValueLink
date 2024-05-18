@@ -287,6 +287,7 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
         ssb.AddUsing("System.Diagnostics.CodeAnalysis");
         ssb.AddUsing("System.Linq");
         ssb.AddUsing("System.Runtime.CompilerServices");
+        ssb.AddUsing("System.Runtime.InteropServices");
         ssb.AddUsing("System.Threading");
         ssb.AddUsing("System.Threading.Tasks");
         ssb.AddUsing("Arc.Collections");
