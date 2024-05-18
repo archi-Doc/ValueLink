@@ -30,12 +30,4 @@ public class IntegralityEngine<T>
     {
         difference = default;
     }
-
-    public void GetIdentity(IIntegrality integrality)
-    {
-        if (this.Level == 0)
-        {// Get root hash
-            var rootHash = integrality.GetRootHash();
-        }
-    }
 }

@@ -154,6 +154,12 @@ public sealed class ValueLinkObjectAttribute : Attribute
     /// </summary>
     public bool Restricted { get; set; } = false;
 
+    /// <summary>
+    /// Gets or sets a value indicating whether or not to enable the Integrality feature (a function for synchronizing data).<br/>
+    /// <see cref="IsolationLevel"/> must be either <see cref="IsolationLevel.None"/> or <see cref="IsolationLevel.Serializable"/>.
+    /// </summary>
+    public bool Integrality { get; set; } = false;
+
     public ValueLinkObjectAttribute()
     {
     }

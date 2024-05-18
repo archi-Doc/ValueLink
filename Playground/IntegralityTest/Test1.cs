@@ -10,8 +10,16 @@ public class Test1
         g.Add(new(1, 1, "A", "aaa", 1));
         g.Add(new(2, 2, "B", "bbb", 2));
 
-        var engine = new IntegralityEngine<Message.GoshujinClass>();
-        engine.Context = new TestIntegralityContext();
+        // var engine = new IntegralityEngine2<Message.GoshujinClass>();
+
+        var engine = TestIntegralityEngine.Pool.Get();
+        try
+        {
+        }
+        finally
+        {
+            TestIntegralityEngine.Pool.Return(engine);
+        }
 
         /*var identity = engine.GetIdentity(g);
         var difference = engine.GetDifference();

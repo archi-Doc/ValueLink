@@ -2,9 +2,9 @@
 
 public interface IIntegrality
 {// Exaltation of the Integrality by Baxter.
-    ulong RootHash { get; set; }
+    // ulong IntegralityHash { get; set; }
 
-    ulong GetRootHash();
+    void ClearIntegralityHash();
 
-    void ClearRootHash();
+    ulong GetIntegralityHash();
 }

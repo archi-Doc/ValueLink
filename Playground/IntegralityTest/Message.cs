@@ -1,6 +1,7 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System.Runtime.CompilerServices;
+using Arc.Crypto;
 using Tinyhand;
 using Tinyhand.Integrality;
 using Tinyhand.IO;
@@ -8,14 +9,11 @@ using ValueLink;
 
 namespace Playground;
 
-public class TestIntegralityContext : IntegralityContext<Message.GoshujinClass>
-{
-    public static readonly IntegralityContext Instance = new TestIntegralityContext();
-}
 
-[TinyhandObject(Structual = true)]
-[ValueLinkObject(Isolation = IsolationLevel.Serializable)]
-public partial class Message
+
+[TinyhandObject]
+[ValueLinkObject(Isolation = IsolationLevel.Serializable, Integrality = true)]
+public partial class Message : IIntegrality
 {
     public const int MaxTitleLength = 100;
     public const int MaxNameLength = 50;
@@ -66,12 +64,11 @@ public partial class Message
         return true;
     }
 
-    public void ClearIntegralityHash()
+    void IIntegrality.ClearIntegralityHash()
         => this.integralityHash = 0;
 
-    public void SetIntegralityHash()
-    {
-    }
+    ulong IIntegrality.GetIntegralityHash()
+        => this.integralityHash != 0 ? this.integralityHash : this.integralityHash = Arc.Crypto.XxHash3.Hash64([]);
 
     public override string ToString()
         => $"{this.messageBoardIdentifier}-{this.identifier}({this.signedMics}) {this.name} {this.content}";
