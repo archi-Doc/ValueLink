@@ -1040,8 +1040,13 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     internal void GenerateObject_Integrality(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         ssb.AppendLine("private ulong integralityHash;");
-        ssb.AppendLine("void IIntegrality.ClearIntegralityHash() => this.integralityHash = 0;");
-        ssb.AppendLine("ulong IIntegrality.GetIntegralityHash() => this.integralityHash != 0 ? this.integralityHash : this.integralityHash = TinyhandSerializer.GetXxHash3(this);");
+        using (var scopeMethod = ssb.ScopeBrace($"void {ValueLinkBody.IIntegrality}.ClearIntegralityHash()"))
+        {
+            ssb.AppendLine($"if (this.{this.GoshujinInstanceIdentifier} is {ValueLinkBody.IIntegrality} i) i.ClearIntegralityHash();");
+            ssb.AppendLine("this.integralityHash = 0;");
+        }
+
+        ssb.AppendLine($"ulong {ValueLinkBody.IIntegrality}.GetIntegralityHash() => this.integralityHash != 0 ? this.integralityHash : this.integralityHash = TinyhandSerializer.GetXxHash3(this);");
     }
 
     internal void Generate_WriteLocator(ScopingStringBuilder ssb, GeneratorInformation info)
@@ -1843,9 +1848,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         ssb.AppendLine();
         ssb.AppendLine("private ulong integralityHash;");
-        ssb.AppendLine("void IIntegrality.ClearIntegralityHash() => this.integralityHash = 0;");
+        ssb.AppendLine($"void {ValueLinkBody.IIntegrality}.ClearIntegralityHash() => this.integralityHash = 0;");
 
-        using (var methodScope = ssb.ScopeBrace("ulong IIntegrality.GetIntegralityHash()"))
+        using (var methodScope = ssb.ScopeBrace($"ulong {ValueLinkBody.IIntegrality}.GetIntegralityHash()"))
         {
             ssb.AppendLine("if (this.integralityHash != 0) return this.integralityHash;");
             ssb.AppendLine("byte[]? rent = null;");
@@ -1861,7 +1866,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             {
                 ssb.AppendLine($"Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(s), x.{this.UniqueLink.TargetName});");
                 ssb.AppendLine("s = s.Slice(keyLength);");
-                ssb.AppendLine("Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(s), ((IIntegrality)x).GetIntegralityHash());");
+                ssb.AppendLine($"Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(s), (({ValueLinkBody.IIntegrality})x).GetIntegralityHash());");
                 ssb.AppendLine("s = s.Slice(sizeof(ulong));");
             }
 
