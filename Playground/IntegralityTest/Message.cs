@@ -23,7 +23,7 @@ public partial class Message : IIntegrality
     public const int MaxNameLength = 50;
     public const int MaxContentLength = 4_000;
 
-    /*public partial class GoshujinClass : IIntegrality
+    public partial class GoshujinClass : IIntegrality
     {
         private ulong integralityHash;
 
@@ -32,38 +32,30 @@ public partial class Message : IIntegrality
 
         ulong IIntegrality.GetIntegralityHash()
         {
-            if (this.integralityHash != 0)
-            {
-                return this.integralityHash;
-            }
+            if (this.integralityHash != 0) return this.integralityHash;
 
-            var keyLength = Marshal.SizeOf(typeof(ulong));
-            var length = (keyLength + sizeof(ulong)) * this.Count;
             byte[]? rent = null;
-            Span<byte> span = length <= 4096 ?
-                stackalloc byte[length] : (rent = ArrayPool<byte>.Shared.Rent(length));
-
-            var s = span;//
-            // var writer = default(TinyhandWriter);
             lock (this.syncObject)
             {
-
+                var keyLength = Marshal.SizeOf(typeof(ulong));
+                var length = (keyLength + sizeof(ulong)) * this.Count;
+                Span<byte> span = length <= 4096 ?
+                stackalloc byte[length] : (rent = ArrayPool<byte>.Shared.Rent(length));
+                var s = span;
                 foreach (var x in this.IdentifierChain)
                 {
                     MemoryMarshal.Write(s, x.identifier);
                     s = s.Slice(keyLength);
                     MemoryMarshal.Write(s, ((IIntegrality)x).GetIntegralityHash());
                 }
+
+                this.integralityHash = Arc.Crypto.XxHash3.Hash64(span);
             }
 
-            if (rent is not null)
-            {
-                ArrayPool<byte>.Shared.Return(rent);
-            }
-
-            return this.integralityHash = Arc.Crypto.XxHash3.Hash64(span);
+            if (rent is not null) ArrayPool<byte>.Shared.Return(rent);
+            return this.integralityHash;
         }
-    }*/
+    }
 
     public Message()
     {
