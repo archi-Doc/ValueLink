@@ -3,9 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Threading;
-using System.Xml.Linq;
 using Arc.Visceral;
 using Microsoft.CodeAnalysis;
 using Tinyhand.Generator;
@@ -662,16 +659,6 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 }
             }
 
-            // Check integrality
-            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.IntegralityEnabled))
-            {
-                if (this.UniqueLink is null ||
-                    this.UniqueLink.TypeObject.Kind != VisceralObjectKind.Struct)
-                {
-
-                }
-            }
-
             // Check keywords
             // this.CheckKeyword2(ValueLinkBody.ReaderStructName, this.Location);
             this.CheckKeyword2(ValueLinkBody.WriterClassName, this.Location);
@@ -679,6 +666,26 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             // this.CheckKeyword2(ValueLinkBody.LockMethodName, this.Location);
             this.CheckKeyword2(ValueLinkBody.TryLockAsyncMethodName, this.Location);
             // this.CheckKeyword2(ValueLinkBody.GetReaderMethodName, this.Location);
+        }
+
+        // Check integrality
+        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.IntegralityEnabled))
+        {
+            if (this.UniqueLink is null ||
+                this.UniqueLink.TypeObject.Kind != VisceralObjectKind.Struct)
+            {// The object must have a unique link, and its type must be either a primitive type or a struct.
+                this.Body.AddDiagnostic(ValueLinkBody.Error_IntegralityLink, this.Location);
+                this.Body.AddDiagnostic(ValueLinkBody.Error_IntegralityIsolation, this.Location);
+            }
+
+            if (this.ObjectAttribute is not null)
+            {
+                if (this.ObjectAttribute.Isolation != IsolationLevel.None &&
+                this.ObjectAttribute.Isolation != IsolationLevel.Serializable)
+                {// The IsolationLevel must be either 'IsolationLevel.None' or 'IsolationLevel.Serializable'
+                    this.Body.AddDiagnostic(ValueLinkBody.Error_IntegralityIsolation, this.Location);
+                }
+            }
         }
     }
 
@@ -1715,6 +1722,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             goshujinInterface += $", ValueLink.IEquatableGoshujin<{this.GoshujinFullName}>";
         }
 
+        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.IntegralityEnabled))
+        {
+            goshujinInterface += $", {ValueLinkBody.IIntegrality}";
+        }
+
         /*if (this.RepeatableGoshujin is not null)
         {
             goshujinInterface += $", {this.RepeatableGoshujin}";
@@ -1811,10 +1823,53 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 this.GenerateGoshujin_EquatableGoshujin(ssb, info);
             }
 
+            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.IntegralityEnabled))
+            {
+                this.GenerateGosjujin_Integrality(ssb, info);
+            }
+
             // this.GenerateGoshujin_RemoveInternal(ssb, info);
         }
 
         ssb.AppendLine();
+    }
+
+    internal void GenerateGosjujin_Integrality(ScopingStringBuilder ssb, GeneratorInformation info)
+    {
+        if (this.UniqueLink is null)
+        {
+            return;
+        }
+
+        ssb.AppendLine("private ulong integralityHash;");
+        ssb.AppendLine("void IIntegrality.ClearIntegralityHash() => this.integralityHash = 0;");
+
+        using (var methodScope = ssb.ScopeBrace("ulong IIntegrality.GetIntegralityHash()"))
+        {
+            ssb.AppendLine("if (this.integralityHash != 0) return this.integralityHash;");
+            ssb.AppendLine("byte[]? rent = null;");
+
+            ScopingStringBuilder.IScope? scopeLock = this.ObjectAttribute?.Isolation == IsolationLevel.Serializable ? ssb.ScopeBrace("lock (this.syncObject)") : null;
+
+            ssb.AppendLine($"var keyLength = Unsafe.SizeOf<{this.UniqueLink.TypeObject.FullName}>();");
+            ssb.AppendLine($"var length = (keyLength + sizeof(ulong)) * this.{this.UniqueLink.ChainName}.Count;");
+            ssb.AppendLine($"Span<byte> span = length <= {ValueLinkBody.StackallocThreshold} ? stackalloc byte[length] : (rent = System.Buffers.ArrayPool<byte>.Shared.Rent(length));");
+            ssb.AppendLine("var s = span;");
+
+            using (var scopeFor = ssb.ScopeBrace($"foreach (var x in this.{this.UniqueLink.ChainName})"))
+            {
+                ssb.AppendLine($"Unsafe.WriteUnaligned(ref System.Runtime.InteropServices.MemoryMarshal.GetReference(s), x.{this.UniqueLink.TargetName});");
+                ssb.AppendLine("s = s.Slice(keyLength);");
+                ssb.AppendLine("Unsafe.WriteUnaligned(ref System.Runtime.InteropServices.MemoryMarshal.GetReference(s), ((IIntegrality)x).GetIntegralityHash());");
+            }
+
+            ssb.AppendLine("this.integralityHash = Arc.Crypto.XxHash3.Hash64(span);");
+
+            scopeLock?.Dispose();
+
+            ssb.AppendLine("if (rent is not null) System.Buffers.ArrayPool<byte>.Shared.Return(rent);");
+            ssb.AppendLine("return this.integralityHash;");
+        }
     }
 
     internal void GenerateGoshujin_EquatableGoshujin(ScopingStringBuilder ssb, GeneratorInformation info)

@@ -26,6 +26,7 @@ public static class TinyhandBody
 
 public class ValueLinkBody : VisceralBody<ValueLinkObject>
 {
+    public const int StackallocThreshold = 4096;
     public static readonly string DefaultGoshujinClass = "GoshujinClass";
     public static readonly string DefaultGoshujinInstance = "Goshujin";
     public static readonly string ExplicitPropertyChanged = "PropertyChanged";
@@ -168,6 +169,14 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
 
     public static readonly DiagnosticDescriptor Error_InconsistentType = new DiagnosticDescriptor(
         id: "CLG030", title: "Inconsistent type", messageFormat: "The type of members sharing the chain must be identical",
+        category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor Error_IntegralityLink = new DiagnosticDescriptor(
+        id: "CLG031", title: "Integrality link", messageFormat: "The integrality object must have a unique link, and its type must be a struct",
+        category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor Error_IntegralityIsolation = new DiagnosticDescriptor(
+        id: "CLG032", title: "Integrality isolation", messageFormat: "The IsolationLevel must be either 'IsolationLevel.None' or 'IsolationLevel.Serializable'",
         category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
     public ValueLinkBody(GeneratorExecutionContext context)
