@@ -4,5 +4,5 @@ public enum IntegralityResult
 {
     Integrated, // Assimilated
     Continue,
-    Fatal,
+    InvalidData,
 }

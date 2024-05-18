@@ -8,6 +8,13 @@ namespace Tinyhand.Integrality;
 public class TestIntegralityEngine : IntegralityEngine2<Message.GoshujinClass, Message>
 {
     public static readonly ObjectPool<TestIntegralityEngine> Pool = new(() => new());
+
+    public override bool Validate(Message obj)
+        => true;
+
+    public override void Prume(Message.GoshujinClass goshujin)
+    {
+    }
 }
 
 public class IntegralityEngine2<TGoshujin, TObject>
@@ -33,6 +40,5 @@ public class IntegralityEngine2<TGoshujin, TObject>
 
     public virtual void Prume(TGoshujin goshujin)
     {
-
     }
 }
