@@ -1,11 +1,17 @@
-﻿using Tinyhand;
+﻿using System.Threading.Tasks;
+using Arc.Unit;
+using Tinyhand;
 using Tinyhand.Integrality;
 
 namespace Playground;
 
 public class Test1
 {
-    public void Test()
+    public async Task IntegrateMessage(ByteArrayPool.MemoryOwner owner)
+    {
+    }
+
+    public async void Test()
     {
         var g = new Message.GoshujinClass();
         g.Add(new(1, 1, "A", "aaa", 1));
@@ -21,6 +27,9 @@ public class Test1
         var engine = TestIntegralityEngine.Pool.Get();
         try
         {
+            engine.IntegrateDelegate = x => this.IntegrateMessage(x);
+            var result = await engine.Integrate(g);
+            await engine.Differentiate(g, in integrateion, out difference);
         }
         finally
         {

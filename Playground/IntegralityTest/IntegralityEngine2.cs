@@ -1,4 +1,6 @@
-﻿using Arc.Collections;
+﻿using System;
+using System.Threading.Tasks;
+using Arc.Collections;
 using Arc.Unit;
 using Playground;
 using ValueLink;
@@ -24,6 +26,8 @@ public class IntegralityEngine2<TGoshujin, TObject>
     public IntegralityEngine2()
     {
     }
+
+    public Func<ByteArrayPool.MemoryOwner, Task> IntegrateDelegate { get; set; } = default!;
 
     public void Integrate(TGoshujin obj, ByteArrayPool.MemoryOwner difference, out ByteArrayPool.MemoryOwner integration)
     {
