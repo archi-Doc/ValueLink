@@ -19,8 +19,6 @@ public class Test1
         h = ((IIntegrality)g).GetIntegralityHash();
         h = ((IIntegrality)g).GetIntegralityHash();
 
-        // var engine = new IntegralityEngine2<Message.GoshujinClass>();
-
         var g2 = new Message.GoshujinClass();
         var engine = TestIntegralityEngine.Pool.Get();
         try

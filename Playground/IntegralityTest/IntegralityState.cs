@@ -1,6 +1,6 @@
 ﻿namespace Tinyhand.Integrality;
 
-internal enum IntegralityDataType : byte
+internal enum IntegralityState : byte
 {
     Probe,
     ProbeResponse,

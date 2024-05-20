@@ -2,7 +2,8 @@
 
 public enum IntegralityResult
 {
-    Integrated, // Assimilated
-    Continue,
+    Success, // Integrated
+    Continue,,
     InvalidData,
+    NoNetwork,
 }
