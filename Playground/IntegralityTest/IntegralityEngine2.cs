@@ -5,6 +5,8 @@ using Arc.Unit;
 using Playground;
 using ValueLink;
 
+#pragma warning disable CS1998
+
 namespace Tinyhand.Integrality;
 
 public class TestIntegralityEngine : IntegralityEngine2<Message.GoshujinClass, Message>
@@ -23,21 +25,22 @@ public class IntegralityEngine2<TGoshujin, TObject>
     where TGoshujin : IGoshujin
     where TObject : ITinyhandSerialize<TObject>
 {// Integrate/Differentiate
+    public delegate Task<(IntegralityResult Result, ByteArrayPool.MemoryOwner Difference)> DifferentiateDelegate(ByteArrayPool.MemoryOwner integration);
+
+    static public async Task<(IntegralityResult Result, ByteArrayPool.MemoryOwner Difference)> Differentiate(TGoshujin obj, ByteArrayPool.MemoryOwner integration)
+    {
+        return (IntegralityResult.Integrated, default);
+    }
+
     public IntegralityEngine2()
     {
     }
 
-    public Func<ByteArrayPool.MemoryOwner, Task> IntegrateDelegate { get; set; } = default!;
-
-    public void Integrate(TGoshujin obj, ByteArrayPool.MemoryOwner difference, out ByteArrayPool.MemoryOwner integration)
+    public async Task<IntegralityResult> Integrate(TGoshujin obj, DifferentiateDelegate differentiateDelegate)
     {
-        integration = default;
+        return IntegralityResult.Integrated;
     }
 
-    public void Differentiate(TGoshujin obj, ByteArrayPool.MemoryOwner integration, out ByteArrayPool.MemoryOwner difference)
-    {
-        difference = default;
-    }
 
     public virtual bool Validate(TObject obj)
         => true;

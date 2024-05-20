@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Arc.Unit;
 using Tinyhand;
 using Tinyhand.Integrality;
@@ -7,10 +8,6 @@ namespace Playground;
 
 public class Test1
 {
-    public async Task IntegrateMessage(ByteArrayPool.MemoryOwner owner)
-    {
-    }
-
     public async void Test()
     {
         var g = new Message.GoshujinClass();
@@ -24,20 +21,15 @@ public class Test1
 
         // var engine = new IntegralityEngine2<Message.GoshujinClass>();
 
+        var g2 = new Message.GoshujinClass();
         var engine = TestIntegralityEngine.Pool.Get();
         try
         {
-            engine.IntegrateDelegate = x => this.IntegrateMessage(x);
-            var result = await engine.Integrate(g);
-            await engine.Differentiate(g, in integrateion, out difference);
+            var result = await engine.Integrate(g, x => TestIntegralityEngine.Differentiate(g2, x));
         }
         finally
         {
             TestIntegralityEngine.Pool.Return(engine);
         }
-
-        /*var identity = engine.GetIdentity(g);
-        var difference = engine.GetDifference();
-        engine.Integrate(difference);*/
     }
 }
