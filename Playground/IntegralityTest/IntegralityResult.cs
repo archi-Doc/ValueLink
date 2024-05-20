@@ -3,7 +3,7 @@
 public enum IntegralityResult
 {
     Success, // Integrated
-    Continue,,
+    Continue,
     InvalidData,
     NoNetwork,
 }

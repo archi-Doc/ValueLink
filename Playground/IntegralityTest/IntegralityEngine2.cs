@@ -33,7 +33,7 @@ public class IntegralityEngine2<TGoshujin, TObject>
 
     static public async Task<(IntegralityResult Result, ByteArrayPool.MemoryOwner Difference)> Differentiate(TGoshujin obj, ByteArrayPool.MemoryOwner integration)
     {
-        return (IntegralityResult.Integrated, default);
+        return (IntegralityResult.Success, default);
     }
 
     public IntegralityEngine2()
@@ -82,13 +82,13 @@ public class IntegralityEngine2<TGoshujin, TObject>
 
         void Internal()
         {
-            var writer = new TinyhandWriter(owner.ByteArray);
-            writer.WriteUInt8((byte)state);
+            //var writer = new TinyhandWriter(owner.ByteArray);
+            //writer.WriteUInt8((byte)state);
 
         }
 
 
-        return IntegralityResult.Integrated;
+        return IntegralityResult.Success;
     }
 
     public virtual bool Validate(TObject obj)
