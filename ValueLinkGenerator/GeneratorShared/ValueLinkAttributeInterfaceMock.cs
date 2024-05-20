@@ -99,6 +99,8 @@ public sealed class ValueLinkObjectAttributeMock : Attribute
 
     public bool Restricted { get; set; } = false;
 
+    public bool Integrality { get; set; } = false;
+
     public ValueLinkObjectAttributeMock()
     {
     }
@@ -136,6 +138,12 @@ public sealed class ValueLinkObjectAttributeMock : Attribute
         if (val != null)
         {
             attribute.Restricted = (bool)val;
+        }
+
+        val = AttributeHelper.GetValue(-1, nameof(Integrality), constructorArguments, namedArguments);
+        if (val != null)
+        {
+            attribute.Integrality = (bool)val;
         }
 
         return attribute;

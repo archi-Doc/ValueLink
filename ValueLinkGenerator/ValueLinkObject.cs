@@ -3,9 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Threading;
-using System.Xml.Linq;
 using Arc.Visceral;
 using Microsoft.CodeAnalysis;
 using Tinyhand.Generator;
@@ -42,8 +39,8 @@ public enum ValueLinkObjectFlag
     HasPrimaryLink = 1 << 17, // Has primary link
     HasUniqueLink = 1 << 18, // Has unique link
     StructualEnabled = 1 << 19, // Structual
-    AddSyncObject = 1 << 20,
-    // AddLockable = 1 << 21,
+    IntegralityEnabled = 1 << 20, // Integrality
+    AddSyncObject = 1 << 21,
     AddGoshujinProperty = 1 << 22,
     EquatableObject = 1 << 23, // Has IEquatableObject
     AddValueProperty = 1 << 24, // AddValue property
@@ -270,6 +267,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             else
             {// None
                 this.ObjectFlag |= ValueLinkObjectFlag.AddGoshujinProperty;
+            }
+
+            if (this.ObjectAttribute.Integrality)
+            { // Integrality
+                this.ObjectFlag |= ValueLinkObjectFlag.IntegralityEnabled;
             }
 
             this.ConfigureObject();
@@ -665,6 +667,26 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             this.CheckKeyword2(ValueLinkBody.TryLockAsyncMethodName, this.Location);
             // this.CheckKeyword2(ValueLinkBody.GetReaderMethodName, this.Location);
         }
+
+        // Check integrality
+        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.IntegralityEnabled))
+        {
+            if (this.UniqueLink is null ||
+                this.UniqueLink.TypeObject.Kind != VisceralObjectKind.Struct)
+            {// The object must have a unique link, and its type must be either a primitive type or a struct.
+                this.Body.AddDiagnostic(ValueLinkBody.Error_IntegralityLink, this.Location);
+                this.Body.AddDiagnostic(ValueLinkBody.Error_IntegralityIsolation, this.Location);
+            }
+
+            if (this.ObjectAttribute is not null)
+            {
+                if (this.ObjectAttribute.Isolation != IsolationLevel.None &&
+                this.ObjectAttribute.Isolation != IsolationLevel.Serializable)
+                {// The IsolationLevel must be either 'IsolationLevel.None' or 'IsolationLevel.Serializable'
+                    this.Body.AddDiagnostic(ValueLinkBody.Error_IntegralityIsolation, this.Location);
+                }
+            }
+        }
     }
 
     public void CheckMember(ValueLinkObject parent)
@@ -915,13 +937,18 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             {
                 interfaceString += $", {this.IRepeatableObject}";
             }
+
+            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.IntegralityEnabled))
+            {
+                interfaceString += $", {ValueLinkBody.IIntegrality}";
+            }
         }
 
         using (var cls = ssb.ScopeBrace($"{this.AccessibilityName} partial {this.KindName} {this.LocalName}{interfaceString}"))
         {
             if (this.ObjectAttribute != null)
             {
-                this.Generate2(ssb, info);
+                this.GenerateObject(ssb, info);
             }
 
             /*foreach (var x in this.ConstructedObjects)
@@ -950,7 +977,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
     }
 
-    internal void Generate2(ScopingStringBuilder ssb, GeneratorInformation info)
+    internal void GenerateObject(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         // Generate Goshujin
         this.GenerateGoshujinClass(ssb, info);
@@ -1002,7 +1029,24 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             this.Generate_WriteLocator(ssb, info);
         }
 
+        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.IntegralityEnabled))
+        {
+            this.GenerateObject_Integrality(ssb, info);
+        }
+
         return;
+    }
+
+    internal void GenerateObject_Integrality(ScopingStringBuilder ssb, GeneratorInformation info)
+    {
+        ssb.AppendLine("private ulong integralityHash;");
+        using (var scopeMethod = ssb.ScopeBrace($"void {ValueLinkBody.IIntegrality}.ClearIntegralityHash()"))
+        {
+            ssb.AppendLine($"if (this.{this.GoshujinInstanceIdentifier} is {ValueLinkBody.IIntegrality} i) i.ClearIntegralityHash();");
+            ssb.AppendLine("this.integralityHash = 0;");
+        }
+
+        ssb.AppendLine($"ulong {ValueLinkBody.IIntegrality}.GetIntegralityHash() => this.integralityHash != 0 ? this.integralityHash : this.integralityHash = TinyhandSerializer.GetXxHash3(this);");
     }
 
     internal void Generate_WriteLocator(ScopingStringBuilder ssb, GeneratorInformation info)
@@ -1683,6 +1727,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             goshujinInterface += $", ValueLink.IEquatableGoshujin<{this.GoshujinFullName}>";
         }
 
+        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.IntegralityEnabled))
+        {
+            goshujinInterface += $", {ValueLinkBody.IIntegrality}";
+        }
+
         /*if (this.RepeatableGoshujin is not null)
         {
             goshujinInterface += $", {this.RepeatableGoshujin}";
@@ -1779,10 +1828,55 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 this.GenerateGoshujin_EquatableGoshujin(ssb, info);
             }
 
+            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.IntegralityEnabled))
+            {
+                this.GenerateGosjujin_Integrality(ssb, info);
+            }
+
             // this.GenerateGoshujin_RemoveInternal(ssb, info);
         }
 
         ssb.AppendLine();
+    }
+
+    internal void GenerateGosjujin_Integrality(ScopingStringBuilder ssb, GeneratorInformation info)
+    {
+        if (this.UniqueLink is null)
+        {
+            return;
+        }
+
+        ssb.AppendLine();
+        ssb.AppendLine("private ulong integralityHash;");
+        ssb.AppendLine($"void {ValueLinkBody.IIntegrality}.ClearIntegralityHash() => this.integralityHash = 0;");
+
+        using (var methodScope = ssb.ScopeBrace($"ulong {ValueLinkBody.IIntegrality}.GetIntegralityHash()"))
+        {
+            ssb.AppendLine("if (this.integralityHash != 0) return this.integralityHash;");
+            ssb.AppendLine("byte[]? rent = null;");
+
+            ScopingStringBuilder.IScope? scopeLock = this.ObjectAttribute?.Isolation == IsolationLevel.Serializable ? ssb.ScopeBrace("lock (this.syncObject)") : null;
+
+            ssb.AppendLine($"var keyLength = Unsafe.SizeOf<{this.UniqueLink.TypeObject.FullName}>();");
+            ssb.AppendLine($"var length = (keyLength + sizeof(ulong)) * this.{this.UniqueLink.ChainName}.Count;");
+            ssb.AppendLine($"Span<byte> span = length <= {ValueLinkBody.StackallocThreshold} ? stackalloc byte[length] : (rent = System.Buffers.ArrayPool<byte>.Shared.Rent(length));");
+            ssb.AppendLine("var s = span;");
+
+            using (var scopeFor = ssb.ScopeBrace($"foreach (var x in this.{this.UniqueLink.ChainName})"))
+            {
+                ssb.AppendLine($"Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(s), x.{this.UniqueLink.TargetName});");
+                ssb.AppendLine("s = s.Slice(keyLength);");
+                ssb.AppendLine($"Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(s), (({ValueLinkBody.IIntegrality})x).GetIntegralityHash());");
+                ssb.AppendLine("s = s.Slice(sizeof(ulong));");
+            }
+
+            ssb.AppendLine("this.integralityHash = Arc.Crypto.XxHash3.Hash64(span);");
+
+            scopeLock?.Dispose();
+
+            ssb.AppendLine("if (rent is not null) System.Buffers.ArrayPool<byte>.Shared.Return(rent);");
+            ssb.AppendLine("return this.integralityHash;");
+        }
     }
 
     internal void GenerateGoshujin_EquatableGoshujin(ScopingStringBuilder ssb, GeneratorInformation info)
