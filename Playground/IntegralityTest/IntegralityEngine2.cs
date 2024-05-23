@@ -29,9 +29,9 @@ public class IntegralityEngine2<TGoshujin, TObject>
     where TGoshujin : IGoshujin, IIntegrality
     where TObject : ITinyhandSerialize<TObject>, IIntegrality
 {// Integrate/Differentiate
-    public delegate Task<(IntegralityResult Result, ByteArrayPool.MemoryOwner Difference)> DifferentiateDelegate(ByteArrayPool.MemoryOwner integration, CancellationToken cancellationToken);
+    public delegate Task<(IntegralityResult Result, BytePool.RentMemory Difference)> DifferentiateDelegate(BytePool.RentMemory integration, CancellationToken cancellationToken);
 
-    static public async Task<(IntegralityResult Result, ByteArrayPool.MemoryOwner Difference)> Differentiate(TGoshujin obj, ByteArrayPool.MemoryOwner integration)
+    static public async Task<(IntegralityResult Result, BytePool.RentMemory Difference)> Differentiate(TGoshujin obj, BytePool.RentMemory integration)
     {
         return (IntegralityResult.Success, default);
     }
@@ -52,9 +52,9 @@ public class IntegralityEngine2<TGoshujin, TObject>
         if (this.state == IntegralityState.Probe)
         {// Probe
             var primaryHash = obj.GetIntegralityHash();
-            var owner = ByteArrayPool.Default.Rent(sizeof(ulong));
-            var memoryOwner = owner.ToMemoryOwner(0, sizeof(ulong));
-            Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(owner.ByteArray.AsSpan()), primaryHash);
+            var rentArray = BytePool.Default.Rent(sizeof(ulong));
+            var memoryOwner = rentArray.AsMemory(0, sizeof(ulong));
+            Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(rentArray.Array.AsSpan()), primaryHash);
             var r = await differentiateDelegate(memoryOwner, cancellationToken).ConfigureAwait(false);
             if (r.Result != IntegralityResult.Success)
             {

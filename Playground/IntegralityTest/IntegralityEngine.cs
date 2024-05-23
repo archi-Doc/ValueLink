@@ -1,4 +1,5 @@
-﻿using Arc.Unit;
+﻿using System.Collections;
+using Arc.Collections;
 
 namespace Tinyhand.Integrality;
 
@@ -21,12 +22,12 @@ public class IntegralityEngine<T>
 
     public int Level { get; private set; }
 
-    public void Integrate(T obj, ByteArrayPool.MemoryOwner difference, out ByteArrayPool.MemoryOwner integration)
+    public void Integrate(T obj, BytePool.RentMemory difference, out BytePool.RentMemory integration)
     {
         integration = default;
     }
 
-    public void Differentiate(T obj, ByteArrayPool.MemoryOwner integration, out ByteArrayPool.MemoryOwner difference)
+    public void Differentiate(T obj, BytePool.RentMemory integration, out BytePool.RentMemory difference)
     {
         difference = default;
     }
