@@ -1881,7 +1881,66 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             ssb.AppendLine("return this.integralityHash;");
         }
 
-        ssb.AppendLine($"IntegralityResultMemory {ValueLinkBody.IIntegrality}.Differentiate(BytePool.RentMemory integration) => default;");
+        this.GenerateGosjujin_Integrality_Differentiate(ssb, info);
+        this.GenerateGosjujin_Integrality_Integrate(ssb, info);
+    }
+
+    internal void GenerateGosjujin_Integrality_Differentiate(ScopingStringBuilder ssb, GeneratorInformation info)
+    {
+        using (var methodScope = ssb.ScopeBrace($"IntegralityResultMemory {ValueLinkBody.IIntegrality}.Differentiate(BytePool.RentMemory integration)"))
+        {
+            if (this.UniqueLink is null)
+            {
+                ssb.AppendLine("throw new NotImplementedException();");
+                return;
+            }
+
+            using (var tryScope = ssb.ScopeBrace("try"))
+            {
+                ssb.AppendLine("var reader = new TinyhandReader(integration.Span);");
+                ssb.AppendLine("var state = (IntegralityState)reader.ReadUInt8();");
+
+                using (var probeScope = ssb.ScopeBrace("if (state == IntegralityState.Probe)"))
+                {
+                    ssb.AppendLine($"var hash = (({ValueLinkBody.IIntegrality})this).GetIntegralityHash();");
+                    ssb.AppendLine("var writer = TinyhandWriter.CreateFromBytePool();");
+                    ssb.AppendLine("writer.WriteUInt8((byte)IntegralityState.ProbeResponse);");
+                    ssb.AppendLine("writer.WriteUInt64(hash);");
+
+                    using (var hashScope = ssb.ScopeBrace("if (hash != reader.ReadUInt64())"))
+                    {
+                        using (var forScope = ssb.ScopeBrace($"foreach (var x in this.{this.UniqueLink.ChainName})"))
+                        {
+                            if (this.UniqueLink.Target?.Kind == VisceralObjectKind.Field)
+                            {
+                                ssb.AppendLine($"writer.WriteSpan(MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref x.{this.UniqueLink.TargetName}, 1)));");
+                            }
+                            else
+                            {
+                                ssb.AppendLine($"var vd = x.{this.UniqueLink.TargetName};");
+                                ssb.AppendLine("writer.WriteSpan(MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref vd, 1)));");
+                            }
+
+                            ssb.AppendLine($"writer.WriteUInt64((({ValueLinkBody.IIntegrality})x).GetIntegralityHash());");
+                        }
+                    }
+
+                    ssb.AppendLine("return new(IntegralityResult.Success, writer.FlushAndGetRentMemory());");
+                }
+
+                using (var getScope = ssb.ScopeBrace("else if (state == IntegralityState.Get)"))
+                {
+                }
+            }
+
+            ssb.AppendLine("catch { }");
+            ssb.AppendLine();
+            ssb.AppendLine("return new(IntegralityResult.InvalidData);");
+        }
+    }
+
+    internal void GenerateGosjujin_Integrality_Integrate(ScopingStringBuilder ssb, GeneratorInformation info)
+    {
         ssb.AppendLine($"void {ValueLinkBody.IIntegrality}.Integrate(IntegralityEngine engine, ref TinyhandReader reader, ref TinyhandWriter writer) {{ }}");
     }
 
