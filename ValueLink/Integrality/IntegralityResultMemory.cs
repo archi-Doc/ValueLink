@@ -12,6 +12,12 @@ public readonly struct IntegralityResultMemory
         this.RentMemory = difference;
     }
 
+    public IntegralityResultMemory(IntegralityResult result)
+    {
+        this.Result = result;
+        this.RentMemory = default;
+    }
+
     public readonly IntegralityResult Result;
 
     public readonly BytePool.RentMemory RentMemory;

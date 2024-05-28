@@ -26,46 +26,50 @@ public class IntegralityEngine<TGoshujin, TObject>
 
     #region FieldAndProperty
 
-    private IntegralityState state = IntegralityState.Probe;
     private ulong targetHash;
 
     #endregion
 
     public async Task<IntegralityResult> Integrate(TGoshujin obj, DifferentiateDelegate differentiateDelegate, CancellationToken cancellationToken = default)
     {
-        if (this.state == IntegralityState.Probe)
-        {// Probe
-            var rentMemory = this.CreateProbePacket(obj);
-
-            IntegralityResultMemory resultMemory;
-            try
-            {
-                resultMemory = await differentiateDelegate(rentMemory, cancellationToken).ConfigureAwait(false);
-            }
-            finally
-            {
-                rentMemory.Return();
-            }
-
-            try
-            {
-                var result = this.ProcessProbeResponsePacket(obj, resultMemory);
-                if (result != IntegralityResult.Continue)
-                {
-                    return result;
-                }
-            }
-            finally
-            {
-                resultMemory.Return();
-            }
-
-            this.state = IntegralityState.Get;
-        }
-
-        if (this.state == IntegralityState.Get)
+        // Probe
+        var rentMemory = this.CreateProbePacket(obj);
+        IntegralityResultMemory resultMemory;
+        try
         {
+            resultMemory = await differentiateDelegate(rentMemory, cancellationToken).ConfigureAwait(false);
         }
+        finally
+        {
+            rentMemory.Return();
+        }
+
+        // ProbeResponse
+        IntegralityResultMemory resultMemory2;
+        try
+        {
+            resultMemory2 = this.ProcessProbeResponsePacket(obj, resultMemory);
+            if (resultMemory2.Result != IntegralityResult.Continue)
+            {
+                return resultMemory2.Result;
+            }
+        }
+        finally
+        {
+            resultMemory.Return();
+        }
+
+        // Get
+        try
+        {
+            resultMemory = await differentiateDelegate(resultMemory2.RentMemory, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            resultMemory2.Return();
+        }
+
+        // GetResponse loop
 
         return IntegralityResult.Success;
     }
@@ -92,11 +96,11 @@ public class IntegralityEngine<TGoshujin, TObject>
         }
     }
 
-    private IntegralityResult ProcessProbeResponsePacket(TGoshujin obj, IntegralityResultMemory resultMemory)
+    private IntegralityResultMemory ProcessProbeResponsePacket(TGoshujin obj, IntegralityResultMemory resultMemory)
     {
         if (resultMemory.Result != IntegralityResult.Success)
         {
-            return resultMemory.Result;
+            return new(resultMemory.Result);
         }
 
         var reader = new TinyhandReader(resultMemory.RentMemory.Span);
@@ -105,19 +109,19 @@ public class IntegralityEngine<TGoshujin, TObject>
             var state = (IntegralityState)reader.ReadUInt8();
             if (state != IntegralityState.Probe)
             {
-                return IntegralityResult.InvalidData;
+                return new(IntegralityResult.InvalidData);
             }
 
             this.targetHash = reader.ReadUInt64();
         }
         catch
         {
-            return IntegralityResult.InvalidData;
+            return new(IntegralityResult.InvalidData);
         }
 
         if (obj.GetIntegralityHash() == this.targetHash)
         {// Identical
-            return IntegralityResult.Success;
+            return new(IntegralityResult.Success);
         }
 
         var writer = TinyhandWriter.CreateFromBytePool();
@@ -125,17 +129,15 @@ public class IntegralityEngine<TGoshujin, TObject>
         {
             writer.WriteUInt8((byte)IntegralityState.Get);
             obj.ProcessProbeResponse(ref reader, ref writer);
-            var getPacket = writer.FlushAndGetRentMemory();
+            return new(IntegralityResult.Continue, writer.FlushAndGetRentMemory());
         }
         catch
         {
-            return IntegralityResult.InvalidData;
+            return new(IntegralityResult.InvalidData);
         }
         finally
         {
             writer.Dispose();
         }
-
-        return IntegralityResult.Continue;
     }
 }

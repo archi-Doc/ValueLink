@@ -10,6 +10,7 @@ using System.Threading;
 using Tinyhand;
 using ValueLink;
 using ValueLink.Integrality;
+using Tinyhand.IO;
 
 namespace Playground;
 
@@ -23,13 +24,29 @@ public partial class Message
     public const int MaxNameLength = 50;
     public const int MaxContentLength = 4_000;
 
-    /*public partial class GoshujinClass
+    public partial class GoshujinClass
     {
-        public Task<DifferentiateResult> Differentiate(BytePool.RentMemory integration, CancellationToken cancellationToken)
+        void ProcessProbeResponse(ref TinyhandReader reader, ref TinyhandWriter writer)
         {
-
+            lock (this.syncObject)
+            {
+                while (!reader.End)
+                {
+                    
+                    var key = reader.ReadUInt64();
+                    key = TinyhandSerializer.Deserialize<ulong>(ref reader);
+                    var hash = reader.ReadUInt64();
+                    if (this.IdentifierChain.FindFirst(key) is IIntegrality obj)
+                    {
+                        if (obj.GetIntegralityHash() != hash)
+                        {
+                            writer.WriteUInt64(key);
+                        }
+                    }
+                }
+            }
         }
-    }*/
+    }
 
     public Message()
     {
