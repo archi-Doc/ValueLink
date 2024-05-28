@@ -15,7 +15,7 @@ public class IntegralityEngine<TGoshujin, TObject>
     where TGoshujin : IGoshujin, IIntegrality
     where TObject : ITinyhandSerialize<TObject>, IIntegrality
 {// Integrate/Differentiate
-    public static async Task<DifferentiateResult> Differentiate(TGoshujin obj, BytePool.RentMemory integration)
+    public static async Task<IntegralityResultMemory> Differentiate(TGoshujin obj, BytePool.RentMemory integration)
     {
         return default;
     }
@@ -37,10 +37,10 @@ public class IntegralityEngine<TGoshujin, TObject>
         {// Probe
             var rentMemory = this.CreateProbePacket(obj);
 
-            DifferentiateResult dif;
+            IntegralityResultMemory resultMemory;
             try
             {
-                dif = await differentiateDelegate(rentMemory, cancellationToken).ConfigureAwait(false);
+                resultMemory = await differentiateDelegate(rentMemory, cancellationToken).ConfigureAwait(false);
             }
             finally
             {
@@ -49,7 +49,7 @@ public class IntegralityEngine<TGoshujin, TObject>
 
             try
             {
-                var result = this.ProcessProbeResponsePacket(obj, dif);
+                var result = this.ProcessProbeResponsePacket(obj, resultMemory);
                 if (result != IntegralityResult.Continue)
                 {
                     return result;
@@ -57,7 +57,7 @@ public class IntegralityEngine<TGoshujin, TObject>
             }
             finally
             {
-                dif.Return();
+                resultMemory.Return();
             }
 
             this.state = IntegralityState.Get;
@@ -92,14 +92,14 @@ public class IntegralityEngine<TGoshujin, TObject>
         }
     }
 
-    private IntegralityResult ProcessProbeResponsePacket(TGoshujin obj, DifferentiateResult dif)
+    private IntegralityResult ProcessProbeResponsePacket(TGoshujin obj, IntegralityResultMemory resultMemory)
     {
-        if (dif.Result != IntegralityResult.Success)
+        if (resultMemory.Result != IntegralityResult.Success)
         {
-            return dif.Result;
+            return resultMemory.Result;
         }
 
-        var reader = new TinyhandReader(dif.RentMemory.Span);
+        var reader = new TinyhandReader(resultMemory.RentMemory.Span);
         try
         {
             var state = (IntegralityState)reader.ReadUInt8();
@@ -120,7 +120,21 @@ public class IntegralityEngine<TGoshujin, TObject>
             return IntegralityResult.Success;
         }
 
-        // obj.ProcessProbeResponse(ref reader);
+        var writer = TinyhandWriter.CreateFromBytePool();
+        try
+        {
+            writer.WriteUInt8((byte)IntegralityState.Get);
+            obj.ProcessProbeResponse(ref reader, ref writer);
+            var getPacket = writer.FlushAndGetRentMemory();
+        }
+        catch
+        {
+            return IntegralityResult.InvalidData;
+        }
+        finally
+        {
+            writer.Dispose();
+        }
 
         return IntegralityResult.Continue;
     }

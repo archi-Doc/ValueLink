@@ -6,4 +6,4 @@ using Arc.Collections;
 
 namespace ValueLink.Integrality;
 
-public delegate Task<DifferentiateResult> DifferentiateDelegate(BytePool.RentMemory integration, CancellationToken cancellationToken);
+public delegate Task<IntegralityResultMemory> DifferentiateDelegate(BytePool.RentMemory integration, CancellationToken cancellationToken);

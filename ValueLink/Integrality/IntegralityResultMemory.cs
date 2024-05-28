@@ -4,9 +4,9 @@ using Arc.Collections;
 
 namespace ValueLink.Integrality;
 
-public readonly struct DifferentiateResult
+public readonly struct IntegralityResultMemory
 {
-    public DifferentiateResult(IntegralityResult result, BytePool.RentMemory difference)
+    public IntegralityResultMemory(IntegralityResult result, BytePool.RentMemory difference)
     {
         this.Result = result;
         this.RentMemory = difference;

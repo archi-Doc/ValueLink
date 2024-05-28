@@ -3,6 +3,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Arc.Collections;
+using Tinyhand.IO;
 
 namespace ValueLink.Integrality;
 
@@ -12,9 +13,9 @@ public interface IIntegrality
 
     ulong GetIntegralityHash();
 
-    DifferentiateResult Differentiate(BytePool.RentMemory integration)
+    IntegralityResultMemory Differentiate(BytePool.RentMemory integration)
         => default;
 
-    DifferentiateResult Integrate(BytePool.RentMemory difference)
-        => default;
+    void ProcessProbeResponse(ref TinyhandReader reader, ref TinyhandWriter writer)
+    { }
 }
