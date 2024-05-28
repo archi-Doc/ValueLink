@@ -12,6 +12,12 @@ public readonly struct IntegralityResultMemory
         this.RentMemory = difference;
     }
 
+    /*public IntegralityResultMemory(BytePool.RentMemory difference)
+    {
+        this.Result = IntegralityResult.Success;
+        this.RentMemory = difference;
+    }*/
+
     public IntegralityResultMemory(IntegralityResult result)
     {
         this.Result = result;

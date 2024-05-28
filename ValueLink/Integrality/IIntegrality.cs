@@ -16,6 +16,6 @@ public interface IIntegrality
     IntegralityResultMemory Differentiate(BytePool.RentMemory integration)
         => default;
 
-    void ProcessProbeResponse(ref TinyhandReader reader, ref TinyhandWriter writer)
+    void ProcessProbeResponse(IntegralityEngine engine, ref TinyhandReader reader, ref TinyhandWriter writer)
     { }
 }

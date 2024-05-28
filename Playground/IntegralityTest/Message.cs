@@ -1,20 +1,15 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
-using System;
-using System.Buffers;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using Arc.Collections;
-using System.Threading.Tasks;
-using System.Threading;
 using Tinyhand;
 using ValueLink;
 using ValueLink.Integrality;
 using Tinyhand.IO;
+using Arc.Collections;
+using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
+using System;
 
 namespace Playground;
-
-
 
 [TinyhandObject]
 [ValueLinkObject(Isolation = IsolationLevel.Serializable, Integrality = true)]
@@ -26,13 +21,48 @@ public partial class Message
 
     public partial class GoshujinClass
     {
+        IntegralityResultMemory Differentiate(BytePool.RentMemory integration)
+        {
+            try
+            {
+                var reader = new TinyhandReader(integration.Span);
+                var state = (IntegralityState)reader.ReadUInt8();
+                if (state == IntegralityState.Probe)
+                {
+                    var hash = ((IIntegrality)this).GetIntegralityHash();
+                    var writer = TinyhandWriter.CreateFromBytePool();
+                    writer.WriteUInt8((byte)IntegralityState.ProbeResponse);
+                    writer.WriteUInt64(hash);
+                    if (hash != reader.ReadUInt64())
+                    {
+                        foreach (var x in this)
+                        {
+                            // var key = x.identifier;
+                            writer.WriteSpan(MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref x.identifier, 1)));
+                            writer.WriteUInt64(((IIntegrality)x).GetIntegralityHash());
+                        }
+                    }
+
+                    return new(IntegralityResult.Success, writer.FlushAndGetRentMemory());
+                }
+                else if (state == IntegralityState.Get)
+                {
+                }
+            }
+            catch
+            {
+            }
+
+            return new(IntegralityResult.InvalidData);
+        }
+
         void ProcessProbeResponse(ref TinyhandReader reader, ref TinyhandWriter writer)
         {
             lock (this.syncObject)
             {
                 while (!reader.End)
                 {
-                    
+
                     var key = reader.ReadUInt64();
                     key = TinyhandSerializer.Deserialize<ulong>(ref reader);
                     var hash = reader.ReadUInt64();

@@ -11,46 +11,52 @@ using Tinyhand.IO;
 
 namespace ValueLink.Integrality;
 
-public class IntegralityEngine<TGoshujin, TObject>
+public abstract class IntegralityEngine
+{
+    #region FieldAndProperty
+
+    public ulong TargetHash { get; protected set; }
+
+    #endregion
+}
+
+public abstract class IntegralityEngine<TGoshujin, TObject> : IntegralityEngine
     where TGoshujin : IGoshujin, IIntegrality
     where TObject : ITinyhandSerialize<TObject>, IIntegrality
 {// Integrate/Differentiate
-    public static async Task<IntegralityResultMemory> Differentiate(TGoshujin obj, BytePool.RentMemory integration)
-    {
-        return default;
-    }
-
     public IntegralityEngine()
     {
     }
 
-    #region FieldAndProperty
-
-    private ulong targetHash;
-
-    #endregion
-
-    public async Task<IntegralityResult> Integrate(TGoshujin obj, DifferentiateDelegate differentiateDelegate, CancellationToken cancellationToken = default)
+    public async Task<IntegralityResult> Integrate(TGoshujin obj, IntegralityBrokerDelegate brokerDelegate, CancellationToken cancellationToken = default)
     {
         // Probe
         var rentMemory = this.CreateProbePacket(obj);
         IntegralityResultMemory resultMemory;
         try
         {
-            resultMemory = await differentiateDelegate(rentMemory, cancellationToken).ConfigureAwait(false);
+            resultMemory = await brokerDelegate(rentMemory, cancellationToken).ConfigureAwait(false);
         }
         finally
         {
             rentMemory.Return();
         }
 
-        // ProbeResponse
+        /*var resultMemory = await brokerDelegate(IntegralityHelper.ProbePacket, cancellationToken).ConfigureAwait(false);
+        if (resultMemory.Result != IntegralityResult.Success)
+        {
+            resultMemory.Return();
+            return resultMemory.Result;
+        }*/
+
+        // ProbeResponse: resultMemory
         IntegralityResultMemory resultMemory2;
         try
         {
             resultMemory2 = this.ProcessProbeResponsePacket(obj, resultMemory);
-            if (resultMemory2.Result != IntegralityResult.Continue)
+            if (resultMemory2.Result != IntegralityResult.Incomplete)
             {
+                resultMemory2.Return();
                 return resultMemory2.Result;
             }
         }
@@ -59,17 +65,17 @@ public class IntegralityEngine<TGoshujin, TObject>
             resultMemory.Return();
         }
 
-        // Get
+        // Get: resultMemory2
         try
         {
-            resultMemory = await differentiateDelegate(resultMemory2.RentMemory, cancellationToken).ConfigureAwait(false);
+            resultMemory = await brokerDelegate(resultMemory2.RentMemory, cancellationToken).ConfigureAwait(false);
         }
         finally
         {
             resultMemory2.Return();
         }
 
-        // GetResponse loop
+        // GetResponse: resultMemory
 
         return IntegralityResult.Success;
     }
@@ -112,14 +118,14 @@ public class IntegralityEngine<TGoshujin, TObject>
                 return new(IntegralityResult.InvalidData);
             }
 
-            this.targetHash = reader.ReadUInt64();
+            this.TargetHash = reader.ReadUInt64();
         }
         catch
         {
             return new(IntegralityResult.InvalidData);
         }
 
-        if (obj.GetIntegralityHash() == this.targetHash)
+        if (obj.GetIntegralityHash() == this.TargetHash)
         {// Identical
             return new(IntegralityResult.Success);
         }
@@ -128,8 +134,8 @@ public class IntegralityEngine<TGoshujin, TObject>
         try
         {
             writer.WriteUInt8((byte)IntegralityState.Get);
-            obj.ProcessProbeResponse(ref reader, ref writer);
-            return new(IntegralityResult.Continue, writer.FlushAndGetRentMemory());
+            obj.ProcessProbeResponse(this, ref reader, ref writer);
+            return new(IntegralityResult.Incomplete, writer.FlushAndGetRentMemory());
         }
         catch
         {

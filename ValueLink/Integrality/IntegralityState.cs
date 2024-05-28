@@ -4,7 +4,7 @@
 
 namespace ValueLink.Integrality;
 
-internal enum IntegralityState : byte
+public enum IntegralityState : byte
 {
     Probe,
     ProbeResponse,

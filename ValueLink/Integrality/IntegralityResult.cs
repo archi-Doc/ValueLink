@@ -7,7 +7,7 @@ namespace ValueLink.Integrality;
 public enum IntegralityResult
 {
     Success, // Integrated
-    Continue,
+    Incomplete,
     InvalidData,
     NoNetwork,
 }
