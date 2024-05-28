@@ -1895,6 +1895,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 return;
             }
 
+            ScopingStringBuilder.IScope? scopeLock = this.ObjectAttribute?.Isolation == IsolationLevel.Serializable ? ssb.ScopeBrace("lock (this.syncObject)") : null;
+
             using (var tryScope = ssb.ScopeBrace("try"))
             {
                 ssb.AppendLine("var reader = new TinyhandReader(integration.Span);");
@@ -1934,6 +1936,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             }
 
             ssb.AppendLine("catch { }");
+            scopeLock?.Dispose();
             ssb.AppendLine();
             ssb.AppendLine("return new(IntegralityResult.InvalidData);");
         }
