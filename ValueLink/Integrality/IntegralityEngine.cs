@@ -1,5 +1,7 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Arc.Collections;
@@ -36,6 +38,11 @@ public class IntegralityEngine<TGoshujin, TObject> : IntegralityEngine
         try
         {
             resultMemory = await brokerDelegate(rentMemory, cancellationToken).ConfigureAwait(false);
+            if (resultMemory.Result != IntegralityResult.Success)
+            {
+                resultMemory.Return();
+                return resultMemory.Result;
+            }
         }
         finally
         {
@@ -92,8 +99,8 @@ public class IntegralityEngine<TGoshujin, TObject> : IntegralityEngine
         var writer = TinyhandWriter.CreateFromBytePool();
         try
         {
-            writer.WriteUInt8((byte)IntegralityState.Probe);
-            writer.WriteUInt64(obj.GetIntegralityHash());
+            writer.RawWriteUInt8((byte)IntegralityState.Probe);
+            writer.RawWriteUInt64(obj.GetIntegralityHash());
             return writer.FlushAndGetRentMemory();
         }
         finally
@@ -104,21 +111,26 @@ public class IntegralityEngine<TGoshujin, TObject> : IntegralityEngine
 
     private IntegralityResultMemory ProcessProbeResponsePacket(TGoshujin obj, IntegralityResultMemory resultMemory)
     {
-        if (resultMemory.Result != IntegralityResult.Success)
-        {
-            return new(resultMemory.Result);
-        }
-
         var reader = new TinyhandReader(resultMemory.RentMemory.Span);
         try
         {
-            var state = (IntegralityState)reader.ReadUInt8();
+            var span = reader.ReadRaw(sizeof(byte) + sizeof(ulong));
+            var state = (IntegralityState)span[0];
+            if (state != IntegralityState.ProbeResponse)
+            {
+                return new(IntegralityResult.InvalidData);
+            }
+
+            span = span.Slice(sizeof(byte));
+            this.TargetHash = Unsafe.ReadUnaligned<ulong>(ref MemoryMarshal.GetReference(span));
+
+            /*var state = (IntegralityState)reader.ReadUInt8();
             if (state != IntegralityState.Probe)
             {
                 return new(IntegralityResult.InvalidData);
             }
 
-            this.TargetHash = reader.ReadUInt64();
+            this.TargetHash = reader.ReadUInt64();*/
         }
         catch
         {
