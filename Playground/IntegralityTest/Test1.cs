@@ -37,7 +37,7 @@ public class Test1
         var engine = TestIntegralityEngine.Pool.Get();
         try
         {
-            var result = await engine.Integrate(g, (x, y) => TestIntegralityEngine.Differentiate(g2, x));
+            var result = await engine.Integrate(g, (x, y) => Task.FromResult(((IIntegrality)g).Differentiate(x)));
         }
         finally
         {

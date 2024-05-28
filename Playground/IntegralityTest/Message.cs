@@ -4,8 +4,12 @@ using System;
 using System.Buffers;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Arc.Collections;
+using System.Threading.Tasks;
+using System.Threading;
 using Tinyhand;
 using ValueLink;
+using ValueLink.Integrality;
 
 namespace Playground;
 
@@ -19,34 +23,11 @@ public partial class Message
     public const int MaxNameLength = 50;
     public const int MaxContentLength = 4_000;
 
-    /*public partial class GoshujinClass : IIntegrality
+    /*public partial class GoshujinClass
     {
-        private ulong integralityHash;
-        void IIntegrality.ClearIntegralityHash() => this.integralityHash = 0;
-        ulong IIntegrality.GetIntegralityHash()
+        public Task<DifferentiateResult> Differentiate(BytePool.RentMemory integration, CancellationToken cancellationToken)
         {
-            if (this.integralityHash != 0) return this.integralityHash;
 
-            byte[]? rent = null;
-            lock (this.syncObject)
-            {
-                var keyLength = Unsafe.SizeOf<ulong>();
-                var length = (keyLength + sizeof(ulong)) * this.Count;
-                Span<byte> span = length <= 4096 ?
-                stackalloc byte[length] : (rent = ArrayPool<byte>.Shared.Rent(length));
-                var s = span;
-                foreach (var x in this.IdentifierChain)
-                {
-                    Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(s), x.identifier);
-                    s = s.Slice(keyLength);
-                    Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(s), ((IIntegrality)x).GetIntegralityHash());
-                }
-
-                this.integralityHash = Arc.Crypto.XxHash3.Hash64(span);
-            }
-
-            if (rent is not null) ArrayPool<byte>.Shared.Return(rent);
-            return this.integralityHash;
         }
     }*/
 
