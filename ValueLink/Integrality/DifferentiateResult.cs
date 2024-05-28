@@ -1,5 +1,6 @@
-﻿using Arc.Collections;
-using Tinyhand.Integrality;
+﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
+
+using Arc.Collections;
 
 namespace ValueLink.Integrality;
 

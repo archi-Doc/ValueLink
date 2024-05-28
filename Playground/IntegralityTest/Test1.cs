@@ -1,10 +1,24 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Arc.Collections;
 using Arc.Unit;
 using Tinyhand;
 using ValueLink.Integrality;
 
 namespace Playground;
+
+public class TestIntegralityEngine : IntegralityEngine<Message.GoshujinClass, Message>
+{
+    public static readonly ObjectPool<TestIntegralityEngine> Pool = new(() => new());
+
+    public override bool Validate(Message obj)
+        => true;
+
+    public override void Prune(Message.GoshujinClass goshujin)
+    {
+    }
+}
+
 
 public class Test1
 {

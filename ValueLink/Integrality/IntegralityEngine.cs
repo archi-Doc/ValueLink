@@ -1,38 +1,23 @@
-﻿using System;
+﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
+
 using System.Threading;
 using System.Threading.Tasks;
 using Arc.Collections;
-using Playground;
 using Tinyhand;
 using Tinyhand.IO;
 
 #pragma warning disable CS1998
+#pragma warning disable SA1124
 
 namespace ValueLink.Integrality;
-
-public class TestIntegralityEngine : IntegralityEngine<Message.GoshujinClass, Message>
-{
-    public static readonly ObjectPool<TestIntegralityEngine> Pool = new(() => new());
-
-    public override bool Validate(Message obj)
-        => true;
-
-    public override void Prune(Message.GoshujinClass goshujin)
-    {
-    }
-}
-
-
 
 public class IntegralityEngine<TGoshujin, TObject>
     where TGoshujin : IGoshujin, IIntegrality
     where TObject : ITinyhandSerialize<TObject>, IIntegrality
 {// Integrate/Differentiate
-
-
-    static public async Task<(IntegralityResult Result, BytePool.RentMemory Difference)> Differentiate(TGoshujin obj, BytePool.RentMemory integration)
+    public static async Task<DifferentiateResult> Differentiate(TGoshujin obj, BytePool.RentMemory integration)
     {
-        return (IntegralityResult.Success, default);
+        return default;
     }
 
     public IntegralityEngine()
@@ -65,7 +50,7 @@ public class IntegralityEngine<TGoshujin, TObject>
             try
             {
                 var result = this.ProcessProbeResponsePacket(obj, dif);
-                if (result != IntegralityResult.Success)
+                if (result != IntegralityResult.Continue)
                 {
                     return result;
                 }
@@ -115,7 +100,6 @@ public class IntegralityEngine<TGoshujin, TObject>
         }
 
         var reader = new TinyhandReader(dif.RentMemory.Span);
-        ulong hash;
         try
         {
             var state = (IntegralityState)reader.ReadUInt8();
@@ -124,13 +108,20 @@ public class IntegralityEngine<TGoshujin, TObject>
                 return IntegralityResult.InvalidData;
             }
 
-            var hash = reader.ReadUInt64();
+            this.targetHash = reader.ReadUInt64();
         }
         catch
         {
             return IntegralityResult.InvalidData;
         }
 
-        return IntegralityResult.Success;
+        if (obj.GetIntegralityHash() == this.targetHash)
+        {// Identical
+            return IntegralityResult.Success;
+        }
+
+        // obj.ProcessProbeResponse(ref reader);
+
+        return IntegralityResult.Continue;
     }
 }

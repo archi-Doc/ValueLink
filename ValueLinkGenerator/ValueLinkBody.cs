@@ -292,6 +292,7 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
         ssb.AddUsing("System.Threading.Tasks");
         ssb.AddUsing("Arc.Collections");
         ssb.AddUsing("ValueLink");
+        ssb.AddUsing("ValueLink.Integrality");
         if (tinyhandFlag)
         {
             ssb.AddUsing("Tinyhand");

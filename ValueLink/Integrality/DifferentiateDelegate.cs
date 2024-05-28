@@ -1,6 +1,8 @@
-﻿using Arc.Collections;
-using System.Threading.Tasks;
+﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
+
 using System.Threading;
+using System.Threading.Tasks;
+using Arc.Collections;
 
 namespace ValueLink.Integrality;
 
