@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Arc.Collections;
-using Arc.Unit;
 using Playground;
 using Tinyhand.IO;
 using ValueLink;
@@ -25,11 +22,37 @@ public class TestIntegralityEngine : IntegralityEngine<Message.GoshujinClass, Me
     }
 }
 
+/*[TinyhandObject]
+internal partial class ProbePacket
+{
+    [Key(0)]
+    public IntegralityState State { get; set; } = IntegralityState.Probe;
+
+    [Key(1)]
+    public ulong TargetHash { get; set; }
+}*/
+
+public readonly struct DifferentiateResult
+{
+    public DifferentiateResult(IntegralityResult result, BytePool.RentMemory difference)
+    {
+        this.Result = result;
+        this.RentMemory = difference;
+    }
+
+    public readonly IntegralityResult Result;
+
+    public readonly BytePool.RentMemory RentMemory;
+
+    public void Return()
+        => this.RentMemory.Return();
+}
+
 public class IntegralityEngine<TGoshujin, TObject>
     where TGoshujin : IGoshujin, IIntegrality
     where TObject : ITinyhandSerialize<TObject>, IIntegrality
 {// Integrate/Differentiate
-    public delegate Task<(IntegralityResult Result, BytePool.RentMemory Difference)> DifferentiateDelegate(BytePool.RentMemory integration, CancellationToken cancellationToken);
+    public delegate Task<DifferentiateResult> DifferentiateDelegate(BytePool.RentMemory integration, CancellationToken cancellationToken);
 
     static public async Task<(IntegralityResult Result, BytePool.RentMemory Difference)> Differentiate(TGoshujin obj, BytePool.RentMemory integration)
     {
@@ -51,26 +74,29 @@ public class IntegralityEngine<TGoshujin, TObject>
     {
         if (this.state == IntegralityState.Probe)
         {// Probe
-            var primaryHash = obj.GetIntegralityHash();
-            var rentArray = BytePool.Default.Rent(sizeof(ulong));
-            var rentMemory = rentArray.AsMemory(0, sizeof(ulong));
-            Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(rentMemory.Span), primaryHash);
-            var r = await differentiateDelegate(rentMemory, cancellationToken).ConfigureAwait(false);
-            if (r.Result != IntegralityResult.Success)
+            var rentMemory = this.CreateProbePacket(obj);
+
+            DifferentiateResult dif;
+            try
             {
-                return r.Result;
+                dif = await differentiateDelegate(rentMemory, cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                rentMemory.Return();
             }
 
-            var memory = r.Difference.Memory;
-            if (memory.Length < sizeof(ulong))
+            try
             {
-                return IntegralityResult.InvalidData;
+                var result = this.ProcessProbeResponsePacket(obj, dif);
+                if (result != IntegralityResult.Success)
+                {
+                    return result;
+                }
             }
-
-            this.targetHash = BitConverter.ToUInt64(memory.Span);
-            if (primaryHash == this.targetHash)
+            finally
             {
-                return IntegralityResult.Success;
+                dif.Return();
             }
 
             this.state = IntegralityState.Request;
@@ -80,14 +106,6 @@ public class IntegralityEngine<TGoshujin, TObject>
         {
         }
 
-        void Internal()
-        {
-            //var writer = new TinyhandWriter(owner.ByteArray);
-            //writer.WriteUInt8((byte)state);
-
-        }
-
-
         return IntegralityResult.Success;
     }
 
@@ -96,5 +114,47 @@ public class IntegralityEngine<TGoshujin, TObject>
 
     public virtual void Prune(TGoshujin goshujin)
     {
+    }
+
+    private BytePool.RentMemory CreateProbePacket(TGoshujin obj)
+    {
+        var writer = TinyhandWriter.CreateFromBytePool();
+        try
+        {
+            writer.WriteUInt8((byte)IntegralityState.Probe);
+            writer.WriteUInt64(obj.GetIntegralityHash());
+            return writer.FlushAndGetRentMemory();
+        }
+        finally
+        {
+            writer.Dispose();
+        }
+    }
+
+    private IntegralityResult ProcessProbeResponsePacket(TGoshujin obj, DifferentiateResult dif)
+    {
+        if (dif.Result != IntegralityResult.Success)
+        {
+            return dif.Result;
+        }
+
+        var reader = new TinyhandReader(dif.RentMemory.Span);
+        ulong hash;
+        try
+        {
+            var state = (IntegralityState)reader.ReadUInt8();
+            if (state != IntegralityState.Probe)
+            {
+                return IntegralityResult.InvalidData;
+            }
+
+            var hash = reader.ReadUInt64();
+        }
+        catch
+        {
+            return IntegralityResult.InvalidData;
+        }
+
+        return IntegralityResult.Success;
     }
 }
