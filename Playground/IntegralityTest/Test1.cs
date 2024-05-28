@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Arc.Unit;
 using Tinyhand;
-using Tinyhand.Integrality;
+using ValueLink.Integrality;
 
 namespace Playground;
 

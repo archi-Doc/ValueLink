@@ -1,9 +1,9 @@
-﻿namespace Tinyhand.Integrality;
+﻿namespace ValueLink.Integrality;
 
 internal enum IntegralityState : byte
 {
     Probe,
     ProbeResponse,
-    Request,
-    RequestResponse,
+    Get,
+    GetResponse,
 }

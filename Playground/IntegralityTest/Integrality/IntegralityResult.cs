@@ -1,4 +1,4 @@
-﻿namespace Tinyhand.Integrality;
+﻿namespace ValueLink.Integrality;
 
 public enum IntegralityResult
 {

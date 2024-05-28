@@ -3,12 +3,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Arc.Collections;
 using Playground;
+using Tinyhand;
 using Tinyhand.IO;
-using ValueLink;
 
 #pragma warning disable CS1998
 
-namespace Tinyhand.Integrality;
+namespace ValueLink.Integrality;
 
 public class TestIntegralityEngine : IntegralityEngine<Message.GoshujinClass, Message>
 {
@@ -22,37 +22,13 @@ public class TestIntegralityEngine : IntegralityEngine<Message.GoshujinClass, Me
     }
 }
 
-/*[TinyhandObject]
-internal partial class ProbePacket
-{
-    [Key(0)]
-    public IntegralityState State { get; set; } = IntegralityState.Probe;
 
-    [Key(1)]
-    public ulong TargetHash { get; set; }
-}*/
-
-public readonly struct DifferentiateResult
-{
-    public DifferentiateResult(IntegralityResult result, BytePool.RentMemory difference)
-    {
-        this.Result = result;
-        this.RentMemory = difference;
-    }
-
-    public readonly IntegralityResult Result;
-
-    public readonly BytePool.RentMemory RentMemory;
-
-    public void Return()
-        => this.RentMemory.Return();
-}
 
 public class IntegralityEngine<TGoshujin, TObject>
     where TGoshujin : IGoshujin, IIntegrality
     where TObject : ITinyhandSerialize<TObject>, IIntegrality
 {// Integrate/Differentiate
-    public delegate Task<DifferentiateResult> DifferentiateDelegate(BytePool.RentMemory integration, CancellationToken cancellationToken);
+
 
     static public async Task<(IntegralityResult Result, BytePool.RentMemory Difference)> Differentiate(TGoshujin obj, BytePool.RentMemory integration)
     {
@@ -99,10 +75,10 @@ public class IntegralityEngine<TGoshujin, TObject>
                 dif.Return();
             }
 
-            this.state = IntegralityState.Request;
+            this.state = IntegralityState.Get;
         }
 
-        if (this.state == IntegralityState.Request)
+        if (this.state == IntegralityState.Get)
         {
         }
 

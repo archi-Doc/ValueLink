@@ -1,4 +1,4 @@
-﻿namespace Tinyhand;
+﻿namespace ValueLink.Integrality;
 
 public interface IIntegrality
 {// Exaltation of the Integrality by Baxter.
