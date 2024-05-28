@@ -20,7 +20,7 @@ public abstract class IntegralityEngine
     #endregion
 }
 
-public abstract class IntegralityEngine<TGoshujin, TObject> : IntegralityEngine
+public class IntegralityEngine<TGoshujin, TObject> : IntegralityEngine
     where TGoshujin : IGoshujin, IIntegrality
     where TObject : ITinyhandSerialize<TObject>, IIntegrality
 {// Integrate/Differentiate
@@ -134,7 +134,7 @@ public abstract class IntegralityEngine<TGoshujin, TObject> : IntegralityEngine
         try
         {
             writer.WriteUInt8((byte)IntegralityState.Get);
-            obj.ProcessProbeResponse(this, ref reader, ref writer);
+            obj.Integrate(this, ref reader, ref writer);
             return new(IntegralityResult.Incomplete, writer.FlushAndGetRentMemory());
         }
         catch

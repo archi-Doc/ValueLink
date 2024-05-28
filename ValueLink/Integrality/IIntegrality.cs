@@ -13,9 +13,7 @@ public interface IIntegrality
 
     ulong GetIntegralityHash();
 
-    IntegralityResultMemory Differentiate(BytePool.RentMemory integration)
-        => default;
+    IntegralityResultMemory Differentiate(BytePool.RentMemory integration);
 
-    void ProcessProbeResponse(IntegralityEngine engine, ref TinyhandReader reader, ref TinyhandWriter writer)
-    { }
+    void Integrate(IntegralityEngine engine, ref TinyhandReader reader, ref TinyhandWriter writer);
 }

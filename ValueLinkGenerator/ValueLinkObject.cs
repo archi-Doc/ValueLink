@@ -1047,6 +1047,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
 
         ssb.AppendLine($"ulong {ValueLinkBody.IIntegrality}.GetIntegralityHash() => this.integralityHash != 0 ? this.integralityHash : this.integralityHash = TinyhandSerializer.GetXxHash3(this);");
+
+        ssb.AppendLine($"IntegralityResultMemory {ValueLinkBody.IIntegrality}.Differentiate(BytePool.RentMemory integration) => default;");
+        ssb.AppendLine($"void {ValueLinkBody.IIntegrality}.Integrate(IntegralityEngine engine, ref TinyhandReader reader, ref TinyhandWriter writer) {{ }}");
     }
 
     internal void Generate_WriteLocator(ScopingStringBuilder ssb, GeneratorInformation info)
@@ -1877,6 +1880,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             ssb.AppendLine("if (rent is not null) System.Buffers.ArrayPool<byte>.Shared.Return(rent);");
             ssb.AppendLine("return this.integralityHash;");
         }
+
+        ssb.AppendLine($"IntegralityResultMemory {ValueLinkBody.IIntegrality}.Differentiate(BytePool.RentMemory integration) => default;");
+        ssb.AppendLine($"void {ValueLinkBody.IIntegrality}.Integrate(IntegralityEngine engine, ref TinyhandReader reader, ref TinyhandWriter writer) {{ }}");
     }
 
     internal void GenerateGoshujin_EquatableGoshujin(ScopingStringBuilder ssb, GeneratorInformation info)
