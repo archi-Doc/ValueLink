@@ -15,5 +15,7 @@ public interface IIntegrality
 
     IntegralityResultMemory Differentiate(BytePool.RentMemory integration);
 
+    void Compare(IntegralityEngine engine, ref TinyhandReader reader, ref TinyhandWriter writer);
+
     void Integrate(IntegralityEngine engine, ref TinyhandReader reader, ref TinyhandWriter writer);
 }

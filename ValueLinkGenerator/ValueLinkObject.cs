@@ -1900,9 +1900,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             using (var tryScope = ssb.ScopeBrace("try"))
             {
                 ssb.AppendLine("var reader = new TinyhandReader(integration.Span);");
-                ssb.AppendLine("var span = reader.ReadRaw(sizeof(byte) + sizeof(ulong));");
-                ssb.AppendLine("var state = (IntegralityState)span[0];");
-                ssb.AppendLine("span = span.Slice(sizeof(byte));");
+                ssb.AppendLine("var state = (IntegralityState)reader.ReadRaw<byte>();");
 
                 using (var probeScope = ssb.ScopeBrace("if (state == IntegralityState.Probe)"))
                 {
@@ -1911,7 +1909,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     ssb.AppendLine("writer.RawWriteUInt8((byte)IntegralityState.ProbeResponse);");
                     ssb.AppendLine("writer.RawWriteUInt64(hash);");
 
-                    using (var hashScope = ssb.ScopeBrace("if (hash != Unsafe.ReadUnaligned<ulong>(ref MemoryMarshal.GetReference(span)))"))
+                    using (var hashScope = ssb.ScopeBrace("if (hash != reader.ReadRaw<ulong>())"))
                     {
                         using (var forScope = ssb.ScopeBrace($"foreach (var x in this.{this.UniqueLink.ChainName})"))
                         {
