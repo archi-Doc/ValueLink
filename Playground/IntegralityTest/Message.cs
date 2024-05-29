@@ -1,15 +1,18 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
-using System;
-using System.Buffers;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using Tinyhand;
 using ValueLink;
+using ValueLink.Integrality;
+using Tinyhand.IO;
+using Arc.Collections;
+using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
+using System;
+using System.Net.Http.Headers;
+using Arc.Crypto;
+using System.Collections.Generic;
 
 namespace Playground;
-
-
 
 [TinyhandObject]
 [ValueLinkObject(Isolation = IsolationLevel.Serializable, Integrality = true)]
@@ -19,34 +22,144 @@ public partial class Message
     public const int MaxNameLength = 50;
     public const int MaxContentLength = 4_000;
 
-    /*public partial class GoshujinClass : IIntegrality
+    /*public partial class GoshujinClass
     {
-        private ulong integralityHash;
-        void IIntegrality.ClearIntegralityHash() => this.integralityHash = 0;
-        ulong IIntegrality.GetIntegralityHash()
+        IntegralityResultMemory Differentiate(Integrality engine, BytePool.RentMemory integration)
         {
-            if (this.integralityHash != 0) return this.integralityHash;
-
-            byte[]? rent = null;
-            lock (this.syncObject)
+            try
             {
-                var keyLength = Unsafe.SizeOf<ulong>();
-                var length = (keyLength + sizeof(ulong)) * this.Count;
-                Span<byte> span = length <= 4096 ?
-                stackalloc byte[length] : (rent = ArrayPool<byte>.Shared.Rent(length));
-                var s = span;
-                foreach (var x in this.IdentifierChain)
+                var reader = new TinyhandReader(integration.Span);
+                var state = (IntegralityState)reader.ReadUInt8();
+                if (state == IntegralityState.Probe)
                 {
-                    Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(s), x.identifier);
-                    s = s.Slice(keyLength);
-                    Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(s), ((IIntegrality)x).GetIntegralityHash());
-                }
+                    var hash = ((IIntegralityObject)this).GetIntegralityHash();
+                    var writer = TinyhandWriter.CreateFromBytePool();
+                    writer.WriteUInt8((byte)IntegralityState.ProbeResponse);
+                    writer.WriteUInt64(hash);
+                    if (hash != reader.ReadUInt64())
+                    {
+                        var count = 0;
+                        foreach (var x in this)
+                        {
+                            if (count >= engine.MaxItems) break;
+                            // var key = x.identifier;
+                            writer.WriteUnsafe(x.identifier);
+                            writer.WriteUnsafe(((IIntegralityObject)x).GetIntegralityHash());
+                        }
+                    }
 
-                this.integralityHash = Arc.Crypto.XxHash3.Hash64(span);
+                    return new(IntegralityResult.Success, writer.FlushAndGetRentMemory());
+                }
+                else if (state == IntegralityState.Get)
+                {
+                    var writer = TinyhandWriter.CreateFromBytePool();
+                    writer.WriteUInt8((byte)IntegralityState.GetResponse);
+                    int written = 0;
+                    while (!reader.End)
+                    {
+                        var key = reader.ReadUnsafe<ulong>();
+                        writer.WriteUnsafe(key);
+                        if (this.IdentifierChain.FindFirst(key) is { } obj)
+                        {
+                            TinyhandSerializer.SerializeObject(ref writer, obj);
+                        }
+                        else
+                        {
+                            writer.WriteNil();
+                        }
+
+                        if (writer.Written < engine.MaxMemoryLength) written = (int)writer.Written;
+                        else break;
+                    }
+
+                    return new(IntegralityResult.Success, writer.FlushAndGetRentMemory().Slice(0, written));
+                }
+            }
+            catch
+            {
             }
 
-            if (rent is not null) ArrayPool<byte>.Shared.Return(rent);
-            return this.integralityHash;
+            return new(IntegralityResult.InvalidData);
+        }
+
+
+        void Compare(Integrality engine, ref TinyhandReader reader, ref TinyhandWriter writer)
+        {
+            lock (this.syncObject)
+            {
+                var cache = engine.GetKeyHashCache<ulong>(true);
+                try
+                {
+                    while (!reader.End)
+                    {
+                        var key = reader.ReadUnsafe<ulong>();
+                        var hash = reader.ReadUnsafe<ulong>();
+                        if (this.IdentifierChain.FindFirst(key) is not IIntegralityObject obj || obj.GetIntegralityHash() != hash)
+                        {
+                            if (cache.Count >= engine.MaxItems) break;
+                            cache.TryAdd(key, hash);
+                            writer.WriteUInt64(key);
+                        }
+                    }
+
+                    if (engine.RemoveIfItemNotFound)
+                    {
+                        List<Message>? list = default;
+                        foreach (var x in this.IdentifierChain)
+                        {
+                            if (!cache.ContainsKey(x.identifier))
+                            {
+                                list ??= new();
+                                list.Add(x);
+                            }
+                        }
+                        if (list is not null) foreach (var x in list) x.Goshujin = default;
+                    }
+                }
+                catch
+                {
+                }
+            }
+        }
+
+        void Integrate(Integrality engine, ref TinyhandReader reader, ref TinyhandWriter writer)
+        {
+            lock (this.syncObject)
+            {
+                try
+                {
+                    var cache = engine.GetKeyHashCache<ulong>(true);
+                    while (!reader.End)
+                    {
+                        var key = reader.ReadUnsafe<ulong>();
+                        if (reader.TryReadNil()) continue;
+                        var obj = TinyhandSerializer.DeserializeObject<Message>(ref reader);
+                        cache.Remove(key);
+                        this.Integrate(engine, obj);
+                    }
+
+                    foreach (var x in cache.Keys) writer.WriteUnsafe(x);
+                }
+                catch
+                {
+                }
+            }
+        }
+
+        IntegralityResult Integrate(Integrality engine, object obj)
+        {
+            if (obj is not Message newObj || !engine.Validate(newObj))
+            {
+                return IntegralityResult.InvalidData;
+            }
+
+            if (this.IdentifierChain.FindFirst(newObj.identifier) is { } oldObj)
+            {
+                oldObj.Goshujin = default;
+                newObj.Goshujin = this;
+            }
+
+            return IntegralityResult.Success;
         }
     }*/
 
@@ -67,7 +180,7 @@ public partial class Message
 
     [Key(0, AddProperty = "Identifier")]
     [Link(Primary = true, Unique = true, Type = ChainType.Unordered, AddValue = false)]
-    private ulong identifier;
+    private uint identifier;
 
     [Key(1, AddProperty = "MessageBoardIdentifier")]
     private ulong messageBoardIdentifier;
