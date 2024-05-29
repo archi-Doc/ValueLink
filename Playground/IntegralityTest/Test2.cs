@@ -33,16 +33,16 @@ public class Test1
         g.Add(new(2, 2, "B", "bbb", 2));
 
         var t = new Message(1, 1, "A", "aaa", 1);
-        var h = ((IExaltationOfIntegrality)t).GetIntegralityHash();
-        h = ((IExaltationOfIntegrality)g).GetIntegralityHash();
-        h = ((IExaltationOfIntegrality)g).GetIntegralityHash();
+        var h = ((IIntegralityObject)t).GetIntegralityHash();
+        h = ((IIntegralityObject)g).GetIntegralityHash();
+        h = ((IIntegralityObject)g).GetIntegralityHash();
 
         var g2 = new Message.GoshujinClass();
         var engine = TestIntegrality.Pool.Get();
         try
         {
-            var result = await engine.Integrate(g, (x, y) => Task.FromResult(((IExaltationOfIntegrality)g).Differentiate(engine, x)));
-            result = await engine.Integrate(g, (x, y) => Task.FromResult(((IExaltationOfIntegrality)g).Differentiate(engine, x)));
+            var result = await engine.Integrate(g2, (x, y) => Task.FromResult(((IIntegralityObject)g).Differentiate(engine, x)));
+            result = await engine.Integrate(g2, (x, y) => Task.FromResult(((IIntegralityObject)g).Differentiate(engine, x)));
         }
         finally
         {

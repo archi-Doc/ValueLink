@@ -5,7 +5,7 @@ using Tinyhand.IO;
 
 namespace ValueLink.Integrality;
 
-public interface IExaltationOfIntegrality
+public interface IIntegralityObject
 {// Exaltation of the Integrality by Baxter.
     void ClearIntegralityHash();
 
