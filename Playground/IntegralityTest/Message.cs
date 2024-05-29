@@ -40,8 +40,8 @@ public partial class Message
                         foreach (var x in this)
                         {
                             // var key = x.identifier;
-                            writer.WriteRaw(x.identifier);
-                            writer.WriteUInt64(((IIntegrality)x).GetIntegralityHash());
+                            writer.WriteUnsafe(x.identifier);
+                            writer.WriteUnsafe(((IIntegrality)x).GetIntegralityHash());
                         }
                     }
 
@@ -51,11 +51,13 @@ public partial class Message
                 {
                     var writer = TinyhandWriter.CreateFromBytePool();
                     writer.WriteUInt8((byte)IntegralityState.GetResponse);
+                    long written = 0;
                     while (!reader.End)
                     {
-                        var written = writer.Written;
-                        var key = reader.ReadRaw<ulong>();
-                        writer.WriteRaw(key);
+                        if (written < engine) written = writer.Written;
+                        else break;
+                        var key = reader.ReadUnsafe<ulong>();
+                        writer.WriteUnsafe(key);
                         if (this.IdentifierChain.FindFirst(key) is { } obj)
                         {
                             TinyhandSerializer.SerializeObject(ref writer, obj);
@@ -71,7 +73,7 @@ public partial class Message
                         }
                     }
 
-                    return new(IntegralityResult.Success, writer.FlushAndGetRentMemory());
+                    return new(IntegralityResult.Success, writer.FlushAndGetRentMemory().Slice(0, (int)written));
                 }
             }
             catch

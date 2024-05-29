@@ -11,8 +11,8 @@ public class TestIntegralityEngine : IntegralityEngine<Message.GoshujinClass, Me
 {
     public static readonly ObjectPool<TestIntegralityEngine> Pool = new(() => new()
     {
-        MaxCount = 1000,
-        DeleteIfNotExists = true,
+        MaxItems = 1000,
+        RemoveIfItemNotFound = true,
     });
 
     public override bool Validate(Message obj)

@@ -22,9 +22,9 @@ public abstract class IntegralityEngine
 
     #region FieldAndProperty
 
-    public required int MaxCount { get; init; }
+    public required int MaxItems { get; init; }
 
-    public required bool DeleteIfNotExists { get; init; }
+    public required bool RemoveIfItemNotFound { get; init; }
 
     public int MaxMemoryLength { get; init; } = 1024 * 1024 * 4; // ConnectionAgreement.MaxBlockSize
 
@@ -150,8 +150,8 @@ public class IntegralityEngine<TGoshujin, TObject> : IntegralityEngine
         var writer = TinyhandWriter.CreateFromBytePool();
         try
         {
-            writer.RawWriteUInt8((byte)IntegralityState.Probe);
-            writer.RawWriteUInt64(obj.GetIntegralityHash());
+            writer.WriteRawUInt8((byte)IntegralityState.Probe);
+            writer.WriteRawUInt64(obj.GetIntegralityHash());
             return writer.FlushAndGetRentMemory();
         }
         finally
@@ -165,13 +165,13 @@ public class IntegralityEngine<TGoshujin, TObject> : IntegralityEngine
         var reader = new TinyhandReader(resultMemory.RentMemory.Span);
         try
         {
-            var state = (IntegralityState)reader.ReadRaw<byte>();
+            var state = (IntegralityState)reader.ReadUnsafe<byte>();
             if (state != IntegralityState.ProbeResponse)
             {
                 return new(IntegralityResult.InvalidData);
             }
 
-            this.TargetHash = reader.ReadRaw<ulong>();
+            this.TargetHash = reader.ReadUnsafe<ulong>();
         }
         catch
         {
@@ -186,7 +186,7 @@ public class IntegralityEngine<TGoshujin, TObject> : IntegralityEngine
         var writer = TinyhandWriter.CreateFromBytePool();
         try
         {
-            writer.RawWriteUInt8((byte)IntegralityState.Get);
+            writer.WriteRawUInt8((byte)IntegralityState.Get);
             obj.Compare(this, ref reader, ref writer);
             return new(IntegralityResult.Incomplete, writer.FlushAndGetRentMemory());
         }
@@ -205,7 +205,7 @@ public class IntegralityEngine<TGoshujin, TObject> : IntegralityEngine
         var reader = new TinyhandReader(resultMemory.RentMemory.Span);
         try
         {
-            var state = (IntegralityState)reader.ReadRaw<byte>();
+            var state = (IntegralityState)reader.ReadUnsafe<byte>();
             if (state != IntegralityState.GetResponse)
             {
                 return new(IntegralityResult.InvalidData);
@@ -219,7 +219,7 @@ public class IntegralityEngine<TGoshujin, TObject> : IntegralityEngine
         var writer = TinyhandWriter.CreateFromBytePool();
         try
         {
-            writer.RawWriteUInt8((byte)IntegralityState.Get);
+            writer.WriteRawUInt8((byte)IntegralityState.Get);
             obj.Integrate(this, ref reader, ref writer);
             return new(IntegralityResult.Incomplete, writer.FlushAndGetRentMemory());
         }

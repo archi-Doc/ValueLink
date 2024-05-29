@@ -1902,21 +1902,21 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             using (var tryScope = ssb.ScopeBrace("try"))
             {
                 ssb.AppendLine("var reader = new TinyhandReader(integration.Span);");
-                ssb.AppendLine("var state = (IntegralityState)reader.ReadRaw<byte>();");
+                ssb.AppendLine("var state = (IntegralityState)reader.ReadUnsafe<byte>();");
 
                 using (var probeScope = ssb.ScopeBrace("if (state == IntegralityState.Probe)"))
                 {
                     ssb.AppendLine($"var hash = (({ValueLinkBody.IIntegrality})this).GetIntegralityHash();");
                     ssb.AppendLine("var writer = TinyhandWriter.CreateFromBytePool();");
-                    ssb.AppendLine("writer.RawWriteUInt8((byte)IntegralityState.ProbeResponse);");
-                    ssb.AppendLine("writer.RawWriteUInt64(hash);");
+                    ssb.AppendLine("writer.WriteUnsafe((byte)IntegralityState.ProbeResponse);");
+                    ssb.AppendLine("writer.WriteUnsafe(hash);");
 
-                    using (var hashScope = ssb.ScopeBrace("if (hash != reader.ReadRaw<ulong>())"))
+                    using (var hashScope = ssb.ScopeBrace("if (hash != reader.ReadUnsafe<ulong>())"))
                     {
                         using (var forScope = ssb.ScopeBrace($"foreach (var x in this.{this.UniqueLink.ChainName})"))
                         {
-                            ssb.AppendLine($"writer.WriteRaw(x.{this.UniqueLink.TargetName});");
-                            ssb.AppendLine($"writer.RawWriteUInt64((({ValueLinkBody.IIntegrality})x).GetIntegralityHash());");
+                            ssb.AppendLine($"writer.WriteUnsafe(x.{this.UniqueLink.TargetName});");
+                            ssb.AppendLine($"writer.WriteUnsafe((({ValueLinkBody.IIntegrality})x).GetIntegralityHash());");
                         }
                     }
 
@@ -1925,6 +1925,21 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
                 using (var getScope = ssb.ScopeBrace("else if (state == IntegralityState.Get)"))
                 {
+                    ssb.AppendLine("var writer = TinyhandWriter.CreateFromBytePool();");
+                    ssb.AppendLine("writer.WriteUInt8((byte)IntegralityState.GetResponse);");
+                    ssb.AppendLine("long written = 0;");
+
+                    using (var readScope = ssb.ScopeBrace("while (!reader.End)"))
+                    {
+                        // ssb.AppendLine($"");
+                        // ssb.AppendLine($"");
+                        ssb.AppendLine($"var key = reader.ReadUnsafe<{this.UniqueLink.TypeObject.FullName}>();");
+                        ssb.AppendLine("writer.WriteUnsafe(key);");
+                        ssb.AppendLine($"if (this.{this.UniqueLink.ChainName}.FindFirst(key) is {{ }} obj) TinyhandSerializer.SerializeObject(ref writer, obj);");
+                        ssb.AppendLine("else writer.WriteNil();");
+                    }
+
+                    ssb.AppendLine("return new(IntegralityResult.Success, writer.FlushAndGetRentMemory().Slice(0, 0));");
                 }
             }
 
@@ -1957,12 +1972,12 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             {
                 using (var readScope = ssb.ScopeBrace("while (!reader.End)"))
                 {
-                    ssb.AppendLine($"var key = reader.ReadRaw<{this.UniqueLink.TypeObject.FullName}>();");
-                    ssb.AppendLine("var hash = reader.ReadRaw<ulong>();");
+                    ssb.AppendLine($"var key = reader.ReadUnsafe<{this.UniqueLink.TypeObject.FullName}>();");
+                    ssb.AppendLine("var hash = reader.ReadUnsafe<ulong>();");
                     ssb.AppendLine("cache.TryAdd(key, hash);");
                     using (var ifScope = ssb.ScopeBrace($"if (this.{this.UniqueLink.ChainName}.FindFirst(key) is not {ValueLinkBody.IIntegrality} obj || obj.GetIntegralityHash() != hash)"))
                     {
-                        ssb.AppendLine("writer.WriteRaw(key);");
+                        ssb.AppendLine("writer.WriteUnsafe(key);");
                     }
                 }
             }
