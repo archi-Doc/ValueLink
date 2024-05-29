@@ -23,7 +23,7 @@ public partial class Message
 
     /*public partial class GoshujinClass
     {
-        IntegralityResultMemory Differentiate(BytePool.RentMemory integration)
+        IntegralityResultMemory Differentiate(IntegralityEngine engine, BytePool.RentMemory integration)
         {
             try
             {
@@ -31,7 +31,7 @@ public partial class Message
                 var state = (IntegralityState)reader.ReadUInt8();
                 if (state == IntegralityState.Probe)
                 {
-                    var hash = ((IIntegrality)this).GetIntegralityHash();
+                    var hash = ((IExaltationOfIntegrality)this).GetIntegralityHash();
                     var writer = TinyhandWriter.CreateFromBytePool();
                     writer.WriteUInt8((byte)IntegralityState.ProbeResponse);
                     writer.WriteUInt64(hash);
@@ -41,7 +41,7 @@ public partial class Message
                         {
                             // var key = x.identifier;
                             writer.WriteUnsafe(x.identifier);
-                            writer.WriteUnsafe(((IIntegrality)x).GetIntegralityHash());
+                            writer.WriteUnsafe(((IExaltationOfIntegrality)x).GetIntegralityHash());
                         }
                     }
 
@@ -51,11 +51,9 @@ public partial class Message
                 {
                     var writer = TinyhandWriter.CreateFromBytePool();
                     writer.WriteUInt8((byte)IntegralityState.GetResponse);
-                    long written = 0;
+                    int written = 0;
                     while (!reader.End)
                     {
-                        if (written < engine) written = writer.Written;
-                        else break;
                         var key = reader.ReadUnsafe<ulong>();
                         writer.WriteUnsafe(key);
                         if (this.IdentifierChain.FindFirst(key) is { } obj)
@@ -67,13 +65,11 @@ public partial class Message
                             writer.WriteNil();
                         }
 
-                        if (writer.Written > 1000)
-                        {
-                            break;
-                        }
+                        if (writer.Written < engine.MaxMemoryLength) written = (int)writer.Written;
+                        else break;
                     }
 
-                    return new(IntegralityResult.Success, writer.FlushAndGetRentMemory().Slice(0, (int)written));
+                    return new(IntegralityResult.Success, writer.FlushAndGetRentMemory().Slice(0, written));
                 }
             }
             catch
@@ -96,7 +92,7 @@ public partial class Message
                         var key = reader.ReadUInt64();
                         var hash = reader.ReadUInt64();
                         cache.TryAdd(key, hash);
-                        if (this.IdentifierChain.FindFirst(key) is not IIntegrality obj || obj.GetIntegralityHash() != hash)
+                        if (this.IdentifierChain.FindFirst(key) is not IExaltationOfIntegrality obj || obj.GetIntegralityHash() != hash)
                         {
                             writer.WriteUInt64(key);
                         }

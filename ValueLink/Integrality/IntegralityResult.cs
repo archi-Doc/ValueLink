@@ -9,5 +9,6 @@ public enum IntegralityResult
     Success, // Integrated
     Incomplete,
     InvalidData,
+    NotImplemented,
     NoNetwork,
 }

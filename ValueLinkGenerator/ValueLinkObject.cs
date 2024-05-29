@@ -1047,10 +1047,6 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
 
         ssb.AppendLine($"ulong {ValueLinkBody.IIntegrality}.GetIntegralityHash() => this.integralityHash != 0 ? this.integralityHash : this.integralityHash = TinyhandSerializer.GetXxHash3(this);");
-
-        ssb.AppendLine($"IntegralityResultMemory {ValueLinkBody.IIntegrality}.Differentiate(BytePool.RentMemory integration) => default;");
-        ssb.AppendLine($"void {ValueLinkBody.IIntegrality}.Integrate(IntegralityEngine engine, ref TinyhandReader reader, ref TinyhandWriter writer) {{ }}");
-        ssb.AppendLine($"void {ValueLinkBody.IIntegrality}.Compare(IntegralityEngine engine, ref TinyhandReader reader, ref TinyhandWriter writer) {{ }}");
     }
 
     internal void Generate_WriteLocator(ScopingStringBuilder ssb, GeneratorInformation info)
@@ -1885,11 +1881,12 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         this.GenerateGosjujin_Integrality_Differentiate(ssb, info);
         this.GenerateGosjujin_Integrality_Compare(ssb, info);
         this.GenerateGosjujin_Integrality_Integrate(ssb, info);
+        this.GenerateGosjujin_Integrality_Integrate2(ssb, info);
     }
 
     internal void GenerateGosjujin_Integrality_Differentiate(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        using (var methodScope = ssb.ScopeBrace($"IntegralityResultMemory {ValueLinkBody.IIntegrality}.Differentiate(BytePool.RentMemory integration)"))
+        using (var methodScope = ssb.ScopeBrace($"IntegralityResultMemory {ValueLinkBody.IIntegrality}.Differentiate(IntegralityEngine engine, BytePool.RentMemory integration)"))
         {
             if (this.UniqueLink is null)
             {
@@ -1927,7 +1924,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 {
                     ssb.AppendLine("var writer = TinyhandWriter.CreateFromBytePool();");
                     ssb.AppendLine("writer.WriteUInt8((byte)IntegralityState.GetResponse);");
-                    ssb.AppendLine("long written = 0;");
+                    ssb.AppendLine("int written = 0;");
 
                     using (var readScope = ssb.ScopeBrace("while (!reader.End)"))
                     {
@@ -1937,9 +1934,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                         ssb.AppendLine("writer.WriteUnsafe(key);");
                         ssb.AppendLine($"if (this.{this.UniqueLink.ChainName}.FindFirst(key) is {{ }} obj) TinyhandSerializer.SerializeObject(ref writer, obj);");
                         ssb.AppendLine("else writer.WriteNil();");
+                        ssb.AppendLine("if (writer.Written < engine.MaxMemoryLength) written = (int)writer.Written;");
+                        ssb.AppendLine("else break;");
                     }
 
-                    ssb.AppendLine("return new(IntegralityResult.Success, writer.FlushAndGetRentMemory().Slice(0, 0));");
+                    ssb.AppendLine("return new(IntegralityResult.Success, writer.FlushAndGetRentMemory().Slice(0, written));");
                 }
             }
 
@@ -1951,8 +1950,13 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     }
 
     internal void GenerateGosjujin_Integrality_Integrate(ScopingStringBuilder ssb, GeneratorInformation info)
-    {
+    { // IntegralityResult Integrate(IntegralityEngine engine, object obj);
         ssb.AppendLine($"void {ValueLinkBody.IIntegrality}.Integrate(IntegralityEngine engine, ref TinyhandReader reader, ref TinyhandWriter writer) {{ }}");
+    }
+
+    internal void GenerateGosjujin_Integrality_Integrate2(ScopingStringBuilder ssb, GeneratorInformation info)
+    {
+        ssb.AppendLine($"IntegralityResult Integrate(IntegralityEngine engine, object obj) => IntegralityResult.NotImplemented;");
     }
 
     internal void GenerateGosjujin_Integrality_Compare(ScopingStringBuilder ssb, GeneratorInformation info)

@@ -54,8 +54,8 @@ public abstract class IntegralityEngine
 }
 
 public class IntegralityEngine<TGoshujin, TObject> : IntegralityEngine
-    where TGoshujin : IGoshujin, IIntegrality
-    where TObject : ITinyhandSerialize<TObject>, IIntegrality
+    where TGoshujin : IGoshujin, IExaltationOfIntegrality
+    where TObject : ITinyhandSerialize<TObject>, IExaltationOfIntegrality
 {// Integrate/Differentiate
     public IntegralityEngine()
     {
