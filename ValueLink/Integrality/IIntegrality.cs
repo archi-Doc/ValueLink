@@ -18,4 +18,6 @@ public interface IIntegrality
     void Compare(IntegralityEngine engine, ref TinyhandReader reader, ref TinyhandWriter writer);
 
     void Integrate(IntegralityEngine engine, ref TinyhandReader reader, ref TinyhandWriter writer);
+
+    IntegralityResult Integrate(IntegralityEngine engine, object obj);
 }

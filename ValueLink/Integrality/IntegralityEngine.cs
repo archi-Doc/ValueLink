@@ -16,6 +16,8 @@ namespace ValueLink.Integrality;
 
 public abstract class IntegralityEngine
 {
+    public delegate Task<IntegralityResultMemory> BrokerDelegate(BytePool.RentMemory integration, CancellationToken cancellationToken);
+
     public IntegralityEngine()
     {
     }
@@ -59,10 +61,15 @@ public class IntegralityEngine<TGoshujin, TObject> : IntegralityEngine
     {
     }
 
-    public async Task<IntegralityResult> Integrate(TGoshujin obj, IntegralityBrokerDelegate brokerDelegate, CancellationToken cancellationToken = default)
+    public IntegralityResult Integrate(TGoshujin goshujin, TObject obj)
+    {
+        return goshujin.Integrate(this, obj);
+    }
+
+    public async Task<IntegralityResult> Integrate(TGoshujin goshujin, IntegralityEngine.BrokerDelegate brokerDelegate, CancellationToken cancellationToken = default)
     {
         // Probe
-        var rentMemory = this.CreateProbePacket(obj);
+        var rentMemory = this.CreateProbePacket(goshujin);
         IntegralityResultMemory resultMemory;
         try
         {
@@ -82,7 +89,7 @@ public class IntegralityEngine<TGoshujin, TObject> : IntegralityEngine
         IntegralityResultMemory resultMemory2;
         try
         {
-            resultMemory2 = this.ProcessProbeResponsePacket(obj, resultMemory);
+            resultMemory2 = this.ProcessProbeResponsePacket(goshujin, resultMemory);
             if (resultMemory2.Result != IntegralityResult.Incomplete)
             {
                 resultMemory2.Return();
@@ -116,7 +123,7 @@ public class IntegralityEngine<TGoshujin, TObject> : IntegralityEngine
             // GetResponse: resultMemory
             try
             {
-                resultMemory2 = this.ProcessGetResponsePacket(obj, resultMemory);
+                resultMemory2 = this.ProcessGetResponsePacket(goshujin, resultMemory);
             }
             finally
             {
@@ -128,7 +135,7 @@ public class IntegralityEngine<TGoshujin, TObject> : IntegralityEngine
 
         // Prune
 
-        if (obj.GetIntegralityHash() == this.TargetHash)
+        if (goshujin.GetIntegralityHash() == this.TargetHash)
         {// Integrated
             return IntegralityResult.Success;
         }
@@ -145,13 +152,13 @@ public class IntegralityEngine<TGoshujin, TObject> : IntegralityEngine
     {
     }
 
-    private BytePool.RentMemory CreateProbePacket(TGoshujin obj)
+    private BytePool.RentMemory CreateProbePacket(TGoshujin goshujin)
     {
         var writer = TinyhandWriter.CreateFromBytePool();
         try
         {
             writer.WriteRawUInt8((byte)IntegralityState.Probe);
-            writer.WriteRawUInt64(obj.GetIntegralityHash());
+            writer.WriteRawUInt64(goshujin.GetIntegralityHash());
             return writer.FlushAndGetRentMemory();
         }
         finally

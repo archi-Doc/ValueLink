@@ -42,6 +42,7 @@ public class Test1
         try
         {
             var result = await engine.Integrate(g, (x, y) => Task.FromResult(((IIntegrality)g).Differentiate(x)));
+            result = await engine.Integrate(g, (x, y) => Task.FromResult(((IIntegrality)g).Differentiate(x)));
         }
         finally
         {
