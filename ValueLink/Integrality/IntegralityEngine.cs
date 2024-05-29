@@ -1,5 +1,6 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -19,7 +20,25 @@ public abstract class IntegralityEngine
 
     public ulong TargetHash { get; protected set; }
 
+    private object? keyHashCache;
+
     #endregion
+
+    public Dictionary<TKey, ulong> GetKeyHashCache<TKey>(bool clear)
+        where TKey : struct
+    {
+        if (this.keyHashCache is not Dictionary<TKey, ulong> dictionary)
+        {
+            dictionary = new Dictionary<TKey, ulong>();
+            this.keyHashCache = dictionary;
+        }
+        else if (clear)
+        {
+            dictionary.Clear();
+        }
+
+        return dictionary;
+    }
 }
 
 public class IntegralityEngine<TGoshujin, TObject> : IntegralityEngine
@@ -65,12 +84,19 @@ public class IntegralityEngine<TGoshujin, TObject> : IntegralityEngine
             resultMemory.Return();
         }
 
-        do
+        // Integrate: resultMemory2
+        while (resultMemory2.Result == IntegralityResult.Incomplete &&
+            resultMemory2.RentMemory.Length > 1)
         {
             // Get: resultMemory2
             try
             {
                 resultMemory = await brokerDelegate(resultMemory2.RentMemory, cancellationToken).ConfigureAwait(false);
+                if (resultMemory.Result != IntegralityResult.Success)
+                {
+                    resultMemory.Return();
+                    return resultMemory.Result;
+                }
             }
             finally
             {
@@ -81,21 +107,25 @@ public class IntegralityEngine<TGoshujin, TObject> : IntegralityEngine
             try
             {
                 resultMemory2 = this.ProcessGetResponsePacket(obj, resultMemory);
-                if (obj.GetIntegralityHash() == this.TargetHash)
-                {// Integrated
-                    resultMemory2.Return();
-                    return IntegralityResult.Success;
-                }
             }
             finally
             {
                 resultMemory.Return();
             }
         }
-        while (resultMemory2.Result == IntegralityResult.Incomplete);
 
         resultMemory2.Return();
-        return resultMemory2.Result;
+
+        // Prune
+
+        if (obj.GetIntegralityHash() == this.TargetHash)
+        {// Integrated
+            return IntegralityResult.Success;
+        }
+        else
+        {
+            return IntegralityResult.Incomplete;
+        }
     }
 
     public virtual bool Validate(TObject obj)
@@ -146,7 +176,7 @@ public class IntegralityEngine<TGoshujin, TObject> : IntegralityEngine
         var writer = TinyhandWriter.CreateFromBytePool();
         try
         {
-            writer.WriteUInt8((byte)IntegralityState.Get);
+            writer.RawWriteUInt8((byte)IntegralityState.Get);
             obj.Compare(this, ref reader, ref writer);
             return new(IntegralityResult.Incomplete, writer.FlushAndGetRentMemory());
         }
@@ -179,7 +209,7 @@ public class IntegralityEngine<TGoshujin, TObject> : IntegralityEngine
         var writer = TinyhandWriter.CreateFromBytePool();
         try
         {
-            writer.WriteUInt8((byte)IntegralityState.Get);
+            writer.RawWriteUInt8((byte)IntegralityState.Get);
             obj.Integrate(this, ref reader, ref writer);
             return new(IntegralityResult.Incomplete, writer.FlushAndGetRentMemory());
         }

@@ -8,6 +8,8 @@ using Arc.Collections;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 using System;
+using System.Net.Http.Headers;
+using Arc.Crypto;
 
 namespace Playground;
 
@@ -19,7 +21,7 @@ public partial class Message
     public const int MaxNameLength = 50;
     public const int MaxContentLength = 4_000;
 
-    /*public partial class GoshujinClass
+    public partial class GoshujinClass
     {
         IntegralityResultMemory Differentiate(BytePool.RentMemory integration)
         {
@@ -38,7 +40,7 @@ public partial class Message
                         foreach (var x in this)
                         {
                             // var key = x.identifier;
-                            writer.WriteSpan(MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref x.identifier, 1)));
+                            writer.WriteRaw(x.identifier);
                             writer.WriteUInt64(((IIntegrality)x).GetIntegralityHash());
                         }
                     }
@@ -47,6 +49,29 @@ public partial class Message
                 }
                 else if (state == IntegralityState.Get)
                 {
+                    var writer = TinyhandWriter.CreateFromBytePool();
+                    writer.WriteUInt8((byte)IntegralityState.GetResponse);
+                    while (!reader.End)
+                    {
+                        var written = writer.Written;
+                        var key = reader.ReadRaw<ulong>();
+                        writer.WriteRaw(key);
+                        if (this.IdentifierChain.FindFirst(key) is { } obj)
+                        {
+                            TinyhandSerializer.SerializeObject(ref writer, obj);
+                        }
+                        else
+                        {
+                            writer.WriteNil();
+                        }
+
+                        if (writer.Written > 1000)
+                        {
+                            break;
+                        }
+                    }
+
+                    return new(IntegralityResult.Success, writer.FlushAndGetRentMemory());
                 }
             }
             catch
@@ -56,23 +81,27 @@ public partial class Message
             return new(IntegralityResult.InvalidData);
         }
 
-        void ProcessProbeResponse(ref TinyhandReader reader, ref TinyhandWriter writer)
+
+        void Compare(IntegralityEngine engine, ref TinyhandReader reader, ref TinyhandWriter writer)
         {
             lock (this.syncObject)
             {
-                while (!reader.End)
+                var cache = engine.GetKeyHashCache<ulong>(true);
+                try
                 {
-
-                    var key = reader.ReadUInt64();
-                    key = TinyhandSerializer.Deserialize<ulong>(ref reader);
-                    var hash = reader.ReadUInt64();
-                    if (this.IdentifierChain.FindFirst(key) is IIntegrality obj)
+                    while (!reader.End)
                     {
-                        if (obj.GetIntegralityHash() != hash)
+                        var key = reader.ReadUInt64();
+                        var hash = reader.ReadUInt64();
+                        cache.TryAdd(key, hash);
+                        if (this.IdentifierChain.FindFirst(key) is not IIntegrality obj || obj.GetIntegralityHash() != hash)
                         {
                             writer.WriteUInt64(key);
                         }
                     }
+                }
+                catch
+                {
                 }
             }
         }

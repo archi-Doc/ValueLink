@@ -1050,6 +1050,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         ssb.AppendLine($"IntegralityResultMemory {ValueLinkBody.IIntegrality}.Differentiate(BytePool.RentMemory integration) => default;");
         ssb.AppendLine($"void {ValueLinkBody.IIntegrality}.Integrate(IntegralityEngine engine, ref TinyhandReader reader, ref TinyhandWriter writer) {{ }}");
+        ssb.AppendLine($"void {ValueLinkBody.IIntegrality}.Compare(IntegralityEngine engine, ref TinyhandReader reader, ref TinyhandWriter writer) {{ }}");
     }
 
     internal void Generate_WriteLocator(ScopingStringBuilder ssb, GeneratorInformation info)
@@ -1882,6 +1883,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
 
         this.GenerateGosjujin_Integrality_Differentiate(ssb, info);
+        this.GenerateGosjujin_Integrality_Compare(ssb, info);
         this.GenerateGosjujin_Integrality_Integrate(ssb, info);
     }
 
@@ -1913,16 +1915,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     {
                         using (var forScope = ssb.ScopeBrace($"foreach (var x in this.{this.UniqueLink.ChainName})"))
                         {
-                            if (this.UniqueLink.Target?.Kind == VisceralObjectKind.Field)
-                            {
-                                ssb.AppendLine($"writer.WriteSpan(MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref x.{this.UniqueLink.TargetName}, 1)));");
-                            }
-                            else
-                            {
-                                ssb.AppendLine($"var vd = x.{this.UniqueLink.TargetName};");
-                                ssb.AppendLine("writer.WriteSpan(MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref vd, 1)));");
-                            }
-
+                            ssb.AppendLine($"writer.WriteRaw(x.{this.UniqueLink.TargetName});");
                             ssb.AppendLine($"writer.RawWriteUInt64((({ValueLinkBody.IIntegrality})x).GetIntegralityHash());");
                         }
                     }
@@ -1945,6 +1938,39 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     internal void GenerateGosjujin_Integrality_Integrate(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         ssb.AppendLine($"void {ValueLinkBody.IIntegrality}.Integrate(IntegralityEngine engine, ref TinyhandReader reader, ref TinyhandWriter writer) {{ }}");
+    }
+
+    internal void GenerateGosjujin_Integrality_Compare(ScopingStringBuilder ssb, GeneratorInformation info)
+    {
+        using (var methodScope = ssb.ScopeBrace($"void {ValueLinkBody.IIntegrality}.Compare(IntegralityEngine engine, ref TinyhandReader reader, ref TinyhandWriter writer)"))
+        {
+            if (this.UniqueLink is null)
+            {
+                ssb.AppendLine("throw new NotImplementedException();");
+                return;
+            }
+
+            ScopingStringBuilder.IScope? scopeLock = this.ObjectAttribute?.Isolation == IsolationLevel.Serializable ? ssb.ScopeBrace("lock (this.syncObject)") : null;
+
+            ssb.AppendLine($"var cache = engine.GetKeyHashCache<{this.UniqueLink.TypeObject.FullName}>(true);");
+            using (var tryScope = ssb.ScopeBrace("try"))
+            {
+                using (var readScope = ssb.ScopeBrace("while (!reader.End)"))
+                {
+                    ssb.AppendLine($"var key = reader.ReadRaw<{this.UniqueLink.TypeObject.FullName}>();");
+                    ssb.AppendLine("var hash = reader.ReadRaw<ulong>();");
+                    ssb.AppendLine("cache.TryAdd(key, hash);");
+                    using (var ifScope = ssb.ScopeBrace($"if (this.{this.UniqueLink.ChainName}.FindFirst(key) is not {ValueLinkBody.IIntegrality} obj || obj.GetIntegralityHash() != hash)"))
+                    {
+                        ssb.AppendLine("writer.WriteRaw(key);");
+                    }
+                }
+            }
+
+            ssb.AppendLine("catch {}");
+
+            scopeLock?.Dispose();
+        }
     }
 
     internal void GenerateGoshujin_EquatableGoshujin(ScopingStringBuilder ssb, GeneratorInformation info)
