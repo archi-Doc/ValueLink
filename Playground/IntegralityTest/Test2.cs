@@ -15,7 +15,7 @@ public class TestIntegrality : Integrality<Message.GoshujinClass, Message>
         RemoveIfItemNotFound = true,
     });
 
-    public override bool Validate(Message obj)
+    public override bool Validate(Message newItem, Message? oldItem)
         => true;
 
     public override void Prune(Message.GoshujinClass goshujin)

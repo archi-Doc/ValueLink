@@ -30,6 +30,8 @@ public abstract class Integrality
 
     public int MaxMemoryLength { get; init; } = (1024 * 1024 * 4) - 1024; // ConnectionAgreement.MaxBlockSize
 
+    public int MaxIntegrationCount { get; init; } = 3;
+
     public ulong TargetHash { get; protected set; }
 
     private object? keyHashCache;
@@ -51,11 +53,14 @@ public abstract class Integrality
 
         return dictionary;
     }
+
+    public virtual bool Validate(object newItem, object? oldItem)
+        => true;
 }
 
 public class Integrality<TGoshujin, TObject> : Integrality
-    where TGoshujin : IGoshujin, IIntegralityObject
-    where TObject : ITinyhandSerialize<TObject>, IIntegralityObject
+    where TGoshujin : class, IGoshujin, IIntegralityObject
+    where TObject : class, ITinyhandSerialize<TObject>, IIntegralityObject
 {// Integrate/Differentiate
     public Integrality()
     {
@@ -102,9 +107,14 @@ public class Integrality<TGoshujin, TObject> : Integrality
         }
 
         // Integrate: resultMemory2
-        while (resultMemory2.Result == IntegralityResult.Incomplete &&
-            resultMemory2.RentMemory.Length > 1)
+        var integrationCount = 0;
+        while (resultMemory2.Result == IntegralityResult.Incomplete)
         {
+            if (integrationCount++ >= this.MaxIntegrationCount)
+            {
+                break;
+            }
+
             // Get: resultMemory2
             try
             {
@@ -134,6 +144,7 @@ public class Integrality<TGoshujin, TObject> : Integrality
         resultMemory2.Return();
 
         // Prune
+        this.Prune(goshujin);
 
         if (goshujin.GetIntegralityHash() == this.TargetHash)
         {// Integrated
@@ -145,7 +156,10 @@ public class Integrality<TGoshujin, TObject> : Integrality
         }
     }
 
-    public virtual bool Validate(TObject obj)
+    public override bool Validate(object newItem, object? oldItem)
+        => this.Validate((TObject)newItem, oldItem as TObject);
+
+    public virtual bool Validate(TObject newItem, TObject? oldItem)
         => true;
 
     public virtual void Prune(TGoshujin goshujin)
@@ -228,7 +242,14 @@ public class Integrality<TGoshujin, TObject> : Integrality
         {
             writer.WriteRawUInt8((byte)IntegralityState.Get);
             obj.Integrate(this, ref reader, ref writer);
-            return new(IntegralityResult.Incomplete, writer.FlushAndGetRentMemory());
+            if (writer.Written <= 1)
+            {
+                return new(IntegralityResult.Success, default);
+            }
+            else
+            {
+                return new(IntegralityResult.Incomplete, writer.FlushAndGetRentMemory());
+            }
         }
         catch
         {

@@ -10,6 +10,7 @@ using System.Runtime.CompilerServices;
 using System;
 using System.Net.Http.Headers;
 using Arc.Crypto;
+using System.Collections.Generic;
 
 namespace Playground;
 
@@ -31,17 +32,19 @@ public partial class Message
                 var state = (IntegralityState)reader.ReadUInt8();
                 if (state == IntegralityState.Probe)
                 {
-                    var hash = ((IExaltationOfIntegrality)this).GetIntegralityHash();
+                    var hash = ((IIntegralityObject)this).GetIntegralityHash();
                     var writer = TinyhandWriter.CreateFromBytePool();
                     writer.WriteUInt8((byte)IntegralityState.ProbeResponse);
                     writer.WriteUInt64(hash);
                     if (hash != reader.ReadUInt64())
                     {
+                        var count = 0;
                         foreach (var x in this)
                         {
+                            if (count >= engine.MaxItems) break;
                             // var key = x.identifier;
                             writer.WriteUnsafe(x.identifier);
-                            writer.WriteUnsafe(((IExaltationOfIntegrality)x).GetIntegralityHash());
+                            writer.WriteUnsafe(((IIntegralityObject)x).GetIntegralityHash());
                         }
                     }
 
@@ -89,19 +92,74 @@ public partial class Message
                 {
                     while (!reader.End)
                     {
-                        var key = reader.ReadUInt64();
-                        var hash = reader.ReadUInt64();
-                        cache.TryAdd(key, hash);
-                        if (this.IdentifierChain.FindFirst(key) is not IExaltationOfIntegrality obj || obj.GetIntegralityHash() != hash)
+                        var key = reader.ReadUnsafe<ulong>();
+                        var hash = reader.ReadUnsafe<ulong>();
+                        if (this.IdentifierChain.FindFirst(key) is not IIntegralityObject obj || obj.GetIntegralityHash() != hash)
                         {
+                            if (cache.Count >= engine.MaxItems) break;
+                            cache.TryAdd(key, hash);
                             writer.WriteUInt64(key);
                         }
+                    }
+
+                    if (engine.RemoveIfItemNotFound)
+                    {
+                        List<Message>? list = default;
+                        foreach (var x in this.IdentifierChain)
+                        {
+                            if (!cache.ContainsKey(x.identifier))
+                            {
+                                list ??= new();
+                                list.Add(x);
+                            }
+                        }
+                        if (list is not null) foreach (var x in list) x.Goshujin = default;
                     }
                 }
                 catch
                 {
                 }
             }
+        }
+
+        void Integrate(Integrality engine, ref TinyhandReader reader, ref TinyhandWriter writer)
+        {
+            lock (this.syncObject)
+            {
+                try
+                {
+                    var cache = engine.GetKeyHashCache<ulong>(true);
+                    while (!reader.End)
+                    {
+                        var key = reader.ReadUnsafe<ulong>();
+                        if (reader.TryReadNil()) continue;
+                        var obj = TinyhandSerializer.DeserializeObject<Message>(ref reader);
+                        cache.Remove(key);
+                        this.Integrate(engine, obj);
+                    }
+
+                    foreach (var x in cache.Keys) writer.WriteUnsafe(x);
+                }
+                catch
+                {
+                }
+            }
+        }
+
+        IntegralityResult Integrate(Integrality engine, object obj)
+        {
+            if (obj is not Message newObj || !engine.Validate(newObj))
+            {
+                return IntegralityResult.InvalidData;
+            }
+
+            if (this.IdentifierChain.FindFirst(newObj.identifier) is { } oldObj)
+            {
+                oldObj.Goshujin = default;
+                newObj.Goshujin = this;
+            }
+
+            return IntegralityResult.Success;
         }
     }*/
 
@@ -122,7 +180,7 @@ public partial class Message
 
     [Key(0, AddProperty = "Identifier")]
     [Link(Primary = true, Unique = true, Type = ChainType.Unordered, AddValue = false)]
-    private ulong identifier;
+    private uint identifier;
 
     [Key(1, AddProperty = "MessageBoardIdentifier")]
     private ulong messageBoardIdentifier;
