@@ -28,7 +28,7 @@ public abstract class Integrality
 
     public required bool RemoveIfItemNotFound { get; init; }
 
-    public int MaxMemoryLength { get; init; } = 1024 * 1024 * 4; // ConnectionAgreement.MaxBlockSize
+    public int MaxMemoryLength { get; init; } = (1024 * 1024 * 4) - 1024; // ConnectionAgreement.MaxBlockSize
 
     public ulong TargetHash { get; protected set; }
 
