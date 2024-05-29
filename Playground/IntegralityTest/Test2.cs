@@ -9,7 +9,11 @@ namespace Playground;
 
 public class TestIntegralityEngine : IntegralityEngine<Message.GoshujinClass, Message>
 {
-    public static readonly ObjectPool<TestIntegralityEngine> Pool = new(() => new());
+    public static readonly ObjectPool<TestIntegralityEngine> Pool = new(() => new()
+    {
+        MaxCount = 1000,
+        DeleteIfNotExists = true,
+    });
 
     public override bool Validate(Message obj)
         => true;

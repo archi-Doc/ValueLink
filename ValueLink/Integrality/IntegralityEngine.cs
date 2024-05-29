@@ -16,7 +16,17 @@ namespace ValueLink.Integrality;
 
 public abstract class IntegralityEngine
 {
+    public IntegralityEngine()
+    {
+    }
+
     #region FieldAndProperty
+
+    public required int MaxCount { get; init; }
+
+    public required bool DeleteIfNotExists { get; init; }
+
+    public int MaxMemoryLength { get; init; } = 1024 * 1024 * 4; // ConnectionAgreement.MaxBlockSize
 
     public ulong TargetHash { get; protected set; }
 

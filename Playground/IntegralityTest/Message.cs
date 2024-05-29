@@ -21,7 +21,7 @@ public partial class Message
     public const int MaxNameLength = 50;
     public const int MaxContentLength = 4_000;
 
-    public partial class GoshujinClass
+    /*public partial class GoshujinClass
     {
         IntegralityResultMemory Differentiate(BytePool.RentMemory integration)
         {
