@@ -23,7 +23,7 @@ public partial class Message
 
     /*public partial class GoshujinClass
     {
-        IntegralityResultMemory Differentiate(IntegralityEngine engine, BytePool.RentMemory integration)
+        IntegralityResultMemory Differentiate(Integrality engine, BytePool.RentMemory integration)
         {
             try
             {
@@ -80,7 +80,7 @@ public partial class Message
         }
 
 
-        void Compare(IntegralityEngine engine, ref TinyhandReader reader, ref TinyhandWriter writer)
+        void Compare(Integrality engine, ref TinyhandReader reader, ref TinyhandWriter writer)
         {
             lock (this.syncObject)
             {

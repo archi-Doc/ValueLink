@@ -7,9 +7,9 @@ using ValueLink.Integrality;
 
 namespace Playground;
 
-public class TestIntegralityEngine : IntegralityEngine<Message.GoshujinClass, Message>
+public class TestIntegrality : Integrality<Message.GoshujinClass, Message>
 {
-    public static readonly ObjectPool<TestIntegralityEngine> Pool = new(() => new()
+    public static readonly ObjectPool<TestIntegrality> Pool = new(() => new()
     {
         MaxItems = 1000,
         RemoveIfItemNotFound = true,
@@ -38,7 +38,7 @@ public class Test1
         h = ((IExaltationOfIntegrality)g).GetIntegralityHash();
 
         var g2 = new Message.GoshujinClass();
-        var engine = TestIntegralityEngine.Pool.Get();
+        var engine = TestIntegrality.Pool.Get();
         try
         {
             var result = await engine.Integrate(g, (x, y) => Task.FromResult(((IExaltationOfIntegrality)g).Differentiate(engine, x)));
@@ -46,7 +46,7 @@ public class Test1
         }
         finally
         {
-            TestIntegralityEngine.Pool.Return(engine);
+            TestIntegrality.Pool.Return(engine);
         }
     }
 }

@@ -11,17 +11,17 @@ public interface IExaltationOfIntegrality
 
     ulong GetIntegralityHash();
 
-    IntegralityResultMemory Differentiate(IntegralityEngine engine, BytePool.RentMemory integration)
+    IntegralityResultMemory Differentiate(Integrality engine, BytePool.RentMemory integration)
         => new(IntegralityResult.NotImplemented);
 
-    void Compare(IntegralityEngine engine, ref TinyhandReader reader, ref TinyhandWriter writer)
+    void Compare(Integrality engine, ref TinyhandReader reader, ref TinyhandWriter writer)
     {
     }
 
-    void Integrate(IntegralityEngine engine, ref TinyhandReader reader, ref TinyhandWriter writer)
+    void Integrate(Integrality engine, ref TinyhandReader reader, ref TinyhandWriter writer)
     {
     }
 
-    IntegralityResult Integrate(IntegralityEngine engine, object obj)
+    IntegralityResult Integrate(Integrality engine, object obj)
     => IntegralityResult.NotImplemented;
 }

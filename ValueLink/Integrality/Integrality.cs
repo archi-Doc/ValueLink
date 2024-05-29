@@ -14,11 +14,11 @@ using Tinyhand.IO;
 
 namespace ValueLink.Integrality;
 
-public abstract class IntegralityEngine
+public abstract class Integrality
 {
     public delegate Task<IntegralityResultMemory> BrokerDelegate(BytePool.RentMemory integration, CancellationToken cancellationToken);
 
-    public IntegralityEngine()
+    public Integrality()
     {
     }
 
@@ -53,11 +53,11 @@ public abstract class IntegralityEngine
     }
 }
 
-public class IntegralityEngine<TGoshujin, TObject> : IntegralityEngine
+public class Integrality<TGoshujin, TObject> : Integrality
     where TGoshujin : IGoshujin, IExaltationOfIntegrality
     where TObject : ITinyhandSerialize<TObject>, IExaltationOfIntegrality
 {// Integrate/Differentiate
-    public IntegralityEngine()
+    public Integrality()
     {
     }
 
@@ -66,7 +66,7 @@ public class IntegralityEngine<TGoshujin, TObject> : IntegralityEngine
         return goshujin.Integrate(this, obj);
     }
 
-    public async Task<IntegralityResult> Integrate(TGoshujin goshujin, IntegralityEngine.BrokerDelegate brokerDelegate, CancellationToken cancellationToken = default)
+    public async Task<IntegralityResult> Integrate(TGoshujin goshujin, Integrality.BrokerDelegate brokerDelegate, CancellationToken cancellationToken = default)
     {
         // Probe
         var rentMemory = this.CreateProbePacket(goshujin);
