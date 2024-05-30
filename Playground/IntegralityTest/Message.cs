@@ -15,6 +15,36 @@ using System.Collections.Generic;
 namespace Playground;
 
 [TinyhandObject]
+[ValueLinkObject(Integrality = true)]
+public partial class SimpleIntegralityClass
+{
+    public SimpleIntegralityClass()
+    {
+    }
+
+    [Key(0)]
+    [Link(Primary = true, Unique = true, Type = ChainType.Unordered)]
+    public int Id { get; set; }
+}
+
+[TinyhandObject]
+[ValueLinkObject(Integrality = true)]
+public partial class GenericIntegralityClass<T>
+    where T : ITinyhandSerialize<T>
+{
+    public GenericIntegralityClass()
+    {
+    }
+
+    [Key(0)]
+    [Link(Primary = true, Unique = true, Type = ChainType.Unordered)]
+    public int Id { get; set; }
+
+    [Key(1)]
+    public T Value { get; set; } = default!;
+}
+
+[TinyhandObject]
 [ValueLinkObject(Isolation = IsolationLevel.Serializable, Integrality = true)]
 public partial class Message
 {
