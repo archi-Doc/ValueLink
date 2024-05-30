@@ -1,5 +1,7 @@
-﻿using Tinyhand;
+﻿using Arc.Collections;
+using Tinyhand;
 using ValueLink;
+using ValueLink.Integrality;
 
 namespace Playground;
 
@@ -21,6 +23,22 @@ public partial class SimpleIntegralityClass
 public partial class GenericIntegralityClass<T>
     where T : ITinyhandSerialize<T>
 {
+    public class Integrality : Integrality<GoshujinClass, GenericIntegralityClass<T>>
+    {
+        public static readonly ObjectPool<Integrality> Pool = new(
+            () => new()
+            {
+                MaxItems = 1000,
+                RemoveIfItemNotFound = false,
+            },
+            4);
+
+        public override bool Validate(GenericIntegralityClass<T> newItem, GenericIntegralityClass<T>? oldItem)
+        {
+            return base.Validate(newItem, oldItem);
+        }
+    }
+
     public GenericIntegralityClass()
     {
     }
