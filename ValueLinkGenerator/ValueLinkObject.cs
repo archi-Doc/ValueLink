@@ -671,6 +671,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         // Check integrality
         if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.IntegralityEnabled))
         {
+            if (!this.ObjectFlag.HasFlag(ValueLinkObjectFlag.TinyhandObject))
+            {// TinyhandObject
+                this.Body.AddDiagnostic(ValueLinkBody.Error_IntegralityTinyhand, this.Location);
+            }
+
             if (this.UniqueLink is null ||
                 this.UniqueLink.TypeObject.Kind != VisceralObjectKind.Struct)
             {// The object must have a unique link, and its type must be either a primitive type or a struct.

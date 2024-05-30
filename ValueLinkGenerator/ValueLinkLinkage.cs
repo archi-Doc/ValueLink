@@ -105,6 +105,11 @@ public class Linkage
 
             linkage.Target = target;
             linkage.TargetName = linkAttribute.TargetMember;
+            if (target.TypeObject is not null)
+            {
+                linkage.TypeObject = target.TypeObject;
+            }
+
             obj = target!;
         }
 

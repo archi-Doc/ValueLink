@@ -180,6 +180,10 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
         id: "CLG032", title: "Integrality isolation", messageFormat: "The IsolationLevel must be either 'IsolationLevel.None' or 'IsolationLevel.Serializable'",
         category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
+    public static readonly DiagnosticDescriptor Error_IntegralityTinyhand = new DiagnosticDescriptor(
+        id: "CLG033", title: "Integrality tinyhand", messageFormat: "The integrality object must have TinyhandObject attribute",
+        category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
     public ValueLinkBody(GeneratorExecutionContext context)
         : base(context)
     {
