@@ -50,5 +50,7 @@ public partial class GenericIntegralityClass2<T>
 
     [Key(0)]
     private int id2;
-}
 
+    [Key(2, AddProperty = "Name")]
+    private string name = string.Empty;//
+}
