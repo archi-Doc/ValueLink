@@ -1,15 +1,9 @@
 // Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
 using ValueLink;
 using Tinyhand;
 using Xunit;
-using Arc.Collections;
 using ValueLink.Integrality;
-using static FastExpressionCompiler.ExpressionCompiler;
 
 namespace xUnitTest;
 
@@ -60,7 +54,7 @@ public class IntegralityTest
         var g2 = new SimpleIntegralityClass.GoshujinClass();
         g2.GoshujinEquals(g).IsFalse();
 
-        SimpleIntegralityClass.Integrality.Instance.IntegrateForTest(g2, g);
+        SimpleIntegralityClass.Integrality.Instance.IntegrateForTest(g2, g).Is(IntegralityResult.Success);
         g2.GoshujinEquals(g).IsTrue();
     }
 }
