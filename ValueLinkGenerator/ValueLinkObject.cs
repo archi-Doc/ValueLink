@@ -2089,6 +2089,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         {
             if (this.UniqueLink is not null)
             {
+                ssb.AppendLine("if (this.Count != other.Count) return false;");
                 using (var scopeForeach = ssb.ScopeBrace("foreach (var x in this)"))
                 {
                     ssb.AppendLine($"var y = other.{this.UniqueLink.ChainName}.FindFirst(x.{this.UniqueLink.TargetName});");

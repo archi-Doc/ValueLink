@@ -7,19 +7,6 @@ namespace Playground;
 
 [TinyhandObject]
 [ValueLinkObject(Integrality = true)]
-public partial class SimpleIntegralityClass
-{
-    public SimpleIntegralityClass()
-    {
-    }
-
-    [Key(0)]
-    [Link(Primary = true, Unique = true, Type = ChainType.Unordered)]
-    public int Id { get; set; }
-}
-
-[TinyhandObject]
-[ValueLinkObject(Integrality = true)]
 public partial class GenericIntegralityClass<T>
     where T : ITinyhandSerialize<T>
 {

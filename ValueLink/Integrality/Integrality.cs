@@ -60,6 +60,9 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
     public IntegralityResult IntegrateObject(TGoshujin goshujin, TObject obj)
         => goshujin.IntegrateObject(this, obj);
 
+    public IntegralityResult IntegrateForTest(TGoshujin goshujin, TGoshujin target)
+        => this.Integrate(goshujin, (x, y) => Task.FromResult(target.Differentiate(this, x))).Result;
+
     public async Task<IntegralityResult> Integrate(TGoshujin goshujin, IntegralityBrokerDelegate brokerDelegate, CancellationToken cancellationToken = default)
     {
         // Probe
