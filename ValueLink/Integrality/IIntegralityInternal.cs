@@ -19,5 +19,5 @@ public interface IIntegralityInternal
     Dictionary<TKey, ulong> GetKeyHashCache<TKey>(bool clear)
         where TKey : struct;
 
-    bool ValidateInternal(object goshujin, object newItem, object? oldItem);
+    bool Validate(object goshujin, object newItem, object? oldItem);
 }

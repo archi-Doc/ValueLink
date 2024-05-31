@@ -54,7 +54,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         return dictionary;
     }
 
-    bool IIntegralityInternal.ValidateInternal(object goshujin, object newItem, object? oldItem)
+    bool IIntegralityInternal.Validate(object goshujin, object newItem, object? oldItem)
         => this.Validate((TGoshujin)goshujin, (TObject)newItem, oldItem as TObject);
 
     public IntegralityResult IntegrateObject(TGoshujin goshujin, TObject obj)
