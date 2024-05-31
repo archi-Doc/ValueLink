@@ -14,26 +14,10 @@ using Tinyhand.IO;
 
 namespace ValueLink.Integrality;
 
-public interface IIntegralityInternal
-{
-    int MaxItems { get; }
-
-    bool RemoveIfItemNotFound { get; }
-
-    int MaxMemoryLength { get; }
-
-    int MaxIntegrationCount { get; }
-
-    public ulong TargetHash { get; }
-
-    Dictionary<TKey, ulong> GetKeyHashCache<TKey>(bool clear)
-        where TKey : struct;
-
-    bool ValidateInternal(object goshujin, object newItem, object? oldItem);
-}
-
-public abstract class Integrality : IIntegralityInternal
-{
+public class Integrality<TGoshujin, TObject> : IIntegralityInternal
+    where TGoshujin : class, IGoshujin, IIntegralityObject
+    where TObject : class, ITinyhandSerialize<TObject>, IIntegralityObject
+{// Integrate/Differentiate
     public Integrality()
     {
     }
@@ -70,22 +54,11 @@ public abstract class Integrality : IIntegralityInternal
         return dictionary;
     }
 
-    public virtual bool ValidateInternal(object goshujin, object newItem, object? oldItem)
-        => true;
-}
+    bool IIntegralityInternal.ValidateInternal(object goshujin, object newItem, object? oldItem)
+        => this.Validate((TGoshujin)goshujin, (TObject)newItem, oldItem as TObject);
 
-public class Integrality<TGoshujin, TObject> : Integrality
-    where TGoshujin : class, IGoshujin, IIntegralityObject
-    where TObject : class, ITinyhandSerialize<TObject>, IIntegralityObject
-{// Integrate/Differentiate
-    public Integrality()
-    {
-    }
-
-    public IntegralityResult Integrate(TGoshujin goshujin, TObject obj)
-    {
-        return goshujin.Integrate(this, obj);
-    }
+    public IntegralityResult IntegrateObject(TGoshujin goshujin, TObject obj)
+        => goshujin.IntegrateObject(this, obj);
 
     public async Task<IntegralityResult> Integrate(TGoshujin goshujin, IntegralityBrokerDelegate brokerDelegate, CancellationToken cancellationToken = default)
     {
@@ -178,9 +151,6 @@ public class Integrality<TGoshujin, TObject> : Integrality
     public virtual void Prune(TGoshujin goshujin)
     {
     }
-
-    public override bool ValidateInternal(object goshujin, object newItem, object? oldItem)
-        => this.Validate((TGoshujin)goshujin, (TObject)newItem, oldItem as TObject);
 
     private BytePool.RentMemory CreateProbePacket(TGoshujin goshujin)
     {

@@ -22,6 +22,6 @@ public interface IIntegralityObject
     {
     }
 
-    IntegralityResult Integrate(IIntegralityInternal engine, object? obj)
+    IntegralityResult IntegrateObject(IIntegralityInternal engine, object? obj)
     => IntegralityResult.NotImplemented;
 }
