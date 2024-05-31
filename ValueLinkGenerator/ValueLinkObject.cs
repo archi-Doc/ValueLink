@@ -1876,10 +1876,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         using (var methodScope = ssb.ScopeBrace($"ulong {ValueLinkBody.IIntegralityObject}.GetIntegralityHash()"))
         {
             ssb.AppendLine("if (this.integralityHash != 0) return this.integralityHash;");
-            ssb.AppendLine("byte[]? rent = null;");
 
             var scopeLock = this.TryCreateLockScope(ssb);
 
+            ssb.AppendLine("byte[]? rent = null;");
             ssb.AppendLine($"var keyLength = Unsafe.SizeOf<{this.UniqueLink.TypeObject.FullName}>();");
             ssb.AppendLine($"var length = (keyLength + sizeof(ulong)) * this.{this.UniqueLink.ChainName}.Count;");
             ssb.AppendLine($"Span<byte> span = length <= {ValueLinkBody.StackallocThreshold} ? stackalloc byte[length] : (rent = System.Buffers.ArrayPool<byte>.Shared.Rent(length));");
@@ -1894,11 +1894,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             }
 
             ssb.AppendLine("this.integralityHash = Arc.Crypto.XxHash3.Hash64(span);");
-
-            scopeLock?.Dispose();
-
             ssb.AppendLine("if (rent is not null) System.Buffers.ArrayPool<byte>.Shared.Return(rent);");
             ssb.AppendLine("return this.integralityHash;");
+
+            scopeLock?.Dispose();
         }
 
         this.GenerateGosjujin_Integrality_Differentiate(ssb, info);
