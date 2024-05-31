@@ -14,10 +14,10 @@ using Tinyhand.IO;
 
 namespace ValueLink.Integrality;
 
-public abstract class Integrality
-{
-    public delegate Task<IntegralityResultMemory> BrokerDelegate(BytePool.RentMemory integration, CancellationToken cancellationToken);
-
+public class Integrality<TGoshujin, TObject> : IIntegralityInternal
+    where TGoshujin : class, IGoshujin, IIntegralityObject
+    where TObject : class, ITinyhandSerialize<TObject>, IIntegralityObject
+{// Integrate/Differentiate
     public Integrality()
     {
     }
@@ -38,7 +38,7 @@ public abstract class Integrality
 
     #endregion
 
-    public Dictionary<TKey, ulong> GetKeyHashCache<TKey>(bool clear)
+    Dictionary<TKey, ulong> IIntegralityInternal.GetKeyHashCache<TKey>(bool clear)
         where TKey : struct
     {
         if (this.keyHashCache is not Dictionary<TKey, ulong> dictionary)
@@ -54,24 +54,16 @@ public abstract class Integrality
         return dictionary;
     }
 
-    public virtual bool Validate(object newItem, object? oldItem)
-        => true;
-}
+    bool IIntegralityInternal.Validate(object goshujin, object newItem, object? oldItem)
+        => this.Validate((TGoshujin)goshujin, (TObject)newItem, oldItem as TObject);
 
-public class Integrality<TGoshujin, TObject> : Integrality
-    where TGoshujin : class, IGoshujin, IIntegralityObject
-    where TObject : class, ITinyhandSerialize<TObject>, IIntegralityObject
-{// Integrate/Differentiate
-    public Integrality()
-    {
-    }
+    public IntegralityResult IntegrateObject(TGoshujin goshujin, TObject obj)
+        => goshujin.IntegrateObject(this, obj);
 
-    public IntegralityResult Integrate(TGoshujin goshujin, TObject obj)
-    {
-        return goshujin.Integrate(this, obj);
-    }
+    public IntegralityResult IntegrateForTest(TGoshujin goshujin, TGoshujin target)
+        => this.Integrate(goshujin, (x, y) => Task.FromResult(target.Differentiate(this, x))).Result;
 
-    public async Task<IntegralityResult> Integrate(TGoshujin goshujin, Integrality.BrokerDelegate brokerDelegate, CancellationToken cancellationToken = default)
+    public async Task<IntegralityResult> Integrate(TGoshujin goshujin, IntegralityBrokerDelegate brokerDelegate, CancellationToken cancellationToken = default)
     {
         // Probe
         var rentMemory = this.CreateProbePacket(goshujin);
@@ -156,10 +148,7 @@ public class Integrality<TGoshujin, TObject> : Integrality
         }
     }
 
-    public override bool Validate(object newItem, object? oldItem)
-        => this.Validate((TObject)newItem, oldItem as TObject);
-
-    public virtual bool Validate(TObject newItem, TObject? oldItem)
+    public virtual bool Validate(TGoshujin goshujin, TObject newItem, TObject? oldItem)
         => true;
 
     public virtual void Prune(TGoshujin goshujin)

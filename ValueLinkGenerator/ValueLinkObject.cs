@@ -1878,7 +1878,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             ssb.AppendLine("if (this.integralityHash != 0) return this.integralityHash;");
             ssb.AppendLine("byte[]? rent = null;");
 
-            ScopingStringBuilder.IScope? scopeLock = this.ObjectAttribute?.Isolation == IsolationLevel.Serializable ? ssb.ScopeBrace("lock (this.syncObject)") : null;
+            var scopeLock = this.TryCreateLockScope(ssb);
 
             ssb.AppendLine($"var keyLength = Unsafe.SizeOf<{this.UniqueLink.TypeObject.FullName}>();");
             ssb.AppendLine($"var length = (keyLength + sizeof(ulong)) * this.{this.UniqueLink.ChainName}.Count;");
@@ -1907,6 +1907,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         this.GenerateGosjujin_Integrality_Integrate2(ssb, info);
     }
 
+    internal ScopingStringBuilder.IScope? TryCreateLockScope(ScopingStringBuilder ssb)
+        => this.ObjectAttribute?.Isolation == IsolationLevel.Serializable ? ssb.ScopeBrace("lock (this.syncObject)") : null;
+
     internal void GenerateGosjujin_Integrality_Differentiate(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         using (var methodScope = ssb.ScopeBrace($"IntegralityResultMemory {ValueLinkBody.IIntegralityObject}.Differentiate({ValueLinkBody.Integrality} engine, BytePool.RentMemory integration)"))
@@ -1917,7 +1920,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 return;
             }
 
-            ScopingStringBuilder.IScope? scopeLock = this.ObjectAttribute?.Isolation == IsolationLevel.Serializable ? ssb.ScopeBrace("lock (this.syncObject)") : null;
+            var scopeLock = this.TryCreateLockScope(ssb);
 
             using (var tryScope = ssb.ScopeBrace("try"))
             {
@@ -1984,7 +1987,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 return;
             }
 
-            ScopingStringBuilder.IScope? scopeLock = this.ObjectAttribute?.Isolation == IsolationLevel.Serializable ? ssb.ScopeBrace("lock (this.syncObject)") : null;
+            var scopeLock = this.TryCreateLockScope(ssb);
 
             using (var tryScope = ssb.ScopeBrace("try"))
             {
@@ -1995,7 +1998,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     ssb.AppendLine("if (reader.TryReadNil()) continue;");
                     ssb.AppendLine($"var obj = TinyhandSerializer.DeserializeObject<{this.TypeObject!.FullName}>(ref reader);");
                     ssb.AppendLine("cache.Remove(key);");
-                    ssb.AppendLine($"(({ValueLinkBody.IIntegralityObject})this).Integrate(engine, obj);");
+                    ssb.AppendLine($"(({ValueLinkBody.IIntegralityObject})this).IntegrateObject(engine, obj);");
                 }
 
                 ssb.AppendLine("foreach (var x in cache.Keys) writer.WriteUnsafe(x);");
@@ -2008,7 +2011,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGosjujin_Integrality_Integrate2(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        using (var methodScope = ssb.ScopeBrace($"IntegralityResult {ValueLinkBody.IIntegralityObject}.Integrate({ValueLinkBody.Integrality} engine, object? obj)"))
+        using (var methodScope = ssb.ScopeBrace($"IntegralityResult {ValueLinkBody.IIntegralityObject}.IntegrateObject({ValueLinkBody.Integrality} engine, object? obj)"))
         {
             if (this.UniqueLink is null)
             {
@@ -2018,7 +2021,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             ssb.AppendLine($"if (obj is not {this.TypeObject!.FullName} newObj) return IntegralityResult.InvalidData;");
             ssb.AppendLine($"var oldObj = this.{this.UniqueLink.ChainName}.FindFirst(newObj.{this.UniqueLink.TargetName});");
-            ssb.AppendLine($"if (!engine.Validate(newObj, oldObj)) return IntegralityResult.InvalidData;");
+            ssb.AppendLine($"if (!engine.Validate(this, newObj, oldObj)) return IntegralityResult.InvalidData;");
             ssb.AppendLine("if (oldObj is not null) oldObj.Goshujin = default;");
             ssb.AppendLine($"if (this.{this.UniqueLink.ChainName}.Count >= engine.MaxItems) return IntegralityResult.LimitExceeded;");
             ssb.AppendLine($"newObj.Goshujin = this;");
@@ -2036,7 +2039,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 return;
             }
 
-            ScopingStringBuilder.IScope? scopeLock = this.ObjectAttribute?.Isolation == IsolationLevel.Serializable ? ssb.ScopeBrace("lock (this.syncObject)") : null;
+            var scopeLock = this.TryCreateLockScope(ssb);
 
             ssb.AppendLine($"var cache = engine.GetKeyHashCache<{this.UniqueLink.TypeObject.FullName}>(true);");
             using (var tryScope = ssb.ScopeBrace("try"))
@@ -2086,6 +2089,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         {
             if (this.UniqueLink is not null)
             {
+                ssb.AppendLine("if (this.Count != other.Count) return false;");
                 using (var scopeForeach = ssb.ScopeBrace("foreach (var x in this)"))
                 {
                     ssb.AppendLine($"var y = other.{this.UniqueLink.ChainName}.FindFirst(x.{this.UniqueLink.TargetName});");
