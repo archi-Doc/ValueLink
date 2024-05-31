@@ -33,9 +33,9 @@ public partial class GenericIntegralityClass<T>
             },
             4);
 
-        public override bool Validate(GenericIntegralityClass<T> newItem, GenericIntegralityClass<T>? oldItem)
+        public override bool Validate(GoshujinClass goshujin, GenericIntegralityClass<T> newItem, GenericIntegralityClass<T>? oldItem)
         {
-            return base.Validate(newItem, oldItem);
+            return true;
         }
     }
 

@@ -14,6 +14,12 @@ using Tinyhand.IO;
 
 namespace ValueLink.Integrality;
 
+public interface IIntegralityInternal
+{
+    Dictionary<TKey, ulong> GetKeyHashCache<TKey>(bool clear)
+        where TKey : struct;
+}
+
 public abstract class Integrality
 {
     public delegate Task<IntegralityResultMemory> BrokerDelegate(BytePool.RentMemory integration, CancellationToken cancellationToken);
@@ -54,7 +60,7 @@ public abstract class Integrality
         return dictionary;
     }
 
-    public virtual bool Validate(object newItem, object? oldItem)
+    public virtual bool ValidateInternal(object goshujin, object newItem, object? oldItem)
         => true;
 }
 
@@ -156,15 +162,15 @@ public class Integrality<TGoshujin, TObject> : Integrality
         }
     }
 
-    public override bool Validate(object newItem, object? oldItem)
-        => this.Validate((TObject)newItem, oldItem as TObject);
-
-    public virtual bool Validate(TObject newItem, TObject? oldItem)
+    public virtual bool Validate(TGoshujin goshujin, TObject newItem, TObject? oldItem)
         => true;
 
     public virtual void Prune(TGoshujin goshujin)
     {
     }
+
+    public override bool ValidateInternal(object goshujin, object newItem, object? oldItem)
+        => this.Validate((TGoshujin)goshujin, (TObject)newItem, oldItem as TObject);
 
     private BytePool.RentMemory CreateProbePacket(TGoshujin goshujin)
     {

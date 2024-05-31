@@ -2018,7 +2018,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             ssb.AppendLine($"if (obj is not {this.TypeObject!.FullName} newObj) return IntegralityResult.InvalidData;");
             ssb.AppendLine($"var oldObj = this.{this.UniqueLink.ChainName}.FindFirst(newObj.{this.UniqueLink.TargetName});");
-            ssb.AppendLine($"if (!engine.Validate(newObj, oldObj)) return IntegralityResult.InvalidData;");
+            ssb.AppendLine($"if (!engine.ValidateInternal(this, newObj, oldObj)) return IntegralityResult.InvalidData;");
             ssb.AppendLine("if (oldObj is not null) oldObj.Goshujin = default;");
             ssb.AppendLine($"if (this.{this.UniqueLink.ChainName}.Count >= engine.MaxItems) return IntegralityResult.LimitExceeded;");
             ssb.AppendLine($"newObj.Goshujin = this;");
