@@ -16,11 +16,23 @@ namespace ValueLink.Integrality;
 
 public interface IIntegralityInternal
 {
+    int MaxItems { get; }
+
+    bool RemoveIfItemNotFound { get; }
+
+    int MaxMemoryLength { get; }
+
+    int MaxIntegrationCount { get; }
+
+    public ulong TargetHash { get; }
+
     Dictionary<TKey, ulong> GetKeyHashCache<TKey>(bool clear)
         where TKey : struct;
+
+    bool ValidateInternal(object goshujin, object newItem, object? oldItem);
 }
 
-public abstract class Integrality
+public abstract class Integrality : IIntegralityInternal
 {
     public delegate Task<IntegralityResultMemory> BrokerDelegate(BytePool.RentMemory integration, CancellationToken cancellationToken);
 
@@ -44,7 +56,7 @@ public abstract class Integrality
 
     #endregion
 
-    public Dictionary<TKey, ulong> GetKeyHashCache<TKey>(bool clear)
+    Dictionary<TKey, ulong> IIntegralityInternal.GetKeyHashCache<TKey>(bool clear)
         where TKey : struct
     {
         if (this.keyHashCache is not Dictionary<TKey, ulong> dictionary)
