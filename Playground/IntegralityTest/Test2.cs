@@ -39,7 +39,6 @@ public class Test1
 
         var g2 = new Message.GoshujinClass();
         var engine = TestIntegrality.Pool.Get();
-        engine.Integrate
         try
         {
             var result = await engine.Integrate(g2, (x, y) => Task.FromResult(((IIntegralityObject)g).Differentiate(engine, x)));

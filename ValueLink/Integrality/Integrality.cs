@@ -34,8 +34,6 @@ public interface IIntegralityInternal
 
 public abstract class Integrality : IIntegralityInternal
 {
-    public delegate Task<IntegralityResultMemory> BrokerDelegate(BytePool.RentMemory integration, CancellationToken cancellationToken);
-
     public Integrality()
     {
     }
@@ -89,7 +87,7 @@ public class Integrality<TGoshujin, TObject> : Integrality
         return goshujin.Integrate(this, obj);
     }
 
-    public async Task<IntegralityResult> Integrate(TGoshujin goshujin, Integrality.BrokerDelegate brokerDelegate, CancellationToken cancellationToken = default)
+    public async Task<IntegralityResult> Integrate(TGoshujin goshujin, IntegralityBrokerDelegate brokerDelegate, CancellationToken cancellationToken = default)
     {
         // Probe
         var rentMemory = this.CreateProbePacket(goshujin);
