@@ -2,7 +2,7 @@
   "profiles": {
     "ValueLinkGenerator": {
       "commandName": "DebugRoslynComponent",
-      "targetProject": "..\\Playground\\Playground.csproj"
+      "targetProject": "..\\xUnitTest\\xUnitTest.csproj"
     }
   }
 }

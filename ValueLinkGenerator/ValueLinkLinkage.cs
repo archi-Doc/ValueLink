@@ -90,9 +90,13 @@ public class Linkage
                 }
                 else if (target.Kind == VisceralObjectKind.Property)
                 {
-                    if (target.Property_IsPrivateGetter || target.Property_IsPrivateSetter)
+                    if (target.Property_IsPrivateGetter)
                     {
                         inaccessible = true;
+                    }
+                    else if (target.Property_IsPrivateSetter)
+                    {
+                        linkAttribute.AddValue = false; // inaccessible = true;
                     }
                 }
             }

@@ -9,6 +9,30 @@ using Xunit;
 
 namespace xUnitTest;
 
+[TinyhandObject]
+public partial class PrivateIntClass
+{
+    public PrivateIntClass()
+    {
+    }
+
+    [Key(0)]
+    public int Id { get; private set; }
+}
+
+[TinyhandObject]
+[ValueLinkObject]
+public partial class PrivateIntClass2 : PrivateIntClass
+{
+    [Link(Primary = true, Unique = true, Type = ChainType.Unordered, TargetMember = "Id")]
+    public PrivateIntClass2()
+    {
+    }
+
+    // [Link(Primary = true, Unique = true, Type = ChainType.Unordered)]
+    // public int Id2 => this.Id;
+}
+
 [ValueLinkObject]
 [TinyhandObject]
 public partial class TestClass3
@@ -55,7 +79,7 @@ public class BasicTest2
         array.SequenceEqual(new int[] { 0, 1, 2, 3, 5, }).IsTrue();
 
         array = g.AgeRevChain.Select(a => a.Age).ToArray();
-        array.SequenceEqual(new int[] {5, 3, 2, 1, 0, }).IsTrue();
+        array.SequenceEqual(new int[] { 5, 3, 2, 1, 0, }).IsTrue();
 
         tc3.Goshujin = null;
 
