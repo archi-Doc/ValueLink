@@ -1713,11 +1713,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
         else if (this.SerializableGoshujin is not null)
         {
-            goshujinInterface = $" : {this.SerializableGoshujin}, IGoshujin";
+            goshujinInterface = $" : {this.SerializableGoshujin}, IGoshujin<{this.LocalName}>";
         }
         else
         {
-            goshujinInterface = " : IGoshujin";
+            goshujinInterface = $" : IGoshujin<{this.LocalName}>";
         }
 
         if (this.PrimaryLink != null)
