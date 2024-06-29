@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <PackageReference Include="Arc.Unit" Version="0.15.0" />
+    <PackageReference Include="Netsphere" Version="0.13.0" />
   </ItemGroup>
 
 </Project>

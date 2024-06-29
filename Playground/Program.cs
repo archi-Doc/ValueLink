@@ -8,7 +8,7 @@ internal class Program
     {
         Console.WriteLine("Hello, World!");
 
-        var tc = new Test1();
-        tc.Test();
+        var tc = new Test();
+        tc.Test1();
     }
 }
