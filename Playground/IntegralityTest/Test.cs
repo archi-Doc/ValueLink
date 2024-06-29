@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Arc.Collections;
 using Arc.Unit;
+using Netsphere;
 using Tinyhand;
 using ValueLink.Integrality;
 
@@ -24,9 +25,9 @@ public class TestIntegrality : Integrality<Message.GoshujinClass, Message>
 }
 
 
-public class Test1
+public class Test
 {
-    public async void Test()
+    public async void Test1()
     {
         var g = new Message.GoshujinClass();
         g.Add(new(1, 1, "A", "aaa", 1));
@@ -49,4 +50,14 @@ public class Test1
             TestIntegrality.Pool.Return(engine);
         }
     }
+
+    /*public async void Test2()
+    {
+        var g = new ActiveNode.GoshujinClass();
+
+        var g2 = new ActiveNode.GoshujinClass();
+        var engine = ActiveNode.Integrality.Instance;
+        var result = await engine.Integrate(g2, (x, y) => Task.FromResult(((IIntegralityObject)g).Differentiate(engine, x)));
+        result = await engine.Integrate(g2, (x, y) => Task.FromResult(((IIntegralityObject)g).Differentiate(engine, x)));
+    }*/
 }
