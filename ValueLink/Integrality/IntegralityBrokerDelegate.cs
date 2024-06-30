@@ -5,7 +5,8 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Arc.Collections;
 
 namespace ValueLink.Integrality;
 
-public delegate Task<IntegralityResultMemory> IntegralityBrokerDelegate(ReadOnlySpan<byte> integration, CancellationToken cancellationToken);
+public delegate Task<BytePool.RentMemory> IntegralityBrokerDelegate(ReadOnlySpan<byte> integration, CancellationToken cancellationToken);

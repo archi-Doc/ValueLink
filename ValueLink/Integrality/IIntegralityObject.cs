@@ -12,8 +12,8 @@ public interface IIntegralityObject
 
     ulong GetIntegralityHash();
 
-    IntegralityResultMemory Differentiate(IIntegralityInternal engine, ReadOnlySpan<byte> integration)
-        => new(IntegralityResult.NotImplemented);
+    BytePool.RentMemory Differentiate(IIntegralityInternal engine, ReadOnlySpan<byte> integration)
+        => IntegralityResultHelper.NotImplemented;
 
     void Compare(IIntegralityInternal engine, ref TinyhandReader reader, ref TinyhandWriter writer)
     {

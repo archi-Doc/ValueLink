@@ -1911,7 +1911,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGosjujin_Integrality_Differentiate(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        using (var methodScope = ssb.ScopeBrace($"IntegralityResultMemory {ValueLinkBody.IIntegralityObject}.Differentiate({ValueLinkBody.Integrality} engine, ReadOnlySpan<byte> integration)"))
+        using (var methodScope = ssb.ScopeBrace($"BytePool.RentMemory {ValueLinkBody.IIntegralityObject}.Differentiate({ValueLinkBody.Integrality} engine, ReadOnlySpan<byte> integration)"))
         {
             if (this.UniqueLink is null)
             {
@@ -1944,7 +1944,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                         }
                     }
 
-                    ssb.AppendLine("return new(IntegralityResult.Success, writer.FlushAndGetRentMemory());");
+                    ssb.AppendLine($"writer.WriteRawUInt8((byte)IntegralityResult.Success);");
+                    ssb.AppendLine("return writer.FlushAndGetRentMemory();");
                 }
 
                 using (var getScope = ssb.ScopeBrace("else if (state == IntegralityState.Get)"))
@@ -1965,14 +1966,15 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                         ssb.AppendLine("else break;");
                     }
 
-                    ssb.AppendLine("return new(IntegralityResult.Success, writer.FlushAndGetRentMemory().Slice(0, written));");
+                    ssb.AppendLine($"writer.WriteRawUInt8((byte)IntegralityResult.Success);");
+                    ssb.AppendLine("return writer.FlushAndGetRentMemory().Slice(0, written);");
                 }
             }
 
             ssb.AppendLine("catch { }");
             scopeLock?.Dispose();
             ssb.AppendLine();
-            ssb.AppendLine("return new(IntegralityResult.InvalidData);");
+            ssb.AppendLine("return IntegralityResultHelper.InvalidData;");
         }
     }
 

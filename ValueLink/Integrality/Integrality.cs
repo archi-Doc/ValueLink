@@ -106,14 +106,14 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
     {
         // Probe
         var rentMemory = this.CreateProbePacket(goshujin);
-        IntegralityResultMemory resultMemory;
+        BytePool.RentMemory resultMemory;
         try
         {
             resultMemory = await brokerDelegate(rentMemory.Span, cancellationToken).ConfigureAwait(false);
-            if (resultMemory.Result != IntegralityResult.Success)
+            if (IntegralityResultHelper.TryGetError(rentMemory, out var result))
             {
                 resultMemory.Return();
-                return resultMemory.Result;
+                return result;
             }
         }
         finally
@@ -150,10 +150,10 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
             try
             {
                 resultMemory = await brokerDelegate(resultMemory2.RentMemory.Span, cancellationToken).ConfigureAwait(false);
-                if (resultMemory.Result != IntegralityResult.Success)
+                if (IntegralityResultHelper.TryGetError(rentMemory, out var result))
                 {
                     resultMemory.Return();
-                    return resultMemory.Result;
+                    return result;
                 }
             }
             finally
@@ -232,9 +232,9 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         }
     }
 
-    private IntegralityResultMemory ProcessProbeResponsePacket(TGoshujin obj, IntegralityResultMemory resultMemory)
+    private IntegralityResultMemory ProcessProbeResponsePacket(TGoshujin obj, BytePool.RentMemory resultMemory)
     {
-        var reader = new TinyhandReader(resultMemory.RentMemory.Span);
+        var reader = new TinyhandReader(resultMemory.Span);
         try
         {
             var state = (IntegralityState)reader.ReadUnsafe<byte>();
@@ -272,9 +272,9 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         }
     }
 
-    private IntegralityResultMemory ProcessGetResponsePacket(TGoshujin obj, IntegralityResultMemory resultMemory)
+    private IntegralityResultMemory ProcessGetResponsePacket(TGoshujin obj, BytePool.RentMemory resultMemory)
     {
-        var reader = new TinyhandReader(resultMemory.RentMemory.Span);
+        var reader = new TinyhandReader(resultMemory.Span);
         try
         {
             var state = (IntegralityState)reader.ReadUnsafe<byte>();
