@@ -1911,7 +1911,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGosjujin_Integrality_Differentiate(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        using (var methodScope = ssb.ScopeBrace($"IntegralityResultMemory {ValueLinkBody.IIntegralityObject}.Differentiate({ValueLinkBody.Integrality} engine, BytePool.RentMemory integration)"))
+        using (var methodScope = ssb.ScopeBrace($"IntegralityResultMemory {ValueLinkBody.IIntegralityObject}.Differentiate({ValueLinkBody.Integrality} engine, ReadOnlySpan<byte> integration)"))
         {
             if (this.UniqueLink is null)
             {
@@ -1923,7 +1923,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             using (var tryScope = ssb.ScopeBrace("try"))
             {
-                ssb.AppendLine("var reader = new TinyhandReader(integration.Span);");
+                ssb.AppendLine("var reader = new TinyhandReader(integration);");
                 ssb.AppendLine("var state = (IntegralityState)reader.ReadUnsafe<byte>();");
 
                 using (var probeScope = ssb.ScopeBrace("if (state == IntegralityState.Probe)"))

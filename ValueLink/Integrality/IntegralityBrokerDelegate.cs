@@ -2,10 +2,10 @@
 
 #pragma warning disable SA1602 // Enumeration items should be documented
 
+using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Arc.Collections;
 
 namespace ValueLink.Integrality;
 
-public delegate Task<IntegralityResultMemory> IntegralityBrokerDelegate(BytePool.RentMemory integration, CancellationToken cancellationToken);
+public delegate Task<IntegralityResultMemory> IntegralityBrokerDelegate(ReadOnlySpan<byte> integration, CancellationToken cancellationToken);

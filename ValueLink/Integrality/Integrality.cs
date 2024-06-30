@@ -109,7 +109,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         IntegralityResultMemory resultMemory;
         try
         {
-            resultMemory = await brokerDelegate(rentMemory, cancellationToken).ConfigureAwait(false);
+            resultMemory = await brokerDelegate(rentMemory.Span, cancellationToken).ConfigureAwait(false);
             if (resultMemory.Result != IntegralityResult.Success)
             {
                 resultMemory.Return();
@@ -149,7 +149,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
             // Get: resultMemory2
             try
             {
-                resultMemory = await brokerDelegate(resultMemory2.RentMemory, cancellationToken).ConfigureAwait(false);
+                resultMemory = await brokerDelegate(resultMemory2.RentMemory.Span, cancellationToken).ConfigureAwait(false);
                 if (resultMemory.Result != IntegralityResult.Success)
                 {
                     resultMemory.Return();
@@ -174,17 +174,17 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
 
         resultMemory2.Return();
 
-        // Prune
+        // Trim
         if (goshujin is ISyncObject g)
         {
             lock (g.SyncObject)
             {
-                this.Prune(goshujin);
+                this.Trim(goshujin);
             }
         }
         else
         {
-            this.Prune(goshujin);
+            this.Trim(goshujin);
         }
 
         if (goshujin.GetIntegralityHash() == this.TargetHash)
@@ -209,11 +209,11 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         => true;
 
     /// <summary>
-    /// Prunes the Goshujin.<br/>
+    /// Trim the Goshujin.<br/>
     /// If Goshujin's isolation level is set to <see cref="IsolationLevel.Serializable"/>, this function will be executed within a lock(goshujin.syncObject) statement.
     /// </summary>
     /// <param name="goshujin">The Goshujin.</param>
-    public virtual void Prune(TGoshujin goshujin)
+    public virtual void Trim(TGoshujin goshujin)
     {
     }
 
