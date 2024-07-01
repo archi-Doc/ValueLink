@@ -4,9 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using Arc.Collections;
 
 namespace ValueLink.Integrality;
@@ -16,13 +13,13 @@ public static class IntegralityResultHelper
     static IntegralityResultHelper()
     {
         var bytes = new byte[] { (byte)IntegralityResult.NotImplemented, };
-        NotImplemented = BytePool.RentArray.CreateStatic(bytes).AsMemory();
+        NotImplemented = BytePool.RentArray.CreateFrom(bytes).AsMemory();
 
         bytes = new byte[] { (byte)IntegralityResult.InvalidData, };
-        InvalidData = BytePool.RentArray.CreateStatic(bytes).AsMemory();
+        InvalidData = BytePool.RentArray.CreateFrom(bytes).AsMemory();
 
         bytes = new byte[] { (byte)IntegralityResult.Incomplete, };
-        Incomplete = BytePool.RentArray.CreateStatic(bytes).AsMemory();
+        Incomplete = BytePool.RentArray.CreateFrom(bytes).AsMemory();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
