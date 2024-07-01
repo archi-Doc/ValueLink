@@ -1965,7 +1965,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     }
 
                     // ssb.AppendLine($"writer.WriteRawUInt8((byte)IntegralityResult.Success);");
-                    ssb.AppendLine("return writer.FlushAndGetRentMemory().Slice(0, written + 1);");
+                    ssb.AppendLine("return writer.FlushAndGetRentMemory().Slice(0, written);");
                 }
             }
 

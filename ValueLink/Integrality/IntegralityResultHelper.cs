@@ -23,18 +23,19 @@ public static class IntegralityResultHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void ParseMemoryAndResult(BytePool.RentMemory rentMemory, out Memory<byte> memory, out IntegralityResult result)
+    public static void ParseMemoryAndResult(BytePool.RentMemory rentMemory, out IntegralityResult result)
     {
         if (rentMemory.Length == 0)
         {
-            memory = default;
             result = IntegralityResult.InvalidData;
+        }
+        else if (rentMemory.Length == 1)
+        {
+            result = (IntegralityResult)rentMemory.Span[0];
         }
         else
         {
-            var length = rentMemory.Length - 1;
-            memory = rentMemory.Memory.Slice(0, length);
-            result = (IntegralityResult)rentMemory.Span[length];
+            result = IntegralityResult.Success;
         }
     }
 

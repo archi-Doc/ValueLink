@@ -108,11 +108,10 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         // Probe
         var rentMemory = this.CreateProbePacket(goshujin);
         BytePool.RentMemory resultMemory;
-        Memory<byte> memory;
         try
         {
             resultMemory = await brokerDelegate(rentMemory.Span, cancellationToken).ConfigureAwait(false);
-            IntegralityResultHelper.ParseMemoryAndResult(resultMemory, out memory, out var result);
+            IntegralityResultHelper.ParseMemoryAndResult(resultMemory, out var result);
             if (result != IntegralityResult.Success)
             {
                 resultMemory.Return();
@@ -128,7 +127,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         (IntegralityResult Result, BytePool.RentMemory RentMemory) resultMemory2;
         try
         {
-            resultMemory2 = this.ProcessProbeResponsePacket(goshujin, memory);
+            resultMemory2 = this.ProcessProbeResponsePacket(goshujin, resultMemory.Memory);
             if (resultMemory2.Result != IntegralityResult.Incomplete)
             {
                 resultMemory2.RentMemory.Return();
@@ -153,7 +152,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
             try
             {
                 resultMemory = await brokerDelegate(resultMemory2.RentMemory.Span, cancellationToken).ConfigureAwait(false);
-                IntegralityResultHelper.ParseMemoryAndResult(resultMemory, out memory, out var result);
+                IntegralityResultHelper.ParseMemoryAndResult(resultMemory, out var result);
                 if (result != IntegralityResult.Success)
                 {
                     resultMemory.Return();
@@ -168,7 +167,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
             // GetResponse: resultMemory
             try
             {
-                resultMemory2 = this.ProcessGetResponsePacket(goshujin, memory);
+                resultMemory2 = this.ProcessGetResponsePacket(goshujin, resultMemory.Memory);
             }
             finally
             {
