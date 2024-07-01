@@ -23,15 +23,17 @@ public static class IntegralityResultHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool TryGetError(BytePool.RentMemory rentMemory, out IntegralityResult result)
+    public static Span<byte> TryGet(BytePool.RentMemory rentMemory, out IntegralityResult result)
     {
         if (rentMemory.Length == 0)
         {
             result = IntegralityResult.InvalidData;
+            return default;
         }
 
-        result = (IntegralityResult)rentMemory.Span[rentMemory.Length - 1];
-        return result != IntegralityResult.Success;
+        var length = rentMemory.Length - 1;
+        result = (IntegralityResult)rentMemory.Span[length];
+        return rentMemory.Span.Slice(0, length);
     }
 
     public static readonly BytePool.RentMemory NotImplemented;

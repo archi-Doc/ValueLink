@@ -110,7 +110,8 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         try
         {
             resultMemory = await brokerDelegate(rentMemory.Span, cancellationToken).ConfigureAwait(false);
-            if (IntegralityResultHelper.TryGetError(rentMemory, out var result))
+            var span = IntegralityResultHelper.TryGet(rentMemory, out var result);
+            if (result != IntegralityResult.Success)
             {
                 resultMemory.Return();
                 return result;
