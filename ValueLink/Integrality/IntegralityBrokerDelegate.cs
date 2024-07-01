@@ -9,4 +9,4 @@ using Arc.Collections;
 
 namespace ValueLink.Integrality;
 
-public delegate Task<BytePool.RentMemory> IntegralityBrokerDelegate(ReadOnlySpan<byte> integration, CancellationToken cancellationToken);
+public delegate Task<BytePool.RentMemory> IntegralityBrokerDelegate(ReadOnlyMemory<byte> integration, CancellationToken cancellationToken);
