@@ -4,7 +4,7 @@
 
 namespace ValueLink.Integrality;
 
-public enum IntegralityResult
+public enum IntegralityResult : byte
 {
     Success, // Integrated
     Incomplete,

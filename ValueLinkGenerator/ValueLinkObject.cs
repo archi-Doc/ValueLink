@@ -1911,7 +1911,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGosjujin_Integrality_Differentiate(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        using (var methodScope = ssb.ScopeBrace($"IntegralityResultMemory {ValueLinkBody.IIntegralityObject}.Differentiate({ValueLinkBody.Integrality} engine, BytePool.RentMemory integration)"))
+        using (var methodScope = ssb.ScopeBrace($"BytePool.RentMemory {ValueLinkBody.IIntegralityObject}.Differentiate({ValueLinkBody.Integrality} engine, ReadOnlySpan<byte> integration)"))
         {
             if (this.UniqueLink is null)
             {
@@ -1923,7 +1923,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             using (var tryScope = ssb.ScopeBrace("try"))
             {
-                ssb.AppendLine("var reader = new TinyhandReader(integration.Span);");
+                ssb.AppendLine("var reader = new TinyhandReader(integration);");
                 ssb.AppendLine("var state = (IntegralityState)reader.ReadUnsafe<byte>();");
 
                 using (var probeScope = ssb.ScopeBrace("if (state == IntegralityState.Probe)"))
@@ -1944,7 +1944,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                         }
                     }
 
-                    ssb.AppendLine("return new(IntegralityResult.Success, writer.FlushAndGetRentMemory());");
+                    // ssb.AppendLine($"writer.WriteRawUInt8((byte)IntegralityResult.Success);");
+                    ssb.AppendLine("return writer.FlushAndGetRentMemory();");
                 }
 
                 using (var getScope = ssb.ScopeBrace("else if (state == IntegralityState.Get)"))
@@ -1955,8 +1956,6 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
                     using (var readScope = ssb.ScopeBrace("while (!reader.End)"))
                     {
-                        // ssb.AppendLine($"");
-                        // ssb.AppendLine($"");
                         ssb.AppendLine($"var key = reader.ReadUnsafe<{this.UniqueLink.TypeObject.FullName}>();");
                         ssb.AppendLine("writer.WriteUnsafe(key);");
                         ssb.AppendLine($"if (this.{this.UniqueLink.ChainName}.FindFirst(key) is {{ }} obj) TinyhandSerializer.SerializeObject(ref writer, obj);");
@@ -1965,14 +1964,15 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                         ssb.AppendLine("else break;");
                     }
 
-                    ssb.AppendLine("return new(IntegralityResult.Success, writer.FlushAndGetRentMemory().Slice(0, written));");
+                    ssb.AppendLine($"if (written == 0) return IntegralityResultHelper.Incomplete;");
+                    ssb.AppendLine("return writer.FlushAndGetRentMemory().Slice(0, written);");
                 }
             }
 
             ssb.AppendLine("catch { }");
             scopeLock?.Dispose();
             ssb.AppendLine();
-            ssb.AppendLine("return new(IntegralityResult.InvalidData);");
+            ssb.AppendLine("return IntegralityResultHelper.InvalidData;");
         }
     }
 
