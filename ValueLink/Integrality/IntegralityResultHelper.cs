@@ -20,6 +20,9 @@ public static class IntegralityResultHelper
 
         bytes = new byte[] { (byte)IntegralityResult.InvalidData, };
         InvalidData = BytePool.RentArray.CreateStatic(bytes).AsMemory();
+
+        bytes = new byte[] { (byte)IntegralityResult.Incomplete, };
+        Incomplete = BytePool.RentArray.CreateStatic(bytes).AsMemory();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -42,4 +45,6 @@ public static class IntegralityResultHelper
     public static readonly BytePool.RentMemory NotImplemented;
 
     public static readonly BytePool.RentMemory InvalidData;
+
+    public static readonly BytePool.RentMemory Incomplete;
 }

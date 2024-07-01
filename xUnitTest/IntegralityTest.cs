@@ -134,5 +134,10 @@ public class IntegralityTest
         g2.IdChain.FindFirst(2).IsNull();
         g2.IdChain.FindFirst(3).IsNotNull();
         g2.GoshujinEquals(g).IsFalse();
+
+        g2 = new();
+        g2.GoshujinEquals(g).IsFalse();
+
+        SimpleIntegralityClass.Integrality.Instance10.IntegrateForTest(g, g2).Is(IntegralityResult.Incomplete);
     }
 }

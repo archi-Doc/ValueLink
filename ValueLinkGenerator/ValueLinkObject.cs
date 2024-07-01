@@ -1964,7 +1964,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                         ssb.AppendLine("else break;");
                     }
 
-                    // ssb.AppendLine($"writer.WriteRawUInt8((byte)IntegralityResult.Success);");
+                    ssb.AppendLine($"if (written == 0) return IntegralityResultHelper.Incomplete;");
                     ssb.AppendLine("return writer.FlushAndGetRentMemory().Slice(0, written);");
                 }
             }
