@@ -110,7 +110,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         BytePool.RentMemory resultMemory;
         try
         {
-            resultMemory = await brokerDelegate(rentMemory.Span, cancellationToken).ConfigureAwait(false);
+            resultMemory = await brokerDelegate(rentMemory.Memory, cancellationToken).ConfigureAwait(false);
             IntegralityResultHelper.ParseMemoryAndResult(resultMemory, out var result);
             if (result != IntegralityResult.Success)
             {
@@ -151,7 +151,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
             // Get: resultMemory2
             try
             {
-                resultMemory = await brokerDelegate(resultMemory2.RentMemory.Span, cancellationToken).ConfigureAwait(false);
+                resultMemory = await brokerDelegate(resultMemory2.RentMemory.Memory, cancellationToken).ConfigureAwait(false);
                 IntegralityResultHelper.ParseMemoryAndResult(resultMemory, out var result);
                 if (result != IntegralityResult.Success)
                 {
