@@ -122,13 +122,13 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         }
 
         // ProbeResponse: resultMemory
-        IntegralityResultMemory resultMemory2;
+        (IntegralityResult Result, BytePool.RentMemory RentMemory) resultMemory2;
         try
         {
             resultMemory2 = this.ProcessProbeResponsePacket(goshujin, resultMemory);
             if (resultMemory2.Result != IntegralityResult.Incomplete)
             {
-                resultMemory2.Return();
+                resultMemory2.RentMemory.Return();
                 return resultMemory2.Result;
             }
         }
@@ -158,7 +158,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
             }
             finally
             {
-                resultMemory2.Return();
+                resultMemory2.RentMemory.Return();
             }
 
             // GetResponse: resultMemory
@@ -172,7 +172,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
             }
         }
 
-        resultMemory2.Return();
+        resultMemory2.RentMemory.Return();
 
         // Trim
         if (goshujin is ISyncObject g)
@@ -232,7 +232,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         }
     }
 
-    private IntegralityResultMemory ProcessProbeResponsePacket(TGoshujin obj, BytePool.RentMemory resultMemory)
+    private (IntegralityResult Result, BytePool.RentMemory RentMemory) ProcessProbeResponsePacket(TGoshujin obj, BytePool.RentMemory resultMemory)
     {
         var reader = new TinyhandReader(resultMemory.Span);
         try
@@ -240,19 +240,19 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
             var state = (IntegralityState)reader.ReadUnsafe<byte>();
             if (state != IntegralityState.ProbeResponse)
             {
-                return new(IntegralityResult.InvalidData);
+                return (IntegralityResult.InvalidData, default);
             }
 
             this.TargetHash = reader.ReadUnsafe<ulong>();
         }
         catch
         {
-            return new(IntegralityResult.InvalidData);
+            return (IntegralityResult.InvalidData, default);
         }
 
         if (obj.GetIntegralityHash() == this.TargetHash)
         {// Identical
-            return new(IntegralityResult.Success);
+            return (IntegralityResult.Success, default);
         }
 
         var writer = TinyhandWriter.CreateFromBytePool();
@@ -260,11 +260,11 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         {
             writer.WriteRawUInt8((byte)IntegralityState.Get);
             obj.Compare(this, ref reader, ref writer);
-            return new(IntegralityResult.Incomplete, writer.FlushAndGetRentMemory());
+            return (IntegralityResult.Incomplete, writer.FlushAndGetRentMemory());
         }
         catch
         {
-            return new(IntegralityResult.InvalidData);
+            return (IntegralityResult.InvalidData, default);
         }
         finally
         {
@@ -272,7 +272,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         }
     }
 
-    private IntegralityResultMemory ProcessGetResponsePacket(TGoshujin obj, BytePool.RentMemory resultMemory)
+    private (IntegralityResult Result, BytePool.RentMemory RentMemory) ProcessGetResponsePacket(TGoshujin obj, BytePool.RentMemory resultMemory)
     {
         var reader = new TinyhandReader(resultMemory.Span);
         try
@@ -280,12 +280,12 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
             var state = (IntegralityState)reader.ReadUnsafe<byte>();
             if (state != IntegralityState.GetResponse)
             {
-                return new(IntegralityResult.InvalidData);
+                return (IntegralityResult.InvalidData, default);
             }
         }
         catch
         {
-            return new(IntegralityResult.InvalidData);
+            return (IntegralityResult.InvalidData, default);
         }
 
         var writer = TinyhandWriter.CreateFromBytePool();
@@ -295,16 +295,16 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
             obj.Integrate(this, ref reader, ref writer);
             if (writer.Written <= 1)
             {
-                return new(IntegralityResult.Success, default);
+                return (IntegralityResult.Success, default);
             }
             else
             {
-                return new(IntegralityResult.Incomplete, writer.FlushAndGetRentMemory());
+                return (IntegralityResult.Incomplete, writer.FlushAndGetRentMemory());
             }
         }
         catch
         {
-            return new(IntegralityResult.InvalidData);
+            return (IntegralityResult.InvalidData, default);
         }
         finally
         {
