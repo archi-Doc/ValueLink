@@ -1944,7 +1944,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                         }
                     }
 
-                    ssb.AppendLine($"writer.WriteRawUInt8((byte)IntegralityResult.Success);");
+                    // ssb.AppendLine($"writer.WriteRawUInt8((byte)IntegralityResult.Success);");
                     ssb.AppendLine("return writer.FlushAndGetRentMemory();");
                 }
 
@@ -1956,8 +1956,6 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
                     using (var readScope = ssb.ScopeBrace("while (!reader.End)"))
                     {
-                        // ssb.AppendLine($"");
-                        // ssb.AppendLine($"");
                         ssb.AppendLine($"var key = reader.ReadUnsafe<{this.UniqueLink.TypeObject.FullName}>();");
                         ssb.AppendLine("writer.WriteUnsafe(key);");
                         ssb.AppendLine($"if (this.{this.UniqueLink.ChainName}.FindFirst(key) is {{ }} obj) TinyhandSerializer.SerializeObject(ref writer, obj);");
@@ -1966,8 +1964,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                         ssb.AppendLine("else break;");
                     }
 
-                    ssb.AppendLine($"writer.WriteRawUInt8((byte)IntegralityResult.Success);");
-                    ssb.AppendLine("return writer.FlushAndGetRentMemory().Slice(0, written);");
+                    // ssb.AppendLine($"writer.WriteRawUInt8((byte)IntegralityResult.Success);");
+                    ssb.AppendLine("return writer.FlushAndGetRentMemory().Slice(0, written + 1);");
                 }
             }
 
