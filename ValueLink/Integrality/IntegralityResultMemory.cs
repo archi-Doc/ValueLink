@@ -5,7 +5,7 @@ using Tinyhand;
 
 namespace ValueLink.Integrality;
 
-[TinyhandObject]
+// [TinyhandObject]
 public readonly partial struct IntegralityResultMemory
 {
     public IntegralityResultMemory(IntegralityResult result, BytePool.RentMemory difference)
@@ -26,10 +26,10 @@ public readonly partial struct IntegralityResultMemory
         this.RentMemory = default;
     }
 
-    [Key(0)]
+    // [Key(0)]
     public readonly IntegralityResult Result;
 
-    [Key(1)]
+    // [Key(1)]
     public readonly BytePool.RentMemory RentMemory;
 
     public void Return()

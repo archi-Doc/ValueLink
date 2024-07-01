@@ -15,15 +15,11 @@ public static class IntegralityResultHelper
 {
     static IntegralityResultHelper()
     {
-        BytePool.RentMemory rentMemory;
+        var bytes = new byte[] { (byte)IntegralityResult.NotImplemented, };
+        NotImplemented = BytePool.RentArray.CreateStatic(bytes).AsMemory();
 
-        rentMemory = BytePool.Default.Rent(1).AsMemory();
-        MemoryMarshal.TryWrite(rentMemory.Span, (byte)IntegralityResult.NotImplemented);
-        NotImplemented = rentMemory;
-
-        rentMemory = BytePool.Default.Rent(1).AsMemory();
-        MemoryMarshal.TryWrite(rentMemory.Span, (byte)IntegralityResult.InvalidData);
-        InvalidData = rentMemory;
+        bytes = new byte[] { (byte)IntegralityResult.InvalidData, };
+        InvalidData = BytePool.RentArray.CreateStatic(bytes).AsMemory();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
