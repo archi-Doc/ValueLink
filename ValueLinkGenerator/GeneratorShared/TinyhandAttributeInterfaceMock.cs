@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Arc.Visceral;
 using Microsoft.CodeAnalysis;
 
 #pragma warning disable SA1602
@@ -14,31 +15,6 @@ public enum PropertyAccessibility
     PublicSetter,
     ProtectedSetter,
     GetterOnly,
-}
-
-public static class AttributeHelper
-{
-    public static object? GetValue(int constructorIndex, string? name, object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
-    {
-        if (constructorIndex >= 0 && constructorIndex < constructorArguments.Length)
-        {// Constructor Argument.
-            return constructorArguments[constructorIndex];
-        }
-        else if (name != null)
-        {// Named Argument.
-            var pair = namedArguments.FirstOrDefault(x => x.Key == name);
-            if (pair.Equals(default(KeyValuePair<string, object?>)))
-            {
-                return null;
-            }
-
-            return pair.Value;
-        }
-        else
-        {
-            return null;
-        }
-    }
 }
 
 public sealed class TinyhandUnionAttributeMock
@@ -93,73 +69,73 @@ public sealed class TinyhandObjectAttributeMock
         var attribute = new TinyhandObjectAttributeMock();
 
         object? val;
-        val = AttributeHelper.GetValue(-1, nameof(ImplicitKeyAsName), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(-1, nameof(ImplicitKeyAsName), constructorArguments, namedArguments);
         if (val != null)
         {
             attribute.ImplicitKeyAsName = (bool)val;
         }
 
-        val = AttributeHelper.GetValue(-1, nameof(IncludePrivateMembers), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(-1, nameof(IncludePrivateMembers), constructorArguments, namedArguments);
         if (val != null)
         {
             attribute.IncludePrivateMembers = (bool)val;
         }
 
-        val = AttributeHelper.GetValue(-1, nameof(ExplicitKeyOnly), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(-1, nameof(ExplicitKeyOnly), constructorArguments, namedArguments);
         if (val != null)
         {
             attribute.ExplicitKeyOnly = (bool)val;
         }
 
-        val = AttributeHelper.GetValue(-1, nameof(ReconstructMember), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(-1, nameof(ReconstructMember), constructorArguments, namedArguments);
         if (val != null)
         {
             attribute.ReconstructMember = (bool)val;
         }
 
-        val = AttributeHelper.GetValue(-1, nameof(ReuseMember), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(-1, nameof(ReuseMember), constructorArguments, namedArguments);
         if (val != null)
         {
             attribute.ReuseMember = (bool)val;
         }
 
-        val = AttributeHelper.GetValue(-1, nameof(SkipSerializingDefaultValue), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(-1, nameof(SkipSerializingDefaultValue), constructorArguments, namedArguments);
         if (val != null)
         {
             attribute.SkipSerializingDefaultValue = (bool)val;
         }
 
-        val = AttributeHelper.GetValue(-1, nameof(UseServiceProvider), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(-1, nameof(UseServiceProvider), constructorArguments, namedArguments);
         if (val != null)
         {
             attribute.UseServiceProvider = (bool)val;
         }
 
-        val = AttributeHelper.GetValue(-1, nameof(ReservedKeys), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(-1, nameof(ReservedKeys), constructorArguments, namedArguments);
         if (val != null)
         {
             attribute.ReservedKeys = (int)val;
         }
 
-        val = AttributeHelper.GetValue(-1, nameof(LockObject), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(-1, nameof(LockObject), constructorArguments, namedArguments);
         if (val != null)
         {
             attribute.LockObject = (string)val;
         }
 
-        val = AttributeHelper.GetValue(-1, nameof(EnumAsString), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(-1, nameof(EnumAsString), constructorArguments, namedArguments);
         if (val != null)
         {
             attribute.EnumAsString = (bool)val;
         }
 
-        val = AttributeHelper.GetValue(-1, nameof(UseResolver), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(-1, nameof(UseResolver), constructorArguments, namedArguments);
         if (val != null)
         {
             attribute.UseResolver = (bool)val;
         }
 
-        val = AttributeHelper.GetValue(-1, nameof(Structual), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(-1, nameof(Structual), constructorArguments, namedArguments);
         if (val != null)
         {
             attribute.Structual = (bool)val;
@@ -219,19 +195,19 @@ public class KeyAttributeMock
             throw new ArgumentNullException();
         }
 
-        var v = AttributeHelper.GetValue(-1, nameof(Condition), constructorArguments, namedArguments);
+        var v = VisceralHelper.GetValue(-1, nameof(Condition), constructorArguments, namedArguments);
         if (v != null)
         {
             attribute.Condition = (bool)v;
         }
 
-        v = AttributeHelper.GetValue(-1, nameof(AddProperty), constructorArguments, namedArguments);
+        v = VisceralHelper.GetValue(-1, nameof(AddProperty), constructorArguments, namedArguments);
         if (v != null)
         {
             attribute.AddProperty = (string)v;
         }
 
-        v = AttributeHelper.GetValue(-1, nameof(PropertyAccessibility), constructorArguments, namedArguments);
+        v = VisceralHelper.GetValue(-1, nameof(PropertyAccessibility), constructorArguments, namedArguments);
         if (v != null)
         {
             attribute.PropertyAccessibility = (PropertyAccessibility)v;
@@ -280,13 +256,13 @@ public class MaxLengthAttributeMock
         var attribute = new MaxLengthAttributeMock();
 
         object? val;
-        val = AttributeHelper.GetValue(0, nameof(MaxLength), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(0, nameof(MaxLength), constructorArguments, namedArguments);
         if (val != null)
         {
             attribute.MaxLength = (int)val;
         }
 
-        val = AttributeHelper.GetValue(1, nameof(MaxChildLength), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(1, nameof(MaxChildLength), constructorArguments, namedArguments);
         if (val != null)
         {
             attribute.MaxChildLength = (int)val;
