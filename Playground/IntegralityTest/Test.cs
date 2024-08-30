@@ -10,9 +10,11 @@ namespace Playground;
 
 public class TestIntegrality : Integrality<Message.GoshujinClass, Message>
 {
+    public const int DefaultMaxItems = 1000;
+
     public static readonly ObjectPool<TestIntegrality> Pool = new(() => new()
     {
-        MaxItems = 1000,
+        MaxItems = DefaultMaxItems,
         RemoveIfItemNotFound = true,
     });
 
@@ -42,8 +44,8 @@ public class Test
         var engine = TestIntegrality.Pool.Get();
         try
         {
-            var result = await engine.Integrate(g2, (x, y) => Task.FromResult(((IIntegralityObject)g).Differentiate(engine, x)));
-            result = await engine.Integrate(g2, (x, y) => Task.FromResult(((IIntegralityObject)g).Differentiate(engine, x)));
+            var result = await engine.Integrate(g2, (x, y) => Task.FromResult(((IIntegralityObject)g).Differentiate(x, TestIntegrality.DefaultMaxItems)));
+            result = await engine.Integrate(g2, (x, y) => Task.FromResult(((IIntegralityObject)g).Differentiate(x, TestIntegrality.DefaultMaxItems)));
         }
         finally
         {

@@ -99,7 +99,7 @@ public static class IntegralityTestHelper
     public static IntegralityResult IntegrateForTest<TGoshujin, TObject>(this Integrality<TGoshujin, TObject> integrality, TGoshujin goshujin, TGoshujin target)
         where TGoshujin : class, IGoshujin, IIntegralityObject
         where TObject : class, ITinyhandSerialize<TObject>, IIntegralityObject
-        => integrality.Integrate(goshujin, (x, y) => Task.FromResult(target.Differentiate(integrality, x))).Result;
+        => integrality.Integrate(goshujin, (x, y) => Task.FromResult(target.Differentiate(x, integrality.MaxItems))).Result;
 }
 
 public class IntegralityTest
