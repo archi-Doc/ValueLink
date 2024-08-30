@@ -47,7 +47,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
     /// <summary>
     /// Gets the maximum memory length.
     /// </summary>
-    public int MaxMemoryLength { get; init; } = (1024 * 1024 * 4) - 1024; // ConnectionAgreement.MaxBlockSize
+    public int MaxMemoryLength { get; init; } = IntegralityConstants.DefaultMaxMemoryLength; // ConnectionAgreement.MaxBlockSize
 
     /// <summary>
     /// Gets the maximum integration count.

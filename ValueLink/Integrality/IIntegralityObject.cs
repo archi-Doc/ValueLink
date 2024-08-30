@@ -12,7 +12,7 @@ public interface IIntegralityObject
 
     ulong GetIntegralityHash();
 
-    BytePool.RentMemory Differentiate(IIntegralityInternal engine, ReadOnlyMemory<byte> integration)
+    BytePool.RentMemory Differentiate(ReadOnlyMemory<byte> integration, int maxItems, int maxMemoryLength = IntegralityConstants.DefaultMaxMemoryLength)
         => IntegralityResultHelper.NotImplemented;
 
     void Compare(IIntegralityInternal engine, ref TinyhandReader reader, ref TinyhandWriter writer)
