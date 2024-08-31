@@ -17,12 +17,14 @@ using Tinyhand.IO;
 namespace ValueLink.Integrality;
 
 /// <summary>
-/// Represents the class used for object integration.
+/// Represents a class for object integration.<br/>
+/// Since this class is immutable, it can be used by multiple threads.<br/>
+/// Set the properties according to the use case, and override <see cref="Validate(TGoshujin, TObject, TObject?)"/> and <see cref="Trim(TGoshujin)"/> as needed.
 /// </summary>
 /// <typeparam name="TGoshujin">The type of the Goshujin.</typeparam>
 /// <typeparam name="TObject">The type of the Object.</typeparam>
 public class Integrality<TGoshujin, TObject> : IIntegralityInternal
-    where TGoshujin : class, IGoshujin, IIntegralityObject
+    where TGoshujin : class, IGoshujin, IIntegralityGoshujin
     where TObject : class, ITinyhandSerialize<TObject>, IIntegralityObject
 {
     /// <summary>
@@ -52,33 +54,9 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
     /// <summary>
     /// Gets the maximum integration count.
     /// </summary>
-    public int MaxIntegrationCount { get; init; } = 3;
-
-    /// <summary>
-    /// Gets or sets the target hash.
-    /// </summary>
-    public ulong TargetHash { get; protected set; }
-
-    private object? keyHashCache;
+    public int MaxIntegrationCount { get; init; } = IntegralityConstants.DefaultMaxIntegrationCount;
 
     #endregion
-
-    /// <inheritdoc/>
-    Dictionary<TKey, ulong> IIntegralityInternal.GetKeyHashCache<TKey>(bool clear)
-        where TKey : struct
-    {
-        if (this.keyHashCache is not Dictionary<TKey, ulong> dictionary)
-        {
-            dictionary = new Dictionary<TKey, ulong>();
-            this.keyHashCache = dictionary;
-        }
-        else if (clear)
-        {
-            dictionary.Clear();
-        }
-
-        return dictionary;
-    }
 
     /// <inheritdoc/>
     bool IIntegralityInternal.Validate(object goshujin, object newItem, object? oldItem)
@@ -125,9 +103,10 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
 
         // ProbeResponse: resultMemory
         (IntegralityResult Result, BytePool.RentMemory RentMemory) resultMemory2;
+        ulong targetHash;
         try
         {
-            resultMemory2 = this.ProcessProbeResponsePacket(goshujin, resultMemory.Memory);
+            resultMemory2 = this.ProcessProbeResponsePacket(goshujin, resultMemory.Memory, out targetHash);
             if (resultMemory2.Result != IntegralityResult.Incomplete)
             {
                 resultMemory2.RentMemory.Return();
@@ -190,7 +169,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
             this.Trim(goshujin);
         }
 
-        if (goshujin.GetIntegralityHash() == this.TargetHash)
+        if (goshujin.GetIntegralityHash() == targetHash)
         {// Integrated
             return IntegralityResult.Success;
         }
@@ -235,7 +214,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         }
     }
 
-    private (IntegralityResult Result, BytePool.RentMemory RentMemory) ProcessProbeResponsePacket(TGoshujin obj, Memory<byte> memory)
+    private (IntegralityResult Result, BytePool.RentMemory RentMemory) ProcessProbeResponsePacket(TGoshujin goshujin, Memory<byte> memory, out ulong targetHash)
     {
         var reader = new TinyhandReader(memory.Span);
         try
@@ -243,17 +222,19 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
             var state = (IntegralityState)reader.ReadUnsafe<byte>();
             if (state != IntegralityState.ProbeResponse)
             {
+                targetHash = 0;
                 return (IntegralityResult.InvalidData, default);
             }
 
-            this.TargetHash = reader.ReadUnsafe<ulong>();
+            targetHash = reader.ReadUnsafe<ulong>();
         }
         catch
         {
+            targetHash = 0;
             return (IntegralityResult.InvalidData, default);
         }
 
-        if (obj.GetIntegralityHash() == this.TargetHash)
+        if (goshujin.GetIntegralityHash() == targetHash)
         {// Identical
             return (IntegralityResult.Success, default);
         }
@@ -262,7 +243,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         try
         {
             writer.WriteRawUInt8((byte)IntegralityState.Get);
-            obj.Compare(this, ref reader, ref writer);
+            goshujin.Compare(this, ref reader, ref writer);
             return (IntegralityResult.Incomplete, writer.FlushAndGetRentMemory());
         }
         catch

@@ -97,7 +97,7 @@ public partial class SerializableIntegralityClass : IEquatableObject<Serializabl
 public static class IntegralityTestHelper
 {
     public static IntegralityResult IntegrateForTest<TGoshujin, TObject>(this Integrality<TGoshujin, TObject> integrality, TGoshujin goshujin, TGoshujin target)
-        where TGoshujin : class, IGoshujin, IIntegralityObject
+        where TGoshujin : class, IGoshujin, IIntegralityObject, IIntegralityGoshujin
         where TObject : class, ITinyhandSerialize<TObject>, IIntegralityObject
         => integrality.Integrate(goshujin, (x, y) => Task.FromResult(target.Differentiate(x, integrality.MaxItems))).Result;
 }

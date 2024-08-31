@@ -4,30 +4,31 @@ using System.Collections.Generic;
 
 namespace ValueLink.Integrality;
 
+/*
 /// <summary>
-/// Represents the internal interface for integrality.
+/// Represents the integrality requirements.
 /// </summary>
-public interface IIntegralityInternal
+public abstract class IntegralityRequirements
 {
     /// <summary>
     /// Gets the maximum number of items.
     /// </summary>
-    int MaxItems { get; }
+    public int MaxItems { get; }
 
     /// <summary>
     /// Gets a value indicating whether to remove the item if it is not found.
     /// </summary>
-    bool RemoveIfItemNotFound { get; }
+    public bool RemoveIfItemNotFound { get; }
 
     /// <summary>
     /// Gets the maximum length of the memory.
     /// </summary>
-    int MaxMemoryLength { get; }
+    public int MaxMemoryLength { get; }
 
     /// <summary>
     /// Gets the maximum integration count.
     /// </summary>
-    int MaxIntegrationCount { get; }
+    public int MaxIntegrationCount { get; }
 
     /// <summary>
     /// Validates the specified objects.
@@ -36,5 +37,5 @@ public interface IIntegralityInternal
     /// <param name="newItem">The new item.</param>
     /// <param name="oldItem">The old item.</param>
     /// <returns><c>true</c> if the validation is successful; otherwise, <c>false</c>.</returns>
-    bool Validate(object goshujin, object newItem, object? oldItem);
-}
+    public abstract bool Validate(object goshujin, object newItem, object? oldItem);
+}*/

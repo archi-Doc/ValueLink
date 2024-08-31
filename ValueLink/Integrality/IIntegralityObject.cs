@@ -11,18 +11,15 @@ public interface IIntegralityObject
     void ClearIntegralityHash();
 
     ulong GetIntegralityHash();
+}
 
-    BytePool.RentMemory Differentiate(ReadOnlyMemory<byte> integration, int maxItems, int maxMemoryLength = IntegralityConstants.DefaultMaxMemoryLength)
-        => IntegralityResultHelper.NotImplemented;
+public interface IIntegralityGoshujin : IIntegralityObject
+{
+    void Compare(IIntegralityInternal engine, ref TinyhandReader reader, ref TinyhandWriter writer);
 
-    void Compare(IIntegralityInternal engine, ref TinyhandReader reader, ref TinyhandWriter writer)
-    {
-    }
+    void Integrate(IIntegralityInternal engine, ref TinyhandReader reader, ref TinyhandWriter writer);
 
-    void Integrate(IIntegralityInternal engine, ref TinyhandReader reader, ref TinyhandWriter writer)
-    {
-    }
+    BytePool.RentMemory Differentiate(ReadOnlyMemory<byte> integration, int maxItems, int maxMemoryLength = IntegralityConstants.DefaultMaxMemoryLength);
 
-    IntegralityResult IntegrateObject(IIntegralityInternal engine, object? obj)
-    => IntegralityResult.NotImplemented;
+    IntegralityResult IntegrateObject(IIntegralityInternal engine, object? obj);
 }
