@@ -30,15 +30,6 @@ public interface IIntegralityInternal
     int MaxIntegrationCount { get; }
 
     /// <summary>
-    /// Gets the key hash cache.
-    /// </summary>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="clear">A value indicating whether to clear the cache.</param>
-    /// <returns>The key hash cache.</returns>
-    Dictionary<TKey, ulong> GetKeyHashCache<TKey>(bool clear)
-        where TKey : struct;
-
-    /// <summary>
     /// Validates the specified objects.
     /// </summary>
     /// <param name="goshujin">The goshujin.</param>

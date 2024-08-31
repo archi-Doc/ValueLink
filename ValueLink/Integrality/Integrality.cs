@@ -17,7 +17,9 @@ using Tinyhand.IO;
 namespace ValueLink.Integrality;
 
 /// <summary>
-/// Represents the class used for object integration.
+/// Represents a class for object integration.<br/>
+/// Since this class is immutable, it can be used by multiple threads.<br/>
+/// Set the properties according to the use case, and override <see cref="Validate(TGoshujin, TObject, TObject?)"/> and <see cref="Trim(TGoshujin)"/> as needed.
 /// </summary>
 /// <typeparam name="TGoshujin">The type of the Goshujin.</typeparam>
 /// <typeparam name="TObject">The type of the Object.</typeparam>
@@ -54,26 +56,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
     /// </summary>
     public int MaxIntegrationCount { get; init; } = IntegralityConstants.DefaultMaxIntegrationCount;
 
-    private object? keyHashCache;
-
     #endregion
-
-    /// <inheritdoc/>
-    Dictionary<TKey, ulong> IIntegralityInternal.GetKeyHashCache<TKey>(bool clear)
-        where TKey : struct
-    {
-        if (this.keyHashCache is not Dictionary<TKey, ulong> dictionary)
-        {
-            dictionary = new Dictionary<TKey, ulong>();
-            this.keyHashCache = dictionary;
-        }
-        else if (clear)
-        {
-            dictionary.Clear();
-        }
-
-        return dictionary;
-    }
 
     /// <inheritdoc/>
     bool IIntegralityInternal.Validate(object goshujin, object newItem, object? oldItem)
