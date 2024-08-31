@@ -22,7 +22,7 @@ namespace ValueLink.Integrality;
 /// <typeparam name="TGoshujin">The type of the Goshujin.</typeparam>
 /// <typeparam name="TObject">The type of the Object.</typeparam>
 public class Integrality<TGoshujin, TObject> : IIntegralityInternal
-    where TGoshujin : class, IGoshujin, IIntegralityObject
+    where TGoshujin : class, IGoshujin, IIntegralityObject, IIntegralityGoshujin
     where TObject : class, ITinyhandSerialize<TObject>, IIntegralityObject
 {
     /// <summary>
@@ -53,11 +53,6 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
     /// Gets the maximum integration count.
     /// </summary>
     public int MaxIntegrationCount { get; init; } = IntegralityConstants.DefaultMaxIntegrationCount;
-
-    /// <summary>
-    /// Gets or sets the target hash.
-    /// </summary>
-    public ulong TargetHash { get; protected set; }
 
     private object? keyHashCache;
 
@@ -190,7 +185,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
             this.Trim(goshujin);
         }
 
-        if (goshujin.GetIntegralityHash() == this.TargetHash)
+        if (goshujin.GetIntegralityHash() == goshujin.TargetHash)
         {// Integrated
             return IntegralityResult.Success;
         }
@@ -246,14 +241,14 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
                 return (IntegralityResult.InvalidData, default);
             }
 
-            this.TargetHash = reader.ReadUnsafe<ulong>();
+            obj.TargetHash = reader.ReadUnsafe<ulong>();
         }
         catch
         {
             return (IntegralityResult.InvalidData, default);
         }
 
-        if (obj.GetIntegralityHash() == this.TargetHash)
+        if (obj.GetIntegralityHash() == obj.TargetHash)
         {// Identical
             return (IntegralityResult.Success, default);
         }

@@ -1051,7 +1051,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     }
 
     internal void GenerateObject_Integrality(ScopingStringBuilder ssb, GeneratorInformation info)
-    {
+    {//
         ssb.AppendLine("private ulong integralityHash;");
         using (var scopeMethod = ssb.ScopeBrace($"void {ValueLinkBody.IIntegralityObject}.ClearIntegralityHash()"))
         {
@@ -1752,7 +1752,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.IntegralityEnabled))
         {
-            goshujinInterface += $", {ValueLinkBody.IIntegralityObject}";
+            goshujinInterface += $", {ValueLinkBody.IIntegralityObject}, {ValueLinkBody.IIntegralityGoshujin}";
         }
 
         /*if (this.RepeatableGoshujin is not null)
@@ -1863,13 +1863,14 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     }
 
     internal void GenerateGosjujin_Integrality(ScopingStringBuilder ssb, GeneratorInformation info)
-    {
+    {//
         if (this.UniqueLink is null)
         {
             return;
         }
 
         ssb.AppendLine();
+        ssb.AppendLine($"ulong {ValueLinkBody.IIntegralityGoshujin}.TargetHash {{ get; set; }}");
         ssb.AppendLine("private ulong integralityHash;");
         ssb.AppendLine($"void {ValueLinkBody.IIntegralityObject}.ClearIntegralityHash() => this.integralityHash = 0;");
 

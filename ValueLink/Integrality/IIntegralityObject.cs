@@ -26,3 +26,8 @@ public interface IIntegralityObject
     IntegralityResult IntegrateObject(IIntegralityInternal engine, object? obj)
     => IntegralityResult.NotImplemented;
 }
+
+public interface IIntegralityGoshujin
+{
+    public ulong TargetHash { get; set; }
+}
