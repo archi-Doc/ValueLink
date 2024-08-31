@@ -1912,7 +1912,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGosjujin_Integrality_Differentiate(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        using (var methodScope = ssb.ScopeBrace($"BytePool.RentMemory {ValueLinkBody.IIntegralityObject}.Differentiate(ReadOnlyMemory<byte> integration, int maxItems, int maxMemoryLength)"))
+        using (var methodScope = ssb.ScopeBrace($"BytePool.RentMemory {ValueLinkBody.IIntegralityGoshujin}.Differentiate(ReadOnlyMemory<byte> integration, int maxItems, int maxMemoryLength)"))
         {
             if (this.UniqueLink is null)
             {
@@ -1979,7 +1979,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGosjujin_Integrality_Integrate(ScopingStringBuilder ssb, GeneratorInformation info)
     { // IntegralityResult Integrate(Integrality engine, object obj);
-        using (var methodScope = ssb.ScopeBrace($"void {ValueLinkBody.IIntegralityObject}.Integrate({ValueLinkBody.Integrality} engine, ref TinyhandReader reader, ref TinyhandWriter writer)"))
+        using (var methodScope = ssb.ScopeBrace($"void {ValueLinkBody.IIntegralityGoshujin}.Integrate({ValueLinkBody.Integrality} engine, ref TinyhandReader reader, ref TinyhandWriter writer)"))
         {
             if (this.UniqueLink is null)
             {
@@ -1998,7 +1998,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     ssb.AppendLine("if (reader.TryReadNil()) continue;");
                     ssb.AppendLine($"var obj = TinyhandSerializer.DeserializeObject<{this.TypeObject!.FullName}>(ref reader);");
                     ssb.AppendLine("cache.Remove(key);");
-                    ssb.AppendLine($"(({ValueLinkBody.IIntegralityObject})this).IntegrateObject(engine, obj);");
+                    ssb.AppendLine($"(({ValueLinkBody.IIntegralityGoshujin})this).IntegrateObject(engine, obj);");
                 }
 
                 ssb.AppendLine("foreach (var x in cache.Keys) writer.WriteUnsafe(x);");
@@ -2011,7 +2011,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGosjujin_Integrality_Integrate2(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        using (var methodScope = ssb.ScopeBrace($"IntegralityResult {ValueLinkBody.IIntegralityObject}.IntegrateObject({ValueLinkBody.Integrality} engine, object? obj)"))
+        using (var methodScope = ssb.ScopeBrace($"IntegralityResult {ValueLinkBody.IIntegralityGoshujin}.IntegrateObject({ValueLinkBody.Integrality} engine, object? obj)"))
         {
             if (this.UniqueLink is null)
             {
@@ -2031,7 +2031,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGosjujin_Integrality_Compare(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        using (var methodScope = ssb.ScopeBrace($"void {ValueLinkBody.IIntegralityObject}.Compare({ValueLinkBody.Integrality} engine, ref TinyhandReader reader, ref TinyhandWriter writer)"))
+        using (var methodScope = ssb.ScopeBrace($"void {ValueLinkBody.IIntegralityGoshujin}.Compare({ValueLinkBody.Integrality} engine, ref TinyhandReader reader, ref TinyhandWriter writer)"))
         {
             if (this.UniqueLink is null)
             {

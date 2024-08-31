@@ -230,7 +230,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         }
     }
 
-    private (IntegralityResult Result, BytePool.RentMemory RentMemory) ProcessProbeResponsePacket(TGoshujin obj, Memory<byte> memory)
+    private (IntegralityResult Result, BytePool.RentMemory RentMemory) ProcessProbeResponsePacket(TGoshujin goshujin, Memory<byte> memory)
     {
         var reader = new TinyhandReader(memory.Span);
         try
@@ -241,14 +241,14 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
                 return (IntegralityResult.InvalidData, default);
             }
 
-            obj.TargetHash = reader.ReadUnsafe<ulong>();
+            goshujin.TargetHash = reader.ReadUnsafe<ulong>();
         }
         catch
         {
             return (IntegralityResult.InvalidData, default);
         }
 
-        if (obj.GetIntegralityHash() == obj.TargetHash)
+        if (goshujin.GetIntegralityHash() == goshujin.TargetHash)
         {// Identical
             return (IntegralityResult.Success, default);
         }
@@ -257,7 +257,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         try
         {
             writer.WriteRawUInt8((byte)IntegralityState.Get);
-            obj.Compare(this, ref reader, ref writer);
+            goshujin.Compare(this, ref reader, ref writer);
             return (IntegralityResult.Incomplete, writer.FlushAndGetRentMemory());
         }
         catch
