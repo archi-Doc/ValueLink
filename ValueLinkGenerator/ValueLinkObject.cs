@@ -1752,7 +1752,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.IntegralityEnabled))
         {
-            goshujinInterface += $", {ValueLinkBody.IIntegralityObject}, {ValueLinkBody.IIntegralityGoshujin}";
+            goshujinInterface += $", {ValueLinkBody.IIntegralityGoshujin}";
         }
 
         /*if (this.RepeatableGoshujin is not null)

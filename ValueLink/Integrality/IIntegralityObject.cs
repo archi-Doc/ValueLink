@@ -13,7 +13,7 @@ public interface IIntegralityObject
     ulong GetIntegralityHash();
 }
 
-public interface IIntegralityGoshujin
+public interface IIntegralityGoshujin : IIntegralityObject
 {
     public ulong TargetHash { get; set; }
 
