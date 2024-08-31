@@ -5,6 +5,7 @@ using Tinyhand;
 using Xunit;
 using ValueLink.Integrality;
 using System.Threading.Tasks;
+using Tinyhand.Formatters;
 
 namespace xUnitTest;
 
@@ -99,7 +100,7 @@ public static class IntegralityTestHelper
     public static IntegralityResult IntegrateForTest<TGoshujin, TObject>(this Integrality<TGoshujin, TObject> integrality, TGoshujin goshujin, TGoshujin target)
         where TGoshujin : class, IGoshujin, IIntegralityObject, IIntegralityGoshujin
         where TObject : class, ITinyhandSerialize<TObject>, IIntegralityObject
-        => integrality.Integrate(goshujin, (x, y) => Task.FromResult(target.Differentiate(x, integrality.MaxItems))).Result;
+        => integrality.Integrate(goshujin, (x, y) => Task.FromResult(integrality.Differentiate(target, x))).Result;
 }
 
 public class IntegralityTest

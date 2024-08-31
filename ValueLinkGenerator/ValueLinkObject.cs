@@ -1912,7 +1912,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGosjujin_Integrality_Differentiate(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        using (var methodScope = ssb.ScopeBrace($"BytePool.RentMemory {ValueLinkBody.IIntegralityGoshujin}.Differentiate(ReadOnlyMemory<byte> integration, int maxItems, int maxMemoryLength)"))
+        using (var methodScope = ssb.ScopeBrace($"BytePool.RentMemory {ValueLinkBody.IIntegralityGoshujin}.Differentiate(IIntegralityInternal engine, ReadOnlyMemory<byte> integration)"))
         {
             if (this.UniqueLink is null)
             {
@@ -1939,7 +1939,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                         ssb.AppendLine("var count = 0;");
                         using (var forScope = ssb.ScopeBrace($"foreach (var x in this.{this.UniqueLink.ChainName})"))
                         {
-                            ssb.AppendLine("if (count >= maxItems) break;");
+                            ssb.AppendLine("if (count >= engine.MaxItems) break;");
                             ssb.AppendLine($"writer.WriteUnsafe(x.{this.UniqueLink.TargetName});");
                             ssb.AppendLine($"writer.WriteUnsafe((({ValueLinkBody.IIntegralityObject})x).GetIntegralityHash());");
                         }
@@ -1961,7 +1961,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                         ssb.AppendLine("writer.WriteUnsafe(key);");
                         ssb.AppendLine($"if (this.{this.UniqueLink.ChainName}.FindFirst(key) is {{ }} obj) TinyhandSerializer.SerializeObject(ref writer, obj);");
                         ssb.AppendLine("else writer.WriteNil();");
-                        ssb.AppendLine("if (writer.Written < maxMemoryLength) written = (int)writer.Written;");
+                        ssb.AppendLine("if (writer.Written < engine.MaxMemoryLength) written = (int)writer.Written;");
                         ssb.AppendLine("else break;");
                     }
 

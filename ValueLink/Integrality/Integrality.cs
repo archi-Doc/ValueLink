@@ -71,9 +71,6 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
     public IntegralityResult IntegrateObject(TGoshujin goshujin, TObject obj)
         => goshujin.IntegrateObject(this, obj);
 
-    /*public IntegralityResult IntegrateForTest(TGoshujin goshujin, TGoshujin target)
-        => this.Integrate(goshujin, (x, y) => Task.FromResult(target.Differentiate(this, x))).Result;*/
-
     /// <summary>
     /// Integrates the Goshujin using the specified broker delegate.
     /// </summary>
@@ -178,6 +175,15 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
             return IntegralityResult.Incomplete;
         }
     }
+
+    /// <summary>
+    /// Retrieve the difference data between the source and the target of the integration.
+    /// </summary>
+    /// <param name="target">The target Goshujin.</param>
+    /// <param name="integration">The data sent from the source to the target when calculating the difference.</param>
+    /// <returns>The data sent from the target to the source for integration.</returns>
+    public BytePool.RentMemory Differentiate(TGoshujin target, ReadOnlyMemory<byte> integration)
+        => target.Differentiate(this, integration);
 
     /// <summary>
     /// Validates the specified new item in the Goshujin.<br/>
