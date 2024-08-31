@@ -100,8 +100,6 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
     /// <returns>The integration result.</returns>
     public async Task<IntegralityResult> Integrate(TGoshujin goshujin, IntegralityBrokerDelegate brokerDelegate, CancellationToken cancellationToken = default)
     {
-        ulong targetHash = 0;
-
         // Probe
         var rentMemory = this.CreateProbePacket(goshujin);
         BytePool.RentMemory resultMemory;
@@ -122,9 +120,10 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
 
         // ProbeResponse: resultMemory
         (IntegralityResult Result, BytePool.RentMemory RentMemory) resultMemory2;
+        ulong targetHash;
         try
         {
-            resultMemory2 = this.ProcessProbeResponsePacket(goshujin, resultMemory.Memory, ref targetHash);
+            resultMemory2 = this.ProcessProbeResponsePacket(goshujin, resultMemory.Memory, out targetHash);
             if (resultMemory2.Result != IntegralityResult.Incomplete)
             {
                 resultMemory2.RentMemory.Return();
@@ -232,7 +231,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         }
     }
 
-    private (IntegralityResult Result, BytePool.RentMemory RentMemory) ProcessProbeResponsePacket(TGoshujin goshujin, Memory<byte> memory, ref ulong targetHash)
+    private (IntegralityResult Result, BytePool.RentMemory RentMemory) ProcessProbeResponsePacket(TGoshujin goshujin, Memory<byte> memory, out ulong targetHash)
     {
         var reader = new TinyhandReader(memory.Span);
         try
@@ -240,6 +239,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
             var state = (IntegralityState)reader.ReadUnsafe<byte>();
             if (state != IntegralityState.ProbeResponse)
             {
+                targetHash = 0;
                 return (IntegralityResult.InvalidData, default);
             }
 
@@ -247,6 +247,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         }
         catch
         {
+            targetHash = 0;
             return (IntegralityResult.InvalidData, default);
         }
 
