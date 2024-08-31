@@ -6,11 +6,16 @@ using ValueLink.Integrality;
 namespace Playground;
 
 [TinyhandObject]
-[ValueLinkObject(Integrality = true)]
+[ValueLinkObject(Integrality = true, Isolation = IsolationLevel.Serializable)]
 public partial class SimpleIntegralityClass : IEquatableObject<SimpleIntegralityClass>
 {
     public class Integrality : Integrality<GoshujinClass, SimpleIntegralityClass>
     {
+        public static readonly Integrality Default = new()
+        {
+            MaxItems = 100,
+            RemoveIfItemNotFound = true
+        };
     }
 
     public SimpleIntegralityClass()

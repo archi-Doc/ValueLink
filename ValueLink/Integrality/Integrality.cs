@@ -100,6 +100,8 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
     /// <returns>The integration result.</returns>
     public async Task<IntegralityResult> Integrate(TGoshujin goshujin, IntegralityBrokerDelegate brokerDelegate, CancellationToken cancellationToken = default)
     {
+        ulong targetHash = 0;
+
         // Probe
         var rentMemory = this.CreateProbePacket(goshujin);
         BytePool.RentMemory resultMemory;
@@ -122,7 +124,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         (IntegralityResult Result, BytePool.RentMemory RentMemory) resultMemory2;
         try
         {
-            resultMemory2 = this.ProcessProbeResponsePacket(goshujin, resultMemory.Memory);
+            resultMemory2 = this.ProcessProbeResponsePacket(goshujin, resultMemory.Memory, ref targetHash);
             if (resultMemory2.Result != IntegralityResult.Incomplete)
             {
                 resultMemory2.RentMemory.Return();
@@ -185,7 +187,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
             this.Trim(goshujin);
         }
 
-        if (goshujin.GetIntegralityHash() == goshujin.TargetHash)
+        if (goshujin.GetIntegralityHash() == targetHash)
         {// Integrated
             return IntegralityResult.Success;
         }
@@ -230,7 +232,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         }
     }
 
-    private (IntegralityResult Result, BytePool.RentMemory RentMemory) ProcessProbeResponsePacket(TGoshujin goshujin, Memory<byte> memory)
+    private (IntegralityResult Result, BytePool.RentMemory RentMemory) ProcessProbeResponsePacket(TGoshujin goshujin, Memory<byte> memory, ref ulong targetHash)
     {
         var reader = new TinyhandReader(memory.Span);
         try
@@ -241,14 +243,14 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
                 return (IntegralityResult.InvalidData, default);
             }
 
-            goshujin.TargetHash = reader.ReadUnsafe<ulong>();
+            targetHash = reader.ReadUnsafe<ulong>();
         }
         catch
         {
             return (IntegralityResult.InvalidData, default);
         }
 
-        if (goshujin.GetIntegralityHash() == goshujin.TargetHash)
+        if (goshujin.GetIntegralityHash() == targetHash)
         {// Identical
             return (IntegralityResult.Success, default);
         }

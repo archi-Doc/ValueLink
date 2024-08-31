@@ -15,8 +15,6 @@ public interface IIntegralityObject
 
 public interface IIntegralityGoshujin : IIntegralityObject
 {
-    public ulong TargetHash { get; set; }
-
     void Compare(IIntegralityInternal engine, ref TinyhandReader reader, ref TinyhandWriter writer);
 
     void Integrate(IIntegralityInternal engine, ref TinyhandReader reader, ref TinyhandWriter writer);

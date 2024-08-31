@@ -1870,7 +1870,6 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
 
         ssb.AppendLine();
-        ssb.AppendLine($"ulong {ValueLinkBody.IIntegralityGoshujin}.TargetHash {{ get; set; }}");
         ssb.AppendLine("private ulong integralityHash;");
         ssb.AppendLine($"void {ValueLinkBody.IIntegralityObject}.ClearIntegralityHash() => this.integralityHash = 0;");
 
