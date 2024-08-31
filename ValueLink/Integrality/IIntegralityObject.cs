@@ -19,7 +19,7 @@ public interface IIntegralityGoshujin : IIntegralityObject
 
     void Integrate(IIntegralityInternal engine, ref TinyhandReader reader, ref TinyhandWriter writer);
 
-    BytePool.RentMemory Differentiate(ReadOnlyMemory<byte> integration, int maxItems, int maxMemoryLength = IntegralityConstants.DefaultMaxMemoryLength);
+    BytePool.RentMemory Differentiate(IIntegralityInternal engine, ReadOnlyMemory<byte> integration);
 
     IntegralityResult IntegrateObject(IIntegralityInternal engine, object? obj);
 }
