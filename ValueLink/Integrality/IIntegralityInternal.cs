@@ -30,11 +30,6 @@ public interface IIntegralityInternal
     int MaxIntegrationCount { get; }
 
     /// <summary>
-    /// Gets the target hash.
-    /// </summary>
-    public ulong TargetHash { get; }
-
-    /// <summary>
     /// Gets the key hash cache.
     /// </summary>
     /// <typeparam name="TKey">The type of the key.</typeparam>
