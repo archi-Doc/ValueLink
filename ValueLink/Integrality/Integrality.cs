@@ -52,7 +52,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
     /// <summary>
     /// Gets the maximum integration count.
     /// </summary>
-    public int MaxIntegrationCount { get; init; } = 3;
+    public int MaxIntegrationCount { get; init; } = IntegralityConstants.DefaultMaxIntegrationCount;
 
     /// <summary>
     /// Gets or sets the target hash.
