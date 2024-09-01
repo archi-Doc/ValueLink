@@ -1,9 +1,6 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Arc.Collections;
@@ -49,7 +46,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
     /// <summary>
     /// Gets the maximum memory length.
     /// </summary>
-    public int MaxMemoryLength { get; init; } = IntegralityConstants.DefaultMaxMemoryLength; // ConnectionAgreement.MaxBlockSize
+    public int MaxMemoryLength { get; init; } = IntegralityConstants.DefaultMaxMemoryLength;
 
     /// <summary>
     /// Gets the maximum integration count.
@@ -191,13 +188,13 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
     /// </summary>
     /// <param name="goshujin">The Goshujin.</param>
     /// <param name="newItem">The new item to validate.</param>
-    /// <param name="oldItem">The old item to compare against.</param>
+    /// <param name="oldItem">The old item with the same key to compare against.</param>
     /// <returns><c>true</c> if the new item is valid; otherwise, <c>false</c>.</returns>
     public virtual bool Validate(TGoshujin goshujin, TObject newItem, TObject? oldItem)
         => true;
 
     /// <summary>
-    /// Trim the Goshujin.<br/>
+    /// Called in the final stage of <see cref="Integrate(TGoshujin, IntegralityBrokerDelegate, CancellationToken)" />() to remove any objects from Goshujin that exceed the limit or are invalid.<br/>
     /// If Goshujin's isolation level is set to <see cref="IsolationLevel.Serializable"/>, this function will be executed within a lock(goshujin.syncObject) statement.
     /// </summary>
     /// <param name="goshujin">The Goshujin.</param>
