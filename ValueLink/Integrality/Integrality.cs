@@ -16,7 +16,7 @@ namespace ValueLink.Integrality;
 /// <summary>
 /// Represents a class for object integration.<br/>
 /// Since this class is immutable, it can be used by multiple threads.<br/>
-/// Set the properties according to the use case, and override <see cref="Validate(TGoshujin, TObject, TObject?)"/> and <see cref="Trim(TGoshujin)"/> as needed.
+/// Set the properties according to the use case, and override <see cref="Validate(TGoshujin, TObject, TObject?)"/> and <see cref="Trim(TGoshujin, int)"/> as needed.
 /// </summary>
 /// <typeparam name="TGoshujin">The type of the Goshujin.</typeparam>
 /// <typeparam name="TObject">The type of the Object.</typeparam>
@@ -114,6 +114,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
 
         // Integrate: resultMemory2
         var integrationCount = 0;
+        var integratedObjects = 0;
         while (resultMemory2.Result == IntegralityResult.Incomplete)
         {
             if (integrationCount++ >= this.MaxIntegrationCount)
@@ -140,7 +141,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
             // GetResponse: resultMemory
             try
             {
-                resultMemory2 = this.ProcessGetResponsePacket(goshujin, resultMemory.Memory);
+                resultMemory2 = this.ProcessGetResponsePacket(goshujin, resultMemory.Memory, ref integratedObjects);
             }
             finally
             {
@@ -155,12 +156,12 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         {
             lock (g.SyncObject)
             {
-                this.Trim(goshujin);
+                this.Trim(goshujin, integratedObjects);
             }
         }
         else
         {
-            this.Trim(goshujin);
+            this.Trim(goshujin, integratedObjects);
         }
 
         if (goshujin.GetIntegralityHash() == targetHash)
@@ -198,7 +199,8 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
     /// If Goshujin's isolation level is set to <see cref="IsolationLevel.Serializable"/>, this function will be executed within a lock(goshujin.syncObject) statement.
     /// </summary>
     /// <param name="goshujin">The Goshujin.</param>
-    public virtual void Trim(TGoshujin goshujin)
+    /// <param name="integratedObjects">The number of objects integrated.</param>
+    public virtual void Trim(TGoshujin goshujin, int integratedObjects)
     {
     }
 
@@ -259,7 +261,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         }
     }
 
-    private (IntegralityResult Result, BytePool.RentMemory RentMemory) ProcessGetResponsePacket(TGoshujin obj, Memory<byte> memory)
+    private (IntegralityResult Result, BytePool.RentMemory RentMemory) ProcessGetResponsePacket(TGoshujin obj, Memory<byte> memory, ref int integratedObjects)
     {
         var reader = new TinyhandReader(memory.Span);
         try
@@ -279,7 +281,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         try
         {
             writer.WriteRawUInt8((byte)IntegralityState.Get);
-            obj.Integrate(this, ref reader, ref writer);
+            obj.Integrate(this, ref reader, ref writer, ref integratedObjects);
             if (writer.Written <= 1)
             {
                 return (IntegralityResult.Success, default);
