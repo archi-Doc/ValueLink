@@ -17,7 +17,7 @@ public interface IIntegralityGoshujin : IIntegralityObject
 {
     void Compare(IIntegralityInternal engine, ref TinyhandReader reader, ref TinyhandWriter writer);
 
-    void Integrate(IIntegralityInternal engine, ref TinyhandReader reader, ref TinyhandWriter writer);
+    void Integrate(IIntegralityInternal engine, ref TinyhandReader reader, ref TinyhandWriter writer, ref int integratedCount);
 
     BytePool.RentMemory Differentiate(IIntegralityInternal engine, ReadOnlyMemory<byte> integration);
 
