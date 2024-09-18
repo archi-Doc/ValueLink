@@ -244,7 +244,7 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
             cancellationToken.ThrowIfCancellationRequested();
             var tinyhandFlag = x.Value.Any(a => a.ContainTinyhandObjectAttribute()); // has TinyhandObjectAttribute
             this.GenerateHeader(ssb, tinyhandFlag);
-            var ns = ssb.ScopeNamespace(x.Key);
+            ssb.AppendNamespace(x.Key);
 
             rootObjects.AddRange(x.Value); // For loader generation
 
