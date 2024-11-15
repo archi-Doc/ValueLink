@@ -185,7 +185,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
 
     /// <summary>
     /// Validates the specified new item in the Goshujin.<br/>
-    /// If Goshujin's isolation level is set to <see cref="IsolationLevel.Serializable"/>, this function will be executed within a lock(goshujin.syncObject) statement.
+    /// If Goshujin's isolation level is set to <see cref="IsolationLevel.Serializable"/>, this function will be executed within a lock (goshujin.syncObject) statement.
     /// </summary>
     /// <param name="goshujin">The Goshujin.</param>
     /// <param name="newItem">The new item to validate.</param>
@@ -196,7 +196,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
 
     /// <summary>
     /// Called in the final stage of <see cref="Integrate(TGoshujin, IntegralityBrokerDelegate, CancellationToken)" />() to remove any objects from Goshujin that exceed the limit or are invalid.<br/>
-    /// If Goshujin's isolation level is set to <see cref="IsolationLevel.Serializable"/>, this function will be executed within a lock(goshujin.syncObject) statement.
+    /// If Goshujin's isolation level is set to <see cref="IsolationLevel.Serializable"/>, this function will be executed within a lock (goshujin.syncObject) statement.
     /// </summary>
     /// <param name="goshujin">The Goshujin.</param>
     /// <param name="integratedObjects">The number of objects integrated.</param>
