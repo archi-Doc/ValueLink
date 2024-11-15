@@ -27,7 +27,7 @@ public class IsolationTestList
         var c3 = g.Add(new RepeatableList());
 
         RepeatableList[] array;
-        lock (g.SyncObject)
+        using (g.LockObject.EnterScope())
         {
             g.MainChain.Count.Is(3);
             array = g.MainChain.ToArray();
@@ -46,7 +46,7 @@ public class IsolationTestList
             }
         }
 
-        lock (g.SyncObject)
+        using (g.LockObject.EnterScope())
         {
             g.MainChain.Count.Is(2);
             array = g.MainChain.ToArray();

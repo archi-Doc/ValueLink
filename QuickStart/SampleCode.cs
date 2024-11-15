@@ -247,7 +247,7 @@ public partial record RepeatableClass
         Console.WriteLine();
 
         RepeatableClass[] array;
-        lock (g.SyncObject)
+        using (g.LockObject.EnterScope())
         {
             array = g.ToArray();
             /*using (var w2 = g.TryLock(1))

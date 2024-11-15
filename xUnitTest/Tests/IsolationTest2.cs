@@ -114,7 +114,7 @@ public class IsolationTest2
             item.State.IsInvalid().IsTrue();
         }
 
-        lock (g.SyncObject)
+        using (g.LockObject.EnterScope())
         {
             g.Count.Is(numberOfItems);
             ((IGoshujinSemaphore)g).State.Is(GoshujinState.Valid);

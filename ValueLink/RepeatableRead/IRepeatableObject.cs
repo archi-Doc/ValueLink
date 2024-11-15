@@ -17,7 +17,7 @@ public interface IRepeatableObject<TWriter>
 {
     RepeatableObjectState State { get; }
 
-    object GoshujinSyncObjectInternal { get; }
+    Lock GoshujinLockObjectInternal { get; }
 
     SemaphoreLock WriterSemaphoreInternal { get; }
 
@@ -25,13 +25,6 @@ public interface IRepeatableObject<TWriter>
 
     public TWriter? TryLockInternal(IGoshujinSemaphore? semaphore)
     {
-#if DEBUG
-        if (Monitor.IsEntered(this.GoshujinSyncObjectInternal))
-        {
-            throw new LockOrderException();
-        }
-#endif
-
         if (semaphore?.LockAndTryAcquireOne() == false)
         {
             return null;
@@ -56,13 +49,6 @@ public interface IRepeatableObject<TWriter>
 
     public async ValueTask<TWriter?> TryLockAsyncInternal(IGoshujinSemaphore? semaphore, int millisecondsTimeout, CancellationToken cancellationToken)
     {
-#if DEBUG
-        if (Monitor.IsEntered(this.GoshujinSyncObjectInternal))
-        {
-            throw new LockOrderException();
-        }
-#endif
-
         if (semaphore?.LockAndTryAcquireOne() == false)
         {
             return null;
