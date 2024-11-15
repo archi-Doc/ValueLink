@@ -180,7 +180,7 @@ public class LockTest
         g.Add(tc);
         g.Remove(tc);
         // tc.Goshujin = null;
-        lock (g.SyncObject)
+        using (g.LockObject.EnterScope())
         {
             tc2 = g.IdChain.FindFirst(0);
         }
@@ -198,7 +198,7 @@ public class LockTest
             }
         }
 
-        lock (g.SyncObject)
+        using (g.LockObject.EnterScope())
         {
             tc2 = g.IdChain.FindFirst(0);
         }

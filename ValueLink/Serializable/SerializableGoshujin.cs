@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Tinyhand;
 
@@ -19,7 +20,7 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : IGoshujinSemaph
     where TObject : class, IValueLinkObjectInternal<TGoshujin>
     where TGoshujin : SerializableGoshujin<TObject, TGoshujin>
 {
-    public abstract object SyncObject { get; }
+    public abstract Lock LockObject { get; }
 
     public GoshujinState State { get; set; }
 
@@ -28,7 +29,7 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : IGoshujinSemaph
     protected Task<bool> GoshujinSave(UnloadMode unloadMode)
     {
         TObject[] array;
-        lock (this.SyncObject)
+        using (this.LockObject.EnterScope())
         {
             if (this.State == GoshujinState.Obsolete)
             {// Unloaded or deleted.
@@ -65,7 +66,7 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : IGoshujinSemaph
     protected void GoshujinErase()
     {
         TObject[] array;
-        lock (this.SyncObject)
+        using (this.LockObject.EnterScope())
         {
             ((IGoshujinSemaphore)this).SetObsolete();
             array = (this is IEnumerable<TObject> e) ? e.ToArray() : Array.Empty<TObject>();
@@ -83,7 +84,7 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : IGoshujinSemaph
     public TObject[] GetArray()
     {
         TObject[] array;
-        lock (this.SyncObject)
+        using (this.LockObject.EnterScope())
         {
             array = (this is IEnumerable<TObject> e) ? e.ToArray() : Array.Empty<TObject>();
         }

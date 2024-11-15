@@ -62,7 +62,7 @@ public class IsolationTest
     public void TestSerializable()
     {// Serializable
         var g = new SerializableRoom.GoshujinClass();
-        lock (g.SyncObject)
+        using (g.LockObject.EnterScope())
         {
             g.Add(new SerializableRoom(1));
 

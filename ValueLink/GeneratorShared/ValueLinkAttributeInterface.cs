@@ -18,7 +18,7 @@ public enum IsolationLevel
 
     /// <summary>
     /// Lock-based concurrency control.<br/>
-    /// lock (goshujin.SyncObject).
+    /// using (goshujin.LockObject.EnterScope()).
     /// </summary>
     Serializable,
 

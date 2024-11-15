@@ -23,7 +23,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IG
     where TGoshujin : RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>
     where TWriter : class
 {
-    public abstract object SyncObject { get; }
+    public abstract Lock LockObject { get; }
 
     public GoshujinState State { get; set; }
 
@@ -36,7 +36,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IG
     protected async Task<bool> GoshujinSave(UnloadMode unloadMode)
     {
         TObject[] array;
-        lock (this.SyncObject)
+        using (this.LockObject.EnterScope())
         {
             if (this.State == GoshujinState.Obsolete)
             {// Unloaded or deleted.
@@ -64,7 +64,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IG
 
         if (unloadMode != UnloadMode.NoUnload)
         {// Unloaded
-            lock (this.SyncObject)
+            using (this.LockObject.EnterScope())
             {
                 ((IGoshujinSemaphore)this).SetObsolete();
             }
@@ -76,7 +76,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IG
     protected void GoshujinErase()
     {
         TObject[] array;
-        lock (this.SyncObject)
+        using (this.LockObject.EnterScope())
         {
             ((IGoshujinSemaphore)this).SetObsolete();
             array = (this is IEnumerable<TObject> e) ? e.ToArray() : Array.Empty<TObject>();
@@ -94,7 +94,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IG
     public TObject[] GetArray()
     {
         TObject[] array;
-        lock (this.SyncObject)
+        using (this.LockObject.EnterScope())
         {
             array = (this is IEnumerable<TObject> e) ? e.ToArray() : Array.Empty<TObject>();
         }
@@ -104,7 +104,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IG
 
     public bool Contains(TKey key)
     {
-        lock (this.SyncObject)
+        using (this.LockObject.EnterScope())
         {
             return this.FindFirst(key) != null;
         }
@@ -112,7 +112,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IG
 
     public bool Contains(Func<RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>, bool> predicate)
     {
-        lock (this.SyncObject)
+        using (this.LockObject.EnterScope())
         {
             return predicate(this);
         }
@@ -120,7 +120,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IG
 
     public TObject? TryGet(TKey key)
     {
-        lock (this.SyncObject)
+        using (this.LockObject.EnterScope())
         {
             var x = this.FindFirst(key);
             return x;
@@ -129,7 +129,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IG
 
     public TObject? TryGet(Func<RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>, TObject?> predicate)
     {
-        lock (this.SyncObject)
+        using (this.LockObject.EnterScope())
         {
             return predicate(this);
         }
@@ -141,7 +141,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IG
         int count = 0;
         while (true)
         {
-            lock (this.SyncObject)
+            using (this.LockObject.EnterScope())
             {
                 x = this.FindFirst(key);
                 if (x is null)
@@ -160,7 +160,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IG
 
                         x = this.NewObject(key);
                         x.AddToGoshujinInternal((TGoshujin)this);
-                        goto Created; // Exit lock (this.SyncObject)
+                        goto Created; // Exit using (this.LockObject.EnterScope())
                     }
                 }
                 else
@@ -177,7 +177,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IG
                             return default;
                         }
 
-                        // Exit lock (this.SyncObject)
+                        // Exit using (this.LockObject.EnterScope())
                     }
                 }
             }
@@ -203,7 +203,7 @@ Created:
         int count = 0;
         while (true)
         {
-            lock (this.SyncObject)
+            using (this.LockObject.EnterScope())
             {
                 x = this.FindFirst(key);
                 if (x is null)
@@ -222,7 +222,7 @@ Created:
 
                         x = this.NewObject(key);
                         x.AddToGoshujinInternal((TGoshujin)this);
-                        goto Created; // Exit lock (this.SyncObject)
+                        goto Created; // Exit using (this.LockObject.EnterScope())
                     }
                 }
                 else
@@ -239,7 +239,7 @@ Created:
                             return default;
                         }
 
-                        // Exit lock (this.SyncObject)
+                        // Exit using (this.LockObject.EnterScope())
                     }
                 }
             }
@@ -274,7 +274,7 @@ Created:
         int count = 0;
         while (true)
         {
-            lock (this.SyncObject)
+            using (this.LockObject.EnterScope())
             {
                 x = predicate(this);
                 if (x is null)
@@ -308,7 +308,7 @@ Created:
         int count = 0;
         while (true)
         {
-            lock (this.SyncObject)
+            using (this.LockObject.EnterScope())
             {
                 x = predicate(this);
                 if (x is null)

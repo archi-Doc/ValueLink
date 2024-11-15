@@ -1,10 +1,12 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
+using System.Threading;
+
 namespace ValueLink;
 
 public interface IGoshujinSemaphore
 {
-    public object SyncObject { get; }
+    public Lock LockObject { get; }
 
     public GoshujinState State { get; set; }
 
@@ -57,7 +59,7 @@ public interface IGoshujinSemaphore
 
     public bool LockAndTryAcquireOne()
     {
-        lock (this.SyncObject)
+        using (this.LockObject.EnterScope())
         {
             return this.TryAcquireOne();
         }
@@ -70,7 +72,7 @@ public interface IGoshujinSemaphore
 
     public void LockAndReleaseOne()
     {
-        lock (this.SyncObject)
+        using (this.LockObject.EnterScope())
         {
             this.ReleaseOne();
         }
@@ -93,7 +95,7 @@ public interface IGoshujinSemaphore
             return;
         }
 
-        lock (this.SyncObject)
+        using (this.LockObject.EnterScope())
         {
             this.Release(ref count);
         }
@@ -102,7 +104,7 @@ public interface IGoshujinSemaphore
     public bool LockAndTryUnload(out GoshujinState state)
     {
         var result = false;
-        lock (this.SyncObject)
+        using (this.LockObject.EnterScope())
         {
             if (!this.IsValid)
             {// Invalid (Unloading/Obsolete)
@@ -137,7 +139,7 @@ public interface IGoshujinSemaphore
 
     public void LockAndForceUnload()
     {
-        lock (this.SyncObject)
+        using (this.LockObject.EnterScope())
         {
             this.State = GoshujinState.Unloading;
         }
