@@ -196,6 +196,8 @@ public partial class SerializerBaseClass
             }
         }
 
+        public ulong GetTypeIdentifier() => 0;
+
         public StackListChain<SerializerBaseClass> StackChain { get; }
 
         public OrderedChain<int, SerializerBaseClass> IdChain { get; }
