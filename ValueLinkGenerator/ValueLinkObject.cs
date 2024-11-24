@@ -2533,7 +2533,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGoshujin_TinyhandITinyhandSerialize(ScopingStringBuilder ssb, GeneratorInformation info)
     {// ITinyhandSerialize
-        var identifier = $"0x{FarmHash.Hash64(this.GoshujinFullName).ToString("x")}ul";
+        var identifier = this.GetTypeIdentifierString();
         ssb.AppendLine($"static ulong ITinyhandSerialize<{this.GoshujinFullName}>.GetTypeIdentifier() => {identifier};"); // GetTypeIdentifierCode
         ssb.AppendLine($"ulong ITinyhandSerialize.GetTypeIdentifier() => {identifier};"); // GetTypeIdentifierCode
 
