@@ -323,5 +323,9 @@ public class BasicTest1
 
         st = TinyhandSerializer.SerializeToString(gg);
         gg = TinyhandSerializer.Deserialize<GenericTestClass2<TestClass1>.NestedClass<double, int>.GoshujinClass>(TinyhandSerializer.Serialize(gg));
+
+        var id = g!.GetTypeIdentifier();
+        var id2 = g2!.GetTypeIdentifier();
+        id.IsNot(id2);
     }
 }
