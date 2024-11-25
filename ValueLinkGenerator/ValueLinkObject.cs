@@ -2533,9 +2533,17 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGoshujin_TinyhandITinyhandSerialize(ScopingStringBuilder ssb, GeneratorInformation info)
     {// ITinyhandSerialize
-        var identifier = this.GetTypeIdentifierString();
-        ssb.AppendLine($"static ulong ITinyhandSerialize<{this.GoshujinFullName}>.GetTypeIdentifier() => {identifier};"); // GetTypeIdentifierCode
-        ssb.AppendLine($"ulong ITinyhandSerialize.GetTypeIdentifier() => {identifier};"); // GetTypeIdentifierCode
+        if (this.Generics_IsGeneric)
+        {// Generics
+            ssb.AppendLine($"private static ulong __type_identifier__;");
+            ssb.AppendLine($"static ulong ITinyhandSerialize<{this.GoshujinFullName}>.GetTypeIdentifier() => __type_identifier__ != 0 ? __type_identifier__ : (__type_identifier__ = Arc.Visceral.VisceralHelper.TypeToFarmHash64(typeof({this.GoshujinFullName})));");
+        }
+        else
+        {// Non-generics
+            ssb.AppendLine($"static ulong ITinyhandSerialize<{this.GoshujinFullName}>.GetTypeIdentifier() => 0x{FarmHash.Hash64(this.GoshujinFullName).ToString("x")}ul;");
+        }
+
+        ssb.AppendLine($"ulong ITinyhandSerialize.GetTypeIdentifier() => TinyhandSerializer.GetTypeIdentifierObject<{this.GoshujinFullName}>();"); // GetTypeIdentifierCode
 
         ssb.AppendLine("void ITinyhandSerialize.Deserialize(ref TinyhandReader reader, TinyhandSerializerOptions options)");
         if (this.Kind.IsReferenceType())
