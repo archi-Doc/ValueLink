@@ -12,7 +12,7 @@ namespace Benchmark.Serializer;
 [TinyhandObject(ExplicitKeyOnly = true)]
 public partial class SerializerBaseClass
 {
-    public sealed partial class GoshujinClass : IGoshujin, ITinyhandSerialize
+    public sealed partial class GoshujinClass : IGoshujin, ITinyhandSerializable
     {
         public GoshujinClass()
         {

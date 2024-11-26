@@ -22,7 +22,7 @@ namespace ValueLink.Integrality;
 /// <typeparam name="TObject">The type of the Object.</typeparam>
 public class Integrality<TGoshujin, TObject> : IIntegralityInternal
     where TGoshujin : class, IGoshujin, IIntegralityGoshujin
-    where TObject : class, ITinyhandSerialize<TObject>, IIntegralityObject
+    where TObject : class, ITinyhandSerializable<TObject>, IIntegralityObject
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="Integrality{TGoshujin, TObject}"/> class.
