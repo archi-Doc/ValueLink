@@ -1688,8 +1688,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
 
         if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.TinyhandObject))
-        {// ITinyhandSerialize
-            goshujinInterface += $", ITinyhandSerialize<{this.GoshujinFullName}>, ITinyhandReconstruct<{this.GoshujinFullName}>, ITinyhandClone<{this.GoshujinFullName}>, ITinyhandSerialize";
+        {// ITinyhandSerializable
+            goshujinInterface += $", ITinyhandSerializable<{this.GoshujinFullName}>, ITinyhandReconstructable<{this.GoshujinFullName}>, ITinyhandCloneable<{this.GoshujinFullName}>, ITinyhandSerializable";
         }
 
         if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.StructualEnabled))
@@ -2292,7 +2292,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGoshujin_TinyhandSerialize(ScopingStringBuilder ssb, GeneratorInformation info)
     {// void Serialize(ref TinyhandWriter writer, TinyhandSerializerOptions options);
-        using (var scopeMethod = ssb.ScopeBrace($"static void ITinyhandSerialize<{this.GoshujinFullName}>.Serialize(ref TinyhandWriter writer, scoped ref {this.GoshujinFullName}? v, TinyhandSerializerOptions options)"))
+        using (var scopeMethod = ssb.ScopeBrace($"static void ITinyhandSerializable<{this.GoshujinFullName}>.Serialize(ref TinyhandWriter writer, scoped ref {this.GoshujinFullName}? v, TinyhandSerializerOptions options)"))
         using (var v = ssb.ScopeObject("v"))
         {
             if (this.Kind.IsReferenceType())
@@ -2426,7 +2426,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGoshujin_TinyhandDeserialize(ScopingStringBuilder ssb, GeneratorInformation info)
     {// void Deserialize(ref TinyhandReader reader, TinyhandSerializerOptions options);
-        using (var scopeMethod = ssb.ScopeBrace($"static void ITinyhandSerialize<{this.GoshujinFullName}>.Deserialize(ref TinyhandReader reader, scoped ref {this.GoshujinFullName}? v, TinyhandSerializerOptions options)"))
+        using (var scopeMethod = ssb.ScopeBrace($"static void ITinyhandSerializable<{this.GoshujinFullName}>.Deserialize(ref TinyhandReader reader, scoped ref {this.GoshujinFullName}? v, TinyhandSerializerOptions options)"))
         using (var v = ssb.ScopeObject("v"))
         {
             if (this.Kind.IsReferenceType())
@@ -2517,7 +2517,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGoshujin_TinyhandReconstruct(ScopingStringBuilder ssb, GeneratorInformation info)
     {// this.GoshujinFullName? Clone(TinyhandSerializerOptions options);
-        using (var scopeMethod = ssb.ScopeBrace($"static void ITinyhandReconstruct<{this.GoshujinFullName}>.Reconstruct([NotNull] scoped ref {this.GoshujinFullName}? v, TinyhandSerializerOptions options)"))
+        using (var scopeMethod = ssb.ScopeBrace($"static void ITinyhandReconstructable<{this.GoshujinFullName}>.Reconstruct([NotNull] scoped ref {this.GoshujinFullName}? v, TinyhandSerializerOptions options)"))
         {
             ssb.AppendLine($"v = new {this.GoshujinFullName}();");
         }
@@ -2525,28 +2525,28 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGoshujin_TinyhandClone(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        using (var scopeMethod = ssb.ScopeBrace($"static {this.GoshujinFullName}? ITinyhandClone<{this.GoshujinFullName}>.Clone(scoped ref {this.GoshujinFullName}? v, TinyhandSerializerOptions options)"))
+        using (var scopeMethod = ssb.ScopeBrace($"static {this.GoshujinFullName}? ITinyhandCloneable<{this.GoshujinFullName}>.Clone(scoped ref {this.GoshujinFullName}? v, TinyhandSerializerOptions options)"))
         {
             ssb.AppendLine($"return v == null ? null : TinyhandSerializer.Deserialize<{this.GoshujinFullName}>(TinyhandSerializer.Serialize(v));");
         }
     }
 
     internal void GenerateGoshujin_TinyhandITinyhandSerialize(ScopingStringBuilder ssb, GeneratorInformation info)
-    {// ITinyhandSerialize
+    {// ITinyhandSerializable
         // GetTypeIdentifierCode
         /*if (this.Generics_IsGeneric)
         {// Generics
             ssb.AppendLine($"private static ulong __type_identifier__;");
-            ssb.AppendLine($"static ulong ITinyhandSerialize<{this.GoshujinFullName}>.GetTypeIdentifier() => __type_identifier__ != 0 ? __type_identifier__ : (__type_identifier__ = Arc.Visceral.VisceralHelper.TypeToFarmHash64(typeof({this.GoshujinFullName})));");
+            ssb.AppendLine($"static ulong ITinyhandSerializable<{this.GoshujinFullName}>.GetTypeIdentifier() => __type_identifier__ != 0 ? __type_identifier__ : (__type_identifier__ = Arc.Visceral.VisceralHelper.TypeToFarmHash64(typeof({this.GoshujinFullName})));");
         }
         else
         {// Non-generics
-            ssb.AppendLine($"static ulong ITinyhandSerialize<{this.GoshujinFullName}>.GetTypeIdentifier() => 0x{FarmHash.Hash64(this.GoshujinFullName).ToString("x")}ul;");
+            ssb.AppendLine($"static ulong ITinyhandSerializable<{this.GoshujinFullName}>.GetTypeIdentifier() => 0x{FarmHash.Hash64(this.GoshujinFullName).ToString("x")}ul;");
         }
 
-        ssb.AppendLine($"ulong ITinyhandSerialize.GetTypeIdentifier() => TinyhandSerializer.GetTypeIdentifierObject<{this.GoshujinFullName}>();");*/
+        ssb.AppendLine($"ulong ITinyhandSerializable.GetTypeIdentifier() => TinyhandSerializer.GetTypeIdentifierObject<{this.GoshujinFullName}>();");*/
 
-        ssb.AppendLine("void ITinyhandSerialize.Deserialize(ref TinyhandReader reader, TinyhandSerializerOptions options)");
+        ssb.AppendLine("void ITinyhandSerializable.Deserialize(ref TinyhandReader reader, TinyhandSerializerOptions options)");
         if (this.Kind.IsReferenceType())
         {
             ssb.AppendLine("{ var rt = this; TinyhandSerializer.DeserializeObject(ref reader, ref rt, options); }");
@@ -2556,7 +2556,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             ssb.AppendLine("  => TinyhandSerializer.DeserializeObject(ref reader, ref Unsafe.AsRef(in this)!, options);");
         }
 
-        ssb.AppendLine("void ITinyhandSerialize.Serialize(ref TinyhandWriter writer, TinyhandSerializerOptions options)");
+        ssb.AppendLine("void ITinyhandSerializable.Serialize(ref TinyhandWriter writer, TinyhandSerializerOptions options)");
         ssb.AppendLine("  => TinyhandSerializer.SerializeObject(ref writer, this, options);");
     }
 
