@@ -1,6 +1,7 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace ValueLink;
@@ -212,5 +213,71 @@ public ref struct DeferredList<TGoshujin, TObject>
         this.obj2 = default;
         this.obj3 = default;
         this.list?.Clear();
+    }
+
+    public Enumerator GetEnumerator() => new Enumerator(this);
+
+    public ref struct Enumerator : IEnumerator<TObject>
+    {
+        private readonly DeferredList<TGoshujin, TObject> list;
+        private int index;
+        private TObject? current;
+
+        public Enumerator(DeferredList<TGoshujin, TObject> list)
+        {
+            this.list = list;
+            this.index = -1;
+            this.current = default;
+        }
+
+        public TObject Current => this.current!;
+
+        object IEnumerator.Current => this.Current;
+
+        public void Dispose()
+        {
+        }
+
+        public bool MoveNext()
+        {
+            this.index++;
+            if (this.index == 0)
+            {
+                this.current = this.list.obj0;
+                return this.list.obj0 is not null;
+            }
+            else if (this.index == 1)
+            {
+                this.current = this.list.obj1;
+                return this.list.obj1 is not null;
+            }
+            else if (this.index == 2)
+            {
+                this.current = this.list.obj2;
+                return this.list.obj2 is not null;
+            }
+            else if (this.index == 3)
+            {
+                this.current = this.list.obj3;
+                return this.list.obj3 is not null;
+            }
+
+            if (this.list.list is not null)
+            {
+                if (this.index < 4 + this.list.list.Count)
+                {
+                    this.current = this.list.list[this.index - 4];
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public void Reset()
+        {
+            this.index = -1;
+            this.current = default;
+        }
     }
 }

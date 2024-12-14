@@ -6,6 +6,7 @@ using System.Linq;
 using ValueLink;
 using Tinyhand;
 using Xunit;
+using Arc.Collections;
 
 namespace xUnitTest;
 
@@ -282,9 +283,9 @@ public class BasicTest1
 
         var i = g.IdChain.FindFirst(1);
         i.IsNotNull();
-        var list = new DeferredList<TestClass1.GoshujinClass, TestClass1>(g);
-        list.Add(i!);
-        list.DeferredRemove();
+        var queue = new TemporaryQueue<TestClass1>();
+        queue.Enqueue(i!);
+        g.Remove(ref queue);
 
         g.IdChain.Select(x => x.IdValue).SequenceEqual(new int[] { 0, 2 }).IsTrue();
     }
