@@ -21,10 +21,11 @@ public class Program
 
     public static void Main(string[] args)
     {
-        DebugRun<IsolationBenchmark>();
+        DebugRun<DeferedListBenchmark>();
 
         var switcher = new BenchmarkSwitcher(new[]
         {
+            typeof(DeferedListBenchmark),
             typeof(IsolationBenchmark),
             typeof(CloneClassBenchmark),
             typeof(Serializer.SerializerBenchmark),
