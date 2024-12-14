@@ -6,24 +6,24 @@ using System.Collections.Generic;
 namespace ValueLink;
 
 /// <summary>
-/// Represents a list that allows deferred adding and removing objects of type <typeparamref name="TObject"/> to/from a <typeparamref name="TGoshujin"/>.
+/// Represents a queue that allows deferred adding and removing objects of type <typeparamref name="TObject"/> to/from a <typeparamref name="TGoshujin"/>.
 /// </summary>
 /// <typeparam name="TGoshujin">The type of the goshujin.</typeparam>
 /// <typeparam name="TObject">The type of the objects managed by the goshujin.</typeparam>
-public ref struct DeferredList<TGoshujin, TObject>
+public ref struct DeferredQueue<TGoshujin, TObject>
     where TGoshujin : IGoshujin<TObject>
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="DeferredList{TGoshujin, TObject}"/> struct.
+    /// Initializes a new instance of the <see cref="DeferredQueue{TGoshujin, TObject}"/> struct.
     /// </summary>
     /// <param name="goshujin">The goshujin instance.</param>
-    public DeferredList(TGoshujin goshujin)
+    public DeferredQueue(TGoshujin goshujin)
     {
         this.Goshujin = goshujin;
     }
 
-    [Obsolete("Use DeferredList(TGoshujin goshujin) to create a new instance of DeferredList", true)]
-    public DeferredList()
+    [Obsolete("Use DeferredQueue(TGoshujin goshujin) to create a new instance of DeferredQueue", true)]
+    public DeferredQueue()
     {
         throw new InvalidOperationException();
     }
@@ -33,52 +33,52 @@ public ref struct DeferredList<TGoshujin, TObject>
     /// </summary>
     public readonly TGoshujin Goshujin;
 
-    private List<TObject>? list;
+    private Queue<TObject>? queue;
 
     /// <summary>
-    /// Gets the number of objects in the list.
+    /// Gets the number of objects in the queue.
     /// </summary>
-    public int Count => this.list?.Count ?? 0;
+    public int Count => this.queue?.Count ?? 0;
 
     /// <summary>
-    /// Adds an object to the list.
+    /// Adds an object to the queue.
     /// </summary>
     /// <param name="obj">The object to add.</param>
     public void Add(TObject obj)
     {
-        this.list ??= new List<TObject>();
-        this.list.Add(obj);
+        this.queue ??= new();
+        this.queue.Enqueue(obj);
     }
 
     /// <summary>
-    /// Adds all listed objects to the goshujin.
+    /// Adds all queued objects to the goshujin.
     /// </summary>
     public void DeferredAdd()
     {
-        if (this.list is not null)
+        if (this.queue is not null)
         {
-            foreach (var x in this.list)
+            while (this.queue.TryDequeue(out var x))
             {
                 this.Goshujin.Add(x);
             }
 
-            this.list = default;
+            this.queue = default;
         }
     }
 
     /// <summary>
-    /// Removes all listed objects from the goshujin.
+    /// Removes all queued objects from the goshujin.
     /// </summary>
     public void DeferredRemove()
     {
-        if (this.list is not null)
+        if (this.queue is not null)
         {
-            foreach (var x in this.list)
+            while (this.queue.TryDequeue(out var x))
             {
                 this.Goshujin.Remove(x);
             }
 
-            this.list = default;
+            this.queue = default;
         }
     }
 }
