@@ -12,6 +12,7 @@ namespace ValueLink;
 /// <typeparam name="TObject">The type of the objects managed by the goshujin.</typeparam>
 public ref struct DeferredQueue<TGoshujin, TObject>
     where TGoshujin : IGoshujin<TObject>
+    where TObject : class
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="DeferredQueue{TGoshujin, TObject}"/> struct.

@@ -115,8 +115,8 @@ public class DeferedListBenchmark
         queue.Enqueue(new(10, "c"));
         queue.Enqueue(new(100, "d"));
 
-        this.goshujin.Add(ref queue);
-        this.goshujin.Remove(ref queue);
+        this.goshujin.AddAll(ref queue);
+        this.goshujin.RemoveAll(ref queue);
 
         return this.goshujin;
     }

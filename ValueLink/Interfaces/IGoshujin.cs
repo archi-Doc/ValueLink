@@ -1,5 +1,8 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
+using System.Collections.Generic;
+using Arc.Collections;
+
 namespace ValueLink;
 
 /// <summary>
@@ -14,6 +17,7 @@ public interface IGoshujin
 /// </summary>
 /// <typeparam name="TObject">The type of the object to be managed by the Goshujin.</typeparam>
 public interface IGoshujin<TObject> : IGoshujin
+    where TObject : class
 {
     /// <summary>
     /// Add an object to the Goshujin.
@@ -27,4 +31,8 @@ public interface IGoshujin<TObject> : IGoshujin
     /// <param name="obj">The object to remove.</param>
     /// <returns>True if the object is removed successfully; otherwise, false.</returns>
     bool Remove(TObject obj);
+
+    void AddAll(ref TemporaryQueue<TObject> queue);
+
+    void RemoveAll(ref TemporaryQueue<TObject> queue);
 }

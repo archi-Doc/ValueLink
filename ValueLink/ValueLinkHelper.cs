@@ -6,6 +6,7 @@ using Arc.Collections;
 
 namespace ValueLink;
 
+/*
 /// <summary>
 /// Helper functions for ValueLink.
 /// </summary>
@@ -49,4 +50,4 @@ public static class ValueLinkHelper
             goshujin.Remove(x);
         }
     }
-}
+}*/

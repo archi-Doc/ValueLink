@@ -285,7 +285,7 @@ public class BasicTest1
         i.IsNotNull();
         var queue = new TemporaryQueue<TestClass1>();
         queue.Enqueue(i!);
-        g.Remove(ref queue);
+        g.RemoveAll(ref queue);
 
         g.IdChain.Select(x => x.IdValue).SequenceEqual(new int[] { 0, 2 }).IsTrue();
     }

@@ -2578,6 +2578,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             ssb.AppendLine($"public void Add({this.LocalName} x) => x.{this.ObjectAttribute!.GoshujinInstance} = this;");
         }
 
+        ssb.AppendLine($"public void AddAll(ref TemporaryQueue<{this.LocalName}> queue) {{ foreach (var x in queue) this.Add(x); }}");
+
         /*using (var scopeParameter = ssb.ScopeObject("x"))
         using (var scopeMethod = ssb.ScopeBrace($"public bool Add({this.LocalName} {ssb.FullObject})"))
         {
@@ -2658,6 +2660,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         {
             ssb.AppendLine($"public bool Remove({this.LocalName} x) => (({this.IValueLinkObjectInternal})x).{ValueLinkBody.GeneratedTryRemoveName}(this, false);");
         }
+
+        ssb.AppendLine($"public void RemoveAll(ref TemporaryQueue<{this.LocalName}> queue) {{ foreach (var x in queue) this.Remove(x); }}");
 
         /*using (var scopeParameter = ssb.ScopeObject("x"))
         using (var scopeMethod = ssb.ScopeBrace($"public bool Remove({this.LocalName} {ssb.FullObject})"))
