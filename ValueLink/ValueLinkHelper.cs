@@ -1,6 +1,6 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
-using Arc.Collections;
+using System.Collections.Generic;
 
 #pragma warning disable SA1629 // Documentation text should end with a period
 
@@ -20,7 +20,7 @@ public static class ValueLinkHelper
     /// <typeparam name="TObject">The type of the objects in the queue.</typeparam>
     /// <param name="goshujin">The goshujin to which to add objects.</param>
     /// <param name="queue">The queue containing objects to be added.</param>
-    public static void Add<TGoshujin, TObject>(this TGoshujin goshujin, ref TemporaryQueue<TObject> queue)
+    public static void AddAll<TGoshujin, TObject>(this TGoshujin goshujin, IEnumerable<TObject> queue)
 
         where TGoshujin : IGoshujin<TObject>
         where TObject : class
@@ -40,7 +40,7 @@ public static class ValueLinkHelper
     /// <typeparam name="TObject">The type of the objects in the queue.</typeparam>
     /// <param name="goshujin">The goshujin from which to remove objects.</param>
     /// <param name="queue">The queue containing objects to be removed.</param>
-    public static void Remove<TGoshujin, TObject>(this TGoshujin goshujin, ref TemporaryQueue<TObject> queue)
+    public static void Remove<TGoshujin, TObject>(this TGoshujin goshujin, IEnumerable<TObject> queue)
         where TGoshujin : IGoshujin<TObject>
         where TObject : class
     {
