@@ -32,7 +32,15 @@ public interface IGoshujin<TObject> : IGoshujin
     /// <returns>True if the object is removed successfully; otherwise, false.</returns>
     bool Remove(TObject obj);
 
+    /// <summary>
+    /// Adds all objects in the specified queue to the Goshujin.
+    /// </summary>
+    /// <param name="queue">The queue containing objects to add.</param>
     void AddAll(ref TemporaryQueue<TObject> queue);
 
+    /// <summary>
+    /// Removes all objects in the specified queue from the Goshujin.
+    /// </summary>
+    /// <param name="queue">The queue containing objects to remove.</param>
     void RemoveAll(ref TemporaryQueue<TObject> queue);
 }
