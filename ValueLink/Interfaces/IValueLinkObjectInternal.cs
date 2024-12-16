@@ -12,7 +12,7 @@ public static class ValueLinkInternalHelper<TGoshujin, TObject>
     public static bool RemoveFromGoshujin(TObject obj, TGoshujin? goshujin, bool erase, bool writeJournal = true)
         => TObject.RemoveFromGoshujin(obj, goshujin, erase, writeJournal);
 
-    public static bool SetGoshujin(TObject obj, TGoshujin? goshujin)
+    public static void SetGoshujin(TObject obj, TGoshujin? goshujin)
         => TObject.SetGoshujin(obj, goshujin);
 }
 
@@ -29,5 +29,5 @@ public interface IValueLinkObjectInternal<TGoshujin, TObject>
 
     static abstract bool RemoveFromGoshujin(TObject obj, TGoshujin? goshujin, bool erase, bool writeJournal);
 
-    static abstract bool SetGoshujin(TObject obj, TGoshujin? goshujin);
+    static abstract void SetGoshujin(TObject obj, TGoshujin? goshujin);
 }

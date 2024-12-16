@@ -1107,6 +1107,29 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
     }*/
 
+    internal void Generate_SetGoshujin(ScopingStringBuilder ssb, GeneratorInformation info)
+    {
+        using (var method = ssb.ScopeBrace($"static void {this.IValueLinkObjectInternal}.{ValueLinkBody.SetGoshujinName}({this.LocalName} obj, {this.ObjectAttribute!.GoshujinClass}? g)"))
+        using (var objScope = ssb.ScopeObject("obj"))
+        {
+            if (this.ObjectAttribute.Isolation == IsolationLevel.RepeatableRead)
+            {
+                using (var scopeLock = ssb.ScopeBrace($"using (var w = {ssb.FullObject}.{ValueLinkBody.TryLockMethodName}())"))
+                {
+                    ssb.AppendLine($"if (w is not null) {{ w.{this.ObjectAttribute!.GoshujinInstance} = g; w.Commit(); }}");
+                }
+            }
+            else
+            {
+                ssb.AppendLine($"if (g == {ssb.FullObject}.{this.GoshujinInstanceIdentifier}) return;");
+
+                ssb.AppendLine($"{this.ValueLinkInternalHelper}.{ValueLinkBody.RemoveFromGoshujinName}({ssb.FullObject}, null, false);");
+                ssb.AppendLine($"{this.ValueLinkInternalHelper}.{ValueLinkBody.AddToGoshujinName}({ssb.FullObject}, g);");
+                ssb.AppendLine($"{ssb.FullObject}.{this.GoshujinInstanceIdentifier} = g;");
+            }
+        }
+    }
+
     internal void Generate_AddToGoshujin(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         var goshujinInstance = this.GoshujinInstanceIdentifier; // goshujin + "Instance";
@@ -2819,37 +2842,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGoshujinProperty(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        var goshujin = this.ObjectAttribute!.GoshujinInstance;
-        var goshujinInstance = this.GoshujinInstanceIdentifier; // goshujin + "Instance";
-
         var goshujinAccessibility = this.ObjectAttribute!.Restricted ? "internal " : "public ";
-        using (var scopeProperty = ssb.ScopeBrace($"{goshujinAccessibility}{this.ObjectAttribute!.GoshujinClass}? {goshujin}"))
+        using (var scopeProperty = ssb.ScopeBrace($"{goshujinAccessibility}{this.ObjectAttribute!.GoshujinClass}? {this.ObjectAttribute!.GoshujinInstance}"))
         {
-            ssb.AppendLine($"get => this.{goshujinInstance};");
-            if (this.ObjectAttribute.Isolation == IsolationLevel.RepeatableRead)
-            {
-                using (var scopeSet = ssb.ScopeBrace("set"))
-                {
-                    using (var scopeLock = ssb.ScopeBrace($"using (var w = this.{ValueLinkBody.TryLockMethodName}())"))
-                    {
-                        ssb.AppendLine($"if (w is not null) {{ w.{goshujin} = value; w.Commit(); }}");
-                    }
-                }
-            }
-            else
-            {
-                using (var scopeSet = ssb.ScopeBrace("set"))
-                {
-                    ssb.AppendLine($"if (value == this.{goshujinInstance}) return;");
-
-                    using (var scopeParamter = ssb.ScopeObject("this"))
-                    {
-                        ssb.AppendLine($"{this.ValueLinkInternalHelper}.{ValueLinkBody.RemoveFromGoshujinName}(this, null, false);");
-                        ssb.AppendLine($"{this.ValueLinkInternalHelper}.{ValueLinkBody.AddToGoshujinName}(this, value);");
-                        ssb.AppendLine($"this.{goshujinInstance} = value;");
-                    }
-                }
-            }
+            ssb.AppendLine($"get => this.{this.GoshujinInstanceIdentifier};");
+            ssb.AppendLine($"set => {this.ValueLinkInternalHelper}.{ValueLinkBody.SetGoshujinName}(this, value);");
         }
 
         ssb.AppendLine();
