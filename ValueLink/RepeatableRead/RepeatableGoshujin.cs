@@ -20,7 +20,7 @@ namespace ValueLink;
 /// <typeparam name="TWriter">The type of writer class.</typeparam>
 public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IGoshujinSemaphore
     where TObject : class, IRepeatableObject<TWriter>, IValueLinkObjectInternal<TGoshujin, TObject>
-    where TGoshujin : RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>, IGoshujin<TObject>
+    where TGoshujin : RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>, IGoshujin
     where TWriter : class
 {
     public abstract Lock LockObject { get; }

@@ -3,7 +3,7 @@
 namespace ValueLink;
 
 public static class ValueLinkInternalHelper<TGoshujin, TObject>
-    where TGoshujin : class, IGoshujin<TObject>
+    where TGoshujin : class, IGoshujin
     where TObject : class, IValueLinkObjectInternal<TGoshujin, TObject>
 {
     public static void AddToGoshujin(TObject obj, TGoshujin? g, bool writeJournal = true)
@@ -19,7 +19,7 @@ public static class ValueLinkInternalHelper<TGoshujin, TObject>
 /// <typeparam name="TGoshujin">The type of the goshujin.</typeparam>
 /// <typeparam name="TObject">The type of the object.</typeparam>
 public interface IValueLinkObjectInternal<TGoshujin, TObject>
-    where TGoshujin : class, IGoshujin<TObject>
+    where TGoshujin : class, IGoshujin
     where TObject : class
 {
     static abstract void AddToGoshujin(TObject obj, TGoshujin? g, bool writeJournal);
