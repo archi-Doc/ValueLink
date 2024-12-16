@@ -1125,7 +1125,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
                 ssb.AppendLine($"{this.ValueLinkInternalHelper}.{ValueLinkBody.RemoveFromGoshujinName}({ssb.FullObject}, null, false);");
                 ssb.AppendLine($"{this.ValueLinkInternalHelper}.{ValueLinkBody.AddToGoshujinName}({ssb.FullObject}, g);");
-                ssb.AppendLine($"{ssb.FullObject}.{this.GoshujinInstanceIdentifier} = g;");
+                // ssb.AppendLine($"{ssb.FullObject}.{this.GoshujinInstanceIdentifier} = g;"); // AddToGoshujin()
             }
         }
     }
