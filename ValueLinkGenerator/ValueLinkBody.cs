@@ -36,6 +36,7 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
     public static readonly string GeneratedIdentifierName = "__gen_cl_identifier__";
     public static readonly string AddToGoshujinName = "AddToGoshujin";
     public static readonly string RemoveFromGoshujinName = "RemoveFromGoshujin";
+    public static readonly string SetGoshujinName = "SetGoshujin";
     // public static readonly string GeneratedRemoveInternalName = "RemoveInternal";
     public static readonly string GeneratedNullLockName = "__gen_cl_null_lock__";
     public static readonly string GeneratedGoshujinLockName = "__gen_cl_gosh_lock__";

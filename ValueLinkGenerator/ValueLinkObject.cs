@@ -996,8 +996,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
 
         ssb.AppendLine($"private {this.ObjectAttribute!.GoshujinClass}? {this.GoshujinInstanceIdentifier};");
-        this.Generate_Add(ssb, info);
-        this.Generate_TryRemove(ssb, info);
+        this.Generate_AddToGoshujin(ssb, info);
+        this.Generate_RemoveFromGoshujin(ssb, info);
+        this.Generate_SetGoshujin(ssb, info);
         ssb.AppendLine();
 
         if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.GenerateINotifyPropertyChanged))
@@ -1106,7 +1107,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
     }*/
 
-    internal void Generate_Add(ScopingStringBuilder ssb, GeneratorInformation info)
+    internal void Generate_AddToGoshujin(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         var goshujinInstance = this.GoshujinInstanceIdentifier; // goshujin + "Instance";
 
@@ -1146,7 +1147,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
     }
 
-    internal void Generate_TryRemove(ScopingStringBuilder ssb, GeneratorInformation info)
+    internal void Generate_RemoveFromGoshujin(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         var goshujinInstance = this.GoshujinInstanceIdentifier; // goshujin + "Instance";
 
