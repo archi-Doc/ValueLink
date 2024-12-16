@@ -87,7 +87,7 @@ public class DeferedListBenchmark
     }
 
     [Benchmark]
-    public DeferedTestClass.GoshujinClass TemporaryQueue_AddAndRemove()
+    public DeferedTestClass.GoshujinClass TemporaryQueue_ForEach()
     {
         var queue = default(TemporaryQueue<DeferedTestClass>);
         queue.Enqueue(new(1, "a"));
@@ -110,8 +110,8 @@ public class DeferedListBenchmark
         return this.goshujin;
     }
 
-    // [Benchmark]
-    public DeferedTestClass.GoshujinClass TemporaryQueue_AddAndRemove2()
+    [Benchmark]
+    public DeferedTestClass.GoshujinClass TemporaryQueue_GoshujinAddAll()
     {
         var queue = default(TemporaryQueue<DeferedTestClass>);
         queue.Enqueue(new(1, "a"));
@@ -126,7 +126,7 @@ public class DeferedListBenchmark
     }
 
     [Benchmark]
-    public DeferedTestClass.GoshujinClass TemporaryQueue_AddAndRemove3()
+    public DeferedTestClass.GoshujinClass TemporaryQueue_QueueAddToGoshujin()
     {
         var queue = default(TemporaryQueue<DeferedTestClass>);
         queue.Enqueue(new(1, "a"));
@@ -141,7 +141,7 @@ public class DeferedListBenchmark
     }
 
     [Benchmark]
-    public DeferedTestClass.GoshujinClass TemporaryQueue_AddAndRemove4()
+    public DeferedTestClass.GoshujinClass TemporaryQueue_ObjectsAddToGoshujin()
     {
         var objects = default(TemporaryObjects<DeferedTestClass.GoshujinClass, DeferedTestClass>);
         objects.Add(new(1, "a"));
