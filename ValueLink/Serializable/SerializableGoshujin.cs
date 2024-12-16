@@ -17,8 +17,8 @@ namespace ValueLink;
 /// <typeparam name="TObject">The type of object class.</typeparam>
 /// <typeparam name="TGoshujin">The type of goshujin class.</typeparam>
 public abstract class SerializableGoshujin<TObject, TGoshujin> : IGoshujinSemaphore
-    where TObject : class, IValueLinkObjectInternal<TGoshujin>
-    where TGoshujin : SerializableGoshujin<TObject, TGoshujin>
+    where TObject : class, IValueLinkObjectInternal<TGoshujin, TObject>
+    where TGoshujin : SerializableGoshujin<TObject, TGoshujin>, IGoshujin<TObject>
 {
     public abstract Lock LockObject { get; }
 

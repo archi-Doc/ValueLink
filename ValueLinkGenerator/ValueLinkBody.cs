@@ -34,8 +34,8 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
     public static readonly string AddedMethodName = "Added"; // void Link name + AddedMethodName()
     public static readonly string RemovedMethodName = "Removed"; // void Link name + RemovedMethodName()
     public static readonly string GeneratedIdentifierName = "__gen_cl_identifier__";
-    public static readonly string GeneratedAddName = "AddToGoshujinInternal";
-    public static readonly string GeneratedTryRemoveName = "RemoveFromGoshujinInternal";
+    public static readonly string AddToGoshujinName = "AddToGoshujin";
+    public static readonly string RemoveFromGoshujinName = "RemoveFromGoshujin";
     // public static readonly string GeneratedRemoveInternalName = "RemoveInternal";
     public static readonly string GeneratedNullLockName = "__gen_cl_null_lock__";
     public static readonly string GeneratedGoshujinLockName = "__gen_cl_gosh_lock__";
@@ -48,6 +48,7 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
     public static readonly string SerializableGoshujin = "SerializableGoshujin";
     public static readonly string RepeatableGoshujin = "RepeatableGoshujin";
     public static readonly string IValueLinkObjectInternal = "IValueLinkObjectInternal";
+    public static readonly string ValueLinkInternalHelper = "ValueLinkInternalHelper";
     public static readonly string IGoshujinSemaphore = "ValueLink.IGoshujinSemaphore";
     public static readonly string IIntegralityObject = "IIntegralityObject";
     public static readonly string IIntegralityGoshujin = "IIntegralityGoshujin";
