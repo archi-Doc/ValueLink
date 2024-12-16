@@ -6,11 +6,28 @@ using System.Collections.Generic;
 
 namespace ValueLink;
 
+public interface IValueLinkObject<TObject, TGoshujin>
+    where TObject : class
+    where TGoshujin : IGoshujin<TObject>
+{
+    static abstract void SetGoshujin(TObject @object, TGoshujin? goshujin);
+}
+
 /// <summary>
 /// Helper functions for ValueLink.
 /// </summary>
 public static class ValueLinkHelper
 {
+    public static void SetGoshujin<TObject, TGoshujin>(this IEnumerable<TObject> queue, TGoshujin? goshujin)
+        where TObject : class, IValueLinkObject<TObject, TGoshujin>
+        where TGoshujin : IGoshujin<TObject>
+    {
+        foreach (var x in queue)
+        {
+            TObject.SetGoshujin(x, goshujin);
+        }
+    }
+
     /// <summary>
     /// Adds all objects in the specified queue to the goshujin.<br/>
     /// To achieve the best performance, avoid virtualization and call the goshujin function within a manually written for loop.<br/><br/>
