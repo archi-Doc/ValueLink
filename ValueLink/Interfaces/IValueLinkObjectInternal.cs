@@ -2,14 +2,32 @@
 
 namespace ValueLink;
 
+public static class ValueLinkInternalHelper<TGoshujin, TObject>
+    where TGoshujin : class, IGoshujin
+    where TObject : class, IValueLinkObjectInternal<TGoshujin, TObject>
+{
+    public static void AddToGoshujin(TObject obj, TGoshujin? goshujin, bool writeJournal = true)
+        => TObject.AddToGoshujin(obj, goshujin, writeJournal);
+
+    public static bool RemoveFromGoshujin(TObject obj, TGoshujin? goshujin, bool erase, bool writeJournal = true)
+        => TObject.RemoveFromGoshujin(obj, goshujin, erase, writeJournal);
+
+    public static void SetGoshujin(TObject obj, TGoshujin? goshujin)
+        => TObject.SetGoshujin(obj, goshujin);
+}
+
 /// <summary>
 /// An internal interface for value link object.
 /// </summary>
-/// <typeparam name="TGoshujin">The type of goshujin class.</typeparam>
-public interface IValueLinkObjectInternal<TGoshujin>
-    where TGoshujin : class
+/// <typeparam name="TGoshujin">The type of the goshujin.</typeparam>
+/// <typeparam name="TObject">The type of the object.</typeparam>
+public interface IValueLinkObjectInternal<TGoshujin, TObject>
+    where TGoshujin : class, IGoshujin
+    where TObject : class
 {
-    void AddToGoshujinInternal(TGoshujin? g, bool writeJournal = true);
+    static abstract void AddToGoshujin(TObject obj, TGoshujin? goshujin, bool writeJournal);
 
-    bool RemoveFromGoshujinInternal(TGoshujin? g, bool erase, bool writeJournal = true);
+    static abstract bool RemoveFromGoshujin(TObject obj, TGoshujin? goshujin, bool erase, bool writeJournal);
+
+    static abstract void SetGoshujin(TObject obj, TGoshujin? goshujin);
 }

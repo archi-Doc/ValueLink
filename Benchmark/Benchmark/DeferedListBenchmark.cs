@@ -1,7 +1,9 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
+using System;
 using Arc.Collections;
 using BenchmarkDotNet.Attributes;
+using Tinyhand.Tree;
 using ValueLink;
 
 namespace Benchmark;
@@ -35,7 +37,7 @@ public class DeferedListBenchmark
     }
 
     [Benchmark]
-    public DeferedTestClass.GoshujinClass List_AddAndRemove()
+    public DeferedTestClass.GoshujinClass DeferredList_ForEach()
     {
         var d = new DeferredList<DeferedTestClass.GoshujinClass, DeferedTestClass>(this.goshujin);
         d.Add(new(1, "a"));
@@ -54,9 +56,9 @@ public class DeferedListBenchmark
     }
 
     [Benchmark]
-    public DeferedTestClass.GoshujinClass List_AddAndRemove2()
+    public DeferedTestClass.GoshujinClass TemporaryList_ForEach()
     {
-        var list = new DeferredList<DeferedTestClass.GoshujinClass, DeferedTestClass>(this.goshujin);
+        var list = default(TemporaryList<DeferedTestClass>);
         list.Add(new(1, "a"));
         list.Add(new(2, "b"));
         list.Add(new(10, "c"));
@@ -64,94 +66,46 @@ public class DeferedListBenchmark
 
         foreach (var x in list)
         {
-            goshujin.Add(x);
-        }
-
-        list.Clear();
-
-        foreach (var x in this.goshujin)
-        {
-            list.Add(x);
+            x.Goshujin = this.goshujin;
+            // this.goshujin.Add(x);
         }
 
         foreach (var x in list)
         {
-            goshujin.Remove(x);
-        }
-
-        list.Clear();
-
-        return goshujin;
-    }
-
-    [Benchmark]
-    public DeferedTestClass.GoshujinClass TemporaryQueue_AddAndRemove()
-    {
-        var queue = default(TemporaryQueue<DeferedTestClass>);
-        queue.Enqueue(new(1, "a"));
-        queue.Enqueue(new(2, "b"));
-        queue.Enqueue(new(10, "c"));
-        queue.Enqueue(new(100, "d"));
-
-        foreach (var x in queue)
-        {
-            this.goshujin.Add(x);
-        }
-
-        foreach (var x in queue)
-        {
-            this.goshujin.Remove(x);
+            x.Goshujin = default;
+            // this.goshujin.Remove(x);
         }
 
         return this.goshujin;
     }
 
     [Benchmark]
-    public DeferedTestClass.GoshujinClass TemporaryQueue_AddAndRemove2()
+    public DeferedTestClass.GoshujinClass TemporaryList_AddToGoshujin()
     {
-        var queue = default(TemporaryQueue<DeferedTestClass>);
-        queue.Enqueue(new(1, "a"));
-        queue.Enqueue(new(2, "b"));
-        queue.Enqueue(new(10, "c"));
-        queue.Enqueue(new(100, "d"));
+        var list = default(TemporaryList<DeferedTestClass>);
+        list.Add(new(1, "a"));
+        list.Add(new(2, "b"));
+        list.Add(new(10, "c"));
+        list.Add(new(100, "d"));
 
-        this.goshujin.AddAll(ref queue);
-        this.goshujin.RemoveAll(ref queue);
+        list.AddToGoshujin(this.goshujin);
+        list.RemoveFromGoshujin<DeferedTestClass.GoshujinClass, DeferedTestClass>();
 
         return this.goshujin;
     }
 
     [Benchmark]
-    public DeferedTestClass.GoshujinClass TemporaryObject_AddAndRemove()
+    public DeferedTestClass.GoshujinClass TemporaryObjects_AddToGoshujin()
     {
-        var queue = default(TemporaryObjects<DeferedTestClass>);
-        queue.Enqueue(new(1, "a"));
-        queue.Enqueue(new(2, "b"));
-        queue.Enqueue(new(10, "c"));
-        queue.Enqueue(new(100, "d"));
+        var objects = default(TemporaryObjects<DeferedTestClass.GoshujinClass, DeferedTestClass>);
+        objects.Add(new(1, "a"));
+        objects.Add(new(2, "b"));
+        objects.Add(new(10, "c"));
+        objects.Add(new(100, "d"));
 
-        queue.AddToGoshujin(this.goshujin);
-        queue.RemoveFromGoshunin(this.goshujin);
+        objects.AddToGoshujin(this.goshujin);
+        objects.RemoveFromGoshujin();
 
         return this.goshujin;
-    }
-
-    [Benchmark]
-    public DeferedTestClass.GoshujinClass Queue_AddAndRemove()
-    {
-        var d = new DeferredQueue<DeferedTestClass.GoshujinClass, DeferedTestClass>(this.goshujin);
-        d.Add(new(1, "a"));
-        d.Add(new(2, "b"));
-        d.Add(new(10, "c"));
-        d.Add(new(100, "d"));
-        d.DeferredAdd();
-
-        foreach (var x in this.goshujin)
-        {
-            d.Add(x);
-        }
-
-        d.DeferredRemove();
-        return goshujin;
     }
 }
