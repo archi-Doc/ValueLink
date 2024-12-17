@@ -10,6 +10,7 @@ namespace ValueLink;
 /// If the count is 4 or fewer, it avoids creating a <see cref="List{T}"/> and keeps the objects on the stack.<br/>
 /// It is primarily used when you need to manipulate a collection after exiting a for or foreach loop.
 /// </summary>
+/// <typeparam name="TGoshujin">The type of the goshujin.</typeparam>
 /// <typeparam name="TObject">The type of the objects.</typeparam>
 public ref struct TemporaryObjects<TGoshujin, TObject>
     where TGoshujin : class, IGoshujin

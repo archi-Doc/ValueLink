@@ -283,9 +283,12 @@ public class BasicTest1
 
         var i = g.IdChain.FindFirst(1);
         i.IsNotNull();
-        var queue = new TemporaryQueue<TestClass1>();
-        queue.Enqueue(i!);
-        g.RemoveAll(ref queue);
+        var list = new TemporaryList<TestClass1>();
+        list.Add(i!);
+        foreach (var x in list)
+        {
+            x.Goshujin = default;
+        }
 
         g.IdChain.Select(x => x.IdValue).SequenceEqual(new int[] { 0, 2 }).IsTrue();
     }
