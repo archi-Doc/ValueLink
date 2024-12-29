@@ -186,7 +186,7 @@ public sealed class LinkAttribute : Attribute
     public bool Unique { get; set; } = false;
 
     /// <summary>
-    /// Gets or sets a string value which represents the name used for the linkage interface.
+    /// Gets or sets a string value which represents the name to be used for the Chain and Link (e.g., NameChain/NameLink).
     /// </summary>
     public string Name { get; set; } = string.Empty;
 
