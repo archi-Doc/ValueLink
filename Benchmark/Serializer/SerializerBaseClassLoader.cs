@@ -41,12 +41,16 @@ static class Generated
             if (v == null) { writer.WriteNil(); return; }
             v.Serialize(ref writer, options);
         }
-        public Benchmark.Serializer.SerializerBaseClass.GoshujinClass? Deserialize(ref TinyhandReader reader, TinyhandSerializerOptions options)
+        public void Deserialize(ref TinyhandReader reader, ref Benchmark.Serializer.SerializerBaseClass.GoshujinClass? value, TinyhandSerializerOptions options)
         {
-            if (reader.TryReadNil()) return default;
+            if (reader.TryReadNil())
+            {
+                return;
+            }
+
             var v = new Benchmark.Serializer.SerializerBaseClass.GoshujinClass();
             v.Deserialize(ref reader, options);
-            return v;
+            value = v;
         }
         public Benchmark.Serializer.SerializerBaseClass.GoshujinClass Reconstruct(TinyhandSerializerOptions options)
         {
