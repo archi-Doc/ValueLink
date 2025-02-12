@@ -75,7 +75,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
     /// <param name="brokerDelegate">The broker delegate.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The integration result.</returns>
-    public async Task<IntegralityResult> Integrate(TGoshujin goshujin, IntegralityBrokerDelegate brokerDelegate, CancellationToken cancellationToken = default)
+    public async Task<IntegralityResultAndCount> Integrate(TGoshujin goshujin, IntegralityBrokerDelegate brokerDelegate, CancellationToken cancellationToken = default)
     {
         // Probe
         var rentMemory = this.CreateProbePacket(goshujin);
@@ -87,7 +87,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
             if (result != IntegralityResult.Success)
             {
                 resultMemory.Return();
-                return result;
+                return new(result);
             }
         }
         finally
@@ -104,7 +104,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
             if (resultMemory2.Result != IntegralityResult.Incomplete)
             {
                 resultMemory2.RentMemory.Return();
-                return resultMemory2.Result;
+                return new(resultMemory2.Result);
             }
         }
         finally
@@ -113,11 +113,12 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         }
 
         // Integrate: resultMemory2
-        var integrationCount = 0;
-        var integratedObjects = 0;
+        var iterationCount = 0;
+        var integratedCount = 0;
+        var trimmedCount = 0;
         while (resultMemory2.Result == IntegralityResult.Incomplete)
         {
-            if (integrationCount++ >= this.MaxIntegrationCount)
+            if (iterationCount++ >= this.MaxIntegrationCount)
             {
                 break;
             }
@@ -130,7 +131,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
                 if (result != IntegralityResult.Success)
                 {
                     resultMemory.Return();
-                    return result;
+                    return new(result);
                 }
             }
             finally
@@ -141,7 +142,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
             // GetResponse: resultMemory
             try
             {
-                resultMemory2 = this.ProcessGetResponsePacket(goshujin, resultMemory.Memory, ref integratedObjects);
+                resultMemory2 = this.ProcessGetResponsePacket(goshujin, resultMemory.Memory, ref integratedCount);
             }
             finally
             {
@@ -156,22 +157,19 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         {
             using (g.LockObject.EnterScope())
             {
-                this.Trim(goshujin, integratedObjects);
+                trimmedCount = this.Trim(goshujin, integratedCount);
             }
         }
         else
         {
-            this.Trim(goshujin, integratedObjects);
+            trimmedCount = this.Trim(goshujin, integratedCount);
         }
 
-        if (goshujin.GetIntegralityHash() == targetHash)
-        {// Integrated
-            return IntegralityResult.Success;
-        }
-        else
-        {
-            return IntegralityResult.Incomplete;
-        }
+        return new(
+            goshujin.GetIntegralityHash() == targetHash ? IntegralityResult.Success : IntegralityResult.Incomplete,
+            iterationCount,
+            integratedCount,
+            trimmedCount);
     }
 
     /// <summary>
@@ -199,9 +197,11 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
     /// If Goshujin's isolation level is set to <see cref="IsolationLevel.Serializable"/>, this function will be executed within a lock (goshujin.LockObject) statement.
     /// </summary>
     /// <param name="goshujin">The Goshujin.</param>
-    /// <param name="integratedObjects">The number of objects integrated.</param>
-    public virtual void Trim(TGoshujin goshujin, int integratedObjects)
+    /// <param name="integratedCount">The number of successfully integrated objects.</param>
+    /// <returns>The number of objects trimmed.</returns>
+    public virtual int Trim(TGoshujin goshujin, int integratedCount)
     {
+        return 0;
     }
 
     private BytePool.RentMemory CreateProbePacket(TGoshujin goshujin)

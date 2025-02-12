@@ -97,7 +97,7 @@ public partial class SerializableIntegralityClass : IEquatableObject<Serializabl
 
 public static class IntegralityTestHelper
 {
-    public static IntegralityResult IntegrateForTest<TGoshujin, TObject>(this Integrality<TGoshujin, TObject> integrality, TGoshujin goshujin, TGoshujin target)
+    public static IntegralityResultAndCount IntegrateForTest<TGoshujin, TObject>(this Integrality<TGoshujin, TObject> integrality, TGoshujin goshujin, TGoshujin target)
         where TGoshujin : class, IGoshujin, IIntegralityObject, IIntegralityGoshujin
         where TObject : class, ITinyhandSerializable<TObject>, IIntegralityObject
         => integrality.Integrate(goshujin, (x, y) => Task.FromResult(integrality.Differentiate(target, x))).Result;
@@ -119,18 +119,21 @@ public class IntegralityTest
         g2 = new(); // 1, 2, 3
         g2.GoshujinEquals(g).IsFalse();
 
-        SimpleIntegralityClass.Integrality.Instance10.IntegrateForTest(g2, g).Is(IntegralityResult.Success);
+        var resultAndCount = SimpleIntegralityClass.Integrality.Instance10.IntegrateForTest(g2, g);
+        resultAndCount.Result.Is(IntegralityResult.Success);
         g2.GoshujinEquals(g).IsTrue();
 
         g2 = new(); // 1, 2
-        SimpleIntegralityClass.Integrality.Instance2.IntegrateForTest(g2, g).Is(IntegralityResult.Incomplete);
+        resultAndCount = SimpleIntegralityClass.Integrality.Instance2.IntegrateForTest(g2, g);
+        resultAndCount.Result.Is(IntegralityResult.Incomplete);
         g2.IdChain.FindFirst(1).IsNotNull();
         g2.IdChain.FindFirst(2).IsNotNull();
         g2.IdChain.FindFirst(3).IsNull();
         g2.GoshujinEquals(g).IsFalse();
 
         g2 = new(); // 1, 3
-        SimpleIntegralityClass.IntegralityNotB.Instance.IntegrateForTest(g2, g).Is(IntegralityResult.Incomplete);
+        resultAndCount = SimpleIntegralityClass.IntegralityNotB.Instance.IntegrateForTest(g2, g);
+        resultAndCount.Result.Is(IntegralityResult.Incomplete);
         g2.IdChain.FindFirst(1).IsNotNull();
         g2.IdChain.FindFirst(2).IsNull();
         g2.IdChain.FindFirst(3).IsNotNull();
@@ -139,6 +142,7 @@ public class IntegralityTest
         g2 = new();
         g2.GoshujinEquals(g).IsFalse();
 
-        SimpleIntegralityClass.Integrality.Instance10.IntegrateForTest(g, g2).Is(IntegralityResult.Incomplete);
+        resultAndCount = SimpleIntegralityClass.Integrality.Instance10.IntegrateForTest(g, g2);
+        resultAndCount.Result.Is(IntegralityResult.Incomplete);
     }
 }
