@@ -75,7 +75,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
     /// <param name="brokerDelegate">The broker delegate.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The integration result.</returns>
-    public async Task<IntegralityResult> Integrate(TGoshujin goshujin, IntegralityBrokerDelegate brokerDelegate, CancellationToken cancellationToken = default)
+    public async Task<IntegrateResult> Integrate(TGoshujin goshujin, IntegralityBrokerDelegate brokerDelegate, CancellationToken cancellationToken = default)
     {
         // Probe
         var rentMemory = this.CreateProbePacket(goshujin);
