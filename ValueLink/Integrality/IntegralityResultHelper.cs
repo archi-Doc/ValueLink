@@ -1,8 +1,5 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using Arc.Collections;
 
@@ -12,14 +9,16 @@ public static class IntegralityResultHelper
 {
     static IntegralityResultHelper()
     {
-        var bytes = new byte[] { (byte)IntegralityResult.NotImplemented, };
-        NotImplemented = BytePool.RentArray.CreateFrom(bytes).AsMemory();
+        byte[] bytes;
+
+        bytes = new byte[] { (byte)IntegralityResult.Incomplete, };
+        Incomplete = BytePool.RentArray.CreateFrom(bytes).AsMemory();
 
         bytes = new byte[] { (byte)IntegralityResult.InvalidData, };
         InvalidData = BytePool.RentArray.CreateFrom(bytes).AsMemory();
 
-        bytes = new byte[] { (byte)IntegralityResult.Incomplete, };
-        Incomplete = BytePool.RentArray.CreateFrom(bytes).AsMemory();
+        // bytes = new byte[] { (byte)IntegralityResult.NotImplemented, };
+        // NotImplemented = BytePool.RentArray.CreateFrom(bytes).AsMemory();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -39,9 +38,9 @@ public static class IntegralityResultHelper
         }
     }
 
-    public static readonly BytePool.RentMemory NotImplemented;
+    public static readonly BytePool.RentMemory Incomplete;
 
     public static readonly BytePool.RentMemory InvalidData;
 
-    public static readonly BytePool.RentMemory Incomplete;
+    // public static readonly BytePool.RentMemory NotImplemented;
 }
