@@ -30,6 +30,16 @@ public readonly record struct IntegralityResultAndCount
     public readonly int TrimmedCount;
 
     /// <summary>
+    /// Gets a value indicating whether the integration result is successful.
+    /// </summary>
+    public bool IsSuccess => this.Result == IntegralityResult.Success;
+
+    /// <summary>
+    /// Gets a value indicating whether any items were modified during the integration.
+    /// </summary>
+    public bool IsModified => this.IntegratedCount > 0 || this.TrimmedCount > 0;
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="IntegralityResultAndCount"/> struct with the specified result.
     /// </summary>
     /// <param name="result">The result of the integration.</param>
