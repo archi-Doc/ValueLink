@@ -31,7 +31,7 @@ public partial class SimpleIntegralityClass : IEquatableObject<SimpleIntegrality
 
     [Key(0)]
     [Link(Primary = true, Unique = true, Type = ChainType.Unordered)]
-    public int Id { get; set; }
+    public partial int Id { get; private set; }
 
     [Key(1)]
     public string Name { get; set; } = string.Empty;
