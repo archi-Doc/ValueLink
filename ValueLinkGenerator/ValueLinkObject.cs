@@ -1556,7 +1556,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     }
 
     internal void GenerateLink_Property(ScopingStringBuilder ssb, GeneratorInformation info, Linkage main, Linkage[] sub)
-    {
+    {//
         var target = main.Target;
         if (target == null || target.TypeObject == null || target.TypeObjectWithNullable == null || string.IsNullOrEmpty(main.ValueName))
         {
@@ -2866,4 +2866,13 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         return false;
     }
+
+    internal bool IsPartialProperty
+        => this.symbol is IPropertySymbol ps && ps.IsPartialDefinition;
+
+    internal string SimpleNameOrField
+        => this.IsPartialProperty ? "field" : $"this.{this.SimpleName}";
+
+    internal string AddedPropertyOrPartialProperty
+        => this.IsPartialProperty ? this.SimpleName : this.KeyAttribute?.AddProperty ?? string.Empty;
 }

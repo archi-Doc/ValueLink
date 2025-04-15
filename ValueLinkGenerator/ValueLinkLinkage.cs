@@ -107,6 +107,11 @@ public class Linkage
                 return null;
             }
 
+            if (obj.IsPartialProperty)
+            {
+                linkage.AddValue = false;
+            }
+
             linkage.Target = target;
             linkage.TargetName = linkAttribute.TargetMember;
             if (target.TypeObject is not null)
@@ -171,7 +176,9 @@ public class Linkage
         {
             if (obj.Kind == VisceralObjectKind.Property)
             {
-                (linkage.GetterAccessibility, linkage.SetterAccessibility) = obj.Property_Accessibility;
+                var property = obj.Property_Accessibility;
+                linkage.GetterAccessibility = property.Getter;
+                linkage.SetterAccessibility = property.Setter;
             }
             else if (obj.Kind == VisceralObjectKind.Field)
             {
