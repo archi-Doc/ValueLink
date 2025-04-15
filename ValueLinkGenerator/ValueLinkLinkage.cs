@@ -31,6 +31,7 @@ public class Linkage
 
         var linkage = new Linkage();
         linkage.Location = attribute.Location;
+        linkage.LinkedObject = obj;
         linkage.Type = linkAttribute.Type;
         linkage.TypeObject = obj.TypeObject;
         linkage.Primary = linkAttribute.Primary;
@@ -171,7 +172,9 @@ public class Linkage
         {
             if (obj.Kind == VisceralObjectKind.Property)
             {
-                (linkage.GetterAccessibility, linkage.SetterAccessibility) = obj.Property_Accessibility;
+                var property = obj.Property_Accessibility;
+                linkage.GetterAccessibility = property.Getter;
+                linkage.SetterAccessibility = property.Setter;
             }
             else if (obj.Kind == VisceralObjectKind.Field)
             {
@@ -213,6 +216,12 @@ public class Linkage
             linkage.AddValue = false;
         }
 
+        if (obj.IsPartialProperty)
+        {
+            linkage.AddValue = true;
+            linkage.ValueName = linkAttribute.Name;
+        }
+
         if (!string.IsNullOrEmpty(linkage.LinkName))
         {// Methods (Predicate, Adding, Removing)
             var predicateName = linkage.LinkName + ValueLinkBody.PredicateMethodName;
@@ -249,6 +258,8 @@ public class Linkage
     public Location Location { get; private set; } = Location.None;
 
     public ChainType Type { get; private set; }
+
+    public ValueLinkObject LinkedObject { get; private set; } = default!;
 
     public ValueLinkObject TypeObject { get; private set; } = default!;
 

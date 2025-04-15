@@ -34,7 +34,7 @@ public partial class TestClass1 : IComparable<TestClass1>
 
     [Link(Type = ChainType.Ordered)]
     [KeyAsName]
-    private byte Age;
+    public partial byte Age { get; private set; }
 
     /*[Link(Type = ChainType.Ordered)]
     [KeyAsName]
