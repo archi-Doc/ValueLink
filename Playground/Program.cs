@@ -36,6 +36,9 @@ public partial class SimpleIntegralityClass : IEquatableObject<SimpleIntegrality
     [Key(1)]
     public string Name { get; set; } = string.Empty;
 
+    [Link(Type = ChainType.Ordered)]
+    public partial int Age { get; private set; }
+
     bool IEquatableObject<SimpleIntegralityClass>.ObjectEquals(SimpleIntegralityClass other)
         => this.Id == other.Id && this.Name == other.Name;
 }
