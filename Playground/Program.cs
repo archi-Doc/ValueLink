@@ -36,8 +36,11 @@ public partial class SimpleIntegralityClass : IEquatableObject<SimpleIntegrality
     [Key(1)]
     public string Name { get; set; } = string.Empty;
 
+    [IgnoreMember]
     [Link(Type = ChainType.Ordered)]
-    public partial int Age { get; private set; }
+#pragma warning disable CLG016 // No Key attribute
+    public partial int Age { get; protected set; }
+#pragma warning restore CLG016 // No Key attribute
 
     bool IEquatableObject<SimpleIntegralityClass>.ObjectEquals(SimpleIntegralityClass other)
         => this.Id == other.Id && this.Name == other.Name;

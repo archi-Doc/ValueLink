@@ -44,6 +44,7 @@ public enum ValueLinkObjectFlag
     AddGoshujinProperty = 1 << 22,
     EquatableObject = 1 << 23, // Has IEquatableObject
     AddValueProperty = 1 << 24, // AddValue property
+    HasKeyOrKeyAsName = 1 << 25, // Has KeyAttribute or KeyAsNameAttribute
 }
 
 public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
@@ -511,7 +512,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 }
 
                 var result = true;
-                if (x.AddValue && x.MainLink == null)
+                if (x.AddValue && x.MainLink == null && !x.LinkedObject.IsPartialProperty)
                 {
                     result = this.CheckKeyword(x.ValueName, x.Location);
                 }
@@ -714,9 +715,13 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             if (parent.ObjectFlag.HasFlag(ValueLinkObjectFlag.TinyhandObject))
             {// TinyhandObject
-                if (!this.AllAttributes.Any(x =>
+                if (this.AllAttributes.Any(x =>
                 x.FullName == "Tinyhand.KeyAttribute" ||
                 x.FullName == "Tinyhand.KeyAsNameAttribute"))
+                {// Has KeyAttribute or KeyAsNameAttribute
+                    this.ObjectFlag |= ValueLinkObjectFlag.HasKeyOrKeyAsName;
+                }
+                else
                 {
                     this.Body.AddDiagnostic(ValueLinkBody.Warning_NoKeyAttribute, this.Location);
                 }
@@ -1563,25 +1568,40 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             return;
         }
 
-        if (main.LinkedObject.IsPartialProperty)
-        {
-
+        if (main.LinkedObject.IsPartialProperty &&
+            main.LinkedObject.ObjectFlag.HasFlag(ValueLinkObjectFlag.HasKeyOrKeyAsName))
+        {// Tinyhand generates the target property.
+            return;
         }
 
-        var accessibility = VisceralHelper.GetterSetterAccessibilityToPropertyString(main.GetterAccessibility, main.SetterAccessibility);
-        using (var scopeProperty = ssb.ScopeBrace($"{accessibility.Property}{target.TypeObjectWithNullable.FullNameWithNullable} {main.ValueName}"))
+        VisceralProperty property;
+        string partialString = string.Empty;
+        string targetString;
+        if (main.LinkedObject.IsPartialProperty)
         {
-            ssb.AppendLine($"{accessibility.Getter}get => this.{main.TargetName};");
-            using (var scopeSet = ssb.ScopeBrace($"{accessibility.Setter}set"))
+            partialString = "partial ";
+            targetString = "field";
+            property = main.LinkedObject.Property_Accessibility;
+        }
+        else
+        {
+            targetString = $"this.{main.TargetName}";
+            property = new(main.GetterAccessibility, main.SetterAccessibility, false);
+        }
+
+        using (var scopeProperty = ssb.ScopeBrace($"{property.DeclarationAccessibility.AccessibilityToStringPlusSpace()}{partialString}{target.TypeObjectWithNullable.FullNameWithNullable} {main.ValueName}"))
+        {
+            ssb.AppendLine($"{property.GetterName} => {targetString};");
+            using (var scopeSet = ssb.ScopeBrace($"{property.SetterName}"))
             {
                 string compare;
                 if (target.TypeObject.IsPrimitive)
                 {
-                    compare = $"if (value != this.{main.TargetName})";
+                    compare = $"if (value != {targetString})";
                 }
                 else
                 {
-                    compare = $"if (!EqualityComparer<{target.TypeObject.FullName}>.Default.Equals(value, this.{main.TargetName}))";
+                    compare = $"if (!EqualityComparer<{target.TypeObject.FullName}>.Default.Equals(value, {targetString}))";
                 }
 
                 using (var scopeCompare = ssb.ScopeBrace(compare))
@@ -1591,7 +1611,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                         ssb.AppendLine($"var lockObject = this.{ValueLinkBody.GeneratedEnterName}();");
                     }*/
 
-                    ssb.AppendLine($"this.{main.TargetName} = value;");
+                    ssb.AppendLine($"{targetString} = value;");
 
                     if (main.AutoLink)
                     {
@@ -2875,9 +2895,6 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     internal bool IsPartialProperty
         => this.symbol is IPropertySymbol ps && ps.IsPartialDefinition;
 
-    internal string SimpleNameOrField
-        => this.IsPartialProperty ? "field" : $"this.{this.SimpleName}";
-
-    internal string AddedPropertyOrPartialProperty
-        => this.IsPartialProperty ? this.SimpleName : this.KeyAttribute?.AddProperty ?? string.Empty;
+    internal static string NameOrField(ValueLinkObject obj, string name)
+        => obj.IsPartialProperty ? "field" : $"this.{name}";
 }
