@@ -1517,7 +1517,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         var tinyhandProperty = this.TinyhandAttribute is not null &&
             main.Target?.AllAttributes.Any(x => x.FullName == Tinyhand.Generator.KeyAttributeMock.FullName || x.FullName == Tinyhand.Generator.KeyAsNameAttributeMock.FullName) == true;
 
-        if (main.AddValue/* && !tinyhandProperty*/)
+        if (main.AddValue)
         {// Value property
             this.GenerateLink_Property(ssb, info, main, sub);
         }
@@ -1561,6 +1561,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         if (target == null || target.TypeObject == null || target.TypeObjectWithNullable == null || string.IsNullOrEmpty(main.ValueName))
         {
             return;
+        }
+
+        if (main.LinkedObject.IsPartialProperty)
+        {
+
         }
 
         var accessibility = VisceralHelper.GetterSetterAccessibilityToPropertyString(main.GetterAccessibility, main.SetterAccessibility);

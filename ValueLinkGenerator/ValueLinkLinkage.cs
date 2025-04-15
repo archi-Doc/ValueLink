@@ -31,6 +31,7 @@ public class Linkage
 
         var linkage = new Linkage();
         linkage.Location = attribute.Location;
+        linkage.LinkedObject = obj;
         linkage.Type = linkAttribute.Type;
         linkage.TypeObject = obj.TypeObject;
         linkage.Primary = linkAttribute.Primary;
@@ -105,11 +106,6 @@ public class Linkage
             {
                 obj.Body.AddDiagnostic(ValueLinkBody.Error_InaccessibleMember, attribute.Location, target.FullName);
                 return null;
-            }
-
-            if (obj.IsPartialProperty)
-            {
-                linkage.AddValue = false;
             }
 
             linkage.Target = target;
@@ -220,6 +216,12 @@ public class Linkage
             linkage.AddValue = false;
         }
 
+        if (obj.IsPartialProperty)
+        {
+            linkage.AddValue = true;
+            linkage.ValueName = linkAttribute.Name;
+        }
+
         if (!string.IsNullOrEmpty(linkage.LinkName))
         {// Methods (Predicate, Adding, Removing)
             var predicateName = linkage.LinkName + ValueLinkBody.PredicateMethodName;
@@ -256,6 +258,8 @@ public class Linkage
     public Location Location { get; private set; } = Location.None;
 
     public ChainType Type { get; private set; }
+
+    public ValueLinkObject LinkedObject { get; private set; } = default!;
 
     public ValueLinkObject TypeObject { get; private set; } = default!;
 
