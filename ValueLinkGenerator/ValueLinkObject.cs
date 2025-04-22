@@ -1561,7 +1561,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     }
 
     internal void GenerateLink_Property(ScopingStringBuilder ssb, GeneratorInformation info, Linkage main, Linkage[] sub)
-    {//
+    {
         var target = main.Target;
         if (target == null || target.TypeObject == null || target.TypeObjectWithNullable == null || string.IsNullOrEmpty(main.ValueName))
         {
