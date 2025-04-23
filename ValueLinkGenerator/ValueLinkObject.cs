@@ -710,7 +710,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         {
             if (!this.IsSerializable || this.IsReadOnly || this.IsInitOnly)
             {// Not serializable
-                this.Body.AddDiagnostic(ValueLinkBody.Error_ReadonlyMember, this.Location, this.SimpleName);
+                if (!this.IsPartialProperty)
+                {
+                    this.Body.AddDiagnostic(ValueLinkBody.Error_ReadonlyMember, this.Location, this.SimpleName);
+                }
             }
 
             if (parent.ObjectFlag.HasFlag(ValueLinkObjectFlag.TinyhandObject))
@@ -1577,6 +1580,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         VisceralProperty property;
         string partialString = string.Empty;
         string targetString;
+        var requiredString = main.LinkedObject.IsRequired ? "required " : string.Empty;
         if (main.LinkedObject.IsPartialProperty)
         {
             partialString = "partial ";
@@ -1589,7 +1593,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             property = new(main.GetterAccessibility, main.SetterAccessibility, false);
         }
 
-        using (var scopeProperty = ssb.ScopeBrace($"{property.DeclarationAccessibility.AccessibilityToStringPlusSpace()}{partialString}{target.TypeObjectWithNullable.FullNameWithNullable} {main.ValueName}"))
+        using (var scopeProperty = ssb.ScopeBrace($"{property.DeclarationAccessibility.AccessibilityToStringPlusSpace()}{requiredString}{partialString}{target.TypeObjectWithNullable.FullNameWithNullable} {main.ValueName}"))
         {
             ssb.AppendLine($"{property.GetterName} => {targetString};");
             using (var scopeSet = ssb.ScopeBrace($"{property.SetterName}"))
