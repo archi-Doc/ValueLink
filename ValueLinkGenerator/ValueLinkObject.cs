@@ -710,7 +710,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         {
             if (!this.IsSerializable || this.IsReadOnly || this.IsInitOnly)
             {// Not serializable
-                this.Body.AddDiagnostic(ValueLinkBody.Error_ReadonlyMember, this.Location, this.SimpleName);
+                if (!this.IsPartialProperty)
+                {
+                    this.Body.AddDiagnostic(ValueLinkBody.Error_ReadonlyMember, this.Location, this.SimpleName);
+                }
             }
 
             if (parent.ObjectFlag.HasFlag(ValueLinkObjectFlag.TinyhandObject))
