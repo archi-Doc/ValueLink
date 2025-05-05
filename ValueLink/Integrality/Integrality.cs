@@ -193,7 +193,8 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         => true;
 
     /// <summary>
-    /// Called in the final stage of <see cref="Integrate(TGoshujin, IntegralityBrokerDelegate, CancellationToken)" />() to remove any objects from Goshujin that exceed the limit or are invalid.<br/>
+    /// Called in the final stage of <see cref="Integrate(TGoshujin, IntegralityBrokerDelegate, CancellationToken)" />() to remove any objects from Goshujin that exceed the limit or are invalid<br/>
+    /// (The number of items is ensured to be less than or equal to <see cref="MaxItems"/> beforehand).<br/>
     /// If Goshujin's isolation level is set to <see cref="IsolationLevel.Serializable"/>, this function will be executed within a lock (goshujin.LockObject) statement.
     /// </summary>
     /// <param name="goshujin">The Goshujin.</param>
