@@ -16,7 +16,14 @@ namespace ValueLink.Integrality;
 /// <summary>
 /// Represents a class for object integration.<br/>
 /// Since this class is immutable, it can be used by multiple threads.<br/>
-/// Set the properties according to the use case, and override <see cref="Validate(TGoshujin, TObject, TObject?)"/> and <see cref="Trim(TGoshujin, int)"/> as needed.
+/// Set the properties according to the use case, and override <see cref="Validate(TGoshujin, TObject, TObject?)"/> and <see cref="Trim(TGoshujin, int)"/> as needed.<br/><br/>
+/// Situations where Goshujin is modified during the integration process:<br/>
+/// Addition: <br/>
+/// When <see cref="Validate(TGoshujin, TObject, TObject?)"/> returns true, the newItem is added.<br/>
+/// Removal:<br/>
+/// When <see cref="RemoveIfItemNotFound"/> is true and the item does not exist in the comparison Goshujin.<br/>
+/// When <see cref="Validate(TGoshujin, TObject, TObject?)"/> results in updating to newItem and the oldItem is removed.<br/>
+/// When excess items are removed during <see cref="Trim(TGoshujin, int)"/>.<br/>
 /// </summary>
 /// <typeparam name="TGoshujin">The type of the Goshujin.</typeparam>
 /// <typeparam name="TObject">The type of the Object.</typeparam>
