@@ -2042,7 +2042,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             ssb.AppendLine($"var oldObj = this.{this.UniqueLink.ChainName}.FindFirst(newObj.{this.UniqueLink.TargetName});");
             ssb.AppendLine($"if (!engine.Validate(this, newObj, oldObj)) return IntegralityResult.InvalidData;");
             ssb.AppendLine("if (oldObj is not null) oldObj.Goshujin = default;");
-            ssb.AppendLine($"if (this.{this.UniqueLink.ChainName}.Count >= engine.MaxItems) return IntegralityResult.LimitExceeded;");
+            ssb.AppendLine($"else if (this.{this.UniqueLink.ChainName}.Count >= engine.MaxItems) return IntegralityResult.LimitExceeded;");
             ssb.AppendLine($"newObj.Goshujin = this;");
             ssb.AppendLine("return IntegralityResult.Success;");
         }
