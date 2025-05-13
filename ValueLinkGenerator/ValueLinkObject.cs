@@ -2365,6 +2365,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             if (this.Links == null)
             {
+                ssb.AppendLine("writer.WriteNil();");
                 return;
             }
 
