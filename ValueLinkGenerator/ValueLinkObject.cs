@@ -2577,7 +2577,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     {// this.GoshujinFullName? Clone(TinyhandSerializerOptions options);
         using (var scopeMethod = ssb.ScopeBrace($"static void ITinyhandReconstructable<{this.GoshujinFullName}>.Reconstruct([NotNull] scoped ref {this.GoshujinFullName}? v, TinyhandSerializerOptions options)"))
         {
-            ssb.AppendLine($"v = new {this.GoshujinFullName}();");
+            ssb.AppendLine($"v ??= new {this.GoshujinFullName}();");
         }
     }
 
