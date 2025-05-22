@@ -17,7 +17,7 @@ namespace ConsoleApp1;
 [ValueLinkObject]
 public partial class TinyClass
 {// Tiny class to demonstrate how ValueLink works.
-    [Link(Type = ChainType.Ordered)]
+    [Link(Type = ChainType.Ordered, AddValue = true)]
     private int id;
 
     public static void Test()
@@ -75,7 +75,7 @@ public partial class SerializeClass
 [ValueLinkObject]
 public partial class AutoNotifyClass
 {
-    [Link(AutoNotify = true)] // Set AutoNotify to true.
+    [Link(AutoNotify = true, AddValue = true)] // Set AutoNotify to true.
     private int id;
 
     public void Reset()
@@ -120,7 +120,7 @@ public partial class ManualLinkClass
 [ValueLinkObject]
 public partial class ObservableClass
 {
-    [Link(Type = ChainType.Ordered, AutoNotify = true)]
+    [Link(Type = ChainType.Ordered, AutoNotify = true, AddValue = true)]
     private int Id { get; set; }
 
     [Link(Type = ChainType.Observable, Name = "Observable")]
@@ -171,7 +171,7 @@ public partial class AdditionalMethodClass
 {
     public static int TotalAge;
 
-    [Link(Type = ChainType.Ordered)]
+    [Link(Type = ChainType.Ordered, AddValue = true)]
     private int age;
 
     protected bool AgeLinkPredicate()

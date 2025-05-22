@@ -14,10 +14,10 @@ public partial class TestClass // Partial class is required for source generator
     // Generated value is for changing values and updating links.
     // Generated link is for storing information between objects, similar to a node in a collection.
 
-    [Link(Type = ChainType.Ordered)] // Sorted link associated with name.
+    [Link(Type = ChainType.Ordered, AddValue = true)] // Sorted link associated with name.
     public string Name { get; private set; } = string.Empty; // Generated property name: NameValue, chain name: NameChain
 
-    [Link(Type = ChainType.Ordered, Accessibility = ValueLinkAccessibility.Public)] // Sorted link associated with age.
+    [Link(Type = ChainType.Ordered, Accessibility = ValueLinkAccessibility.Public, AddValue = true)] // Sorted link associated with age.
     [Link(Name = "AgeRev", Type = ChainType.ReverseOrdered)] // Specify a different name for the target in order to set up multiple links.
     private int age; // Generated property name: AgeValue, chain name: AgeChain
 

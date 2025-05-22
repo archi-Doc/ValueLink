@@ -10,7 +10,7 @@ namespace xUnitTest;
 [ValueLinkObject]
 public partial class TestNotifyPropertyChanged : INotifyPropertyChanged
 {
-    [Link(AutoNotify = true)]
+    [Link(AutoNotify = true, AddValue = true)]
     private int Id;
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -19,7 +19,7 @@ public partial class TestNotifyPropertyChanged : INotifyPropertyChanged
 [ValueLinkObject(ExplicitPropertyChanged = "propertyChanged")]
 public partial class TestNotifyPropertyChanged2 : INotifyPropertyChanged
 {
-    [Link(AutoNotify = true)]
+    [Link(AutoNotify = true, AddValue = true)]
     private int Id;
 
     public event PropertyChangedEventHandler? propertyChanged;
@@ -41,7 +41,7 @@ public partial class TestNotifyPropertyChanged2 : INotifyPropertyChanged
 [ValueLinkObject]
 public partial class TestNotifyPropertyChanged3
 {
-    [Link(AutoNotify = true)]
+    [Link(AutoNotify = true, AddValue = true)]
     private int Id;
 
     public void Test()

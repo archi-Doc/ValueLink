@@ -12,13 +12,13 @@ namespace QuickStart;
 [ValueLinkObject]
 public partial class AccessibilityTestClass
 {
-    [Link(Type = ChainType.Ordered, Accessibility = ValueLinkAccessibility.PublicGetter)]
+    [Link(Type = ChainType.Ordered, Accessibility = ValueLinkAccessibility.PublicGetter, AddValue = true)]
     private int privateField_PublicGetter;
 
-    [Link(Type = ChainType.Ordered, Accessibility = ValueLinkAccessibility.Public)]
+    [Link(Type = ChainType.Ordered, Accessibility = ValueLinkAccessibility.Public, AddValue = true)]
     private int privateField_Public;
 
-    [Link(Type = ChainType.Ordered, Accessibility = ValueLinkAccessibility.Inherit)]
+    [Link(Type = ChainType.Ordered, Accessibility = ValueLinkAccessibility.Inherit, AddValue = true)]
     private int privateField_Inherit;
 
     [Link(Type = ChainType.Ordered, Accessibility = ValueLinkAccessibility.PublicGetter)]
