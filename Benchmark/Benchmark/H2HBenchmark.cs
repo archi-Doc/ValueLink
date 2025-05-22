@@ -25,7 +25,7 @@ public partial class H2HClass2
         this.Id = id;
     }
 
-    [Link(Type = ChainType.Ordered)]
+    [Link(Type = ChainType.Ordered, AddValue = true)]
     private int Id;
 }
 

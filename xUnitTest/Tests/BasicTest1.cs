@@ -24,7 +24,7 @@ public partial class TestClass1Derived : TestClass1
 [TinyhandObject]
 public partial class TestClass1 : IComparable<TestClass1>
 {
-    [Link(Type = ChainType.Ordered)]
+    [Link(Type = ChainType.Ordered, AddValue = true)]
     [KeyAsName]
     private int Id;
 
@@ -140,7 +140,7 @@ public partial class GenericTestClass<T>
 [TinyhandObject]
 public partial class GenericTestClass2<T>
 {
-    [Link(Type = ChainType.Ordered, Primary = true)]
+    [Link(Type = ChainType.Ordered, Primary = true, AddValue = true)]
     [KeyAsName]
     private int Id;
 
@@ -148,7 +148,7 @@ public partial class GenericTestClass2<T>
     [KeyAsName]
     private T Value = default!;
 
-    [Link(Type = ChainType.Ordered)]
+    [Link(Type = ChainType.Ordered, AddValue = true)]
     [KeyAsName]
     private NestedClass<double, int> Nested = default!;
 

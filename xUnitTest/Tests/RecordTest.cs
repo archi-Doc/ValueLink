@@ -14,7 +14,7 @@ namespace xUnitTest;
 [TinyhandObject]
 public partial record TestRecord
 {
-    [Link(Type = ChainType.Ordered)]
+    [Link(Type = ChainType.Ordered, AddValue = true)]
     [KeyAsName]
     private int Id;
 

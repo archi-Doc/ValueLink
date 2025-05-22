@@ -13,7 +13,7 @@ public partial class AdditionalMethodClass
 {
     public static int TotalAge;
 
-    [Link(Primary = true, Type = ChainType.Ordered)]
+    [Link(Primary = true, Type = ChainType.Ordered, AddValue = true)]
     [KeyAsName]
     private int Id;
 

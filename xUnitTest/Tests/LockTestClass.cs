@@ -13,7 +13,7 @@ namespace xUnitTest;
 [ValueLinkObject(Isolation = IsolationLevel.Serializable)]
 public partial record LockTestClass
 {
-    [Link(Primary = true, Type = ChainType.Ordered)]
+    [Link(Primary = true, Type = ChainType.Ordered, AddValue = true)]
     private int id;
 
     public LockTestClass()

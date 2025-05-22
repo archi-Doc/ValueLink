@@ -175,7 +175,7 @@ public sealed class LinkAttributeMock : Attribute
 
     public ValueLinkAccessibility Accessibility { get; set; } = ValueLinkAccessibility.PublicGetter;
 
-    public bool AddValue { get; set; } = true;
+    public bool AddValue { get; set; } = false;
 
     public LinkAttributeMock(bool rectricted)
     {
