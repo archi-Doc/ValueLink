@@ -45,6 +45,7 @@ public enum ValueLinkObjectFlag
     EquatableObject = 1 << 23, // Has IEquatableObject
     AddValueProperty = 1 << 24, // AddValue property
     HasKeyOrKeyAsName = 1 << 25, // Has KeyAttribute or KeyAsNameAttribute
+    NoDefaultConstructor = 1 << 26, // No default constructor
 }
 
 public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
@@ -443,13 +444,18 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     public void CheckObject()
     {
-        /*if (!this.IsAbstractOrInterface)
+        if (!this.IsAbstractOrInterface)
         {
             this.ObjectFlag |= ValueLinkObjectFlag.CanCreateInstance;
-        }*/
+        }
 
         if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.CanCreateInstance))
         {// Type which can create an instance
+            if (this.GetMembers(VisceralTarget.Method).Any(a => a.Method_IsConstructor && a.Method_Parameters.Length == 0) != true)
+            {// No default constructor
+                this.ObjectFlag |= ValueLinkObjectFlag.NoDefaultConstructor;
+            }
+
             // partial class required.
             if (!this.IsPartial)
             {
@@ -469,9 +475,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             }
 
             if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatableRead &&
-                this.TinyhandAttribute?.UseServiceProvider != true)
+                this.TinyhandAttribute is null)
             {// Default constructor is required
-                if (this.GetMembers(VisceralTarget.Method).Any(a => a.Method_IsConstructor && a.Method_Parameters.Length == 0) != true)
+                if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.NoDefaultConstructor))
                 {
                     this.Body.ReportDiagnostic(ValueLinkBody.Error_NoDefaultConstructor, this.Location, this.FullName);
                 }
@@ -1848,6 +1854,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     if (this.TinyhandAttribute?.UseServiceProvider == true)
                     {
                         ssb.AppendLine($"var obj = ({this.FullName})TinyhandSerializer.GetService(typeof({this.FullName}));");
+                    }
+                    else if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.NoDefaultConstructor))
+                    {
+                        ssb.AppendLine($"var obj = {this.FullName}.{ValueLinkBody.UnsafeConstructorName}();");
                     }
                     else
                     {
