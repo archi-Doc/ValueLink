@@ -1,10 +1,29 @@
 // Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
+using Tinyhand;
 using ValueLink;
 using Xunit;
 
 namespace xUnitTest;
+
+[TinyhandObject]
+[ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
+public partial record class NoDefaultConstructorClass
+{
+    public NoDefaultConstructorClass(int id, string name)
+    {
+        this.Id = id;
+        this.Name = name;
+    }
+
+    [Key(0)]
+    [Link(Primary = true, Unique = true, Type = ChainType.Unordered)]
+    public int Id { get; private set; }
+
+    [Key(1)]
+    public string Name { get; set; } = string.Empty;
+}
 
 [ValueLinkObject(Isolation = IsolationLevel.Serializable)]
 public partial record SerializableRoom
@@ -168,7 +187,7 @@ public class IsolationTest
             w.IsNotNull();
             if (w is not null)
             {
-                
+
                 w.RoomId = 1;
                 rr = w.Commit();
                 rr.IsNull();
