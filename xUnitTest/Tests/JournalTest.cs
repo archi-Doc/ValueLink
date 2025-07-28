@@ -86,7 +86,7 @@ public partial record JournalTestClass2 : IEquatableObject<JournalTestClass2>
     public JournalTestClass2()
     {
         this.child = new();
-        // ((IStructualObject)this.child).SetParent(this, 2);
+        // ((IStructualObject)this.child).SetupStructure(this, 2);
     }
 
     public JournalTestClass2(JournalIdentifier id, string name)
@@ -95,7 +95,7 @@ public partial record JournalTestClass2 : IEquatableObject<JournalTestClass2>
         this.name = name;
 
         this.child = new();
-        // ((IStructualObject)this.child).SetParent(this, 2);
+        // ((IStructualObject)this.child).SetupStructure(this, 2);
         this.child.Age = id.Id0 + 0.1d;
     }
 
