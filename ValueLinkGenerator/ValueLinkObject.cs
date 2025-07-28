@@ -1155,7 +1155,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.StructualEnabled))
             {
-                ssb.AppendLine($"(({TinyhandBody.IStructualObject}){ssb.FullObject}).SetParent(g);");
+                ssb.AppendLine($"(({TinyhandBody.IStructualObject}){ssb.FullObject}).SetupStructure(g);");
             }
 
             using (var scopeIfNull2 = ssb.ScopeBrace($"if (g != null)"))
@@ -1239,7 +1239,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
                 if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.StructualEnabled))
                 {
-                    ssb.AppendLine($"(({TinyhandBody.IStructualObject}){ssb.FullObject}).SetParent(null);");
+                    ssb.AppendLine($"(({TinyhandBody.IStructualObject}){ssb.FullObject}).SetupStructure(null);");
                 }
 
                 ssb.AppendLine("return true;");
@@ -1467,7 +1467,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             // Structual
             if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.StructualEnabled))
             {
-                ssb.AppendLine($"(({TinyhandBody.IStructualObject})this.instance).SetParent(this.Goshujin);");
+                ssb.AppendLine($"(({TinyhandBody.IStructualObject})this.instance).SetupStructure(this.Goshujin);");
             }
 
             ssb.AppendLine($"this.original.State = {ValueLinkBody.RepeatableObjectState}.Obsolete;");
@@ -1866,7 +1866,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
                     if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.StructualEnabled))
                     {// IStructualObject
-                        ssb.AppendLine($"(({TinyhandBody.IStructualObject})obj).SetParent(this);");
+                        ssb.AppendLine($"(({TinyhandBody.IStructualObject})obj).SetupStructure(this);");
                     }
 
                     ssb.AppendLine($"obj.State = RepeatableObjectState.Created;");
@@ -2236,12 +2236,12 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     {
         if (this.PrimaryLink is not null)
         {
-            using (var scopeMethod = ssb.ScopeBrace($"void {TinyhandBody.IStructualObject}.SetParent({TinyhandBody.IStructualObject}? parent, int key)"))
+            using (var scopeMethod = ssb.ScopeBrace($"void {TinyhandBody.IStructualObject}.SetupStructure({TinyhandBody.IStructualObject}? parent, int key)"))
             {
-                ssb.AppendLine($"(({TinyhandBody.IStructualObject})this).SetParentActual(parent, key);");
+                ssb.AppendLine($"(({TinyhandBody.IStructualObject})this).SetParentAndKey(parent, key);");
                 using (var scopeFor = ssb.ScopeBrace($"foreach (var x in this.{this.PrimaryLink.ChainName})"))
                 {
-                    ssb.AppendLine($"(({TinyhandBody.IStructualObject})x).SetParent(this);");
+                    ssb.AppendLine($"(({TinyhandBody.IStructualObject})x).SetupStructure(this);");
                 }
             }
         }
@@ -2534,7 +2534,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     ssb.AppendLine($"array[n].{this.GoshujinInstanceIdentifier} = {ssb.FullObject};");
                     /*if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.StructualEnabled))
                     {// IStructualObject
-                        ssb.AppendLine($"(({TinyhandBody.IStructualObject})array[n]).SetParent(v);"); // -> SetParent()
+                        ssb.AppendLine($"(({TinyhandBody.IStructualObject})array[n]).SetupStructure(v);"); // -> SetParent()
                     }*/
                 }
             }
