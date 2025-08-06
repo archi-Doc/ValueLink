@@ -73,6 +73,46 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IG
         return true;
     }
 
+    protected async Task<bool> GoshujinStoreData(StoreMode storeMode)
+    {
+        TObject[] array;
+        using (this.LockObject.EnterScope())
+        {
+            if (this.State == GoshujinState.Obsolete)
+            {// Unloaded or deleted.
+                return true;
+            }
+            else if (storeMode == StoreMode.Release)
+            {// Release
+                ((IGoshujinSemaphore)this).SetUnloading();//
+                /*if (unloadMode == UnloadMode.TryUnload && this.SemaphoreCount > 0)
+                {// Acquired.
+                    return false;
+                }*/
+            }
+
+            array = (this is IEnumerable<TObject> e) ? e.ToArray() : Array.Empty<TObject>();
+        }
+
+        foreach (var x in array)
+        {
+            if (x is IStructualObject y && await y.StoreData(storeMode).ConfigureAwait(false) == false)
+            {
+                return false;
+            }
+        }
+
+        if (storeMode == StoreMode.Release)
+        {// Released
+            using (this.LockObject.EnterScope())
+            {
+                ((IGoshujinSemaphore)this).SetObsolete();
+            }
+        }
+
+        return true;
+    }
+
     protected void GoshujinErase()
     {
         TObject[] array;

@@ -2197,6 +2197,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             this.ObjectAttribute?.Isolation == IsolationLevel.RepeatableRead)
         {
             this.GenerateGosjujin_Structual_Save(ssb, info);
+            this.GenerateGosjujin_Structual_StoreData(ssb, info);
             this.GenerateGosjujin_Structual_Delete(ssb, info);
             this.GenerateGosjujin_Structual_SetParent(ssb, info);
             // this.GenerateGosjujin_Structual_NotifyDataChanged(ssb, info);
@@ -2230,6 +2231,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             ssb.AppendLine("if (unloadMode != UnloadMode.NoUnload) s.SetObsolete();");
             ssb.AppendLine("return true;");
         }*/
+    }
+
+    internal void GenerateGosjujin_Structual_StoreData(ScopingStringBuilder ssb, GeneratorInformation info)
+    {
+        ssb.AppendLine($"Task<bool> {TinyhandBody.IStructualObject}.StoreData(StoreMode storeMode) => this.GoshujinStoreData(storeMode);");
     }
 
     internal void GenerateGosjujin_Structual_SetParent(ScopingStringBuilder ssb, GeneratorInformation info)
