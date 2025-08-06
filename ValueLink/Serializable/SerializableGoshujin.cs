@@ -63,6 +63,43 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : IGoshujinSemaph
         return Task.FromResult(true);
     }
 
+    protected Task<bool> GoshujinStoreData(StoreMode storeMode)
+    {
+        TObject[] array;
+        using (this.LockObject.EnterScope())
+        {
+            if (this.State == GoshujinState.Obsolete)
+            {// Unloaded or deleted.
+                return Task.FromResult(true);
+            }
+            else if (storeMode == StoreMode.Release)
+            {
+                ((IGoshujinSemaphore)this).SetUnloading();//
+                /*if (unloadMode == UnloadMode.TryUnload && this.SemaphoreCount > 0)
+                {// Acquired.
+                    return Task.FromResult(false);
+                }*/
+            }
+
+            array = (this is IEnumerable<TObject> e) ? e.ToArray() : Array.Empty<TObject>();
+
+            foreach (var x in array)
+            {
+                if (x is IStructualObject y && y.StoreData(storeMode).Result == false)
+                {
+                    return Task.FromResult(false);
+                }
+            }
+
+            if (storeMode == StoreMode.Release)
+            {// Released
+                ((IGoshujinSemaphore)this).SetObsolete();
+            }
+        }
+
+        return Task.FromResult(true);
+    }
+
     protected void GoshujinErase()
     {
         TObject[] array;
