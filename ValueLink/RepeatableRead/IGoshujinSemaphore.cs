@@ -8,14 +8,14 @@ public interface IGoshujinSemaphore
 {
     public Lock LockObject { get; }
 
-    public GoshujinState State { get; set; }
+    public GoshujinState State { get; set; } // Lock:LockObject
 
-    public int SemaphoreCount { get; set; }
+    public int SemaphoreCount { get; set; } // Lock:LockObject
 
     public bool IsValid
         => this.State == GoshujinState.Valid;
 
-    public bool CanUnload
+    public bool CanRelease
         => this.State == GoshujinState.Valid && this.SemaphoreCount == 0;
 
     /// <summary>
@@ -27,7 +27,7 @@ public interface IGoshujinSemaphore
     public bool TryAcquire(ref int count)
     {
         if (!this.IsValid)
-        {// Invalid (Unloading/Obsolete)
+        {// Invalid (Releasing/Obsolete)
             this.SemaphoreCount -= count;
             count = 0;
             return false;
