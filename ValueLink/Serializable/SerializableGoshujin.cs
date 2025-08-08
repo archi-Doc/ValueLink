@@ -36,7 +36,7 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : ISerializableSe
             }
             else if (unloadMode != UnloadMode.NoUnload)
             {// TryUnload or ForceUnload
-                ((IRepeatableSemaphore)this).SetReleasing();
+                ((ISerializableSemaphore)this).SetReleasing();
                 /*if (unloadMode == UnloadMode.TryUnload && this.SemaphoreCount > 0)
                 {// Acquired.
                     return Task.FromResult(false);
@@ -55,7 +55,7 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : ISerializableSe
 
             if (unloadMode != UnloadMode.NoUnload)
             {// Unloaded
-                ((IRepeatableSemaphore)this).SetObsolete();
+                ((ISerializableSemaphore)this).SetObsolete();
             }
         }
 
@@ -75,7 +75,7 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : ISerializableSe
             }
             else if (storeMode == StoreMode.Release)
             {
-                ((IRepeatableSemaphore)this).SetReleasing();//
+                ((ISerializableSemaphore)this).SetReleasing();//
                 /*if (unloadMode == UnloadMode.TryUnload && this.SemaphoreCount > 0)
                 {// Acquired.
                     return Task.FromResult(false);
@@ -94,7 +94,7 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : ISerializableSe
 
             if (storeMode == StoreMode.Release)
             {// Released
-                ((IRepeatableSemaphore)this).SetObsolete();
+                ((ISerializableSemaphore)this).SetObsolete();
             }
         }
         finally
@@ -110,7 +110,7 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : ISerializableSe
         TObject[] array;
         using (this.LockObject.EnterScope())
         {
-            ((IRepeatableSemaphore)this).SetObsolete();
+            ((ISerializableSemaphore)this).SetObsolete();
             array = (this is IEnumerable<TObject> e) ? e.ToArray() : Array.Empty<TObject>();
 
             foreach (var x in array)

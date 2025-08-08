@@ -128,14 +128,10 @@ public interface IRepeatableSemaphore
     }
 
     public void SetObsolete()
-    {
-        this.State = GoshujinState.Obsolete;
-    }
+        => this.State = GoshujinState.Obsolete;
 
     public void SetReleasing()
-    {
-        this.State = GoshujinState.Releasing;
-    }
+        => this.State = GoshujinState.Releasing;
 
     public void LockAndForceRelease()
     {
