@@ -95,13 +95,13 @@ public class IsolationTest
     {// RepeatableRead
         var g = new RepeatableRoom.GoshujinClass();
         var room1 = g.Add(new RepeatableRoom(1));
-        ((IGoshujinSemaphore)g).State.Is(GoshujinState.Valid);
-        ((IGoshujinSemaphore)g).SemaphoreCount.Is(0);
+        ((IRepeatableSemaphore)g).State.Is(GoshujinState.Valid);
+        ((IRepeatableSemaphore)g).SemaphoreCount.Is(0);
 
         using (var a = g.TryLock(0))
         {
-            ((IGoshujinSemaphore)g).State.Is(GoshujinState.Valid);
-            ((IGoshujinSemaphore)g).SemaphoreCount.Is(0);
+            ((IRepeatableSemaphore)g).State.Is(GoshujinState.Valid);
+            ((IRepeatableSemaphore)g).SemaphoreCount.Is(0);
         }
 
         var b = g.TryGet(1);
@@ -109,17 +109,17 @@ public class IsolationTest
         {
             if (a is not null)
             {
-                ((IGoshujinSemaphore)g).State.Is(GoshujinState.Valid);
-                ((IGoshujinSemaphore)g).SemaphoreCount.Is(1);
+                ((IRepeatableSemaphore)g).State.Is(GoshujinState.Valid);
+                ((IRepeatableSemaphore)g).SemaphoreCount.Is(1);
 
                 a.RoomId = 100;
                 a.Commit();
 
-                ((IGoshujinSemaphore)g).SemaphoreCount.Is(1);
+                ((IRepeatableSemaphore)g).SemaphoreCount.Is(1);
             }
         }
 
-        ((IGoshujinSemaphore)g).SemaphoreCount.Is(0);
+        ((IRepeatableSemaphore)g).SemaphoreCount.Is(0);
 
         var r = new RepeatableRoom(2);
         var room2 = g.Add(r);

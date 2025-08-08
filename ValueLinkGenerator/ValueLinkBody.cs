@@ -50,7 +50,8 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
     public static readonly string RepeatableGoshujin = "RepeatableGoshujin";
     public static readonly string IValueLinkObjectInternal = "IValueLinkObjectInternal";
     public static readonly string ValueLinkInternalHelper = "ValueLinkInternalHelper";
-    public static readonly string IGoshujinSemaphore = "ValueLink.IGoshujinSemaphore";
+    public static readonly string IRepeatableSemaphore = "ValueLink.IRepeatableSemaphore";
+    public static readonly string ISerializableSemaphore = "ValueLink.ISerializableSemaphore";
     public static readonly string IIntegralityObject = "IIntegralityObject";
     public static readonly string IIntegralityGoshujin = "IIntegralityGoshujin";
     public static readonly string Integrality = "ValueLink.Integrality.IIntegralityInternal";
@@ -301,6 +302,7 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
         ssb.AddUsing("System.Threading");
         ssb.AddUsing("System.Threading.Tasks");
         ssb.AddUsing("Arc.Collections");
+        ssb.AddUsing("Arc.Threading");
         ssb.AddUsing("ValueLink");
         ssb.AddUsing("ValueLink.Integrality");
         if (tinyhandFlag)

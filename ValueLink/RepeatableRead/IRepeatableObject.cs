@@ -23,7 +23,7 @@ public interface IRepeatableObject<TWriter>
 
     TWriter NewWriterInternal();
 
-    public TWriter? TryLockInternal(IGoshujinSemaphore? semaphore)
+    public TWriter? TryLockInternal(IRepeatableSemaphore? semaphore)
     {
         if (semaphore?.LockAndTryAcquireOne() == false)
         {
@@ -41,13 +41,13 @@ public interface IRepeatableObject<TWriter>
         return this.NewWriterInternal();
     }
 
-    ValueTask<TWriter?> TryLockAsyncInternal(IGoshujinSemaphore? semaphore)
+    ValueTask<TWriter?> TryLockAsyncInternal(IRepeatableSemaphore? semaphore)
         => this.TryLockAsyncInternal(semaphore, ValueLinkGlobal.LockTimeout, default);
 
-    ValueTask<TWriter?> TryLockAsyncInternal(IGoshujinSemaphore? semaphore, int millisecondsTimeout)
+    ValueTask<TWriter?> TryLockAsyncInternal(IRepeatableSemaphore? semaphore, int millisecondsTimeout)
         => this.TryLockAsyncInternal(semaphore, millisecondsTimeout, default);
 
-    public async ValueTask<TWriter?> TryLockAsyncInternal(IGoshujinSemaphore? semaphore, int millisecondsTimeout, CancellationToken cancellationToken)
+    public async ValueTask<TWriter?> TryLockAsyncInternal(IRepeatableSemaphore? semaphore, int millisecondsTimeout, CancellationToken cancellationToken)
     {
         if (semaphore?.LockAndTryAcquireOne() == false)
         {
