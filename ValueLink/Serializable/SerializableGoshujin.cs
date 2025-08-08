@@ -63,14 +63,14 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : IGoshujinSemaph
         return Task.FromResult(true);
     }
 
-    protected Task<bool> GoshujinStoreData(StoreMode storeMode)
+    protected async Task<bool> GoshujinStoreData(StoreMode storeMode)
     {
         TObject[] array;
         using (this.LockObject.EnterScope())
         {
             if (this.State == GoshujinState.Obsolete)
             {// Unloaded or deleted.
-                return Task.FromResult(true);
+                return true;
             }
             else if (storeMode == StoreMode.Release)
             {
@@ -85,9 +85,9 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : IGoshujinSemaph
 
             foreach (var x in array)
             {
-                if (x is IStructualObject y && y.StoreData(storeMode).Result == false)
+                if (x is IStructualObject y && await y.StoreData(storeMode).ConfigureAwait(false) == false)
                 {
-                    return Task.FromResult(false);
+                    return false;
                 }
             }
 
@@ -97,7 +97,7 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : IGoshujinSemaph
             }
         }
 
-        return Task.FromResult(true);
+        return true;
     }
 
     protected void GoshujinErase()
