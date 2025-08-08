@@ -101,17 +101,17 @@ public interface IGoshujinSemaphore
         }
     }
 
-    public bool LockAndTryUnload(out GoshujinState state)
+    public bool LockAndTryRelease(out GoshujinState state)
     {
         var result = false;
         using (this.LockObject.EnterScope())
         {
             if (!this.IsValid)
-            {// Invalid (Unloading/Obsolete)
+            {// Invalid (Releasing/Obsolete)
             }
             else
             {// Valid
-                this.State = GoshujinState.Unloading;
+                this.State = GoshujinState.Releasing;
                 if (this.SemaphoreCount > 0)
                 {// Acquired
                 }
@@ -132,16 +132,16 @@ public interface IGoshujinSemaphore
         this.State = GoshujinState.Obsolete;
     }
 
-    public void SetUnloading()
+    public void SetReleasing()
     {
-        this.State = GoshujinState.Unloading;
+        this.State = GoshujinState.Releasing;
     }
 
-    public void LockAndForceUnload()
+    public void LockAndForceRelease()
     {
         using (this.LockObject.EnterScope())
         {
-            this.State = GoshujinState.Unloading;
+            this.State = GoshujinState.Releasing;
         }
     }
 }

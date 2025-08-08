@@ -37,7 +37,7 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : IGoshujinSemaph
             }
             else if (unloadMode != UnloadMode.NoUnload)
             {// TryUnload or ForceUnload
-                ((IGoshujinSemaphore)this).SetUnloading();
+                ((IGoshujinSemaphore)this).SetReleasing();
                 if (unloadMode == UnloadMode.TryUnload && this.SemaphoreCount > 0)
                 {// Acquired.
                     return Task.FromResult(false);
@@ -63,18 +63,18 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : IGoshujinSemaph
         return Task.FromResult(true);
     }
 
-    protected async Task<bool> GoshujinStoreData(StoreMode storeMode)
+    protected Task<bool> GoshujinStoreData(StoreMode storeMode)
     {
         TObject[] array;
         using (this.LockObject.EnterScope())
         {
             if (this.State == GoshujinState.Obsolete)
             {// Unloaded or deleted.
-                return true;
+                return Task.FromResult(true);
             }
             else if (storeMode == StoreMode.Release)
             {
-                ((IGoshujinSemaphore)this).SetUnloading();//
+                ((IGoshujinSemaphore)this).SetReleasing();//
                 /*if (unloadMode == UnloadMode.TryUnload && this.SemaphoreCount > 0)
                 {// Acquired.
                     return Task.FromResult(false);
@@ -85,9 +85,9 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : IGoshujinSemaph
 
             foreach (var x in array)
             {
-                if (x is IStructualObject y && await y.StoreData(storeMode).ConfigureAwait(false) == false)
+                if (x is IStructualObject y && y.StoreData(storeMode).Result == false)
                 {
-                    return false;
+                    return Task.FromResult(false);
                 }
             }
 
@@ -97,7 +97,7 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : IGoshujinSemaph
             }
         }
 
-        return true;
+        return Task.FromResult(true);
     }
 
     protected void GoshujinErase()

@@ -13,12 +13,12 @@ public enum GoshujinState
     Valid,
 
     /// <summary>
-    /// The goshujin is unloading.
+    /// The goshujin is in the process of being released.
     /// </summary>
-    Unloading,
+    Releasing,
 
     /// <summary>
-    /// The goshujin is not in a valid state because it has been unloaded or deleted.
+    /// The goshujin is not in a valid state because it has been released or deleted.
     /// </summary>
     Obsolete,
 }
