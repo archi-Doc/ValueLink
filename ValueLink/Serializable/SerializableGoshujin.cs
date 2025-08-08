@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Arc.Threading;
 using Tinyhand;
 
 #pragma warning disable SA1202 // Elements should be ordered by access
@@ -16,15 +17,13 @@ namespace ValueLink;
 /// </summary>
 /// <typeparam name="TObject">The type of object class.</typeparam>
 /// <typeparam name="TGoshujin">The type of goshujin class.</typeparam>
-public abstract class SerializableGoshujin<TObject, TGoshujin> : IGoshujinSemaphore
+public abstract class SerializableGoshujin<TObject, TGoshujin> : ISerializableSemaphore
     where TObject : class, IValueLinkObjectInternal<TGoshujin, TObject>
     where TGoshujin : SerializableGoshujin<TObject, TGoshujin>, IGoshujin<TObject>
 {
-    public abstract Lock LockObject { get; }
+    public abstract SemaphoreLock LockObject { get; }
 
     public GoshujinState State { get; set; }
-
-    public int SemaphoreCount { get; set; }
 
     protected Task<bool> GoshujinSave(UnloadMode unloadMode)
     {
@@ -37,11 +36,11 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : IGoshujinSemaph
             }
             else if (unloadMode != UnloadMode.NoUnload)
             {// TryUnload or ForceUnload
-                ((IGoshujinSemaphore)this).SetReleasing();
-                if (unloadMode == UnloadMode.TryUnload && this.SemaphoreCount > 0)
+                ((IRepeatableSemaphore)this).SetReleasing();
+                /*if (unloadMode == UnloadMode.TryUnload && this.SemaphoreCount > 0)
                 {// Acquired.
                     return Task.FromResult(false);
-                }
+                }*/
             }
 
             array = (this is IEnumerable<TObject> e) ? e.ToArray() : Array.Empty<TObject>();
@@ -56,25 +55,27 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : IGoshujinSemaph
 
             if (unloadMode != UnloadMode.NoUnload)
             {// Unloaded
-                ((IGoshujinSemaphore)this).SetObsolete();
+                ((IRepeatableSemaphore)this).SetObsolete();
             }
         }
 
         return Task.FromResult(true);
     }
 
-    protected Task<bool> GoshujinStoreData(StoreMode storeMode)
+    protected async Task<bool> GoshujinStoreData(StoreMode storeMode)
     {
         TObject[] array;
-        using (this.LockObject.EnterScope())
+
+        await this.LockObject.EnterAsync().ConfigureAwait(false);
+        try
         {
             if (this.State == GoshujinState.Obsolete)
             {// Unloaded or deleted.
-                return Task.FromResult(true);
+                return true;
             }
             else if (storeMode == StoreMode.Release)
             {
-                ((IGoshujinSemaphore)this).SetReleasing();//
+                ((IRepeatableSemaphore)this).SetReleasing();//
                 /*if (unloadMode == UnloadMode.TryUnload && this.SemaphoreCount > 0)
                 {// Acquired.
                     return Task.FromResult(false);
@@ -87,17 +88,21 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : IGoshujinSemaph
             {
                 if (x is IStructualObject y && y.StoreData(storeMode).Result == false)
                 {
-                    return Task.FromResult(false);
+                    return false;
                 }
             }
 
             if (storeMode == StoreMode.Release)
             {// Released
-                ((IGoshujinSemaphore)this).SetObsolete();
+                ((IRepeatableSemaphore)this).SetObsolete();
             }
         }
+        finally
+        {
+            this.LockObject.Exit();
+        }
 
-        return Task.FromResult(true);
+        return true;
     }
 
     protected void GoshujinErase()
@@ -105,7 +110,7 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : IGoshujinSemaph
         TObject[] array;
         using (this.LockObject.EnterScope())
         {
-            ((IGoshujinSemaphore)this).SetObsolete();
+            ((IRepeatableSemaphore)this).SetObsolete();
             array = (this is IEnumerable<TObject> e) ? e.ToArray() : Array.Empty<TObject>();
 
             foreach (var x in array)

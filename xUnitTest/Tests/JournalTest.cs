@@ -471,13 +471,13 @@ public class JournalTest
         this.ReadJournal(g3, journal).IsTrue();
         g2.GoshujinEquals(g3).IsTrue();
 
-        ((IGoshujinSemaphore)g2).State.Is(GoshujinState.Valid);
-        ((IGoshujinSemaphore)g2).SemaphoreCount.Is(0);
+        ((IRepeatableSemaphore)g2).State.Is(GoshujinState.Valid);
+        ((IRepeatableSemaphore)g2).SemaphoreCount.Is(0);
 
         var bin = TinyhandSerializer.Serialize(g2);
-        ((IGoshujinSemaphore)g2).State.Is(GoshujinState.Valid);
+        ((IRepeatableSemaphore)g2).State.Is(GoshujinState.Valid);
 
-        ((IGoshujinSemaphore)g2).LockAndTryRelease(out var state).IsTrue();
+        ((IRepeatableSemaphore)g2).LockAndTryRelease(out var state).IsTrue();
         state.Is(GoshujinState.Releasing);
         bin = TinyhandSerializer.Serialize(g2); // TinyhandSerializerOptions.Unload
         // ((IGoshujinSemaphore)g2).State.Is(GoshujinState.Obsolete);

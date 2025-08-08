@@ -18,7 +18,7 @@ namespace ValueLink;
 /// <typeparam name="TObject">The type of object class.</typeparam>
 /// <typeparam name="TGoshujin">The type of goshujin class.</typeparam>
 /// <typeparam name="TWriter">The type of writer class.</typeparam>
-public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IGoshujinSemaphore
+public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IRepeatableSemaphore
     where TObject : class, IRepeatableObject<TWriter>, IValueLinkObjectInternal<TGoshujin, TObject>
     where TGoshujin : RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>, IGoshujin
     where TWriter : class
@@ -44,7 +44,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IG
             }
             else if (unloadMode != UnloadMode.NoUnload)
             {// TryUnload or ForceUnload
-                ((IGoshujinSemaphore)this).SetReleasing();
+                ((IRepeatableSemaphore)this).SetReleasing();
                 if (unloadMode == UnloadMode.TryUnload && this.SemaphoreCount > 0)
                 {// Acquired.
                     return false;
@@ -66,7 +66,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IG
         {// Unloaded
             using (this.LockObject.EnterScope())
             {
-                ((IGoshujinSemaphore)this).SetObsolete();
+                ((IRepeatableSemaphore)this).SetObsolete();
             }
         }
 
@@ -84,7 +84,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IG
             }
             else if (storeMode == StoreMode.Release)
             {// Release
-                ((IGoshujinSemaphore)this).SetReleasing();//
+                ((IRepeatableSemaphore)this).SetReleasing();//
                 /*if (unloadMode == UnloadMode.TryUnload && this.SemaphoreCount > 0)
                 {// Acquired.
                     return false;
@@ -106,7 +106,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IG
         {// Released
             using (this.LockObject.EnterScope())
             {
-                ((IGoshujinSemaphore)this).SetObsolete();
+                ((IRepeatableSemaphore)this).SetObsolete();
             }
         }
 
@@ -118,7 +118,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IG
         TObject[] array;
         using (this.LockObject.EnterScope())
         {
-            ((IGoshujinSemaphore)this).SetObsolete();
+            ((IRepeatableSemaphore)this).SetObsolete();
             array = (this is IEnumerable<TObject> e) ? e.ToArray() : Array.Empty<TObject>();
         }
 
@@ -188,12 +188,12 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IG
                 {// No object
                     if (mode == TryLockMode.Get)
                     {// Get
-                        ((IGoshujinSemaphore)this).Release(ref count);
+                        ((IRepeatableSemaphore)this).Release(ref count);
                         return default;
                     }
                     else
                     {// Create, GetOrCreate
-                        if (!((IGoshujinSemaphore)this).TryAcquire(ref count))
+                        if (!((IRepeatableSemaphore)this).TryAcquire(ref count))
                         {
                             return default;
                         }
@@ -207,12 +207,12 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IG
                 {// Exists
                     if (mode == TryLockMode.Create)
                     {// Create
-                        ((IGoshujinSemaphore)this).Release(ref count);
+                        ((IRepeatableSemaphore)this).Release(ref count);
                         return default;
                     }
                     else
                     {// Get, GetOrCreate
-                        if (!((IGoshujinSemaphore)this).TryAcquire(ref count))
+                        if (!((IRepeatableSemaphore)this).TryAcquire(ref count))
                         {
                             return default;
                         }
@@ -250,12 +250,12 @@ Created:
                 {// No object
                     if (mode == TryLockMode.Get)
                     {// Get
-                        ((IGoshujinSemaphore)this).Release(ref count);
+                        ((IRepeatableSemaphore)this).Release(ref count);
                         return default;
                     }
                     else
                     {// Create, GetOrCreate
-                        if (!((IGoshujinSemaphore)this).TryAcquire(ref count))
+                        if (!((IRepeatableSemaphore)this).TryAcquire(ref count))
                         {
                             return default;
                         }
@@ -269,12 +269,12 @@ Created:
                 {// Exists
                     if (mode == TryLockMode.Create)
                     {// Create
-                        ((IGoshujinSemaphore)this).Release(ref count);
+                        ((IRepeatableSemaphore)this).Release(ref count);
                         return default;
                     }
                     else
                     {// Get, GetOrCreate
-                        if (!((IGoshujinSemaphore)this).TryAcquire(ref count))
+                        if (!((IRepeatableSemaphore)this).TryAcquire(ref count))
                         {
                             return default;
                         }
@@ -289,7 +289,7 @@ Created:
                 if (x.State.IsInvalid())
                 {
                     x.WriterSemaphoreInternal.Exit();
-                    ((IGoshujinSemaphore)this).LockAndRelease(ref count);
+                    ((IRepeatableSemaphore)this).LockAndRelease(ref count);
                 }
                 else
                 {
@@ -298,7 +298,7 @@ Created:
             }
             else
             {// Timeout/Canceled
-                ((IGoshujinSemaphore)this).LockAndRelease(ref count);
+                ((IRepeatableSemaphore)this).LockAndRelease(ref count);
                 return default;
             }
         }
@@ -319,12 +319,12 @@ Created:
                 x = predicate(this);
                 if (x is null)
                 {// No object
-                    ((IGoshujinSemaphore)this).Release(ref count);
+                    ((IRepeatableSemaphore)this).Release(ref count);
                     return default;
                 }
                 else
                 {// Exists
-                    if (!((IGoshujinSemaphore)this).TryAcquire(ref count))
+                    if (!((IRepeatableSemaphore)this).TryAcquire(ref count))
                     {
                         return default;
                     }
@@ -353,12 +353,12 @@ Created:
                 x = predicate(this);
                 if (x is null)
                 {// No object
-                    ((IGoshujinSemaphore)this).Release(ref count);
+                    ((IRepeatableSemaphore)this).Release(ref count);
                     return default;
                 }
                 else
                 {// Exists
-                    if (!((IGoshujinSemaphore)this).TryAcquire(ref count))
+                    if (!((IRepeatableSemaphore)this).TryAcquire(ref count))
                     {
                         return default;
                     }
@@ -370,7 +370,7 @@ Created:
                 if (x.State.IsInvalid())
                 {
                     x.WriterSemaphoreInternal.Exit();
-                    ((IGoshujinSemaphore)this).LockAndRelease(ref count);
+                    ((IRepeatableSemaphore)this).LockAndRelease(ref count);
                 }
                 else
                 {
@@ -379,7 +379,7 @@ Created:
             }
             else
             {// Timeout
-                ((IGoshujinSemaphore)this).LockAndRelease(ref count);
+                ((IRepeatableSemaphore)this).LockAndRelease(ref count);
                 return default;
             }
         }
