@@ -44,7 +44,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IG
             }
             else if (unloadMode != UnloadMode.NoUnload)
             {// TryUnload or ForceUnload
-                ((IGoshujinSemaphore)this).SetUnloading();
+                ((IGoshujinSemaphore)this).SetReleasing();
                 if (unloadMode == UnloadMode.TryUnload && this.SemaphoreCount > 0)
                 {// Acquired.
                     return false;
@@ -84,7 +84,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IG
             }
             else if (storeMode == StoreMode.Release)
             {// Release
-                ((IGoshujinSemaphore)this).SetUnloading();//
+                ((IGoshujinSemaphore)this).SetReleasing();//
                 /*if (unloadMode == UnloadMode.TryUnload && this.SemaphoreCount > 0)
                 {// Acquired.
                     return false;

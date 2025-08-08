@@ -37,7 +37,7 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : IGoshujinSemaph
             }
             else if (unloadMode != UnloadMode.NoUnload)
             {// TryUnload or ForceUnload
-                ((IGoshujinSemaphore)this).SetUnloading();
+                ((IGoshujinSemaphore)this).SetReleasing();
                 if (unloadMode == UnloadMode.TryUnload && this.SemaphoreCount > 0)
                 {// Acquired.
                     return Task.FromResult(false);
@@ -74,7 +74,7 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : IGoshujinSemaph
             }
             else if (storeMode == StoreMode.Release)
             {
-                ((IGoshujinSemaphore)this).SetUnloading();//
+                ((IGoshujinSemaphore)this).SetReleasing();//
                 /*if (unloadMode == UnloadMode.TryUnload && this.SemaphoreCount > 0)
                 {// Acquired.
                     return Task.FromResult(false);

@@ -477,8 +477,8 @@ public class JournalTest
         var bin = TinyhandSerializer.Serialize(g2);
         ((IGoshujinSemaphore)g2).State.Is(GoshujinState.Valid);
 
-        ((IGoshujinSemaphore)g2).LockAndTryUnload(out var state).IsTrue();
-        state.Is(GoshujinState.Unloading);
+        ((IGoshujinSemaphore)g2).LockAndTryRelease(out var state).IsTrue();
+        state.Is(GoshujinState.Releasing);
         bin = TinyhandSerializer.Serialize(g2); // TinyhandSerializerOptions.Unload
         // ((IGoshujinSemaphore)g2).State.Is(GoshujinState.Obsolete);
     }
