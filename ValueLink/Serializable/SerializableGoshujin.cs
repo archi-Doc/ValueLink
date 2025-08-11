@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Arc.Threading;
 using Tinyhand;
@@ -37,10 +36,6 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : ISerializableSe
             else if (unloadMode != UnloadMode.NoUnload)
             {// TryUnload or ForceUnload
                 ((ISerializableSemaphore)this).SetReleasing();
-                /*if (unloadMode == UnloadMode.TryUnload && this.SemaphoreCount > 0)
-                {// Acquired.
-                    return Task.FromResult(false);
-                }*/
             }
 
             array = (this is IEnumerable<TObject> e) ? e.ToArray() : Array.Empty<TObject>();
@@ -75,11 +70,7 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : ISerializableSe
             }
             else if (storeMode == StoreMode.Release)
             {
-                ((ISerializableSemaphore)this).SetReleasing();//
-                /*if (unloadMode == UnloadMode.TryUnload && this.SemaphoreCount > 0)
-                {// Acquired.
-                    return Task.FromResult(false);
-                }*/
+                ((ISerializableSemaphore)this).SetReleasing();
             }
 
             array = (this is IEnumerable<TObject> e) ? e.ToArray() : Array.Empty<TObject>();
