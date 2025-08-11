@@ -22,35 +22,17 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : ISerializableSe
 {
     public abstract SemaphoreLock LockObject { get; }
 
-    public GoshujinState State { get; set; }
-
     protected Task<bool> GoshujinSave(UnloadMode unloadMode)
     {
-        TObject[] array;
         using (this.LockObject.EnterScope())
         {
-            if (this.State == GoshujinState.Obsolete)
-            {// Unloaded or deleted.
-                return Task.FromResult(true);
-            }
-            else if (unloadMode != UnloadMode.NoUnload)
-            {// TryUnload or ForceUnload
-                ((ISerializableSemaphore)this).SetReleasing();
-            }
-
-            array = (this is IEnumerable<TObject> e) ? e.ToArray() : Array.Empty<TObject>();
-
-            foreach (var x in array)
+            var e = (this as IEnumerable<TObject>) ?? [];
+            foreach (var x in e)
             {
                 if (x is IStructualObject y && y.Save(unloadMode).Result == false)
                 {
                     return Task.FromResult(false);
                 }
-            }
-
-            if (unloadMode != UnloadMode.NoUnload)
-            {// Unloaded
-                ((ISerializableSemaphore)this).SetObsolete();
             }
         }
 
@@ -59,57 +41,58 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : ISerializableSe
 
     protected async Task<bool> GoshujinStoreData(StoreMode storeMode)
     {
-        TObject[] array;
-
-        await this.LockObject.EnterAsync().ConfigureAwait(false);
-        try
+        if (storeMode == StoreMode.StoreOnly)
         {
-            if (this.State == GoshujinState.Obsolete)
-            {// Unloaded or deleted.
-                return true;
-            }
-            else if (storeMode == StoreMode.Release)
+            TObject[] array;
+            await this.LockObject.EnterAsync().ConfigureAwait(false);
+            try
             {
-                ((ISerializableSemaphore)this).SetReleasing();
+                array = (this is IEnumerable<TObject> e) ? e.ToArray() : Array.Empty<TObject>();
             }
-
-            array = (this is IEnumerable<TObject> e) ? e.ToArray() : Array.Empty<TObject>();
+            finally
+            {
+                this.LockObject.Exit();
+            }
 
             foreach (var x in array)
             {
-                if (x is IStructualObject y && y.StoreData(storeMode).Result == false)
+                if (x is IStructualObject y && await y.StoreData(storeMode).ConfigureAwait(false) == false)
                 {
                     return false;
                 }
             }
-
-            if (storeMode == StoreMode.Release)
-            {// Released
-                ((ISerializableSemaphore)this).SetObsolete();
-            }
         }
-        finally
+        else
         {
-            this.LockObject.Exit();
+            await this.LockObject.EnterAsync().ConfigureAwait(false);
+            try
+            {
+                var e = (this as IEnumerable<TObject>) ?? [];
+                foreach (var x in e)
+                {
+                    if (x is IStructualObject y && await y.StoreData(storeMode).ConfigureAwait(false) == false)
+                    {
+                        return false;
+                    }
+                }
+            }
+            finally
+            {
+                this.LockObject.Exit();
+            }
         }
 
         return true;
     }
 
-    protected void GoshujinErase()
-    {
-        TObject[] array;
-        using (this.LockObject.EnterScope())
+    protected void GoshujinEraseInternal()
+    {// using (this.LockObject.EnterScope())
+        var e = (this as IEnumerable<TObject>) ?? [];
+        foreach (var x in e)
         {
-            ((ISerializableSemaphore)this).SetObsolete();
-            array = (this is IEnumerable<TObject> e) ? e.ToArray() : Array.Empty<TObject>();
-
-            foreach (var x in array)
+            if (x is IStructualObject y)
             {
-                if (x is IStructualObject y)
-                {
-                    y.Erase();
-                }
+                y.Erase();
             }
         }
     }

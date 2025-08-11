@@ -7,12 +7,4 @@ namespace ValueLink;
 public interface ISerializableSemaphore
 {
     public SemaphoreLock LockObject { get; }
-
-    public GoshujinState State { get; set; } // Lock:LockObject
-
-    public void SetObsolete()
-        => this.State = GoshujinState.Obsolete;
-
-    public void SetReleasing()
-        => this.State = GoshujinState.Releasing;
 }
