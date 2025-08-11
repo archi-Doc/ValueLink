@@ -85,14 +85,20 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : ISerializableSe
         return true;
     }
 
-    protected void GoshujinEraseInternal()
-    {// using (this.LockObject.EnterScope())
-        var e = (this as IEnumerable<TObject>) ?? [];
-        foreach (var x in e)
+    protected void GoshujinErase()
+    {
+        using (this.LockObject.EnterScope())
         {
-            if (x is IStructualObject y)
+            var g = this as IGoshujin;
+            g?.ClearInternal();
+
+            var e = (this as IEnumerable<TObject>) ?? [];
+            foreach (var x in e)
             {
-                y.Erase();
+                if (x is IStructualObject y)
+                {
+                    y.Erase();
+                }
             }
         }
     }

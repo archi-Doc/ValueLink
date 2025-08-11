@@ -130,6 +130,11 @@ public sealed class TestGoshujin4 : IGoshujin
         this.IdChain.Remove(x);
     }
 
+    void IGoshujin.ClearInternal()
+    {
+        throw new NotImplementedException();
+    }
+
     public LinkedListChain<TestClass4> IdChain { get; }
 }
 

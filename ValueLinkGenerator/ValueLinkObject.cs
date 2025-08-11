@@ -1804,6 +1804,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             }
 
             this.GenerateGoshujin_Clear(ssb, info);
+            this.GenerateGoshujin_ClearInternal(ssb, info);
             this.GenerateGoshujin_Chain(ssb, info);
 
             if (this.PrimaryLink is not null)
@@ -2267,13 +2268,13 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGosjujin_Structual_Erase(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        // ssb.AppendLine($"void {TinyhandBody.IStructualObject}.Erase() => this.GoshujinErase();");
+        ssb.AppendLine($"void {TinyhandBody.IStructualObject}.Erase() => this.GoshujinErase();");
 
-        using (var scopeMethod = ssb.ScopeBrace($"void {TinyhandBody.IStructualObject}.Erase()"))
+        /*using (var scopeMethod = ssb.ScopeBrace($"void {TinyhandBody.IStructualObject}.Erase()"))
         using (var scopeThis = ssb.ScopeObject("this"))
         {
             this.GenerateGoshujin_ClearChains(ssb, info, true);
-        }
+        }*/
     }
 
     internal void GenerateGosjujin_Structual_NotifyDataChanged(ScopingStringBuilder ssb, GeneratorInformation info)
@@ -2836,43 +2837,34 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGoshujin_Clear(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        using (var scopeMethod = ssb.ScopeBrace($"public void Clear()"))
+        ssb.AppendLine($"public void Clear() => ((IGoshujin)this).ClearInternal();");
+        /*using (var scopeMethod = ssb.ScopeBrace($"public void Clear()"))
         using (var scopeThis = ssb.ScopeObject("this"))
         {
             this.GenerateGoshujin_ClearChains(ssb, info, false);
-        }
+        }*/
 
         ssb.AppendLine();
     }
 
-    internal void GenerateGoshujin_ClearChains(ScopingStringBuilder ssb, GeneratorInformation info, bool erase)
+    internal void GenerateGoshujin_ClearInternal(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        if (this.Links != null)
+        using (var scopeMethod = ssb.ScopeBrace($"void IGoshujin.ClearInternal()"))
         {
-            var scopeLock = this.ScopeLock(ssb, "this");
-
-            foreach (var link in this.Links)
+            if (this.Links != null)
             {
-                if (link.IsSharedOrInvalid)
+                foreach (var link in this.Links)
                 {
-                    continue;
+                    if (link.IsSharedOrInvalid)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        ssb.AppendLine($"this.{link.ChainName}.Clear();");
+                    }
                 }
-                else
-                {
-                    ssb.AppendLine($"this.{link.ChainName}.Clear();");
-                }
             }
-
-            if (this.ObjectAttribute?.Isolation == IsolationLevel.Serializable)
-            {
-                ssb.AppendLine("this.GoshujinEraseInternal();");
-            }
-            else if (this.ObjectAttribute?.Isolation == IsolationLevel.RepeatableRead)
-            {
-                ssb.AppendLine("this.GoshujinErase();");
-            }
-
-            scopeLock?.Dispose();
         }
     }
 

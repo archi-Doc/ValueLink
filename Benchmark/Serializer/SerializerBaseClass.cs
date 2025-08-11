@@ -205,6 +205,11 @@ public partial class SerializerBaseClass
         private static ReadOnlySpan<byte> __gen_utf8_key_0000 => new byte[] { 83, 116, 97, 99, 107, 67, 104, 97, 105, 110, };
         private static ReadOnlySpan<byte> __gen_utf8_key_0001 => new byte[] { 73, 100, 67, 104, 97, 105, 110, };
         private static ReadOnlySpan<byte> __gen_utf8_key_0002 => new byte[] { 78, 97, 109, 101, 67, 104, 97, 105, 110, };
+
+        void IGoshujin.ClearInternal()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public SerializerBaseClass()
