@@ -1,8 +1,5 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
-using System.Collections.Generic;
-using Arc.Collections;
-
 namespace ValueLink;
 
 /// <summary>
@@ -10,6 +7,11 @@ namespace ValueLink;
 /// </summary>
 public interface IGoshujin
 {
+    /// <summary>
+    /// Clears all objects from the Goshujin.<br/>
+    /// Note that if mutual exclusion is enabled, this must be called within a lock statement.
+    /// </summary>
+    void ClearInternal();
 }
 
 /// <summary>

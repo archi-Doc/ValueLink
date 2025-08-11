@@ -1804,6 +1804,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             }
 
             this.GenerateGoshujin_Clear(ssb, info);
+            this.GenerateGoshujin_ClearInternal(ssb, info);
             this.GenerateGoshujin_Chain(ssb, info);
 
             if (this.PrimaryLink is not null)
@@ -2210,7 +2211,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         {
             this.GenerateGosjujin_Structual_Save(ssb, info);
             this.GenerateGosjujin_Structual_StoreData(ssb, info);
-            this.GenerateGosjujin_Structual_Delete(ssb, info);
+            this.GenerateGosjujin_Structual_Erase(ssb, info);
             this.GenerateGosjujin_Structual_SetParent(ssb, info);
             // this.GenerateGosjujin_Structual_NotifyDataChanged(ssb, info);
         }
@@ -2265,27 +2266,14 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
     }
 
-    internal void GenerateGosjujin_Structual_Delete(ScopingStringBuilder ssb, GeneratorInformation info)
+    internal void GenerateGosjujin_Structual_Erase(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         ssb.AppendLine($"void {TinyhandBody.IStructualObject}.Erase() => this.GoshujinErase();");
 
         /*using (var scopeMethod = ssb.ScopeBrace($"void {TinyhandBody.IStructualObject}.Erase()"))
+        using (var scopeThis = ssb.ScopeObject("this"))
         {
-            ssb.AppendLine($"if (this is not {ValueLinkBody.IGoshujinSemaphore} s) return;");
-
-            ssb.AppendLine($"{this.LocalName}[] array;");
-            var scopeLock = this.ScopeLock(ssb, "this");
-
-            ssb.AppendLine($"s.SetObsolete();");
-            // ssb.AppendLine($"array = (this is IEnumerable<{this.LocalName}> e) ? e.ToArray() : Array.Empty<{this.LocalName}>();");
-            ssb.AppendLine("array = this.ToArray();");
-
-            scopeLock?.Dispose();
-
-            using (var scopeForeach = ssb.ScopeBrace($"foreach (var x in array)"))
-            {
-                ssb.AppendLine($"if (x is {TinyhandBody.IStructualObject} y) y.Erase();");
-            }
+            this.GenerateGoshujin_ClearChains(ssb, info, true);
         }*/
     }
 
@@ -2849,13 +2837,22 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGoshujin_Clear(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        using (var scopeMethod = ssb.ScopeBrace($"public void Clear()"))
+        ssb.AppendLine($"public void Clear() => ((IGoshujin)this).ClearInternal();");
+        /*using (var scopeMethod = ssb.ScopeBrace($"public void Clear()"))
         using (var scopeThis = ssb.ScopeObject("this"))
+        {
+            this.GenerateGoshujin_ClearChains(ssb, info, false);
+        }*/
+
+        ssb.AppendLine();
+    }
+
+    internal void GenerateGoshujin_ClearInternal(ScopingStringBuilder ssb, GeneratorInformation info)
+    {
+        using (var scopeMethod = ssb.ScopeBrace($"void IGoshujin.ClearInternal()"))
         {
             if (this.Links != null)
             {
-                var scopeLock = this.ScopeLock(ssb, "this");
-
                 foreach (var link in this.Links)
                 {
                     if (link.IsSharedOrInvalid)
@@ -2867,12 +2864,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                         ssb.AppendLine($"this.{link.ChainName}.Clear();");
                     }
                 }
-
-                scopeLock?.Dispose();
             }
         }
-
-        ssb.AppendLine();
     }
 
     internal void GenerateGoshujin_Chain(ScopingStringBuilder ssb, GeneratorInformation info)

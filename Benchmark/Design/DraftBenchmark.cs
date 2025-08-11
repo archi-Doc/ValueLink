@@ -83,6 +83,11 @@ public sealed class TestGoshujin : IGoshujin
         this.IdChain.Remove(x);
     }
 
+    void IGoshujin.ClearInternal()
+    {
+        throw new NotImplementedException();
+    }
+
     public ListChain<TestClass> IdChain { get; }
 }
 
@@ -120,7 +125,7 @@ public class TestClass
 
 public class TestClass0
 {
-    public TestClass0( int id)
+    public TestClass0(int id)
     {
         this.Id = id;
     }

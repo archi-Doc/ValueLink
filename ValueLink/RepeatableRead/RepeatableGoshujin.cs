@@ -119,6 +119,9 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IR
         using (this.LockObject.EnterScope())
         {
             ((IRepeatableSemaphore)this).SetObsolete();
+
+            var g = this as IGoshujin;
+            g?.ClearInternal();
             array = (this is IEnumerable<TObject> e) ? e.ToArray() : Array.Empty<TObject>();
         }
 
