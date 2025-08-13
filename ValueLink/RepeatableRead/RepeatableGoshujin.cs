@@ -82,13 +82,13 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IR
             {// Unloaded or deleted.
                 return true;
             }
-            else if (storeMode == StoreMode.Release)
+            else if (storeMode != StoreMode.StoreOnly)
             {// Release
                 ((IRepeatableSemaphore)this).SetReleasing();//
-                /*if (unloadMode == UnloadMode.TryUnload && this.SemaphoreCount > 0)
+                if (storeMode == StoreMode.TryRelease && this.SemaphoreCount > 0)
                 {// Acquired.
                     return false;
-                }*/
+                }
             }
 
             array = (this is IEnumerable<TObject> e) ? e.ToArray() : Array.Empty<TObject>();
@@ -102,7 +102,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IR
             }
         }
 
-        if (storeMode == StoreMode.Release)
+        if (storeMode != StoreMode.StoreOnly)
         {// Released
             using (this.LockObject.EnterScope())
             {
