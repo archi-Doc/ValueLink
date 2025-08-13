@@ -1797,14 +1797,12 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             // Constructor
             this.GenerateGoshujin_Constructor(ssb, info);
 
-            // if (!this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSyncObject))
-            {
-                this.GenerateGoshujin_Add(ssb, info);
-                this.GenerateGoshujin_Remove(ssb, info);
-            }
-
+            this.GenerateGoshujin_Add(ssb, info);
+            this.GenerateGoshujin_Remove(ssb, info);
             this.GenerateGoshujin_Clear(ssb, info);
             this.GenerateGoshujin_ClearInternal(ssb, info);
+            ssb.AppendLine();
+
             this.GenerateGoshujin_Chain(ssb, info);
 
             if (this.PrimaryLink is not null)
@@ -2843,8 +2841,6 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         {
             this.GenerateGoshujin_ClearChains(ssb, info, false);
         }*/
-
-        ssb.AppendLine();
     }
 
     internal void GenerateGoshujin_ClearInternal(ScopingStringBuilder ssb, GeneratorInformation info)
