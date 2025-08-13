@@ -2207,7 +2207,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         if (this.ObjectAttribute?.Isolation == IsolationLevel.Serializable ||
             this.ObjectAttribute?.Isolation == IsolationLevel.RepeatableRead)
         {
-            this.GenerateGosjujin_Structual_Save(ssb, info);
+            // this.GenerateGosjujin_Structual_Save(ssb, info);
             this.GenerateGosjujin_Structual_StoreData(ssb, info);
             this.GenerateGosjujin_Structual_Erase(ssb, info);
             this.GenerateGosjujin_Structual_SetParent(ssb, info);
