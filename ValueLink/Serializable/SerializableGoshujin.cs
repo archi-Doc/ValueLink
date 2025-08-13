@@ -22,23 +22,6 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : ISerializableSe
 {
     public abstract SemaphoreLock LockObject { get; }
 
-    protected Task<bool> GoshujinSave(UnloadMode unloadMode)
-    {
-        using (this.LockObject.EnterScope())
-        {
-            var e = (this as IEnumerable<TObject>) ?? [];
-            foreach (var x in e)
-            {
-                if (x is IStructualObject y && y.Save(unloadMode).Result == false)
-                {
-                    return Task.FromResult(false);
-                }
-            }
-        }
-
-        return Task.FromResult(true);
-    }
-
     protected async Task<bool> GoshujinStoreData(StoreMode storeMode)
     {
         if (storeMode == StoreMode.StoreOnly)
