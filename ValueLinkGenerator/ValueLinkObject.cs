@@ -1098,8 +1098,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         using (var scopeMethod = ssb.ScopeBrace($"void {TinyhandBody.IStructualObject}.WriteLocator(ref TinyhandWriter writer)"))
         {
-            ssb.AppendLine("writer.Write_Locator();");
-            ssb.AppendLine(writeLocator);
+            using (var scopeIfNotNull = ssb.ScopeBrace($"if (this.{this.ObjectAttribute!.GoshujinInstance} is not null)"))
+            {
+                ssb.AppendLine("writer.Write_Locator();");
+                ssb.AppendLine(writeLocator);
+            }
         }
     }
 
