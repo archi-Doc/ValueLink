@@ -28,6 +28,7 @@ public enum IsolationLevel
 {
     None,
     Serializable,
+    ReadCommitted,
     RepeatableRead,
 }
 

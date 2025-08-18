@@ -1482,7 +1482,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 ssb.AppendLine("this.instance.State = RepeatableObjectState.Obsolete;");
                 if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.StructualEnabled))
                 {
-                    ssb.AppendLine($"(({TinyhandBody.IStructualObject})this.instance).Erase();");
+                    ssb.AppendLine($"(({TinyhandBody.IStructualObject})this.instance).Delete();");
                 }
             }
 
@@ -2269,9 +2269,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGosjujin_Structual_Erase(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        ssb.AppendLine($"void {TinyhandBody.IStructualObject}.Erase() => this.GoshujinErase();");
+        ssb.AppendLine($"void {TinyhandBody.IStructualObject}.Delete() => this.GoshujinDelete();");
 
-        /*using (var scopeMethod = ssb.ScopeBrace($"void {TinyhandBody.IStructualObject}.Erase()"))
+        /*using (var scopeMethod = ssb.ScopeBrace($"void {TinyhandBody.IStructualObject}.Delete()"))
         using (var scopeThis = ssb.ScopeObject("this"))
         {
             this.GenerateGoshujin_ClearChains(ssb, info, true);
@@ -2292,7 +2292,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         using (var scopeMethod = ssb.ScopeBrace($"bool {TinyhandBody.IStructualObject}.ReadRecord(ref TinyhandReader reader)"))
         {
-            ssb.AppendLine("if (!reader.TryRead(out JournalRecord record)) return false;");
+            ssb.AppendLine("if (!reader.TryReadJournalRecord(out JournalRecord record)) return false;");
 
             using (var scopeLocator = ssb.ScopeBrace("if (record == JournalRecord.Locator)"))
             {// Locator

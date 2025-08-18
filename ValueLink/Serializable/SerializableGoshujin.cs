@@ -68,7 +68,7 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : ISerializableSe
         return true;
     }
 
-    protected void GoshujinErase()
+    protected void GoshujinDelete()
     {
         using (this.LockObject.EnterScope())
         {
@@ -80,7 +80,7 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : ISerializableSe
             {
                 if (x is IStructualObject y)
                 {
-                    y.Erase();
+                    y.Delete();
                 }
             }
         }

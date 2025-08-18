@@ -23,6 +23,12 @@ public enum IsolationLevel
     Serializable,
 
     /// <summary>
+    /// Read committed isolation level.<br/>
+    /// Does not guarantee repeatable reads (values may change between reads) and phantom reads may occur.
+    /// </summary>
+    ReadCommitted,
+
+    /// <summary>
     /// Same data (primitive types) is guaranteed to be read during the transaction.<br/>
     /// The class must be a record type to specify this level.
     /// </summary>

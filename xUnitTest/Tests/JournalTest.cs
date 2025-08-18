@@ -103,7 +103,7 @@ public partial record JournalTestClass2 : IEquatableObject<JournalTestClass2>
     [Key(0)]
     private JournalIdentifier id;
 
-    [Key(1)]
+    [Key(1, AddProperty = "Name")]
     [MaxLength(4)]
     private string name = string.Empty;
 
