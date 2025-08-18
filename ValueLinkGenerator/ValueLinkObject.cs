@@ -1315,7 +1315,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             this.Generate_RepeatableRead_WriterClass_Commit(ssb);
 
-            ssb.AppendLine($"public void RemoveAndErase() => this.__erase_flag__ = true;");
+            ssb.AppendLine($"public void DeleteAndErase() => this.__erase_flag__ = true;");
             using (var scopeRollback = ssb.ScopeBrace($"public void Rollback()"))
             {
                 ssb.AppendLine("this.instance = null;");
@@ -2331,7 +2331,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 ssb.AppendLine("catch {}");
             }
 
-            using (var scopeRemove = ssb.ScopeBrace("else if (record == JournalRecord.Remove || record == JournalRecord.RemoveAndErase)"))
+            using (var scopeRemove = ssb.ScopeBrace("else if (record == JournalRecord.Delete || record == JournalRecord.DeleteAndErase)"))
             {// Remove
                 var typeObject = this.UniqueLink.Target.TypeObject;
                 ssb.AppendLine($"var key = {typeObject.CodeReader()};");
@@ -2340,7 +2340,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
                 ssb.AppendLine("{");
                 ssb.IncrementIndent();
-                ssb.AppendLine($"{this.ValueLinkInternalHelper}.{ValueLinkBody.RemoveFromGoshujinName}(obj, null, record == JournalRecord.RemoveAndErase, false);");
+                ssb.AppendLine($"{this.ValueLinkInternalHelper}.{ValueLinkBody.RemoveFromGoshujinName}(obj, null, record == JournalRecord.DeleteAndErase, false);");
                 ssb.AppendLine("return true;");
                 ssb.DecrementIndent();
                 ssb.AppendLine("}");
