@@ -10,7 +10,7 @@ namespace ValueLink;
 /// <typeparam name="TData">
 /// The type of data to be locked. Must be non-null.
 /// </typeparam>
-public interface IDataLock<TData>
+public interface IDataLock<TData> : IDataUnlock
     where TData : notnull
 {
     /// <summary>
@@ -21,9 +21,4 @@ public interface IDataLock<TData>
     /// indicating the outcome of the lock attempt, and the locked data if successful.
     /// </returns>
     ValueTask<(DataLockResult Result, TData? Data)> TryLock();
-
-    /// <summary>
-    /// Releases the lock on the data resource.
-    /// </summary>
-    void Unlock();
 }
