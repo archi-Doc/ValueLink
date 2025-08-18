@@ -73,7 +73,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IR
         return true;
     }
 
-    protected void GoshujinErase()
+    protected void GoshujinDelete()
     {
         TObject[] array;
         using (this.LockObject.EnterScope())
@@ -89,7 +89,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IR
         {
             if (x is IStructualObject y)
             {
-                y.Erase();
+                y.Delete();
             }
         }
     }
