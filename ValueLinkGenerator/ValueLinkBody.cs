@@ -48,6 +48,7 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
     public static readonly string IRepeatableReadObject = "IRepeatableReadObject";
     public static readonly string SerializableGoshujin = "SerializableGoshujin";
     public static readonly string RepeatableReadGoshujin = "RepeatableReadGoshujin";
+    public static readonly string ReadCommittedGoshujin = "ReadCommittedGoshujin";
     public static readonly string IValueLinkObjectInternal = "IValueLinkObjectInternal";
     public static readonly string ValueLinkInternalHelper = "ValueLinkInternalHelper";
     public static readonly string IRepeatableReadSemaphore = "ValueLink.IRepeatableReadSemaphore";

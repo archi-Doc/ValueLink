@@ -65,6 +65,7 @@ public partial class SpClassPoint : LockedDataMock<SpClass>
 
     public SpClassPoint()
     {
+        this.SetData(new());
     }
 }
 
@@ -76,13 +77,29 @@ public partial class SpClass
     }
 
     [Key(0)]
-    public string Name { get; private set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
 }
 
 internal class Program
 {
-    static void Main(string[] args)
+    static async Task Main(string[] args)
     {
         Console.WriteLine("Hello, World");
+
+        var g = new SpClassPoint.GoshujinClass();
+        using (var scope = await g.TryLock(123, LockMode.GetOrCreate))
+        {
+            if (scope.IsValid)
+            {
+                scope.Data.Name = "Test Name";
+            }
+        }
+
+        using (var scope = await g.TryLock(123, LockMode.Get))
+        {
+            if (scope.IsValid)
+            {
+            }
+        }
     }
 }

@@ -14,7 +14,7 @@ namespace ValueLink;
 public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : IReadCommittedSemaphore
     where TData : notnull
     where TObject : class, IValueLinkObjectInternal<TGoshujin, TObject>, ILockableData<TData>
-    where TGoshujin : class, IGoshujin<TObject>
+    where TGoshujin : ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin>, IGoshujin
 {
     public abstract Lock LockObject { get; }
 
@@ -63,6 +63,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
                 else
                 {// Create or GetOrCreate
                     obj = this.NewObject(key);
+                    TObject.AddToGoshujin(obj, (TGoshujin)this, true);
                 }
             }
             else

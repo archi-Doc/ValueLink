@@ -104,7 +104,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     public string? IRepeatableReadObject;
 
-    public string? RepeatableReadGoshujin;
+    public string? IsolationGoshujin;
 
     public string? SerializableGoshujin;
 
@@ -950,11 +950,18 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 this.IRepeatableReadObject = $"{ValueLinkBody.IRepeatableReadObject}<{this.LocalName}.{ValueLinkBody.WriterClassName}>";
                 if (this.UniqueLink is not null)
                 {
-                    this.RepeatableReadGoshujin = $"{ValueLinkBody.RepeatableReadGoshujin}<{this.UniqueLink.TypeObject.FullName}, {this.LocalName}, {this.ObjectAttribute.GoshujinClass}, {ValueLinkBody.WriterClassName}>";
+                    this.IsolationGoshujin = $"{ValueLinkBody.RepeatableReadGoshujin}<{this.UniqueLink.TypeObject.FullName}, {this.LocalName}, {this.ObjectAttribute.GoshujinClass}, {ValueLinkBody.WriterClassName}>";
+                }
+            }
+            else if (this.ObjectAttribute.Isolation == IsolationLevel.ReadCommitted)
+            {
+                if (this.UniqueLink is not null)
+                {
+                    this.IsolationGoshujin = $"{ValueLinkBody.ReadCommittedGoshujin}<{this.UniqueLink.TypeObject.FullName}, {this.TargetDataObject?.FullName}, {this.LocalName},{this.ObjectAttribute.GoshujinClass}>";
                 }
             }
             else if (this.ObjectAttribute.Isolation == IsolationLevel.Serializable)
-            {//
+            {
                 this.SerializableGoshujin = $"{ValueLinkBody.SerializableGoshujin}<{this.LocalName}, {this.ObjectAttribute.GoshujinClass}>";
             }
 
@@ -1742,9 +1749,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     internal void GenerateGoshujinClass(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         string goshujinInterface;
-        if (this.RepeatableReadGoshujin is not null)
+        if (this.IsolationGoshujin is not null)
         {
-            goshujinInterface = $" : {this.RepeatableReadGoshujin}, IGoshujin";
+            goshujinInterface = $" : {this.IsolationGoshujin}, IGoshujin";
         }
         else if (this.SerializableGoshujin is not null)
         {
@@ -1809,11 +1816,19 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             // Constructor
             this.GenerateGoshujin_Constructor(ssb, info);
 
-            this.GenerateGoshujin_Add(ssb, info);
-            this.GenerateGoshujin_Remove(ssb, info);
-            this.GenerateGoshujin_Clear(ssb, info);
-            this.GenerateGoshujin_ClearInternal(ssb, info);
-            ssb.AppendLine();
+            if (this.ObjectAttribute.Isolation == IsolationLevel.ReadCommitted)
+            {
+                this.GenerateGoshujin_ClearInternal(ssb, info);
+                ssb.AppendLine();
+            }
+            else
+            {
+                this.GenerateGoshujin_Add(ssb, info);
+                this.GenerateGoshujin_Remove(ssb, info);
+                this.GenerateGoshujin_Clear(ssb, info);
+                this.GenerateGoshujin_ClearInternal(ssb, info);
+                ssb.AppendLine();
+            }
 
             this.GenerateGoshujin_Chain(ssb, info);
 
@@ -1849,32 +1864,27 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSerializableSemaphore))
             {
-                var overridePrefix = (this.RepeatableReadGoshujin is null && this.SerializableGoshujin is null) ? string.Empty : "override ";
+                var overridePrefix = (this.IsolationGoshujin is null && this.SerializableGoshujin is null) ? string.Empty : "override ";
                 ssb.AppendLine("private SemaphoreLock lockObject = new();");
                 ssb.AppendLine($"public {overridePrefix}SemaphoreLock LockObject => this.lockObject;");
                 ssb.AppendLine($"SemaphoreLock {ValueLinkBody.ISerializableSemaphore}.LockObject => this.lockObject;");
             }
             else if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddReadCommittedSemaphore))
             {
-                var overridePrefix = (this.RepeatableReadGoshujin is null && this.SerializableGoshujin is null) ? string.Empty : "override ";
+                var overridePrefix = (this.IsolationGoshujin is null && this.SerializableGoshujin is null) ? string.Empty : "override ";
                 ssb.AppendLine("private Lock lockObject = new();");
                 ssb.AppendLine($"public {overridePrefix}Lock LockObject => this.lockObject;");
                 ssb.AppendLine($"Lock {ValueLinkBody.IReadCommittedSemaphore}.LockObject => this.lockObject;");
             }
             else if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddRepeatableReadSemaphore))
             {
-                var overridePrefix = (this.RepeatableReadGoshujin is null && this.SerializableGoshujin is null) ? string.Empty : "override ";
+                var overridePrefix = (this.IsolationGoshujin is null && this.SerializableGoshujin is null) ? string.Empty : "override ";
                 ssb.AppendLine("private Lock lockObject = new();");
                 ssb.AppendLine($"public {overridePrefix}Lock LockObject => this.lockObject;");
                 ssb.AppendLine($"Lock {ValueLinkBody.IRepeatableReadSemaphore}.LockObject => this.lockObject;");
             }
 
-            /*if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddLockable))
-            {// ILockable
-                this.GenerateGosjujin_Lock(ssb, info);
-            }*/
-
-            if (this.RepeatableReadGoshujin is not null && this.UniqueLink is not null)
+            if (this.IsolationGoshujin is not null && this.UniqueLink is not null)
             {
                 ssb.AppendLine($"protected override {this.LocalName}? FindFirst({this.UniqueLink.TypeObject.FullName} key) => this.{this.UniqueLink.ChainName}.FindFirst(key);");
 
@@ -1898,7 +1908,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                         ssb.AppendLine($"(({TinyhandBody.IStructualObject})obj).SetupStructure(this);");
                     }
 
-                    ssb.AppendLine($"obj.State = RepeatableReadObjectState.Created;");
+                    if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddRepeatableReadSemaphore))
+                    {
+                        ssb.AppendLine($"obj.State = RepeatableReadObjectState.Created;");
+                    }
+
                     ssb.AppendLine($"obj.{this.UniqueLink.TargetName} = key;");
                     ssb.AppendLine($"return obj;");
                 }
