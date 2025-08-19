@@ -13,6 +13,16 @@ public enum DataLockResult
     Success,
 
     /// <summary>
+    /// The specified data was not found.
+    /// </summary>
+    NotFound,
+
+    /// <summary>
+    /// The specified data already exists.
+    /// </summary>
+    AlreadyExists,
+
+    /// <summary>
     /// The lock attempt failed because the operation timed out.
     /// </summary>
     Timeout,
