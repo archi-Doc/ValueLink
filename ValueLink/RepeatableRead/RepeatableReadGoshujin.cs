@@ -44,7 +44,7 @@ public abstract class RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter> 
             }
             else if (storeMode != StoreMode.StoreOnly)
             {// Release
-                ((IRepeatableReadSemaphore)this).SetReleasing();//
+                ((IRepeatableReadSemaphore)this).SetReleasing();
                 if (storeMode == StoreMode.TryRelease && this.SemaphoreCount > 0)
                 {// Acquired.
                     return false;

@@ -2248,7 +2248,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         {
             // this.GenerateGosjujin_Structual_Save(ssb, info);
             this.GenerateGosjujin_Structual_StoreData(ssb, info);
-            this.GenerateGosjujin_Structual_Erase(ssb, info);
+            this.GenerateGosjujin_Structual_Delete(ssb, info);
             this.GenerateGosjujin_Structual_SetParent(ssb, info);
             // this.GenerateGosjujin_Structual_NotifyDataChanged(ssb, info);
         }
@@ -2303,7 +2303,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
     }
 
-    internal void GenerateGosjujin_Structual_Erase(ScopingStringBuilder ssb, GeneratorInformation info)
+    internal void GenerateGosjujin_Structual_Delete(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         ssb.AppendLine($"void {TinyhandBody.IStructualObject}.Delete() => this.GoshujinDelete();");
 

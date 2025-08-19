@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using FastExpressionCompiler;
 using Tinyhand;
 
 #pragma warning disable SA1202 // Elements should be ordered by access
@@ -23,6 +22,25 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
 
     protected abstract TObject NewObject(TKey key);
 
+    /// <summary>
+    /// Executes the specified <paramref name="action"/> for every owned object.<br/>
+    /// The specified delegate is invoked within mutual exclusion (inside a lock).
+    /// </summary>
+    /// <param name="action">The delegate to execute per item.</param>
+    public void ForEach(Action<TObject> action)
+    {
+        using (this.LockObject.EnterScope())
+        {
+            if (((IGoshujin)this).GetEnumerableInternal() is IEnumerable<TObject> enumerable)
+            {
+                foreach (var x in enumerable)
+                {
+                    action(x);
+                }
+            }
+        }
+    }
+
     public ValueTask<TData?> TryGet(TKey key, CancellationToken cancellationToken = default)
     {
         TObject? obj;
@@ -37,17 +55,6 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
 
         return obj.TryGet(ValueLinkGlobal.LockTimeout, cancellationToken);
     }
-
-    /*public ValueTask<TData?> GetOrCreate(TKey key)
-    {
-        TObject? obj;
-        using (this.LockObject.EnterScope())
-        {
-            obj = this.FindFirst(key) ?? this.NewObject(key);
-        }
-
-        return obj.TryGet();
-    }*/
 
     public ValueTask<DataScope<TData>> TryLock(TKey key, LockMode lockMode, CancellationToken cancellationToken = default)
     {
@@ -77,6 +84,28 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
         }
 
         return obj.TryLock(ValueLinkGlobal.LockTimeout, cancellationToken);
+    }
+
+    public DataLockResult Delete(TKey key, CancellationToken cancellationToken = default)
+    {
+        TObject? obj;
+        using (this.LockObject.EnterScope())
+        {
+            obj = this.FindFirst(key);
+            if (obj is null)
+            {// Object not found
+                return DataLockResult.NotFound;
+            }
+
+            TObject.RemoveFromGoshujin(obj, (TGoshujin)this, true, true);
+        }
+
+        if (obj is IStructualObject y)
+        {
+            y.Delete();
+        }
+
+        return DataLockResult.Success;
     }
 
     public TObject[] GetArray()
@@ -110,18 +139,25 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
 
     protected void GoshujinDelete()
     {
+        TObject[] array = [];
         using (this.LockObject.EnterScope())
         {
-            var g = this as IGoshujin;
-            g?.ClearInternal();
-
-            var e = (this as IEnumerable<TObject>) ?? [];
-            foreach (var x in e)
+            if (this is IGoshujin goshujin)
             {
-                if (x is IStructualObject y)
+                if (goshujin.GetEnumerableInternal() is IEnumerable<TObject> enumerable)
                 {
-                    y.Delete();
+                    array = enumerable.ToArray();
                 }
+
+                goshujin.ClearInternal();
+            }
+        }
+
+        foreach (var x in array)
+        {
+            if (x is IStructualObject y)
+            {
+                y.Delete();
             }
         }
     }

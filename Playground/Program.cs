@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Arc.Threading;
@@ -90,6 +88,7 @@ internal class Program
         Console.WriteLine("Hello, World");
 
         var g = new SpClassPoint.GoshujinClass();
+        var tc = await g.TryGet(123);
         using (var scope = await g.TryLock(123, LockMode.GetOrCreate))
         {
             if (scope.IsValid)
@@ -98,6 +97,7 @@ internal class Program
             }
         }
 
+        tc = await g.TryGet(123);
         using (var scope = await g.TryLock(123, LockMode.Get))
         {
             if (scope.IsValid)
@@ -109,6 +109,9 @@ internal class Program
         foreach (var x in array)
         {
         }
+
+        g.Delete(123);
+        array = g.GetArray();
     }
 
     private IEnumerable Get() => System.Array.Empty<object>();
