@@ -23,8 +23,8 @@ public class IsolationTestEmpty
         var c2 = g.Add(c);
         var c3 = g.Add(c);
 
-        c.State.Is(RepeatableObjectState.Obsolete);
-        c2!.State.Is(RepeatableObjectState.Valid);
+        c.State.Is(RepeatableReadObjectState.Obsolete);
+        c2!.State.Is(RepeatableReadObjectState.Valid);
         c3.IsNull();
     }
 }*/

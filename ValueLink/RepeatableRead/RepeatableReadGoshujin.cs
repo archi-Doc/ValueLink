@@ -18,9 +18,9 @@ namespace ValueLink;
 /// <typeparam name="TObject">The type of object class.</typeparam>
 /// <typeparam name="TGoshujin">The type of goshujin class.</typeparam>
 /// <typeparam name="TWriter">The type of writer class.</typeparam>
-public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IRepeatableSemaphore
-    where TObject : class, IRepeatableObject<TWriter>, IValueLinkObjectInternal<TGoshujin, TObject>
-    where TGoshujin : RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>, IGoshujin
+public abstract class RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter> : IRepeatableReadSemaphore
+    where TObject : class, IRepeatableReadObject<TWriter>, IValueLinkObjectInternal<TGoshujin, TObject>
+    where TGoshujin : RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter>, IGoshujin
     where TWriter : class
 {
     public abstract Lock LockObject { get; }
@@ -44,7 +44,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IR
             }
             else if (storeMode != StoreMode.StoreOnly)
             {// Release
-                ((IRepeatableSemaphore)this).SetReleasing();//
+                ((IRepeatableReadSemaphore)this).SetReleasing();//
                 if (storeMode == StoreMode.TryRelease && this.SemaphoreCount > 0)
                 {// Acquired.
                     return false;
@@ -66,7 +66,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IR
         {// Released
             using (this.LockObject.EnterScope())
             {
-                ((IRepeatableSemaphore)this).SetObsolete();
+                ((IRepeatableReadSemaphore)this).SetObsolete();
             }
         }
 
@@ -78,7 +78,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IR
         TObject[] array;
         using (this.LockObject.EnterScope())
         {
-            ((IRepeatableSemaphore)this).SetObsolete();
+            ((IRepeatableReadSemaphore)this).SetObsolete();
 
             var g = this as IGoshujin;
             g?.ClearInternal();
@@ -113,7 +113,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IR
         }
     }
 
-    public bool Contains(Func<RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>, bool> predicate)
+    public bool Contains(Func<RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter>, bool> predicate)
     {
         using (this.LockObject.EnterScope())
         {
@@ -130,7 +130,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IR
         }
     }
 
-    public TObject? TryGet(Func<RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>, TObject?> predicate)
+    public TObject? TryGet(Func<RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter>, TObject?> predicate)
     {
         using (this.LockObject.EnterScope())
         {
@@ -151,12 +151,12 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IR
                 {// No object
                     if (mode == LockMode.Get)
                     {// Get
-                        ((IRepeatableSemaphore)this).Release(ref count);
+                        ((IRepeatableReadSemaphore)this).Release(ref count);
                         return default;
                     }
                     else
                     {// Create, GetOrCreate
-                        if (!((IRepeatableSemaphore)this).TryAcquire(ref count))
+                        if (!((IRepeatableReadSemaphore)this).TryAcquire(ref count))
                         {
                             return default;
                         }
@@ -170,12 +170,12 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IR
                 {// Exists
                     if (mode == LockMode.Create)
                     {// Create
-                        ((IRepeatableSemaphore)this).Release(ref count);
+                        ((IRepeatableReadSemaphore)this).Release(ref count);
                         return default;
                     }
                     else
                     {// Get, GetOrCreate
-                        if (!((IRepeatableSemaphore)this).TryAcquire(ref count))
+                        if (!((IRepeatableReadSemaphore)this).TryAcquire(ref count))
                         {
                             return default;
                         }
@@ -213,12 +213,12 @@ Created:
                 {// No object
                     if (mode == LockMode.Get)
                     {// Get
-                        ((IRepeatableSemaphore)this).Release(ref count);
+                        ((IRepeatableReadSemaphore)this).Release(ref count);
                         return default;
                     }
                     else
                     {// Create, GetOrCreate
-                        if (!((IRepeatableSemaphore)this).TryAcquire(ref count))
+                        if (!((IRepeatableReadSemaphore)this).TryAcquire(ref count))
                         {
                             return default;
                         }
@@ -232,12 +232,12 @@ Created:
                 {// Exists
                     if (mode == LockMode.Create)
                     {// Create
-                        ((IRepeatableSemaphore)this).Release(ref count);
+                        ((IRepeatableReadSemaphore)this).Release(ref count);
                         return default;
                     }
                     else
                     {// Get, GetOrCreate
-                        if (!((IRepeatableSemaphore)this).TryAcquire(ref count))
+                        if (!((IRepeatableReadSemaphore)this).TryAcquire(ref count))
                         {
                             return default;
                         }
@@ -252,7 +252,7 @@ Created:
                 if (x.State.IsInvalid())
                 {
                     x.WriterSemaphoreInternal.Exit();
-                    ((IRepeatableSemaphore)this).LockAndRelease(ref count);
+                    ((IRepeatableReadSemaphore)this).LockAndRelease(ref count);
                 }
                 else
                 {
@@ -261,7 +261,7 @@ Created:
             }
             else
             {// Timeout/Canceled
-                ((IRepeatableSemaphore)this).LockAndRelease(ref count);
+                ((IRepeatableReadSemaphore)this).LockAndRelease(ref count);
                 return default;
             }
         }
@@ -271,7 +271,7 @@ Created:
         return x.NewWriterInternal(); // Success (Create)
     }
 
-    public TWriter? TryLock(Func<RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>, TObject?> predicate)
+    public TWriter? TryLock(Func<RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter>, TObject?> predicate)
     {
         TObject? x = default;
         int count = 0;
@@ -282,12 +282,12 @@ Created:
                 x = predicate(this);
                 if (x is null)
                 {// No object
-                    ((IRepeatableSemaphore)this).Release(ref count);
+                    ((IRepeatableReadSemaphore)this).Release(ref count);
                     return default;
                 }
                 else
                 {// Exists
-                    if (!((IRepeatableSemaphore)this).TryAcquire(ref count))
+                    if (!((IRepeatableReadSemaphore)this).TryAcquire(ref count))
                     {
                         return default;
                     }
@@ -301,11 +301,11 @@ Created:
         }
     }
 
-    public ValueTask<TWriter?> TryLockAsync(Func<RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>, TObject?> predicate) => this.TryLockAsync(predicate, ValueLinkGlobal.LockTimeoutInMilliseconds, default);
+    public ValueTask<TWriter?> TryLockAsync(Func<RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter>, TObject?> predicate) => this.TryLockAsync(predicate, ValueLinkGlobal.LockTimeoutInMilliseconds, default);
 
-    public ValueTask<TWriter?> TryLockAsync(Func<RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>, TObject?> predicate, int millisecondsTimeout) => this.TryLockAsync(predicate, millisecondsTimeout, default);
+    public ValueTask<TWriter?> TryLockAsync(Func<RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter>, TObject?> predicate, int millisecondsTimeout) => this.TryLockAsync(predicate, millisecondsTimeout, default);
 
-    public async ValueTask<TWriter?> TryLockAsync(Func<RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter>, TObject?> predicate, int millisecondsTimeout, CancellationToken cancellationToken)
+    public async ValueTask<TWriter?> TryLockAsync(Func<RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter>, TObject?> predicate, int millisecondsTimeout, CancellationToken cancellationToken)
     {
         TObject? x = default;
         int count = 0;
@@ -316,12 +316,12 @@ Created:
                 x = predicate(this);
                 if (x is null)
                 {// No object
-                    ((IRepeatableSemaphore)this).Release(ref count);
+                    ((IRepeatableReadSemaphore)this).Release(ref count);
                     return default;
                 }
                 else
                 {// Exists
-                    if (!((IRepeatableSemaphore)this).TryAcquire(ref count))
+                    if (!((IRepeatableReadSemaphore)this).TryAcquire(ref count))
                     {
                         return default;
                     }
@@ -333,7 +333,7 @@ Created:
                 if (x.State.IsInvalid())
                 {
                     x.WriterSemaphoreInternal.Exit();
-                    ((IRepeatableSemaphore)this).LockAndRelease(ref count);
+                    ((IRepeatableReadSemaphore)this).LockAndRelease(ref count);
                 }
                 else
                 {
@@ -342,7 +342,7 @@ Created:
             }
             else
             {// Timeout
-                ((IRepeatableSemaphore)this).LockAndRelease(ref count);
+                ((IRepeatableReadSemaphore)this).LockAndRelease(ref count);
                 return default;
             }
         }

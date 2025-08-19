@@ -4,9 +4,9 @@ namespace ValueLink;
 
 public static class RepeatableReadExtension
 {
-    public static bool IsValid(this RepeatableObjectState state)
-        => state == RepeatableObjectState.Valid;
+    public static bool IsValid(this RepeatableReadObjectState state)
+        => state == RepeatableReadObjectState.Valid;
 
-    public static bool IsInvalid(this RepeatableObjectState state)
-        => state != RepeatableObjectState.Valid;
+    public static bool IsInvalid(this RepeatableReadObjectState state)
+        => state != RepeatableReadObjectState.Valid;
 }

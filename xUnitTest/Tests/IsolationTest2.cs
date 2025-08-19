@@ -118,8 +118,8 @@ public class IsolationTest2
         using (g.LockObject.EnterScope())
         {
             g.Count.Is(numberOfItems);
-            ((IRepeatableSemaphore)g).State.Is(GoshujinState.Valid);
-            ((IRepeatableSemaphore)g).SemaphoreCount.Is(0);
+            ((IRepeatableReadSemaphore)g).State.Is(GoshujinState.Valid);
+            ((IRepeatableReadSemaphore)g).SemaphoreCount.Is(0);
         }
 
         // Task
