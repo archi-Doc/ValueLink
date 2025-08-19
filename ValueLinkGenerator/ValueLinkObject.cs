@@ -1762,7 +1762,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             goshujinInterface = $" : IGoshujin<{this.LocalName}>";
         }
 
-        if (this.PrimaryLink != null)
+        if (this.PrimaryLink is not null &&
+            this.ObjectAttribute?.Isolation != IsolationLevel.ReadCommitted)
         {// IEnumerable
             goshujinInterface += $", IEnumerable, IEnumerable<{this.LocalName}>";
         }
@@ -1818,7 +1819,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             if (this.ObjectAttribute.Isolation == IsolationLevel.ReadCommitted)
             {
-                this.GenerateGoshujin_ClearInternal(ssb, info);
+                this.GenerateGoshujin_IGoshujin(ssb, info);
                 ssb.AppendLine();
             }
             else
@@ -1826,7 +1827,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 this.GenerateGoshujin_Add(ssb, info);
                 this.GenerateGoshujin_Remove(ssb, info);
                 this.GenerateGoshujin_Clear(ssb, info);
-                this.GenerateGoshujin_ClearInternal(ssb, info);
+                this.GenerateGoshujin_IGoshujin(ssb, info);
                 ssb.AppendLine();
             }
 
@@ -1835,8 +1836,13 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             if (this.PrimaryLink is not null)
             {// IEnumerable, Count
                 ssb.AppendLine();
-                ssb.AppendLine($"IEnumerator<{this.LocalName}> IEnumerable<{this.LocalName}>.GetEnumerator() => this.{this.PrimaryLink.ChainName}.GetEnumerator();");
-                ssb.AppendLine($"System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => this.{this.PrimaryLink.ChainName}.GetEnumerator();");
+
+                if (this.ObjectAttribute.Isolation != IsolationLevel.ReadCommitted)
+                {
+                    ssb.AppendLine($"IEnumerator<{this.LocalName}> IEnumerable<{this.LocalName}>.GetEnumerator() => this.{this.PrimaryLink.ChainName}.GetEnumerator();");
+                    ssb.AppendLine($"System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => this.{this.PrimaryLink.ChainName}.GetEnumerator();");
+                }
+
                 ssb.AppendLine($"public int Count => this.{this.PrimaryLink.ChainName}.Count;");
             }
 
@@ -2877,7 +2883,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }*/
     }
 
-    internal void GenerateGoshujin_ClearInternal(ScopingStringBuilder ssb, GeneratorInformation info)
+    internal void GenerateGoshujin_IGoshujin(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         using (var scopeMethod = ssb.ScopeBrace($"void IGoshujin.ClearInternal()"))
         {
@@ -2895,6 +2901,15 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     }
                 }
             }
+        }
+
+        if (this.PrimaryLink is not null)
+        {
+            ssb.AppendLine($"IEnumerable IGoshujin.GetEnumerableInternal() => this.{this.PrimaryLink.ChainName};");
+        }
+        else
+        {
+            ssb.AppendLine($"IEnumerable IGoshujin.GetEnumerableInternal() => System.Array.Empty<object>();");
         }
     }
 

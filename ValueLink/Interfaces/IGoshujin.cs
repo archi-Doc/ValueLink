@@ -1,5 +1,7 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
+using System.Collections;
+
 namespace ValueLink;
 
 /// <summary>
@@ -12,6 +14,12 @@ public interface IGoshujin
     /// Note that if mutual exclusion is enabled, this must be called within a lock statement.
     /// </summary>
     void ClearInternal();
+
+    /// <summary>
+    /// Gets an <see cref="IEnumerable"/> that iterates through the objects managed by the Goshujin.
+    /// </summary>
+    /// <returns>An <see cref="IEnumerable"/> for the objects in the Goshujin.</returns>
+    IEnumerable GetEnumerableInternal();
 }
 
 /// <summary>

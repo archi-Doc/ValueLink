@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Arc.Threading;
@@ -101,5 +104,12 @@ internal class Program
             {
             }
         }
+
+        var array = g.GetArray();
+        foreach (var x in array)
+        {
+        }
     }
+
+    private IEnumerable Get() => System.Array.Empty<object>();
 }

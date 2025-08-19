@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using FastExpressionCompiler;
 using Tinyhand;
 
 #pragma warning disable SA1202 // Elements should be ordered by access
@@ -80,13 +81,17 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
 
     public TObject[] GetArray()
     {
-        TObject[] array;
         using (this.LockObject.EnterScope())
         {
-            array = (this is IEnumerable<TObject> e) ? e.ToArray() : Array.Empty<TObject>();
+            if (((IGoshujin)this).GetEnumerableInternal() is IEnumerable<TObject> enumerable)
+            {
+                return enumerable.ToArray();
+            }
+            else
+            {
+                return [];
+            }
         }
-
-        return array;
     }
 
     protected async Task<bool> GoshujinStoreData(StoreMode storeMode)

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -33,6 +34,9 @@ public class TestClassGeneric<T>
         {
             throw new NotImplementedException();
         }
+
+        IEnumerable IGoshujin.GetEnumerableInternal()
+            => System.Array.Empty<object>();
     }
 
     public TestClassGeneric(int id)

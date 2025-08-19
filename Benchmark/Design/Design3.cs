@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -134,6 +135,9 @@ public sealed class TestGoshujin4 : IGoshujin
     {
         throw new NotImplementedException();
     }
+
+    IEnumerable IGoshujin.GetEnumerableInternal()
+        => System.Array.Empty<object>();
 
     public LinkedListChain<TestClass4> IdChain { get; }
 }

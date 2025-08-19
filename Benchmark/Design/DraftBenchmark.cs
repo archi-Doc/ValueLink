@@ -2,6 +2,7 @@
 
 using System;
 using System.Buffers;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -87,6 +88,9 @@ public sealed class TestGoshujin : IGoshujin
     {
         throw new NotImplementedException();
     }
+
+    IEnumerable IGoshujin.GetEnumerableInternal()
+            => System.Array.Empty<object>();
 
     public ListChain<TestClass> IdChain { get; }
 }
