@@ -16,6 +16,8 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
     where TObject : class, IValueLinkObjectInternal<TGoshujin, TObject>, ILockableData<TData>
     where TGoshujin : class, IGoshujin<TObject>
 {
+    public abstract Lock LockObject { get; }
+
     protected abstract TObject? FindFirst(TKey key);
 
     protected abstract TObject NewObject(TKey key);
@@ -34,6 +36,17 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
 
         return obj.TryGet();
     }
+
+    /*public ValueTask<TData?> GetOrCreate(TKey key)
+    {
+        TObject? obj;
+        using (this.LockObject.EnterScope())
+        {
+            obj = this.FindFirst(key) ?? this.NewObject(key);
+        }
+
+        return obj.TryGet();
+    }*/
 
     public ValueTask<DataScope<TData>> TryLock(TKey key, LockMode lockMode, TimeSpan timeout)
     {
@@ -74,8 +87,6 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
 
         return array;
     }
-
-    public abstract Lock LockObject { get; }
 
     protected async Task<bool> GoshujinStoreData(StoreMode storeMode)
     {

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ValueLink;
@@ -25,10 +26,13 @@ public interface ILockableData<TData>
     /// <summary>
     /// Attempts to acquire a lock on the data resource asynchronously.
     /// </summary>
-    /// <param name="timeout">The maximum duration to wait for acquiring the lock before timing out.</param>
+    /// <param name="timeout">The maximum time to wait for the lock. If <see cref="TimeSpan.Zero"/>, the method returns immediately.</param>
+    /// <param name="cancellationToken">
+    /// A <see cref="CancellationToken"/> to observe while waiting to acquire the lock.
+    /// </param>
     /// <returns>
     /// A <see cref="ValueTask"/> containing a tuple with the <see cref="DataLockResult"/><br/>
     /// indicating the outcome of the lock attempt, and the locked data if successful.
     /// </returns>
-    ValueTask<DataScope<TData>> TryLock(TimeSpan timeout);
+    ValueTask<DataScope<TData>> TryLock(TimeSpan timeout, CancellationToken cancellationToken);
 }
