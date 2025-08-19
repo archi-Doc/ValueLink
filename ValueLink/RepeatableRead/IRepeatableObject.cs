@@ -1,5 +1,6 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Arc.Threading;
@@ -42,7 +43,7 @@ public interface IRepeatableObject<TWriter>
     }
 
     ValueTask<TWriter?> TryLockAsyncInternal(IRepeatableSemaphore? semaphore)
-        => this.TryLockAsyncInternal(semaphore, ValueLinkGlobal.LockTimeout, default);
+        => this.TryLockAsyncInternal(semaphore, ValueLinkGlobal.LockTimeoutInMilliseconds, default);
 
     ValueTask<TWriter?> TryLockAsyncInternal(IRepeatableSemaphore? semaphore, int millisecondsTimeout)
         => this.TryLockAsyncInternal(semaphore, millisecondsTimeout, default);
@@ -54,7 +55,7 @@ public interface IRepeatableObject<TWriter>
             return null;
         }
 
-        var entered = await this.WriterSemaphoreInternal.EnterAsync(millisecondsTimeout, cancellationToken).ConfigureAwait(false);
+        var entered = await this.WriterSemaphoreInternal.EnterAsync(TimeSpan.FromMilliseconds(millisecondsTimeout), cancellationToken).ConfigureAwait(false);
         if (!entered)
         {
             semaphore?.LockAndReleaseOne();
