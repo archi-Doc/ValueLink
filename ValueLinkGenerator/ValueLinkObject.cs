@@ -1854,8 +1854,14 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 ssb.AppendLine($"public {overridePrefix}SemaphoreLock LockObject => this.lockObject;");
                 ssb.AppendLine($"SemaphoreLock {ValueLinkBody.ISerializableSemaphore}.LockObject => this.lockObject;");
             }
-            else if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddReadCommittedSemaphore) ||
-this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddRepeatableReadSemaphore))
+            else if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddReadCommittedSemaphore))
+            {
+                var overridePrefix = (this.RepeatableReadGoshujin is null && this.SerializableGoshujin is null) ? string.Empty : "override ";
+                ssb.AppendLine("private Lock lockObject = new();");
+                ssb.AppendLine($"public {overridePrefix}Lock LockObject => this.lockObject;");
+                ssb.AppendLine($"Lock {ValueLinkBody.IReadCommittedSemaphore}.LockObject => this.lockObject;");
+            }
+            else if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddRepeatableReadSemaphore))
             {
                 var overridePrefix = (this.RepeatableReadGoshujin is null && this.SerializableGoshujin is null) ? string.Empty : "override ";
                 ssb.AppendLine("private Lock lockObject = new();");
