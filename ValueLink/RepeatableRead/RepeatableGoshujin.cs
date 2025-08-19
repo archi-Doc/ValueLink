@@ -247,7 +247,7 @@ Created:
                 }
             }
 
-            if (await x.WriterSemaphoreInternal.EnterAsync(millisecondsTimeout, cancellationToken).ConfigureAwait(false))
+            if (await x.WriterSemaphoreInternal.EnterAsync(TimeSpan.FromMilliseconds(millisecondsTimeout), cancellationToken).ConfigureAwait(false))
             {
                 if (x.State.IsInvalid())
                 {
@@ -328,7 +328,7 @@ Created:
                 }
             }
 
-            if (await x.WriterSemaphoreInternal.EnterAsync(millisecondsTimeout, cancellationToken).ConfigureAwait(false))
+            if (await x.WriterSemaphoreInternal.EnterAsync(TimeSpan.FromMilliseconds(millisecondsTimeout), cancellationToken).ConfigureAwait(false))
             {
                 if (x.State.IsInvalid())
                 {
