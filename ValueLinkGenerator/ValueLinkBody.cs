@@ -193,7 +193,7 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
         category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor Error_ReadCommitted = new DiagnosticDescriptor(
-        id: "CLG034", title: "Integrality tinyhand", messageFormat: "A class with Read Committed isolation must inherit from ILockableData<TData>",
+        id: "CLG034", title: "Read committed", messageFormat: "The object must inherit from ILockableData<TData> when Read Committed isolation is specified",
         category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
     public ValueLinkBody(GeneratorExecutionContext context)
