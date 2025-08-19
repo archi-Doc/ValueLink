@@ -22,7 +22,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
 
     protected abstract TObject NewObject(TKey key);
 
-    public ValueTask<TData?> TryGet(TKey key)
+    public ValueTask<TData?> TryGet(TKey key, CancellationToken cancellationToken = default)
     {
         TObject? obj;
         using (this.LockObject.EnterScope())
@@ -34,7 +34,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
             }
         }
 
-        return obj.TryGet();
+        return obj.TryGet(ValueLinkGlobal.LockTimeout, cancellationToken);
     }
 
     /*public ValueTask<TData?> GetOrCreate(TKey key)
@@ -48,7 +48,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
         return obj.TryGet();
     }*/
 
-    public ValueTask<DataScope<TData>> TryLock(TKey key, LockMode lockMode, TimeSpan timeout)
+    public ValueTask<DataScope<TData>> TryLock(TKey key, LockMode lockMode, CancellationToken cancellationToken = default)
     {
         TObject? obj;
         using (this.LockObject.EnterScope())
@@ -74,7 +74,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
             }
         }
 
-        return obj.TryLock(timeout);
+        return obj.TryLock(ValueLinkGlobal.LockTimeout, cancellationToken);
     }
 
     public TObject[] GetArray()

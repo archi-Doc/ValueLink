@@ -18,10 +18,14 @@ public interface ILockableData<TData>
     /// <summary>
     /// Attempts to retrieve the data instance if available, without acquiring a lock.
     /// </summary>
+    /// <param name="timeout">The maximum time to wait for the lock. If <see cref="TimeSpan.Zero"/>, the method returns immediately.</param>
+    /// <param name="cancellationToken">
+    /// A <see cref="CancellationToken"/> to observe while waiting to acquire the lock.
+    /// </param>
     /// <returns>
     /// A <see cref="ValueTask"/> containing the data instance of type <typeparamref name="TData"/> if available; otherwise <c>null</c>.
     /// </returns>
-    ValueTask<TData?> TryGet();
+    ValueTask<TData?> TryGet(TimeSpan timeout, CancellationToken cancellationToken);
 
     /// <summary>
     /// Attempts to acquire a lock on the data resource asynchronously.

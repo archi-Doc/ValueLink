@@ -42,7 +42,7 @@ public interface IRepeatableObject<TWriter>
     }
 
     ValueTask<TWriter?> TryLockAsyncInternal(IRepeatableSemaphore? semaphore)
-        => this.TryLockAsyncInternal(semaphore, ValueLinkGlobal.LockTimeout, default);
+        => this.TryLockAsyncInternal(semaphore, ValueLinkGlobal.LockTimeoutInMilliseconds, default);
 
     ValueTask<TWriter?> TryLockAsyncInternal(IRepeatableSemaphore? semaphore, int millisecondsTimeout)
         => this.TryLockAsyncInternal(semaphore, millisecondsTimeout, default);
