@@ -52,6 +52,7 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
     public static readonly string ValueLinkInternalHelper = "ValueLinkInternalHelper";
     public static readonly string IRepeatableReadSemaphore = "ValueLink.IRepeatableReadSemaphore";
     public static readonly string ISerializableSemaphore = "ValueLink.ISerializableSemaphore";
+    public static readonly string IReadCommittedSemaphore = "ValueLink.IReadCommittedSemaphore";
     public static readonly string IIntegralityObject = "IIntegralityObject";
     public static readonly string IIntegralityGoshujin = "IIntegralityGoshujin";
     public static readonly string Integrality = "ValueLink.Integrality.IIntegralityInternal";

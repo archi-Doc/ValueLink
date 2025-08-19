@@ -41,12 +41,13 @@ public enum ValueLinkObjectFlag
     StructualEnabled = 1 << 19, // Structual
     IntegralityEnabled = 1 << 20, // Integrality
     AddSerializableSemaphore = 1 << 21,
-    AddRepeatableReadSemaphore = 1 << 22,
-    AddGoshujinProperty = 1 << 23,
-    EquatableObject = 1 << 24, // Has IEquatableObject
-    AddValueProperty = 1 << 25, // AddValue property
-    HasKeyOrKeyAsName = 1 << 26, // Has KeyAttribute or KeyAsNameAttribute
-    NoDefaultConstructor = 1 << 27, // No default constructor
+    AddReadCommittedSemaphore = 1 << 22,
+    AddRepeatableReadSemaphore = 1 << 23,
+    AddGoshujinProperty = 1 << 24,
+    EquatableObject = 1 << 25, // Has IEquatableObject
+    AddValueProperty = 1 << 26, // AddValue property
+    HasKeyOrKeyAsName = 1 << 27, // Has KeyAttribute or KeyAsNameAttribute
+    NoDefaultConstructor = 1 << 28, // No default constructor
 }
 
 public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
@@ -264,8 +265,13 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 this.ObjectFlag |= ValueLinkObjectFlag.AddSerializableSemaphore;
                 this.ObjectFlag |= ValueLinkObjectFlag.AddGoshujinProperty;
             }
+            else if (this.ObjectAttribute.Isolation == IsolationLevel.ReadCommitted)
+            {// Read committed
+                this.ObjectFlag |= ValueLinkObjectFlag.AddReadCommittedSemaphore;
+                this.ObjectFlag |= ValueLinkObjectFlag.AddGoshujinProperty;
+            }
             else if (this.ObjectAttribute.Isolation == IsolationLevel.RepeatableRead)
-            {// Repeatable read
+            {// Repeatable reads
                 this.ObjectFlag |= ValueLinkObjectFlag.AddRepeatableReadSemaphore;
                 this.ObjectFlag |= ValueLinkObjectFlag.AddGoshujinProperty;
             }
@@ -948,7 +954,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 }
             }
             else if (this.ObjectAttribute.Isolation == IsolationLevel.Serializable)
-            {
+            {//
                 this.SerializableGoshujin = $"{ValueLinkBody.SerializableGoshujin}<{this.LocalName}, {this.ObjectAttribute.GoshujinClass}>";
             }
 
@@ -1768,8 +1774,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         {// ISerializableSemaphore
             goshujinInterface += $", {ValueLinkBody.ISerializableSemaphore}";
         }
-
-        if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddRepeatableReadSemaphore))
+        else if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddReadCommittedSemaphore))
+        {// IReadCommittedSemaphore
+            goshujinInterface += $", {ValueLinkBody.IReadCommittedSemaphore}";
+        }
+        else if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddRepeatableReadSemaphore))
         {// IRepeatableReadSemaphore
             goshujinInterface += $", {ValueLinkBody.IRepeatableReadSemaphore}";
         }
@@ -1845,8 +1854,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 ssb.AppendLine($"public {overridePrefix}SemaphoreLock LockObject => this.lockObject;");
                 ssb.AppendLine($"SemaphoreLock {ValueLinkBody.ISerializableSemaphore}.LockObject => this.lockObject;");
             }
-
-            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddRepeatableReadSemaphore))
+            else if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddReadCommittedSemaphore) ||
+this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddRepeatableReadSemaphore))
             {
                 var overridePrefix = (this.RepeatableReadGoshujin is null && this.SerializableGoshujin is null) ? string.Empty : "override ";
                 ssb.AppendLine("private Lock lockObject = new();");
@@ -2208,6 +2217,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         this.GenerateGosjujin_Structual_ReadRecord(ssb, info);
 
         if (this.ObjectAttribute?.Isolation == IsolationLevel.Serializable ||
+            this.ObjectAttribute?.Isolation == IsolationLevel.ReadCommitted ||
             this.ObjectAttribute?.Isolation == IsolationLevel.RepeatableRead)
         {
             // this.GenerateGosjujin_Structual_Save(ssb, info);
@@ -2826,6 +2836,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     internal ScopingStringBuilder.IScope? ScopeLock(ScopingStringBuilder ssb, string objectName)
     {
         if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSerializableSemaphore) ||
+            this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddReadCommittedSemaphore) ||
             this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddRepeatableReadSemaphore))
         {
             return ssb.ScopeBrace($"using ({objectName}.LockObject.EnterScope())");
