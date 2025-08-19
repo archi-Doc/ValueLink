@@ -2,7 +2,6 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Threading.Tasks;
 
 namespace ValueLink;
 
@@ -16,8 +15,8 @@ public record struct DataScope<TData> : IDisposable
     where TData : notnull
 {
     public readonly DataLockResult Result;
-    private readonly IDataUnlockable dataUnlock;
     private TData? data;
+    private IDataUnlockable? unlocker;
 
     /// <summary>
     /// Gets the scoped data instance while the scope is valid; otherwise <c>null</c> after disposal or if lock failed.
@@ -32,17 +31,28 @@ public record struct DataScope<TData> : IDisposable
     public bool IsValid => this.data is not null;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="DataScope{TData}"/> struct.<br/>
-    /// Associates the scope with a lock result, an unlock handler, and the scoped data instance.
+    /// Initializes a new instance of the <see cref="DataScope{TData}"/> struct with a valid data instance and unlocker.<br/>
+    /// The scope is considered valid and will automatically release the lock upon disposal.
     /// </summary>
-    /// <param name="result">The result of the data lock attempt.</param>
-    /// <param name="dataUnlock">The unlock handler responsible for releasing the lock.</param>
-    /// <param name="data">The data instance to be scoped; may be <c>null</c> if the lock failed.</param>
-    public DataScope(DataLockResult result, IDataUnlockable dataUnlock, TData? data)
+    /// <param name="data">The data instance to be scoped and locked.</param>
+    /// <param name="unlocker">The unlocker responsible for releasing the lock on the data resource.</param>
+    public DataScope(TData data, IDataUnlockable unlocker)
+    {
+        this.Result = DataLockResult.Success;
+        this.unlocker = unlocker;
+        this.data = data;
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DataScope{TData}"/> struct with a specified lock result.<br/>
+    /// This constructor is used when the lock attempt did not yield a valid data instance.
+    /// </summary>
+    /// <param name="result">
+    /// The result of the data lock attempt, indicating the reason for failure or status.
+    /// </param>
+    public DataScope(DataLockResult result)
     {
         this.Result = result;
-        this.dataUnlock = dataUnlock;
-        this.data = data;
     }
 
     /// <summary>
@@ -51,10 +61,11 @@ public record struct DataScope<TData> : IDisposable
     /// </summary>
     public void Dispose()
     {
-        if (this.data is not null)
+        this.data = default;
+        if (this.unlocker is not null)
         {
-            this.dataUnlock.Unlock();
-            this.data = default;
+            this.unlocker.Unlock();
+            this.unlocker = default;
         }
     }
 }

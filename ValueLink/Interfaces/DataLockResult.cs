@@ -13,11 +13,6 @@ public enum DataLockResult
     Success,
 
     /// <summary>
-    /// The target data has not been loaded and is therefore unavailable for locking.
-    /// </summary>
-    NotLoaded,
-
-    /// <summary>
     /// The lock attempt failed because the operation timed out.
     /// </summary>
     Timeout,
@@ -26,4 +21,9 @@ public enum DataLockResult
     /// The lock attempt is no longer valid because the resource has become obsolete or invalidated.
     /// </summary>
     Obsolete,
+
+    /// <summary>
+    /// Failed to acquire lock due to the storage engine being shut down.
+    /// </summary>
+    Rip,
 }
