@@ -57,7 +57,7 @@ public partial class LockedDataMock<TData> : ILockableData<TData>, IUnlockableDa
 
 [TinyhandObject(Structual = true)]
 [ValueLinkObject(Isolation = IsolationLevel.ReadCommitted)]
-public partial class SpClassPoint : LockedDataMock<SpClass>
+public partial class SpClassPoint // : LockedDataMock<SpClass>
 {// Value, Link
     [Key(1)]
     [Link(Unique = true, Primary = true, Type = ChainType.Unordered)]

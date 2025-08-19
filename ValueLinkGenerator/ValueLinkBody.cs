@@ -58,6 +58,7 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
     public static readonly string Integrality = "ValueLink.Integrality.IIntegralityInternal";
     public static readonly string KeyHashDictionaryName = "__keyhash_dictionary__";
     public static readonly string UnsafeConstructorName = "UnsafeConstructor";
+    public static readonly string ILockableData = "ValueLink.ILockableData<TData>";
 
     public static readonly DiagnosticDescriptor Error_NotPartial = new DiagnosticDescriptor(
         id: "CLG001", title: "Not a partial class/struct", messageFormat: "ValueLinkObject '{0}' is not a partial class/struct",
@@ -189,6 +190,10 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
 
     public static readonly DiagnosticDescriptor Error_IntegralityTinyhand = new DiagnosticDescriptor(
         id: "CLG033", title: "Integrality tinyhand", messageFormat: "The integrality object must have TinyhandObject attribute",
+        category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor Error_ReadCommitted = new DiagnosticDescriptor(
+        id: "CLG034", title: "Integrality tinyhand", messageFormat: "A class with Read Committed isolation must inherit from ILockableData<TData>",
         category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
     public ValueLinkBody(GeneratorExecutionContext context)

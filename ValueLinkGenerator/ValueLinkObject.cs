@@ -108,7 +108,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     public string? SerializableGoshujin;
 
-    public ValueLinkObject? ClosedGenericHint { get; private set; }
+    public ValueLinkObject? TargetDataObject { get; private set; }
 
     internal Automata<ValueLinkObject, Linkage>? DeserializeChainAutomata { get; private set; }
 
@@ -162,17 +162,6 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         {
             return;
         }*/
-
-        // Closed generic type is not supported.
-        if (this.Generics_Kind == VisceralGenericsKind.ClosedGeneric)
-        {
-            if (this.OriginalDefinition != null && this.OriginalDefinition.ClosedGenericHint == null)
-            {
-                this.OriginalDefinition.ClosedGenericHint = this;
-            }
-
-            return;
-        }
 
         foreach (var attribute in this.AllAttributes)
         {
@@ -502,6 +491,17 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             }
 
             baseObject = baseObject.BaseObject;
+        }
+
+        if (this.ObjectAttribute?.Isolation == IsolationLevel.ReadCommitted)
+        {// Read committed
+            this.TargetDataObject = this.AllInterfaceObjects.FirstOrDefault(x => x.OriginalDefinition?.FullName == ValueLinkBody.ILockableData)?.Generics_Arguments[0];
+
+            if (this.TargetDataObject is null)
+            {
+                this.Body.ReportDiagnostic(ValueLinkBody.Error_ReadCommitted, this.Location);
+                return;
+            }
         }
 
         // ITinyhandCustomJournalImplementation
