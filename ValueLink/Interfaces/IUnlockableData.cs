@@ -8,6 +8,11 @@ namespace ValueLink;
 public interface IUnlockableData
 {
     /// <summary>
+    /// Gets or sets a value indicating whether the data resource is protected from deletion.
+    /// </summary>
+    bool IsProtected { get; internal set; }
+
+    /// <summary>
     /// Releases the lock on the data resource.
     /// </summary>
     void Unlock();

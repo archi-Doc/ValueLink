@@ -14,9 +14,9 @@ namespace ValueLink;
 public record struct DataScope<TData> : IDisposable
     where TData : notnull
 {
-    public readonly DataLockResult Result;
+    public readonly DataScopeResult Result;
     private TData? data;
-    private IUnlockableData? unlocker;
+    private ILockableData<TData>? lockableData;
 
     /// <summary>
     /// Gets the scoped data instance while the scope is valid; otherwise <c>null</c> after disposal or if lock failed.
@@ -35,11 +35,11 @@ public record struct DataScope<TData> : IDisposable
     /// The scope is considered valid and will automatically release the lock upon disposal.
     /// </summary>
     /// <param name="data">The data instance to be scoped and locked.</param>
-    /// <param name="unlocker">The unlocker responsible for releasing the lock on the data resource.</param>
-    public DataScope(TData data, IUnlockableData unlocker)
+    /// <param name="lockableData">The data instance responsible for releasing the lock on the data resource.</param>
+    public DataScope(TData data, ILockableData<TData> lockableData)
     {
-        this.Result = DataLockResult.Success;
-        this.unlocker = unlocker;
+        this.Result = DataScopeResult.Success;
+        this.lockableData = lockableData;
         this.data = data;
     }
 
@@ -50,7 +50,7 @@ public record struct DataScope<TData> : IDisposable
     /// <param name="result">
     /// The result of the data lock attempt, indicating the reason for failure or status.
     /// </param>
-    public DataScope(DataLockResult result)
+    public DataScope(DataScopeResult result)
     {
         this.Result = result;
     }
@@ -62,10 +62,15 @@ public record struct DataScope<TData> : IDisposable
     public void Dispose()
     {
         this.data = default;
-        if (this.unlocker is not null)
+        if (this.lockableData is not null)
         {
-            this.unlocker.Unlock();
-            this.unlocker = default;
+            if (this.lockableData.State == LockableDataState.Protected)
+            {
+                this.lockableData.State = LockableDataState.Unprotected;
+            }
+
+            this.lockableData.Unlock();
+            this.lockableData = default;
         }
     }
 }

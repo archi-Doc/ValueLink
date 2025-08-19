@@ -5,7 +5,7 @@ namespace ValueLink;
 /// <summary>
 /// Represents the result of a data lock attempt.
 /// </summary>
-public enum DataLockResult
+public enum DataScopeResult
 {
     /// <summary>
     /// The lock was successfully acquired.
