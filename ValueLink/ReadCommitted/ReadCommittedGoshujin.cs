@@ -66,7 +66,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
             {// Object not found
                 if (lockMode == LockMode.Get)
                 {// Get
-                    return ValueTask.FromResult(new DataScope<TData>(DataLockResult.NotFound));
+                    return ValueTask.FromResult(new DataScope<TData>(DataScopeResult.NotFound));
                 }
                 else
                 {// Create or GetOrCreate
@@ -78,15 +78,22 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
             {// Object found
                 if (lockMode == LockMode.Create)
                 {// Create
-                    return ValueTask.FromResult(new DataScope<TData>(DataLockResult.AlreadyExists));
+                    return ValueTask.FromResult(new DataScope<TData>(DataScopeResult.AlreadyExists));
                 }
             }
+
+            if (obj.State == LockableDataState.Deleted)
+            {// Object has been deleted
+                return ValueTask.FromResult(new DataScope<TData>(DataScopeResult.NotFound));
+            }
+
+            obj.State = LockableDataState.Protected; // Set the object as protected to prevent deletion while locked.
         }
 
         return obj.TryLock(ValueLinkGlobal.LockTimeout, cancellationToken);
     }
 
-    public DataLockResult Delete(TKey key, CancellationToken cancellationToken = default)
+    public DataScopeResult Delete(TKey key, CancellationToken cancellationToken = default)
     {
         TObject? obj;
         using (this.LockObject.EnterScope())
@@ -94,7 +101,16 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
             obj = this.FindFirst(key);
             if (obj is null)
             {// Object not found
-                return DataLockResult.NotFound;
+                return DataScopeResult.NotFound;
+            }
+
+            if (obj.State == LockableDataState.Protected)
+            {
+                return DataScopeResult.Timeout;
+            }
+            else
+            {
+                obj.State = LockableDataState.Deleted; // Mark the object as deleted.
             }
 
             TObject.RemoveFromGoshujin(obj, (TGoshujin)this, true, true);
@@ -105,7 +121,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
             y.Delete();
         }
 
-        return DataLockResult.Success;
+        return DataScopeResult.Success;
     }
 
     public TObject[] GetArray()

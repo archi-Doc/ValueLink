@@ -9,11 +9,14 @@ using ValueLink;
 namespace Playground;
 
 [TinyhandObject(Structual = true)]
-public partial class LockedDataMock<TData> : ILockableData<TData>, IUnlockableData
+public partial class LockedDataMock<TData> : ILockableData<TData> //, IUnlockableData
     where TData : notnull
 {
     private readonly SemaphoreLock lockObject = new();
     private TData? data;
+
+    // public LockableDataState State { get; protected set; }
+    LockableDataState ILockableData<TData>.State { get; set; }
 
     public LockedDataMock()
     {
@@ -23,6 +26,8 @@ public partial class LockedDataMock<TData> : ILockableData<TData>, IUnlockableDa
     {
         this.data = data;
     }
+
+
 
     public void SetData(TData data)
     {
@@ -42,7 +47,7 @@ public partial class LockedDataMock<TData> : ILockableData<TData>, IUnlockableDa
         await this.lockObject.EnterAsync(timeout, cancellationToken).ConfigureAwait(false);
         if (this.data is null)
         {
-            return new(DataLockResult.NotFound);
+            return new(DataScopeResult.NotFound);
         }
         else
         {
@@ -87,6 +92,7 @@ internal class Program
     {
         Console.WriteLine("Hello, World");
 
+        var a = new SpClassPoint();
         var g = new SpClassPoint.GoshujinClass();
         var tc = await g.TryGet(123);
         using (var scope = await g.TryLock(123, LockMode.GetOrCreate))
@@ -102,6 +108,7 @@ internal class Program
         {
             if (scope.IsValid)
             {
+
             }
         }
 
