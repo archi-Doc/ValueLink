@@ -2,6 +2,7 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 
 namespace ValueLink;
 
@@ -15,7 +16,7 @@ public record struct DataScope<TData> : IDisposable
     where TData : notnull
 {
     public readonly DataLockResult Result;
-    private readonly IDataUnlock dataUnlock;
+    private readonly IDataUnlockable dataUnlock;
     private TData? data;
 
     /// <summary>
@@ -37,7 +38,7 @@ public record struct DataScope<TData> : IDisposable
     /// <param name="result">The result of the data lock attempt.</param>
     /// <param name="dataUnlock">The unlock handler responsible for releasing the lock.</param>
     /// <param name="data">The data instance to be scoped; may be <c>null</c> if the lock failed.</param>
-    public DataScope(DataLockResult result, IDataUnlock dataUnlock, TData? data)
+    public DataScope(DataLockResult result, IDataUnlockable dataUnlock, TData? data)
     {
         this.Result = result;
         this.dataUnlock = dataUnlock;

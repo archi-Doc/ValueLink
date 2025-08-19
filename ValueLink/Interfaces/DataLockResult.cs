@@ -13,6 +13,11 @@ public enum DataLockResult
     Success,
 
     /// <summary>
+    /// The target data has not been loaded and is therefore unavailable for locking.
+    /// </summary>
+    NotLoaded,
+
+    /// <summary>
     /// The lock attempt failed because the operation timed out.
     /// </summary>
     Timeout,
