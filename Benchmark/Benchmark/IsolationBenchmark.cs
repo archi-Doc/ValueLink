@@ -29,7 +29,7 @@ public class IsolationBenchmark
         this.goshujin = new();
         for (var i = 0; i < 10; i++)
         {
-            using (var w = this.goshujin.TryLock(i, TryLockMode.Create))
+            using (var w = this.goshujin.TryLock(i, LockMode.Create))
             {
                 if (w is not null)
                 {

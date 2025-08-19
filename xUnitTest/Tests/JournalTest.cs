@@ -341,7 +341,7 @@ public class JournalTest
             w!.Commit();
         }
 
-        using (var w = g2.TryLock(new JournalIdentifier(20), TryLockMode.GetOrCreate))
+        using (var w = g2.TryLock(new JournalIdentifier(20), LockMode.GetOrCreate))
         {
             w!.Name = "20";
             w!.Id = new(222);
@@ -371,7 +371,7 @@ public class JournalTest
             g2.Remove(r);
         }
 
-        using (var w = g2.TryLock(new JournalIdentifier(5), TryLockMode.GetOrCreate))
+        using (var w = g2.TryLock(new JournalIdentifier(5), LockMode.GetOrCreate))
         {
             if (w is not null)
             {
@@ -409,7 +409,7 @@ public class JournalTest
 
         for (var i = 0; i < 100; i++)
         {
-            using (var w = g2.TryLock(new JournalIdentifier(i), TryLockMode.GetOrCreate))
+            using (var w = g2.TryLock(new JournalIdentifier(i), LockMode.GetOrCreate))
             {
                 if (w is not null)
                 {
@@ -446,7 +446,7 @@ public class JournalTest
                 w.Children.Add(new(new(60), "six"));
                 w.Commit();
 
-                using (var w2 = w.Children.TryLock(new JournalIdentifier(10), TryLockMode.GetOrCreate))
+                using (var w2 = w.Children.TryLock(new JournalIdentifier(10), LockMode.GetOrCreate))
                 {
                     if (w2 is not null)
                     {

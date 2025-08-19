@@ -138,7 +138,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IR
         }
     }
 
-    public TWriter? TryLock(TKey key, TryLockMode mode = TryLockMode.Get)
+    public TWriter? TryLock(TKey key, LockMode mode = LockMode.Get)
     {
         TObject? x = default;
         int count = 0;
@@ -149,7 +149,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IR
                 x = this.FindFirst(key);
                 if (x is null)
                 {// No object
-                    if (mode == TryLockMode.Get)
+                    if (mode == LockMode.Get)
                     {// Get
                         ((IRepeatableSemaphore)this).Release(ref count);
                         return default;
@@ -168,7 +168,7 @@ public abstract class RepeatableGoshujin<TKey, TObject, TGoshujin, TWriter> : IR
                 }
                 else
                 {// Exists
-                    if (mode == TryLockMode.Create)
+                    if (mode == LockMode.Create)
                     {// Create
                         ((IRepeatableSemaphore)this).Release(ref count);
                         return default;
@@ -196,11 +196,11 @@ Created:
         return x.NewWriterInternal(); // Success (Create)
     }
 
-    public ValueTask<TWriter?> TryLockAsync(TKey key, TryLockMode mode = TryLockMode.Get) => this.TryLockAsync(key, ValueLinkGlobal.LockTimeoutInMilliseconds, default, mode);
+    public ValueTask<TWriter?> TryLockAsync(TKey key, LockMode mode = LockMode.Get) => this.TryLockAsync(key, ValueLinkGlobal.LockTimeoutInMilliseconds, default, mode);
 
-    public ValueTask<TWriter?> TryLockAsync(TKey key, int millisecondsTimeout, TryLockMode mode = TryLockMode.Get) => this.TryLockAsync(key, millisecondsTimeout, default, mode);
+    public ValueTask<TWriter?> TryLockAsync(TKey key, int millisecondsTimeout, LockMode mode = LockMode.Get) => this.TryLockAsync(key, millisecondsTimeout, default, mode);
 
-    public async ValueTask<TWriter?> TryLockAsync(TKey key, int millisecondsTimeout, CancellationToken cancellationToken, TryLockMode mode = TryLockMode.Get)
+    public async ValueTask<TWriter?> TryLockAsync(TKey key, int millisecondsTimeout, CancellationToken cancellationToken, LockMode mode = LockMode.Get)
     {
         TObject? x = default;
         int count = 0;
@@ -211,7 +211,7 @@ Created:
                 x = this.FindFirst(key);
                 if (x is null)
                 {// No object
-                    if (mode == TryLockMode.Get)
+                    if (mode == LockMode.Get)
                     {// Get
                         ((IRepeatableSemaphore)this).Release(ref count);
                         return default;
@@ -230,7 +230,7 @@ Created:
                 }
                 else
                 {// Exists
-                    if (mode == TryLockMode.Create)
+                    if (mode == LockMode.Create)
                     {// Create
                         ((IRepeatableSemaphore)this).Release(ref count);
                         return default;
