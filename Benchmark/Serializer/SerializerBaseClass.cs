@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using ValueLink;
 using Tinyhand;
 using Tinyhand.IO;
+using System.Collections;
 
 namespace Benchmark.Serializer;
 
@@ -210,6 +211,9 @@ public partial class SerializerBaseClass
         {
             throw new NotImplementedException();
         }
+
+        IEnumerable IGoshujin.GetEnumerableInternal()
+            => System.Array.Empty<object>();
     }
 
     public SerializerBaseClass()

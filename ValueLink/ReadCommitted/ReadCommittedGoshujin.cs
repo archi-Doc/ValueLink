@@ -14,13 +14,32 @@ namespace ValueLink;
 public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : IReadCommittedSemaphore
     where TData : notnull
     where TObject : class, IValueLinkObjectInternal<TGoshujin, TObject>, ILockableData<TData>
-    where TGoshujin : class, IGoshujin<TObject>
+    where TGoshujin : ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin>, IGoshujin
 {
     public abstract Lock LockObject { get; }
 
     protected abstract TObject? FindFirst(TKey key);
 
     protected abstract TObject NewObject(TKey key);
+
+    /// <summary>
+    /// Executes the specified <paramref name="action"/> for every owned object.<br/>
+    /// The specified delegate is invoked within mutual exclusion (inside a lock).
+    /// </summary>
+    /// <param name="action">The delegate to execute per item.</param>
+    public void ForEach(Action<TObject> action)
+    {
+        using (this.LockObject.EnterScope())
+        {
+            if (((IGoshujin)this).GetEnumerableInternal() is IEnumerable<TObject> enumerable)
+            {
+                foreach (var x in enumerable)
+                {
+                    action(x);
+                }
+            }
+        }
+    }
 
     public ValueTask<TData?> TryGet(TKey key, CancellationToken cancellationToken = default)
     {
@@ -37,17 +56,6 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
         return obj.TryGet(ValueLinkGlobal.LockTimeout, cancellationToken);
     }
 
-    /*public ValueTask<TData?> GetOrCreate(TKey key)
-    {
-        TObject? obj;
-        using (this.LockObject.EnterScope())
-        {
-            obj = this.FindFirst(key) ?? this.NewObject(key);
-        }
-
-        return obj.TryGet();
-    }*/
-
     public ValueTask<DataScope<TData>> TryLock(TKey key, LockMode lockMode, CancellationToken cancellationToken = default)
     {
         TObject? obj;
@@ -63,6 +71,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
                 else
                 {// Create or GetOrCreate
                     obj = this.NewObject(key);
+                    TObject.AddToGoshujin(obj, (TGoshujin)this, true);
                 }
             }
             else
@@ -77,15 +86,41 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
         return obj.TryLock(ValueLinkGlobal.LockTimeout, cancellationToken);
     }
 
-    public TObject[] GetArray()
+    public DataLockResult Delete(TKey key, CancellationToken cancellationToken = default)
     {
-        TObject[] array;
+        TObject? obj;
         using (this.LockObject.EnterScope())
         {
-            array = (this is IEnumerable<TObject> e) ? e.ToArray() : Array.Empty<TObject>();
+            obj = this.FindFirst(key);
+            if (obj is null)
+            {// Object not found
+                return DataLockResult.NotFound;
+            }
+
+            TObject.RemoveFromGoshujin(obj, (TGoshujin)this, true, true);
         }
 
-        return array;
+        if (obj is IStructualObject y)
+        {
+            y.Delete();
+        }
+
+        return DataLockResult.Success;
+    }
+
+    public TObject[] GetArray()
+    {
+        using (this.LockObject.EnterScope())
+        {
+            if (((IGoshujin)this).GetEnumerableInternal() is IEnumerable<TObject> enumerable)
+            {
+                return enumerable.ToArray();
+            }
+            else
+            {
+                return [];
+            }
+        }
     }
 
     protected async Task<bool> GoshujinStoreData(StoreMode storeMode)
@@ -104,18 +139,25 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
 
     protected void GoshujinDelete()
     {
+        TObject[] array = [];
         using (this.LockObject.EnterScope())
         {
-            var g = this as IGoshujin;
-            g?.ClearInternal();
-
-            var e = (this as IEnumerable<TObject>) ?? [];
-            foreach (var x in e)
+            if (this is IGoshujin goshujin)
             {
-                if (x is IStructualObject y)
+                if (goshujin.GetEnumerableInternal() is IEnumerable<TObject> enumerable)
                 {
-                    y.Delete();
+                    array = enumerable.ToArray();
                 }
+
+                goshujin.ClearInternal();
+            }
+        }
+
+        foreach (var x in array)
+        {
+            if (x is IStructualObject y)
+            {
+                y.Delete();
             }
         }
     }

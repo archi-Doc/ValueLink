@@ -95,13 +95,13 @@ public class IsolationTest
     {// RepeatableRead
         var g = new RepeatableRoom.GoshujinClass();
         var room1 = g.Add(new RepeatableRoom(1));
-        ((IRepeatableSemaphore)g).State.Is(GoshujinState.Valid);
-        ((IRepeatableSemaphore)g).SemaphoreCount.Is(0);
+        ((IRepeatableReadSemaphore)g).State.Is(GoshujinState.Valid);
+        ((IRepeatableReadSemaphore)g).SemaphoreCount.Is(0);
 
         using (var a = g.TryLock(0))
         {
-            ((IRepeatableSemaphore)g).State.Is(GoshujinState.Valid);
-            ((IRepeatableSemaphore)g).SemaphoreCount.Is(0);
+            ((IRepeatableReadSemaphore)g).State.Is(GoshujinState.Valid);
+            ((IRepeatableReadSemaphore)g).SemaphoreCount.Is(0);
         }
 
         var b = g.TryGet(1);
@@ -109,17 +109,17 @@ public class IsolationTest
         {
             if (a is not null)
             {
-                ((IRepeatableSemaphore)g).State.Is(GoshujinState.Valid);
-                ((IRepeatableSemaphore)g).SemaphoreCount.Is(1);
+                ((IRepeatableReadSemaphore)g).State.Is(GoshujinState.Valid);
+                ((IRepeatableReadSemaphore)g).SemaphoreCount.Is(1);
 
                 a.RoomId = 100;
                 a.Commit();
 
-                ((IRepeatableSemaphore)g).SemaphoreCount.Is(1);
+                ((IRepeatableReadSemaphore)g).SemaphoreCount.Is(1);
             }
         }
 
-        ((IRepeatableSemaphore)g).SemaphoreCount.Is(0);
+        ((IRepeatableReadSemaphore)g).SemaphoreCount.Is(0);
 
         var r = new RepeatableRoom(2);
         var room2 = g.Add(r);
@@ -167,12 +167,12 @@ public class IsolationTest
             r!.Commit().Is(r1);
         }
 
-        using (var r = g1.TryLock(1, TryLockMode.GetOrCreate))
+        using (var r = g1.TryLock(1, LockMode.GetOrCreate))
         {
             r.IsNotNull();
         }
 
-        using (var r = g1.TryLock(1, TryLockMode.Create))
+        using (var r = g1.TryLock(1, LockMode.Create))
         {
             r.IsNull();
         }
@@ -214,7 +214,7 @@ public class IsolationTest
             }
         }
 
-        using (var w = g2.TryLock(10, TryLockMode.Create))
+        using (var w = g2.TryLock(10, LockMode.Create))
         {
             w!.Commit();
         }
@@ -222,14 +222,14 @@ public class IsolationTest
         rr = g2.TryGet(10);
         rr.IsNotNull();
 
-        using (var w = g2.TryLock(11, TryLockMode.Create))
+        using (var w = g2.TryLock(11, LockMode.Create))
         {
         }
 
         rr = g2.TryGet(11);
         rr.IsNull();
 
-        using (var w = g2.TryLock(10, TryLockMode.Get)!)
+        using (var w = g2.TryLock(10, LockMode.Get)!)
         {
             w.DeleteAndErase();
             w.Commit();
@@ -238,7 +238,7 @@ public class IsolationTest
         rr = g2.TryGet(10);
         rr.IsNull();
 
-        using (var w = g2.TryLock(10, TryLockMode.Create)!)
+        using (var w = g2.TryLock(10, LockMode.Create)!)
         {
             w.DeleteAndErase();
             w.Commit();

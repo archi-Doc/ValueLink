@@ -84,7 +84,7 @@ public class PropertyAccessibilityTest
     public void Test1()
     {
         var g = new PropertyAccessibilityClass.GoshujinClass();
-        using (var w = g.TryLock(1, TryLockMode.GetOrCreate)!)
+        using (var w = g.TryLock(1, LockMode.GetOrCreate)!)
         {
             w.B = 1;
             // w.C = 2;

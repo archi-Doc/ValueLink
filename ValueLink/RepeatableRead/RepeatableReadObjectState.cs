@@ -5,7 +5,7 @@ namespace ValueLink;
 /// <summary>
 /// Represents the state of the object.
 /// </summary>
-public enum RepeatableObjectState
+public enum RepeatableReadObjectState
 {
     /// <summary>
     /// The object is in a valid state.

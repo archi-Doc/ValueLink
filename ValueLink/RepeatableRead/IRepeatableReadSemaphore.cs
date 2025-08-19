@@ -4,7 +4,7 @@ using System.Threading;
 
 namespace ValueLink;
 
-public interface IRepeatableSemaphore
+public interface IRepeatableReadSemaphore
 {
     public Lock LockObject { get; }
 

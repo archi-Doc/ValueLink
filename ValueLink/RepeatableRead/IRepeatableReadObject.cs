@@ -13,10 +13,10 @@ namespace ValueLink;
 /// A base interface for Repeatable reads.
 /// </summary>
 /// <typeparam name="TWriter">The type of writer class.</typeparam>
-public interface IRepeatableObject<TWriter>
+public interface IRepeatableReadObject<TWriter>
     where TWriter : class
 {
-    RepeatableObjectState State { get; }
+    RepeatableReadObjectState State { get; }
 
     Lock GoshujinLockObjectInternal { get; }
 
@@ -24,7 +24,7 @@ public interface IRepeatableObject<TWriter>
 
     TWriter NewWriterInternal();
 
-    public TWriter? TryLockInternal(IRepeatableSemaphore? semaphore)
+    public TWriter? TryLockInternal(IRepeatableReadSemaphore? semaphore)
     {
         if (semaphore?.LockAndTryAcquireOne() == false)
         {
@@ -42,13 +42,13 @@ public interface IRepeatableObject<TWriter>
         return this.NewWriterInternal();
     }
 
-    ValueTask<TWriter?> TryLockAsyncInternal(IRepeatableSemaphore? semaphore)
+    ValueTask<TWriter?> TryLockAsyncInternal(IRepeatableReadSemaphore? semaphore)
         => this.TryLockAsyncInternal(semaphore, ValueLinkGlobal.LockTimeoutInMilliseconds, default);
 
-    ValueTask<TWriter?> TryLockAsyncInternal(IRepeatableSemaphore? semaphore, int millisecondsTimeout)
+    ValueTask<TWriter?> TryLockAsyncInternal(IRepeatableReadSemaphore? semaphore, int millisecondsTimeout)
         => this.TryLockAsyncInternal(semaphore, millisecondsTimeout, default);
 
-    public async ValueTask<TWriter?> TryLockAsyncInternal(IRepeatableSemaphore? semaphore, int millisecondsTimeout, CancellationToken cancellationToken)
+    public async ValueTask<TWriter?> TryLockAsyncInternal(IRepeatableReadSemaphore? semaphore, int millisecondsTimeout, CancellationToken cancellationToken)
     {
         if (semaphore?.LockAndTryAcquireOne() == false)
         {

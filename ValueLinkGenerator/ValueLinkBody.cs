@@ -44,19 +44,22 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
     public static readonly string TryLockMethodName = "TryLock";
     public static readonly string TryLockAsyncMethodName = "TryLockAsync";
     public static readonly string WriterSemaphoreName = "writerSemaphore";
-    public static readonly string RepeatableObjectState = "RepeatableObjectState";
-    public static readonly string IRepeatableObject = "IRepeatableObject";
+    public static readonly string RepeatableReadObjectState = "RepeatableReadObjectState";
+    public static readonly string IRepeatableReadObject = "IRepeatableReadObject";
     public static readonly string SerializableGoshujin = "SerializableGoshujin";
-    public static readonly string RepeatableGoshujin = "RepeatableGoshujin";
+    public static readonly string RepeatableReadGoshujin = "RepeatableReadGoshujin";
+    public static readonly string ReadCommittedGoshujin = "ReadCommittedGoshujin";
     public static readonly string IValueLinkObjectInternal = "IValueLinkObjectInternal";
     public static readonly string ValueLinkInternalHelper = "ValueLinkInternalHelper";
-    public static readonly string IRepeatableSemaphore = "ValueLink.IRepeatableSemaphore";
+    public static readonly string IRepeatableReadSemaphore = "ValueLink.IRepeatableReadSemaphore";
     public static readonly string ISerializableSemaphore = "ValueLink.ISerializableSemaphore";
+    public static readonly string IReadCommittedSemaphore = "ValueLink.IReadCommittedSemaphore";
     public static readonly string IIntegralityObject = "IIntegralityObject";
     public static readonly string IIntegralityGoshujin = "IIntegralityGoshujin";
     public static readonly string Integrality = "ValueLink.Integrality.IIntegralityInternal";
     public static readonly string KeyHashDictionaryName = "__keyhash_dictionary__";
     public static readonly string UnsafeConstructorName = "UnsafeConstructor";
+    public static readonly string ILockableData = "ValueLink.ILockableData<TData>";
 
     public static readonly DiagnosticDescriptor Error_NotPartial = new DiagnosticDescriptor(
         id: "CLG001", title: "Not a partial class/struct", messageFormat: "ValueLinkObject '{0}' is not a partial class/struct",
@@ -188,6 +191,10 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
 
     public static readonly DiagnosticDescriptor Error_IntegralityTinyhand = new DiagnosticDescriptor(
         id: "CLG033", title: "Integrality tinyhand", messageFormat: "The integrality object must have TinyhandObject attribute",
+        category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor Error_ReadCommitted = new DiagnosticDescriptor(
+        id: "CLG034", title: "Read committed", messageFormat: "The object must inherit from ILockableData<TData> when Read Committed isolation is specified",
         category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
     public ValueLinkBody(GeneratorExecutionContext context)

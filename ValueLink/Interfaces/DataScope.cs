@@ -27,7 +27,7 @@ public record struct DataScope<TData> : IDisposable
     /// Gets a value indicating whether the scope currently references valid data<br/>
     /// (i.e., it has not been disposed and the underlying data was successfully obtained).
     /// </summary>
-    [MemberNotNullWhen(true, nameof(data))]
+    [MemberNotNullWhen(true, nameof(Data))]
     public bool IsValid => this.data is not null;
 
     /// <summary>
