@@ -2,6 +2,7 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading;
 
 namespace ValueLink;
 
@@ -64,11 +65,7 @@ public record struct DataScope<TData> : IDisposable
         this.data = default;
         if (this.dataUnlocker is not null)
         {
-            if (this.dataUnlocker.DataState == LockableDataState.Protected)
-            {
-                this.dataUnlocker.DataState = LockableDataState.Unprotected;
-            }
-
+            Interlocked.Decrement(ref this.dataUnlocker.GetProtectionCounterRef());
             this.dataUnlocker.Unlock();
             this.dataUnlocker = default;
         }

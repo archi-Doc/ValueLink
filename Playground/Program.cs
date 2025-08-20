@@ -14,9 +14,9 @@ public partial class LockedDataMock<TData> : IDataLocker<TData>, IDataUnlocker
 {
     private readonly SemaphoreLock lockObject = new();
     private TData? data;
+    private int protectionCounter;
 
-    // public LockableDataState State { get; protected set; }
-    LockableDataState ILockableDataState.DataState { get; set; }
+    ref int IDataProtectionCounter.GetProtectionCounterRef() => ref this.protectionCounter;
 
     public LockedDataMock()
     {

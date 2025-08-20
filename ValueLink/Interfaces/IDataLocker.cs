@@ -12,7 +12,7 @@ namespace ValueLink;
 /// <typeparam name="TData">
 /// The type of data to be locked. Must be non-null.
 /// </typeparam>
-public interface IDataLocker<TData> : ILockableDataState
+public interface IDataLocker<TData> : IDataProtectionCounter
     where TData : notnull
 {
     /// <summary>
