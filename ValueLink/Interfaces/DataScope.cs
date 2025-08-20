@@ -16,7 +16,7 @@ public record struct DataScope<TData> : IDisposable
 {
     public readonly DataScopeResult Result;
     private TData? data;
-    private ILockableData<TData>? lockableData;
+    private IDataUnlocker? dataUnlocker;
 
     /// <summary>
     /// Gets the scoped data instance while the scope is valid; otherwise <c>null</c> after disposal or if lock failed.
@@ -35,12 +35,12 @@ public record struct DataScope<TData> : IDisposable
     /// The scope is considered valid and will automatically release the lock upon disposal.
     /// </summary>
     /// <param name="data">The data instance to be scoped and locked.</param>
-    /// <param name="lockableData">The data instance responsible for releasing the lock on the data resource.</param>
-    public DataScope(TData data, ILockableData<TData> lockableData)
+    /// <param name="dataUnlocker">The data instance responsible for releasing the lock on the data resource.</param>
+    public DataScope(TData data, IDataUnlocker dataUnlocker)
     {
         this.Result = DataScopeResult.Success;
-        this.lockableData = lockableData;
         this.data = data;
+        this.dataUnlocker = dataUnlocker;
     }
 
     /// <summary>
@@ -62,15 +62,15 @@ public record struct DataScope<TData> : IDisposable
     public void Dispose()
     {
         this.data = default;
-        if (this.lockableData is not null)
+        if (this.dataUnlocker is not null)
         {
-            if (this.lockableData.State == LockableDataState.Protected)
+            if (this.dataUnlocker.DataState == LockableDataState.Protected)
             {
-                this.lockableData.State = LockableDataState.Unprotected;
+                this.dataUnlocker.DataState = LockableDataState.Unprotected;
             }
 
-            this.lockableData.Unlock();
-            this.lockableData = default;
+            this.dataUnlocker.Unlock();
+            this.dataUnlocker = default;
         }
     }
 }

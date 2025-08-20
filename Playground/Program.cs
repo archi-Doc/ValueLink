@@ -9,14 +9,14 @@ using ValueLink;
 namespace Playground;
 
 [TinyhandObject(Structual = true)]
-public partial class LockedDataMock<TData> : ILockableData<TData> //, IUnlockableData
+public partial class LockedDataMock<TData> : IDataLocker<TData>, IDataUnlocker
     where TData : notnull
 {
     private readonly SemaphoreLock lockObject = new();
     private TData? data;
 
     // public LockableDataState State { get; protected set; }
-    LockableDataState ILockableData<TData>.State { get; set; }
+    LockableDataState ILockableDataState.DataState { get; set; }
 
     public LockedDataMock()
     {

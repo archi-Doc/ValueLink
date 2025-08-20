@@ -59,7 +59,7 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
     public static readonly string Integrality = "ValueLink.Integrality.IIntegralityInternal";
     public static readonly string KeyHashDictionaryName = "__keyhash_dictionary__";
     public static readonly string UnsafeConstructorName = "UnsafeConstructor";
-    public static readonly string ILockableData = "ValueLink.ILockableData<TData>";
+    public static readonly string IDataLocker = "ValueLink.IDataLocker<TData>";
 
     public static readonly DiagnosticDescriptor Error_NotPartial = new DiagnosticDescriptor(
         id: "CLG001", title: "Not a partial class/struct", messageFormat: "ValueLinkObject '{0}' is not a partial class/struct",

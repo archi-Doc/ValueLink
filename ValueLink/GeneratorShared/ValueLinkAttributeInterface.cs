@@ -25,7 +25,7 @@ public enum IsolationLevel
     /// <summary>
     /// Read committed isolation level.<br/>
     /// Does not guarantee repeatable reads (values may change between reads) and phantom reads may occur.<br/>
-    /// The object must inherit from <see cref="ILockableData{TData}"/>.
+    /// The object must inherit from <see cref="IDataLocker{TData}"/>.
     /// </summary>
     ReadCommitted,
 
