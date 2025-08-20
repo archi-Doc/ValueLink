@@ -65,7 +65,6 @@ public record struct DataScope<TData> : IDisposable
         this.data = default;
         if (this.dataUnlocker is not null)
         {
-            Interlocked.Decrement(ref this.dataUnlocker.GetProtectionCounterRef());
             this.dataUnlocker.Unlock();
             this.dataUnlocker = default;
         }

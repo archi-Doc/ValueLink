@@ -16,7 +16,7 @@ public partial class LockedDataMock<TData> : IDataLocker<TData>, IDataUnlocker
     private TData? data;
     private int protectionCounter;
 
-    ref int IDataProtectionCounter.GetProtectionCounterRef() => ref this.protectionCounter;
+    ref int IDataLocker<TData>.GetProtectionCounterRef() => ref this.protectionCounter;
 
     public LockedDataMock()
     {
@@ -57,6 +57,7 @@ public partial class LockedDataMock<TData> : IDataLocker<TData>, IDataUnlocker
 
     public void Unlock()
     {
+        Interlocked.Decrement(ref this.protectionCounter);
         this.lockObject.Exit();
     }
 }

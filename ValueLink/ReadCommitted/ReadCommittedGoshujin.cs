@@ -17,6 +17,8 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
     where TObject : class, IValueLinkObjectInternal<TGoshujin, TObject>, IDataLocker<TData>
     where TGoshujin : ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin>, IGoshujin
 {
+    private const int DeletedCount = int.MinValue / 2;
+
     public abstract Lock LockObject { get; }
 
     protected abstract TObject? FindFirst(TKey key);
@@ -111,7 +113,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
                     return DataScopeResult.Timeout;
                 }
             }
-            while (Interlocked.CompareExchange(ref obj.GetProtectionCounterRef(), IDataProtectionCounter.DeletedCount, current) != current);
+            while (Interlocked.CompareExchange(ref obj.GetProtectionCounterRef(), DeletedCount, current) != current);
 
             TObject.RemoveFromGoshujin(obj, (TGoshujin)this, true, true);
         }

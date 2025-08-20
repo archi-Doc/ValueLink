@@ -7,8 +7,6 @@ namespace ValueLink;
 /// </summary>
 public interface IDataProtectionCounter
 {
-    public const int DeletedCount = int.MinValue / 2;
-
     /// <summary>
     /// Gets a reference to the protection counter.<br/>
     /// &lt; 0: The data is deleted<br/>
