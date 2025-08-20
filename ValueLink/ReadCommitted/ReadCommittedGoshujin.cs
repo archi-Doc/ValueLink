@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,6 +17,8 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
     where TObject : class, IValueLinkObjectInternal<TGoshujin, TObject>, IDataLocker<TData>
     where TGoshujin : ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin>, IGoshujin
 {
+    private const int DeletedCount = int.MinValue / 2;
+
     public abstract Lock LockObject { get; }
 
     protected abstract TObject? FindFirst(TKey key);
@@ -82,12 +85,9 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
                 }
             }
 
-            if (obj.DataState == LockableDataState.Deleted)
-            {// Object has been deleted
-                return ValueTask.FromResult(new DataScope<TData>(DataScopeResult.NotFound));
-            }
-
-            obj.DataState = LockableDataState.Protected; // Set the object as protected to prevent deletion while locked.
+            // Increments the ProtectionCount.
+            // Since this is within a lock scope, deletion will not occur.
+            Interlocked.Increment(ref obj.GetProtectionCounterRef());
         }
 
         return obj.TryLock(ValueLinkGlobal.LockTimeout, cancellationToken);
@@ -104,14 +104,16 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
                 return DataScopeResult.NotFound;
             }
 
-            if (obj.DataState == LockableDataState.Protected)
+            int current;
+            do
             {
-                return DataScopeResult.Timeout;
+                current = Volatile.Read(ref obj.GetProtectionCounterRef());
+                if (current > 0)
+                {// Protected
+                    return DataScopeResult.Timeout;
+                }
             }
-            else
-            {
-                obj.DataState = LockableDataState.Deleted; // Mark the object as deleted.
-            }
+            while (Interlocked.CompareExchange(ref obj.GetProtectionCounterRef(), DeletedCount, current) != current);
 
             TObject.RemoveFromGoshujin(obj, (TGoshujin)this, true, true);
         }
