@@ -13,7 +13,7 @@ namespace ValueLink;
 
 public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : IReadCommittedSemaphore
     where TData : notnull
-    where TObject : class, IValueLinkObjectInternal<TGoshujin, TObject>, ILockableData<TData>
+    where TObject : class, IValueLinkObjectInternal<TGoshujin, TObject>, IDataLocker<TData>
     where TGoshujin : ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin>, IGoshujin
 {
     public abstract Lock LockObject { get; }
@@ -82,12 +82,12 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
                 }
             }
 
-            if (obj.State == LockableDataState.Deleted)
+            if (obj.DataState == LockableDataState.Deleted)
             {// Object has been deleted
                 return ValueTask.FromResult(new DataScope<TData>(DataScopeResult.NotFound));
             }
 
-            obj.State = LockableDataState.Protected; // Set the object as protected to prevent deletion while locked.
+            obj.DataState = LockableDataState.Protected; // Set the object as protected to prevent deletion while locked.
         }
 
         return obj.TryLock(ValueLinkGlobal.LockTimeout, cancellationToken);
@@ -104,13 +104,13 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
                 return DataScopeResult.NotFound;
             }
 
-            if (obj.State == LockableDataState.Protected)
+            if (obj.DataState == LockableDataState.Protected)
             {
                 return DataScopeResult.Timeout;
             }
             else
             {
-                obj.State = LockableDataState.Deleted; // Mark the object as deleted.
+                obj.DataState = LockableDataState.Deleted; // Mark the object as deleted.
             }
 
             TObject.RemoveFromGoshujin(obj, (TGoshujin)this, true, true);

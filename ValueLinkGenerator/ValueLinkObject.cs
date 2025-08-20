@@ -495,7 +495,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         if (this.ObjectAttribute?.Isolation == IsolationLevel.ReadCommitted)
         {// Read committed
-            this.TargetDataObject = this.AllInterfaceObjects.FirstOrDefault(x => x.OriginalDefinition?.FullName == ValueLinkBody.ILockableData)?.Generics_Arguments[0];
+            this.TargetDataObject = this.AllInterfaceObjects.FirstOrDefault(x => x.OriginalDefinition?.FullName == ValueLinkBody.IDataLocker)?.Generics_Arguments[0];
 
             if (this.TargetDataObject is null)
             {
