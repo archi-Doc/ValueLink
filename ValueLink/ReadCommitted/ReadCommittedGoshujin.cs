@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,6 +17,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
     where TGoshujin : ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin>, IGoshujin
 {
     private const int DeletedCount = int.MinValue / 2;
+    private const int DelayInMilliseconds = 10;
 
     public abstract Lock LockObject { get; }
 
@@ -93,9 +93,17 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
         return obj.TryLock(ValueLinkGlobal.LockTimeout, cancellationToken);
     }
 
-    public DataScopeResult Delete(TKey key, CancellationToken cancellationToken = default)
+    public async Task<DataScopeResult> Delete(TKey key, DateTime forceDeleteAfter = default)
     {
         TObject? obj;
+        var delay = false;
+
+Retry:
+        if (delay)
+        {
+            await Task.Delay(DelayInMilliseconds);
+        }
+
         using (this.LockObject.EnterScope())
         {
             obj = this.FindFirst(key);
@@ -110,7 +118,16 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
                 current = Volatile.Read(ref obj.GetProtectionCounterRef());
                 if (current > 0)
                 {// Protected
-                    return DataScopeResult.Timeout;
+                    if (forceDeleteAfter == default ||
+                        DateTime.UtcNow <= forceDeleteAfter)
+                    {// Wait for a specified time, then attempt deletion again.
+                        delay = true;
+                        goto Retry;
+                    }
+                    else
+                    {// Force delete
+                        break;
+                    }
                 }
             }
             while (Interlocked.CompareExchange(ref obj.GetProtectionCounterRef(), DeletedCount, current) != current);
@@ -120,7 +137,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
 
         if (obj is IStructualObject y)
         {
-            y.Delete();
+            await y.Delete(forceDeleteAfter).ConfigureAwait(false);
         }
 
         return DataScopeResult.Success;
@@ -155,8 +172,8 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
         return true;
     }
 
-    protected void GoshujinDelete()
-    {
+    protected async Task GoshujinDelete(DateTime forceDeleteAfter)
+    {//
         TObject[] array = [];
         using (this.LockObject.EnterScope())
         {
@@ -175,7 +192,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
         {
             if (x is IStructualObject y)
             {
-                y.Delete();
+                await y.Delete(forceDeleteAfter).ConfigureAwait(false);
             }
         }
     }

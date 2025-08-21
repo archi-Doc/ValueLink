@@ -118,7 +118,7 @@ internal class Program
         {
         }
 
-        g.Delete(123);
+        await g.Delete(123);
         array = g.GetArray();
     }
 
