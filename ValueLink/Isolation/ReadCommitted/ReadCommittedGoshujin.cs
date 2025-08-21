@@ -25,6 +25,13 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
 
     protected abstract TObject NewObject(TKey key);
 
+    public GoshujinState State { get; private set; } // Lock:LockObject
+
+    public bool IsValid => this.State == GoshujinState.Valid;
+
+    public void SetObsolete()
+        => this.State = GoshujinState.Obsolete;
+
     /// <summary>
     /// Executes the specified <paramref name="action"/> for every owned object.<br/>
     /// The specified delegate is invoked within mutual exclusion (inside a lock).
@@ -34,6 +41,11 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
     {
         using (this.LockObject.EnterScope())
         {
+            if (!this.IsValid)
+            {
+                return;
+            }
+
             if (((IGoshujin)this).GetEnumerableInternal() is IEnumerable<TObject> enumerable)
             {
                 foreach (var x in enumerable)
@@ -49,6 +61,11 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
         TObject? obj;
         using (this.LockObject.EnterScope())
         {
+            if (!this.IsValid)
+            {
+                return ValueTask.FromResult<TData?>(default);
+            }
+
             obj = this.FindFirst(key);
             if (obj is null)
             {
@@ -64,6 +81,11 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
         TObject? obj;
         using (this.LockObject.EnterScope())
         {
+            if (!this.IsValid)
+            {
+                return ValueTask.FromResult(new DataScope<TData>(DataScopeResult.Obsolete));
+            }
+
             obj = this.FindFirst(key);
             if (obj is null)
             {// Object not found
@@ -93,7 +115,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
         return obj.TryLock(ValueLinkGlobal.LockTimeout, cancellationToken);
     }
 
-    public async Task<DataScopeResult> Delete(TKey key, DateTime forceDeleteAfter = default)
+    public async Task<DataScopeResult> TryDelete(TKey key, DateTime forceDeleteAfter = default)
     {
         TObject? obj;
         var delay = false;
@@ -147,6 +169,11 @@ Retry:
     {
         using (this.LockObject.EnterScope())
         {
+            if (!this.IsValid)
+            {
+                return [];
+            }
+
             if (((IGoshujin)this).GetEnumerableInternal() is IEnumerable<TObject> enumerable)
             {
                 return enumerable.ToArray();
@@ -173,10 +200,12 @@ Retry:
     }
 
     protected async Task GoshujinDelete(DateTime forceDeleteAfter)
-    {//
+    {
         TObject[] array = [];
         using (this.LockObject.EnterScope())
         {
+            this.SetObsolete();
+
             if (this is IGoshujin goshujin)
             {
                 if (goshujin.GetEnumerableInternal() is IEnumerable<TObject> enumerable)
@@ -188,9 +217,30 @@ Retry:
             }
         }
 
-        foreach (var x in array)
+        foreach (var obj in array)
         {
-            if (x is IStructualObject y)
+            int current;
+            do
+            {
+Retry:
+                current = Volatile.Read(ref obj.GetProtectionCounterRef());
+                if (current > 0)
+                {// Protected
+                    if (forceDeleteAfter == default ||
+                        DateTime.UtcNow <= forceDeleteAfter)
+                    {// Wait for a specified time, then attempt deletion again.
+                        await Task.Delay(DelayInMilliseconds);
+                        goto Retry;
+                    }
+                    else
+                    {// Force delete
+                        break;
+                    }
+                }
+            }
+            while (Interlocked.CompareExchange(ref obj.GetProtectionCounterRef(), DeletedCount, current) != current);
+
+            if (obj is IStructualObject y)
             {
                 await y.Delete(forceDeleteAfter).ConfigureAwait(false);
             }
