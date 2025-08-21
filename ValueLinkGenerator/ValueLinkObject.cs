@@ -1892,7 +1892,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             if (this.IsolationGoshujin is not null && this.UniqueLink is not null)
             {
-                ssb.AppendLine($"protected override {this.LocalName}? FindFirst({this.UniqueLink.TypeObject.FullName} key) => this.{this.UniqueLink.ChainName}.FindFirst(key);");
+                ssb.AppendLine($"protected override {this.LocalName}? FindObject({this.UniqueLink.TypeObject.FullName} key) => this.{this.UniqueLink.ChainName}.FindFirst(key);");
 
                 using (var scopeNewObject = ssb.ScopeBrace($"protected override {this.LocalName} NewObject({this.UniqueLink.TypeObject.FullName} key)"))
                 {
