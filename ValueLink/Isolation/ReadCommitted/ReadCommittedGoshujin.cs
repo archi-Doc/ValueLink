@@ -21,7 +21,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
 
     public abstract Lock LockObject { get; }
 
-    protected abstract TObject? FindFirst(TKey key);
+    protected abstract TObject? FindObject(TKey key);
 
     protected abstract TObject NewObject(TKey key);
 
@@ -56,7 +56,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
         }
     }
 
-    /*public TData? FindFirst(TKey key)
+    public TObject? FindFirst(TKey key)
     {
         using (this.LockObject.EnterScope())
         {
@@ -65,9 +65,9 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
                 return default;
             }
 
-            return this.FindFirst(key);
+            return this.FindObject(key);
         }
-    }*/
+    }
 
     public ValueTask<TData?> TryGet(TKey key, CancellationToken cancellationToken = default)
     {
@@ -79,7 +79,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
                 return ValueTask.FromResult<TData?>(default);
             }
 
-            obj = this.FindFirst(key);
+            obj = this.FindObject(key);
             if (obj is null)
             {
                 return ValueTask.FromResult<TData?>(default);
@@ -99,7 +99,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
                 return ValueTask.FromResult(new DataScope<TData>(DataScopeResult.Obsolete));
             }
 
-            obj = this.FindFirst(key);
+            obj = this.FindObject(key);
             if (obj is null)
             {// Object not found
                 if (lockMode == LockMode.Get)
@@ -141,7 +141,7 @@ Retry:
 
         using (this.LockObject.EnterScope())
         {
-            obj = this.FindFirst(key);
+            obj = this.FindObject(key);
             if (obj is null)
             {// Object not found
                 return DataScopeResult.NotFound;

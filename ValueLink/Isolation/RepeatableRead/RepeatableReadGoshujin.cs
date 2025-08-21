@@ -29,7 +29,7 @@ public abstract class RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter> 
 
     public int SemaphoreCount { get; set; }
 
-    protected abstract TObject? FindFirst(TKey key);
+    protected abstract TObject? FindObject(TKey key);
 
     protected abstract TObject NewObject(TKey key);
 
@@ -109,7 +109,7 @@ public abstract class RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter> 
     {
         using (this.LockObject.EnterScope())
         {
-            return this.FindFirst(key) != null;
+            return this.FindObject(key) != null;
         }
     }
 
@@ -125,7 +125,7 @@ public abstract class RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter> 
     {
         using (this.LockObject.EnterScope())
         {
-            var x = this.FindFirst(key);
+            var x = this.FindObject(key);
             return x;
         }
     }
@@ -146,7 +146,7 @@ public abstract class RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter> 
         {
             using (this.LockObject.EnterScope())
             {
-                x = this.FindFirst(key);
+                x = this.FindObject(key);
                 if (x is null)
                 {// No object
                     if (mode == LockMode.Get)
@@ -208,7 +208,7 @@ Created:
         {
             using (this.LockObject.EnterScope())
             {
-                x = this.FindFirst(key);
+                x = this.FindObject(key);
                 if (x is null)
                 {// No object
                     if (mode == LockMode.Get)
