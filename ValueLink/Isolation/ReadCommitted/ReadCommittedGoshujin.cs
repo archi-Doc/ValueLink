@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,12 +17,20 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
     where TGoshujin : ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin>, IGoshujin
 {
     private const int DeletedCount = int.MinValue / 2;
+    private const int DelayInMilliseconds = 10;
 
     public abstract Lock LockObject { get; }
 
     protected abstract TObject? FindFirst(TKey key);
 
     protected abstract TObject NewObject(TKey key);
+
+    public GoshujinState State { get; private set; } // Lock:LockObject
+
+    public bool IsValid => this.State == GoshujinState.Valid;
+
+    public void SetObsolete()
+        => this.State = GoshujinState.Obsolete;
 
     /// <summary>
     /// Executes the specified <paramref name="action"/> for every owned object.<br/>
@@ -34,6 +41,11 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
     {
         using (this.LockObject.EnterScope())
         {
+            if (!this.IsValid)
+            {
+                return;
+            }
+
             if (((IGoshujin)this).GetEnumerableInternal() is IEnumerable<TObject> enumerable)
             {
                 foreach (var x in enumerable)
@@ -49,6 +61,11 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
         TObject? obj;
         using (this.LockObject.EnterScope())
         {
+            if (!this.IsValid)
+            {
+                return ValueTask.FromResult<TData?>(default);
+            }
+
             obj = this.FindFirst(key);
             if (obj is null)
             {
@@ -64,6 +81,11 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
         TObject? obj;
         using (this.LockObject.EnterScope())
         {
+            if (!this.IsValid)
+            {
+                return ValueTask.FromResult(new DataScope<TData>(DataScopeResult.Obsolete));
+            }
+
             obj = this.FindFirst(key);
             if (obj is null)
             {// Object not found
@@ -93,9 +115,17 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
         return obj.TryLock(ValueLinkGlobal.LockTimeout, cancellationToken);
     }
 
-    public DataScopeResult Delete(TKey key, CancellationToken cancellationToken = default)
+    public async Task<DataScopeResult> TryDelete(TKey key, DateTime forceDeleteAfter = default)
     {
         TObject? obj;
+        var delay = false;
+
+Retry:
+        if (delay)
+        {
+            await Task.Delay(DelayInMilliseconds);
+        }
+
         using (this.LockObject.EnterScope())
         {
             obj = this.FindFirst(key);
@@ -110,7 +140,16 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
                 current = Volatile.Read(ref obj.GetProtectionCounterRef());
                 if (current > 0)
                 {// Protected
-                    return DataScopeResult.Timeout;
+                    if (forceDeleteAfter == default ||
+                        DateTime.UtcNow <= forceDeleteAfter)
+                    {// Wait for a specified time, then attempt deletion again.
+                        delay = true;
+                        goto Retry;
+                    }
+                    else
+                    {// Force delete
+                        break;
+                    }
                 }
             }
             while (Interlocked.CompareExchange(ref obj.GetProtectionCounterRef(), DeletedCount, current) != current);
@@ -120,7 +159,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
 
         if (obj is IStructualObject y)
         {
-            y.Delete();
+            await y.Delete(forceDeleteAfter).ConfigureAwait(false);
         }
 
         return DataScopeResult.Success;
@@ -130,6 +169,11 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
     {
         using (this.LockObject.EnterScope())
         {
+            if (!this.IsValid)
+            {
+                return [];
+            }
+
             if (((IGoshujin)this).GetEnumerableInternal() is IEnumerable<TObject> enumerable)
             {
                 return enumerable.ToArray();
@@ -155,11 +199,13 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
         return true;
     }
 
-    protected void GoshujinDelete()
+    protected async Task GoshujinDelete(DateTime forceDeleteAfter)
     {
         TObject[] array = [];
         using (this.LockObject.EnterScope())
         {
+            this.SetObsolete();
+
             if (this is IGoshujin goshujin)
             {
                 if (goshujin.GetEnumerableInternal() is IEnumerable<TObject> enumerable)
@@ -171,11 +217,32 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
             }
         }
 
-        foreach (var x in array)
+        foreach (var obj in array)
         {
-            if (x is IStructualObject y)
+            int current;
+            do
             {
-                y.Delete();
+Retry:
+                current = Volatile.Read(ref obj.GetProtectionCounterRef());
+                if (current > 0)
+                {// Protected
+                    if (forceDeleteAfter == default ||
+                        DateTime.UtcNow <= forceDeleteAfter)
+                    {// Wait for a specified time, then attempt deletion again.
+                        await Task.Delay(DelayInMilliseconds);
+                        goto Retry;
+                    }
+                    else
+                    {// Force delete
+                        break;
+                    }
+                }
+            }
+            while (Interlocked.CompareExchange(ref obj.GetProtectionCounterRef(), DeletedCount, current) != current);
+
+            if (obj is IStructualObject y)
+            {
+                await y.Delete(forceDeleteAfter).ConfigureAwait(false);
             }
         }
     }

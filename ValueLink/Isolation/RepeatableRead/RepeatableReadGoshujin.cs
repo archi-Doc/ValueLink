@@ -73,7 +73,7 @@ public abstract class RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter> 
         return true;
     }
 
-    protected void GoshujinDelete()
+    protected async Task GoshujinDelete(DateTime forceDeleteAfter)
     {
         TObject[] array;
         using (this.LockObject.EnterScope())
@@ -89,7 +89,7 @@ public abstract class RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter> 
         {
             if (x is IStructualObject y)
             {
-                y.Delete();
+                await y.Delete(forceDeleteAfter).ConfigureAwait(false);
             }
         }
     }

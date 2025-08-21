@@ -9,12 +9,18 @@ using ValueLink;
 namespace Playground;
 
 [TinyhandObject(Structual = true)]
-public partial class LockedDataMock<TData> : IDataLocker<TData>, IDataUnlocker
+public partial class LockedDataMock<TData> : IDataLocker<TData>, IDataUnlocker, IStructualObject
     where TData : notnull
 {
     private readonly SemaphoreLock lockObject = new();
     private TData? data;
     private int protectionCounter;
+
+    IStructualRoot? IStructualObject.StructualRoot { get; set; }
+
+    IStructualObject? IStructualObject.StructualParent { get; set; }
+
+    int IStructualObject.StructualKey { get; set; }
 
     ref int IDataLocker<TData>.GetProtectionCounterRef() => ref this.protectionCounter;
 
@@ -26,8 +32,6 @@ public partial class LockedDataMock<TData> : IDataLocker<TData>, IDataUnlocker
     {
         this.data = data;
     }
-
-
 
     public void SetData(TData data)
     {
@@ -44,7 +48,11 @@ public partial class LockedDataMock<TData> : IDataLocker<TData>, IDataUnlocker
 
     public async ValueTask<DataScope<TData>> TryLock(TimeSpan timeout, CancellationToken cancellationToken)
     {
-        await this.lockObject.EnterAsync(timeout, cancellationToken).ConfigureAwait(false);
+        if (!await this.lockObject.EnterAsync(timeout, cancellationToken).ConfigureAwait(false))
+        {
+            return new(DataScopeResult.Timeout);
+        }
+
         if (this.data is null)
         {
             return new(DataScopeResult.NotFound);
@@ -59,6 +67,30 @@ public partial class LockedDataMock<TData> : IDataLocker<TData>, IDataUnlocker
     {
         Interlocked.Decrement(ref this.protectionCounter);
         this.lockObject.Exit();
+    }
+
+    public Task<bool> StoreData(StoreMode storeMode)
+    {
+        if (this.data is IStructualObject structualObject)
+        {
+            return structualObject.StoreData(storeMode);
+        }
+        else
+        {
+            return Task.FromResult(true);
+        }
+    }
+
+    public Task Delete(DateTime forceDeleteAfter)
+    {
+        if (this.data is IStructualObject structualObject)
+        {
+            return structualObject.Delete(forceDeleteAfter);
+        }
+        else
+        {
+            return Task.FromResult(true);
+        }
     }
 }
 
@@ -85,6 +117,9 @@ public partial class SpClass
 
     [Key(0)]
     public string Name { get; set; } = string.Empty;
+
+    [Key(1)]
+    public SpClassPoint.GoshujinClass Goshujin { get; set; } = new();
 }
 
 internal class Program
@@ -118,9 +153,20 @@ internal class Program
         {
         }
 
-        g.Delete(123);
+        tc = await g.TryGet(123);
+        await g.TryDelete(123);
         array = g.GetArray();
-    }
 
-    private IEnumerable Get() => System.Array.Empty<object>();
+        var spc = new SpClass();
+        using (var spd = await spc.Goshujin.TryLock(1, LockMode.GetOrCreate))
+        {
+            if (spd.IsValid)
+            {
+                await spd.Data.Goshujin.TryLock(2, LockMode.GetOrCreate);
+            }
+        }
+
+        await spc.Goshujin.TryDelete(2);
+        await spc.Goshujin.TryDelete(1, DateTime.UtcNow + TimeSpan.FromSeconds(2));
+    }
 }
