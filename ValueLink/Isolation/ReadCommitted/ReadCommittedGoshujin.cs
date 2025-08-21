@@ -56,6 +56,19 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
         }
     }
 
+    /*public TData? FindFirst(TKey key)
+    {
+        using (this.LockObject.EnterScope())
+        {
+            if (!this.IsValid)
+            {
+                return default;
+            }
+
+            return this.FindFirst(key);
+        }
+    }*/
+
     public ValueTask<TData?> TryGet(TKey key, CancellationToken cancellationToken = default)
     {
         TObject? obj;
