@@ -50,11 +50,13 @@ public partial class LockedDataMock<TData> : IDataLocker<TData>, IDataUnlocker, 
     {
         if (!await this.lockObject.EnterAsync(timeout, cancellationToken).ConfigureAwait(false))
         {
+            Interlocked.Decrement(ref this.protectionCounter);
             return new(DataScopeResult.Timeout);
         }
 
         if (this.data is null)
         {
+            Interlocked.Decrement(ref this.protectionCounter);
             return new(DataScopeResult.NotFound);
         }
         else

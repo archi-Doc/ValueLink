@@ -118,8 +118,14 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
     /// Finds the first object matching the specified key.
     /// </summary>
     /// <param name="key">The key of the object to find.</param>
+    /// <param name="protect">
+    /// If <c>true</c>, increments the protection counter to prevent deletion while the object is in use.<br/>
+    /// <b>Always call TryLock/Unlock in the following code.</b><br/>
+    /// Otherwise, the data will remain protected and cannot be deleted.<br/>
+    /// If <c>false</c>, does not increment the protection counter.
+    /// </param>
     /// <returns>The object if found; otherwise, <c>null</c>.</returns>
-    public TObject? FindFirst(TKey key)
+    public TObject? FindFirst(TKey key, bool protect)
     {
         using (this.LockObject.EnterScope())
         {
@@ -128,7 +134,20 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
                 return default;
             }
 
-            return this.FindObject(key);
+            var obj = this.FindObject(key);
+            if (obj is null)
+            { // Not found
+                return default;
+            }
+
+            if (protect)
+            {
+                // Increments the ProtectionCount.
+                // Since this is within a lock scope, deletion will not occur.
+                Interlocked.Increment(ref obj.GetProtectionCounterRef());
+            }
+
+            return obj;
         }
     }
 
@@ -141,6 +160,18 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
     /// A <see cref="ValueTask{TData}"/> containing the data if available; otherwise, <c>null</c>.
     /// </returns>
     public ValueTask<TData?> TryGet(TKey key, CancellationToken cancellationToken = default)
+        => this.TryGet(key, ValueLinkGlobal.LockTimeout, cancellationToken);
+
+    /// <summary>
+    /// Attempts to retrieve the data for the object matching the specified key, without acquiring a lock.
+    /// </summary>
+    /// <param name="key">The key of the object to retrieve.</param>
+    /// <param name="timeout">The maximum time to wait for the lock. If <see cref="TimeSpan.Zero"/>, the method returns immediately.</param>
+    /// <param name="cancellationToken">A token to observe while waiting for the operation to complete.</param>
+    /// <returns>
+    /// A <see cref="ValueTask{TData}"/> containing the data if available; otherwise, <c>null</c>.
+    /// </returns>
+    public ValueTask<TData?> TryGet(TKey key, TimeSpan timeout, CancellationToken cancellationToken = default)
     {
         TObject? obj;
         using (this.LockObject.EnterScope())
@@ -157,7 +188,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
             }
         }
 
-        return obj.TryGet(ValueLinkGlobal.LockTimeout, cancellationToken);
+        return obj.TryGet(timeout, cancellationToken);
     }
 
     /// <summary>
@@ -170,6 +201,19 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
     /// A <see cref="ValueTask{DataScope}"/> containing the result and the locked data if successful.
     /// </returns>
     public ValueTask<DataScope<TData>> TryLock(TKey key, LockMode lockMode, CancellationToken cancellationToken = default)
+        => this.TryLock(key, lockMode, ValueLinkGlobal.LockTimeout, cancellationToken);
+
+    /// <summary>
+    /// Attempts to acquire a lock on the object matching the specified key, with the specified lock mode.
+    /// </summary>
+    /// <param name="key">The key of the object to lock.</param>
+    /// <param name="lockMode">The lock mode specifying get, create, or get-or-create behavior.</param>
+    /// <param name="timeout">The maximum time to wait for the lock. If <see cref="TimeSpan.Zero"/>, the method returns immediately.</param>
+    /// <param name="cancellationToken">A token to observe while waiting for the operation to complete.</param>
+    /// <returns>
+    /// A <see cref="ValueTask{DataScope}"/> containing the result and the locked data if successful.
+    /// </returns>
+    public ValueTask<DataScope<TData>> TryLock(TKey key, LockMode lockMode, TimeSpan timeout, CancellationToken cancellationToken = default)
     {
         TObject? obj;
         using (this.LockObject.EnterScope())
@@ -205,7 +249,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
             Interlocked.Increment(ref obj.GetProtectionCounterRef());
         }
 
-        return obj.TryLock(ValueLinkGlobal.LockTimeout, cancellationToken);
+        return obj.TryLock(timeout, cancellationToken);
     }
 
     /// <summary>
