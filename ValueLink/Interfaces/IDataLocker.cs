@@ -15,7 +15,7 @@ namespace ValueLink;
 public interface IDataLocker<TData> // : IDataProtectionCounter
     where TData : notnull
 {
-    public const int DeletedCount = int.MinValue / 2;
+    /*public const int DeletedCount = int.MinValue / 2;
 
     /// <summary>
     /// Gets a reference to the protection counter.<br/>
@@ -26,7 +26,9 @@ public interface IDataLocker<TData> // : IDataProtectionCounter
     /// <returns>
     /// A reference to an <see cref="int"/> representing the protection counter.
     /// </returns>
-    ref int GetProtectionCounterRef();
+    ref int GetProtectionCounterRef();*/
+
+    ref ObjectProtectionState GetProtectionStateRef();
 
     /// <summary>
     /// Attempts to retrieve the data instance if available, without acquiring a lock.

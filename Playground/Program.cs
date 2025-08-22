@@ -14,7 +14,7 @@ public partial class LockedDataMock<TData> : IDataLocker<TData>, IDataUnlocker, 
 {
     private readonly SemaphoreLock lockObject = new();
     private TData? data;
-    private int protectionCounter;
+    private ObjectProtectionState protectionState;
 
     IStructualRoot? IStructualObject.StructualRoot { get; set; }
 
@@ -22,7 +22,9 @@ public partial class LockedDataMock<TData> : IDataLocker<TData>, IDataUnlocker, 
 
     int IStructualObject.StructualKey { get; set; }
 
-    ref int IDataLocker<TData>.GetProtectionCounterRef() => ref this.protectionCounter;
+    // ref int IDataLocker<TData>.GetProtectionCounterRef() => ref this.protectionCounter;
+
+    ref ObjectProtectionState IDataLocker<TData>.GetProtectionStateRef() => ref this.protectionState;
 
     public LockedDataMock()
     {
@@ -50,24 +52,30 @@ public partial class LockedDataMock<TData> : IDataLocker<TData>, IDataUnlocker, 
     {
         if (!await this.lockObject.EnterAsync(timeout, cancellationToken).ConfigureAwait(false))
         {
-            Interlocked.Decrement(ref this.protectionCounter);
             return new(DataScopeResult.Timeout);
         }
 
         if (this.data is null)
         {
-            Interlocked.Decrement(ref this.protectionCounter);
             return new(DataScopeResult.NotFound);
         }
         else
         {
+            // Unprotected -> Protected
+            if (Interlocked.CompareExchange(ref this.protectionState, ObjectProtectionState.Protected, ObjectProtectionState.Unprotected) != ObjectProtectionState.Unprotected)
+            {// Protected(?) or Deleted
+                return new(DataScopeResult.Obsolete);
+            }
+
             return new(this.data, this);
         }
     }
 
     public void Unlock()
     {
-        Interlocked.Decrement(ref this.protectionCounter);
+        // Protected -> Unprotected
+        Interlocked.CompareExchange(ref this.protectionState, ObjectProtectionState.Unprotected, ObjectProtectionState.Protected);
+
         this.lockObject.Exit();
     }
 

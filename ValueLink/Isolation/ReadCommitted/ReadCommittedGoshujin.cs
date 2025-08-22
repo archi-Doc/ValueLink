@@ -45,10 +45,10 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
     where TObject : class, IValueLinkObjectInternal<TGoshujin, TObject>, IDataLocker<TData>
     where TGoshujin : ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin>, IGoshujin
 {
-    /// <summary>
+    /*/// <summary>
     /// The value used to mark an object as deleted in the protection counter.
     /// </summary>
-    private const int DeletedCount = int.MinValue / 2;
+    private const int DeletedCount = int.MinValue / 2;*/
 
     /// <summary>
     /// The delay in milliseconds used when waiting to retry deletion of a protected object.
@@ -118,14 +118,8 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
     /// Finds the first object matching the specified key.
     /// </summary>
     /// <param name="key">The key of the object to find.</param>
-    /// <param name="protect">
-    /// If <c>true</c>, increments the protection counter to prevent deletion while the object is in use.<br/>
-    /// <b>Always call TryLock/Unlock in the following code.</b><br/>
-    /// Otherwise, the data will remain protected and cannot be deleted.<br/>
-    /// If <c>false</c>, does not increment the protection counter.
-    /// </param>
     /// <returns>The object if found; otherwise, <c>null</c>.</returns>
-    public TObject? FindFirst(TKey key, bool protect)
+    public TObject? FindFirst(TKey key)
     {
         using (this.LockObject.EnterScope())
         {
@@ -134,20 +128,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
                 return default;
             }
 
-            var obj = this.FindObject(key);
-            if (obj is null)
-            { // Not found
-                return default;
-            }
-
-            if (protect)
-            {
-                // Increments the ProtectionCount.
-                // Since this is within a lock scope, deletion will not occur.
-                Interlocked.Increment(ref obj.GetProtectionCounterRef());
-            }
-
-            return obj;
+            return this.FindObject(key);
         }
     }
 
@@ -243,10 +224,6 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
                     return ValueTask.FromResult(new DataScope<TData>(DataScopeResult.AlreadyExists));
                 }
             }
-
-            // Increments the ProtectionCount.
-            // Since this is within a lock scope, deletion will not occur.
-            Interlocked.Increment(ref obj.GetProtectionCounterRef());
         }
 
         return obj.TryLock(timeout, cancellationToken);
@@ -283,25 +260,23 @@ Retry:
                 return DataScopeResult.NotFound;
             }
 
-            int current;
-            do
-            {
-                current = Volatile.Read(ref obj.GetProtectionCounterRef());
-                if (current > 0)
-                {// Protected
-                    if (forceDeleteAfter == default ||
+            // Unprotected -> Deleted
+            if (Interlocked.CompareExchange(ref obj.GetProtectionStateRef(), ObjectProtectionState.Deleted, ObjectProtectionState.Unprotected) != ObjectProtectionState.Protected)
+            {// Successfully marked as deleted (Unprotected->Deleted or Deleted->Deleted)
+            }
+            else
+            {// Protected
+                if (forceDeleteAfter == default ||
                         DateTime.UtcNow <= forceDeleteAfter)
-                    {// Wait for a specified time, then attempt deletion again.
-                        delay = true;
-                        goto Retry;
-                    }
-                    else
-                    {// Force delete
-                        break;
-                    }
+                {// Wait for a specified time, then attempt deletion again.
+                    delay = true;
+                    goto Retry;
+                }
+                else
+                {// Force delete
+                    obj.GetProtectionStateRef() = ObjectProtectionState.Deleted;
                 }
             }
-            while (Interlocked.CompareExchange(ref obj.GetProtectionCounterRef(), DeletedCount, current) != current);
 
             TObject.RemoveFromGoshujin(obj, (TGoshujin)this, true, true);
         }
@@ -389,26 +364,23 @@ Retry:
 
         foreach (var obj in array)
         {
-            int current;
-            do
-            {
-Retry:
-                current = Volatile.Read(ref obj.GetProtectionCounterRef());
-                if (current > 0)
-                {// Protected
-                    if (forceDeleteAfter == default ||
-                        DateTime.UtcNow <= forceDeleteAfter)
-                    {// Wait for a specified time, then attempt deletion again.
-                        await Task.Delay(DelayInMilliseconds);
-                        goto Retry;
-                    }
-                    else
-                    {// Force delete
-                        break;
-                    }
+Retry: // Unprotected -> Deleted
+            if (Interlocked.CompareExchange(ref obj.GetProtectionStateRef(), ObjectProtectionState.Deleted, ObjectProtectionState.Unprotected) != ObjectProtectionState.Protected)
+            {// Successfully marked as deleted (Unprotected->Deleted or Deleted->Deleted)
+            }
+            else
+            {// Protected
+                if (forceDeleteAfter == default ||
+                    DateTime.UtcNow <= forceDeleteAfter)
+                {// Wait for a specified time, then attempt deletion again.
+                    await Task.Delay(DelayInMilliseconds);
+                    goto Retry;
+                }
+                else
+                {// Force delete
+                    obj.GetProtectionStateRef() = ObjectProtectionState.Deleted;
                 }
             }
-            while (Interlocked.CompareExchange(ref obj.GetProtectionCounterRef(), DeletedCount, current) != current);
 
             if (obj is IStructualObject y)
             {
