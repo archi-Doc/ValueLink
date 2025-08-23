@@ -11,23 +11,6 @@ using Tinyhand;
 
 namespace ValueLink;
 
-/*public static class ReadCommittedGoshujinHelper
-{
-    public static async ValueTask<TData?> TryGet<TKey, TData, TObject, TGoshujin>(this IDataLocker<TGoshujin> storagePoint, TKey id, LockMode lockMode, CancellationToken cancellationToken = default)
-        where TData : notnull
-        where TObject : class, IValueLinkObjectInternal<TGoshujin, TObject>, IDataLocker<TData>
-        where TGoshujin : ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin>, IGoshujin
-    {
-        var goshujin = await storagePoint.TryGet(ValueLinkGlobal.LockTimeout, cancellationToken).ConfigureAwait(false);
-        if (goshujin is null)
-        {
-            return default;
-        }
-
-        return await goshujin.TryGet(id, cancellationToken);
-    }
-}*/
-
 /// <summary>
 /// Provides a base class for managing objects with read-committed isolation and mutual exclusion.
 /// Supports object retrieval, creation, locking, deletion, and enumeration with thread safety.
