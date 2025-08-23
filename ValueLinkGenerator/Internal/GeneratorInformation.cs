@@ -43,6 +43,8 @@ public class GeneratorInformation
         }
     }
 
+    public HashSet<ValueLinkObject> StoragePointHelper { get; } = new();
+
     private int blockSerialNumber;
     private Dictionary<string, GeneratorBlock> keyToBlock = new();
 }

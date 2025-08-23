@@ -48,6 +48,7 @@ public enum ValueLinkObjectFlag
     AddValueProperty = 1 << 26, // AddValue property
     HasKeyOrKeyAsName = 1 << 27, // Has KeyAttribute or KeyAsNameAttribute
     NoDefaultConstructor = 1 << 28, // No default constructor
+    DerivedFromStoragePoint = 1 << 29, // Derived from StoragePoint<TData>
 }
 
 public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
@@ -502,6 +503,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 this.Body.ReportDiagnostic(ValueLinkBody.Error_ReadCommitted, this.Location);
                 return;
             }
+            else if (this.IsDerivedFrom(ValueLinkBody.StoragePoint))
+            {
+                this.ObjectFlag |= ValueLinkObjectFlag.DerivedFromStoragePoint;
+            }
         }
 
         // ITinyhandCustomJournalImplementation
@@ -825,6 +830,43 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
     }
 
+    public void GenerateStoragePointHelper(ScopingStringBuilder ssb)
+    {
+        if (this.TargetDataObject?.FullName is not { } dataName)
+        {
+            return;
+        }
+
+        if (this.UniqueLink?.TypeObject.FullName is not { } keyName)
+        {
+            return;
+        }
+
+        ssb.AppendLine($"public static ValueTask<{dataName}?> TryGet(this CrystalData.StoragePoint<{this.GoshujinFullName}> storagePoint, {keyName} key, CancellationToken cancellationToken = default) => TryGet(storagePoint, key, ValueLinkGlobal.LockTimeout, cancellationToken);");
+
+        using (var tryGet = ssb.ScopeBrace($"public static async ValueTask<{dataName}?> TryGet(this CrystalData.StoragePoint<{this.GoshujinFullName}> storagePoint, {keyName} key, TimeSpan timeout, CancellationToken cancellationToken = default)"))
+        {
+            ssb.AppendLine("var g = await storagePoint.TryGet().ConfigureAwait(false);");
+            ssb.AppendLine("if (g is null) return default;");
+            ssb.AppendLine("else return await g.TryGet(key, timeout, cancellationToken).ConfigureAwait(false);");
+        }
+
+        ssb.AppendLine($"public static ValueTask<DataScope<{dataName}>> TryLock(this CrystalData.StoragePoint<{this.GoshujinFullName}> storagePoint, {keyName} key, AcquisitionMode acquisitionMode, CancellationToken cancellationToken = default) => TryLock(storagePoint, key, acquisitionMode, ValueLinkGlobal.LockTimeout, cancellationToken);");
+
+        using (var tryLock = ssb.ScopeBrace($"public static async ValueTask<DataScope<{dataName}>> TryLock(this CrystalData.StoragePoint<{this.GoshujinFullName}> storagePoint, {keyName} key, AcquisitionMode acquisitionMode, TimeSpan timeout, CancellationToken cancellationToken = default)"))
+        {
+            ssb.AppendLine($"{this.LocalName}? point = default;");
+            using (var scope = ssb.ScopeBrace($"using (var scope = await storagePoint.TryLock(AcquisitionMode.GetOrCreate, timeout, cancellationToken).ConfigureAwait(false))"))
+            {
+                ssb.AppendLine("if (scope.Data is { } g) point = g.FindFirst(key, acquisitionMode);");
+                ssb.AppendLine("else return new(scope.Result);");
+            }
+
+            ssb.AppendLine("if (point is null) return new(DataScopeResult.NotFound);");
+            ssb.AppendLine("else return await point.TryLock(AcquisitionMode.GetOrCreate, timeout, cancellationToken).ConfigureAwait(false);");
+        }
+    }
+
     public static void GenerateDeserializeChain(ValueLinkObject obj, ScopingStringBuilder ssb, object? info, Linkage link)
     {
         if (link.AutoLink)
@@ -958,6 +1000,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 if (this.UniqueLink is not null)
                 {
                     this.IsolationGoshujin = $"{ValueLinkBody.ReadCommittedGoshujin}<{this.UniqueLink.TypeObject.FullName}, {this.TargetDataObject?.FullName}, {this.LocalName},{this.ObjectAttribute.GoshujinClass}>";
+                }
+
+                if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.DerivedFromStoragePoint))
+                {// Add StoragePoint helper
+                    info.StoragePointHelper.Add(this);
                 }
             }
             else if (this.ObjectAttribute.Isolation == IsolationLevel.Serializable)

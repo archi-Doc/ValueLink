@@ -60,6 +60,8 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
     public static readonly string KeyHashDictionaryName = "__keyhash_dictionary__";
     public static readonly string UnsafeConstructorName = "UnsafeConstructor";
     public static readonly string IDataLocker = "ValueLink.IDataLocker<TData>";
+    public static readonly string StoragePoint = "CrystalData.StoragePoint<TData>";
+    public static readonly string StoragePointHelper = "StoragePointHelper";
 
     public static readonly DiagnosticDescriptor Error_NotPartial = new DiagnosticDescriptor(
         id: "CLG001", title: "Not a partial class/struct", messageFormat: "ValueLinkObject '{0}' is not a partial class/struct",
@@ -272,6 +274,9 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
                 y.Generate(ssb, info); // Primary TinyhandObject
             }
 
+            // Helper
+            this.GenerateHelper(ssb, info);
+
             var result = ssb.Finalize();
 
             if (generator.GenerateToFile && generator.TargetFolder != null && Directory.Exists(generator.TargetFolder))
@@ -294,6 +299,22 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
         }
 
         this.FlushDiagnostic();
+    }
+
+    private void GenerateHelper(ScopingStringBuilder ssb, GeneratorInformation info)
+    {
+        if (info.StoragePointHelper.Count == 0)
+        {
+            return;
+        }
+
+        using (var scope = ssb.ScopeBrace("public static class StoragePointHelper"))
+        {
+            foreach (var x in info.StoragePointHelper)
+            {
+                x.GenerateStoragePointHelper(ssb);
+            }
+        }
     }
 
     private void GenerateHeader(ScopingStringBuilder ssb, bool tinyhandFlag)
