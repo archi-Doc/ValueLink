@@ -11,23 +11,6 @@ using Tinyhand;
 
 namespace ValueLink;
 
-/*public static class ReadCommittedGoshujinHelper
-{
-    public static async ValueTask<TData?> TryGet<TKey, TData, TObject, TGoshujin>(this IDataLocker<TGoshujin> storagePoint, TKey id, LockMode lockMode, CancellationToken cancellationToken = default)
-        where TData : notnull
-        where TObject : class, IValueLinkObjectInternal<TGoshujin, TObject>, IDataLocker<TData>
-        where TGoshujin : ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin>, IGoshujin
-    {
-        var goshujin = await storagePoint.TryGet(ValueLinkGlobal.LockTimeout, cancellationToken).ConfigureAwait(false);
-        if (goshujin is null)
-        {
-            return default;
-        }
-
-        return await goshujin.TryGet(id, cancellationToken);
-    }
-}*/
-
 /// <summary>
 /// Provides a base class for managing objects with read-committed isolation and mutual exclusion.
 /// Supports object retrieval, creation, locking, deletion, and enumeration with thread safety.
@@ -118,8 +101,9 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
     /// Finds the first object matching the specified key.
     /// </summary>
     /// <param name="key">The key of the object to find.</param>
+    /// <param name="lockMode">The lock mode specifying get, create, or get-or-create behavior.</param>
     /// <returns>The object if found; otherwise, <c>null</c>.</returns>
-    public TObject? FindFirst(TKey key)
+    public TObject? FindFirst(TKey key, LockMode lockMode = LockMode.Get)
     {
         using (this.LockObject.EnterScope())
         {
@@ -128,7 +112,28 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
                 return default;
             }
 
-            return this.FindObject(key);
+            var obj = this.FindObject(key);
+            if (obj is null)
+            {// Object not found
+                if (lockMode == LockMode.Get)
+                {// Get
+                    return default;
+                }
+                else
+                {// Create or GetOrCreate
+                    obj = this.NewObject(key);
+                    TObject.AddToGoshujin(obj, (TGoshujin)this, true);
+                }
+            }
+            else
+            {// Object found
+                if (lockMode == LockMode.Create)
+                {// Create
+                    return default;
+                }
+            }
+
+            return obj;
         }
     }
 
