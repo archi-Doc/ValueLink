@@ -141,7 +141,7 @@ internal class Program
         var a = new SpClassPoint();
         var g = new SpClassPoint.GoshujinClass();
         var tc = await g.TryGet(123);
-        using (var scope = await g.TryLock(123, LockMode.GetOrCreate))
+        using (var scope = await g.TryLock(123, AcquisitionMode.GetOrCreate))
         {
             if (scope.IsValid)
             {
@@ -150,7 +150,7 @@ internal class Program
         }
 
         tc = await g.TryGet(123);
-        using (var scope = await g.TryLock(123, LockMode.Get))
+        using (var scope = await g.TryLock(123, AcquisitionMode.Get))
         {
             if (scope.IsValid)
             {
@@ -168,11 +168,11 @@ internal class Program
         array = g.GetArray();
 
         var spc = new SpClass();
-        using (var spd = await spc.Goshujin.TryLock(1, LockMode.GetOrCreate))
+        using (var spd = await spc.Goshujin.TryLock(1, AcquisitionMode.GetOrCreate))
         {
             if (spd.IsValid)
             {
-                await spd.Data.Goshujin.TryLock(2, LockMode.GetOrCreate);
+                await spd.Data.Goshujin.TryLock(2, AcquisitionMode.GetOrCreate);
             }
         }
 

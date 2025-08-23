@@ -224,7 +224,7 @@ public partial record RepeatableClass
 
         g.Add(new RepeatableClass(0)); // Adds an object with id 0.
 
-        using (var w = g.TryLock(1, LockMode.Create))
+        using (var w = g.TryLock(1, AcquisitionMode.Create))
         {// Alternative: adds an object with id 1.
             w?.Commit(); // Commit the change.
         }

@@ -101,9 +101,9 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
     /// Finds the first object matching the specified key.
     /// </summary>
     /// <param name="key">The key of the object to find.</param>
-    /// <param name="lockMode">The lock mode specifying get, create, or get-or-create behavior.</param>
+    /// <param name="acquisitionMode">The data acquisition mode specifying get, create, or get-or-create behavior.</param>
     /// <returns>The object if found; otherwise, <c>null</c>.</returns>
-    public TObject? FindFirst(TKey key, LockMode lockMode = LockMode.Get)
+    public TObject? FindFirst(TKey key, AcquisitionMode acquisitionMode = AcquisitionMode.Get)
     {
         using (this.LockObject.EnterScope())
         {
@@ -115,7 +115,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
             var obj = this.FindObject(key);
             if (obj is null)
             {// Object not found
-                if (lockMode == LockMode.Get)
+                if (acquisitionMode == AcquisitionMode.Get)
                 {// Get
                     return default;
                 }
@@ -127,7 +127,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
             }
             else
             {// Object found
-                if (lockMode == LockMode.Create)
+                if (acquisitionMode == AcquisitionMode.Create)
                 {// Create
                     return default;
                 }
@@ -181,25 +181,25 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
     /// Attempts to acquire a lock on the object matching the specified key, with the specified lock mode.
     /// </summary>
     /// <param name="key">The key of the object to lock.</param>
-    /// <param name="lockMode">The lock mode specifying get, create, or get-or-create behavior.</param>
+    /// <param name="acquisitionMode">The data acquisition mode specifying get, create, or get-or-create behavior.</param>
     /// <param name="cancellationToken">A token to observe while waiting for the operation to complete.</param>
     /// <returns>
     /// A <see cref="ValueTask{DataScope}"/> containing the result and the locked data if successful.
     /// </returns>
-    public ValueTask<DataScope<TData>> TryLock(TKey key, LockMode lockMode, CancellationToken cancellationToken = default)
-        => this.TryLock(key, lockMode, ValueLinkGlobal.LockTimeout, cancellationToken);
+    public ValueTask<DataScope<TData>> TryLock(TKey key, AcquisitionMode acquisitionMode, CancellationToken cancellationToken = default)
+        => this.TryLock(key, acquisitionMode, ValueLinkGlobal.LockTimeout, cancellationToken);
 
     /// <summary>
     /// Attempts to acquire a lock on the object matching the specified key, with the specified lock mode.
     /// </summary>
     /// <param name="key">The key of the object to lock.</param>
-    /// <param name="lockMode">The lock mode specifying get, create, or get-or-create behavior.</param>
+    /// <param name="acquisitionMode">The data acquisition mode specifying get, create, or get-or-create behavior.</param>
     /// <param name="timeout">The maximum time to wait for the lock. If <see cref="TimeSpan.Zero"/>, the method returns immediately.</param>
     /// <param name="cancellationToken">A token to observe while waiting for the operation to complete.</param>
     /// <returns>
     /// A <see cref="ValueTask{DataScope}"/> containing the result and the locked data if successful.
     /// </returns>
-    public ValueTask<DataScope<TData>> TryLock(TKey key, LockMode lockMode, TimeSpan timeout, CancellationToken cancellationToken = default)
+    public ValueTask<DataScope<TData>> TryLock(TKey key, AcquisitionMode acquisitionMode, TimeSpan timeout, CancellationToken cancellationToken = default)
     {
         TObject? obj;
         using (this.LockObject.EnterScope())
@@ -212,7 +212,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
             obj = this.FindObject(key);
             if (obj is null)
             {// Object not found
-                if (lockMode == LockMode.Get)
+                if (acquisitionMode == AcquisitionMode.Get)
                 {// Get
                     return ValueTask.FromResult(new DataScope<TData>(DataScopeResult.NotFound));
                 }
@@ -224,7 +224,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
             }
             else
             {// Object found
-                if (lockMode == LockMode.Create)
+                if (acquisitionMode == AcquisitionMode.Create)
                 {// Create
                     return ValueTask.FromResult(new DataScope<TData>(DataScopeResult.AlreadyExists));
                 }
