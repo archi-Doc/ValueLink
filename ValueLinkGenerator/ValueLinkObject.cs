@@ -502,6 +502,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 this.Body.ReportDiagnostic(ValueLinkBody.Error_ReadCommitted, this.Location);
                 return;
             }
+            /*else if (this.IsDerivedOrImplementing(x => x.OriginalDefinition?.FullName == ValueLinkBody.StoragePoint))
+            {// StorageObject
+                this.IsDerivedOrImplementing
+            }*/
         }
 
         // ITinyhandCustomJournalImplementation
