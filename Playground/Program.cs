@@ -164,7 +164,7 @@ internal class Program
         }
 
         tc = await g.TryGet(123);
-        await g.TryDelete(123);
+        await g.Delete(123);
         array = g.GetArray();
 
         var spc = new SpClass();
@@ -176,7 +176,22 @@ internal class Program
             }
         }
 
-        await spc.Goshujin.TryDelete(2);
-        await spc.Goshujin.TryDelete(1, DateTime.UtcNow + TimeSpan.FromSeconds(2));
+        await spc.Goshujin.Delete(2);
+        await spc.Goshujin.Delete(1, DateTime.UtcNow + TimeSpan.FromSeconds(2));
+    }
+}
+
+internal static class Helper
+{
+    public static async ValueTask<DataScope<Playground.SpClass>> TryDelete(this CrystalData.StoragePoint<Playground.SpClassPoint.GoshujinClass> storagePoint, int key, DateTime forceDeleteAfter = default)
+    {
+        SpClassPoint? point = default;
+        using (var scope = await storagePoint.TryLock(AcquisitionMode.Get).ConfigureAwait(false))
+        {
+            if (scope.Data is { } g) point = g.FindFirst(key, acquisitionMode);
+            else return new(scope.Result);
+        }
+        if (point is null) return new(DataScopeResult.NotFound);
+        else return await point.TryLock(AcquisitionMode.GetOrCreate, timeout, cancellationToken).ConfigureAwait(false);
     }
 }

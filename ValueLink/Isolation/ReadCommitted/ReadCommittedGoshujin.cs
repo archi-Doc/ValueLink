@@ -235,7 +235,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
     }
 
     /// <summary>
-    /// Attempts to delete the object matching the specified key.
+    /// Deletes the object matching the specified key.
     /// If the object is protected, waits until it can be deleted or until <paramref name="forceDeleteAfter"/> is reached.
     /// </summary>
     /// <param name="key">The key of the object to delete.</param>
@@ -246,7 +246,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
     /// <returns>
     /// A <see cref="Task{DataScopeResult}"/> indicating the result of the deletion attempt.
     /// </returns>
-    public async Task<DataScopeResult> TryDelete(TKey key, DateTime forceDeleteAfter = default)
+    public async Task<DataScopeResult> Delete(TKey key, DateTime forceDeleteAfter = default)
     {
         TObject? obj;
         var delay = false;
@@ -293,6 +293,37 @@ Retry:
 
         return DataScopeResult.Success;
     }
+
+    public async Task<DataScopeResult> TryDelete(TKey key)
+    {
+        TObject? obj;
+
+        using (this.LockObject.EnterScope())
+        {
+            obj = this.FindObject(key);
+            if (obj is null)
+            {// Object not found
+                return DataScopeResult.NotFound;
+            }
+
+            // Unprotected -> Deleted
+            if (Interlocked.CompareExchange(ref obj.GetProtectionStateRef(), ObjectProtectionState.Deleted, ObjectProtectionState.Unprotected) != ObjectProtectionState.Protected)
+            {// Successfully marked as deleted (Unprotected->Deleted or Deleted->Deleted)
+            }
+            else
+            {// Protected
+                return DataScopeResult.Timeout;
+            }
+
+            TObject.RemoveFromGoshujin(obj, (TGoshujin)this, true, true);
+        }
+
+        if (obj is IStructualObject y)
+        {
+            await y.Delete(forceDeleteAfter).ConfigureAwait(false);
+        }
+
+        return DataScopeResult.Success;
 
     /// <summary>
     /// Gets an array of all objects managed by the goshujin.
