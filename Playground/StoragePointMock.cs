@@ -39,4 +39,9 @@ public class StoragePoint<TData> : IStructualObject, IDataLocker<TData>
     {
         return ValueTask.FromResult(new DataScope<TData>(DataScopeResult.Timeout));
     }
+
+    public Task Delete(DateTime forceDeleteAfter = default)
+    {
+        return Task.CompletedTask;
+    }
 }

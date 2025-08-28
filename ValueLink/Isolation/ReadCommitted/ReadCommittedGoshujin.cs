@@ -294,37 +294,6 @@ Retry:
         return DataScopeResult.Success;
     }
 
-    public async Task<DataScopeResult> TryDelete(TKey key)
-    {
-        TObject? obj;
-
-        using (this.LockObject.EnterScope())
-        {
-            obj = this.FindObject(key);
-            if (obj is null)
-            {// Object not found
-                return DataScopeResult.NotFound;
-            }
-
-            // Unprotected -> Deleted
-            if (Interlocked.CompareExchange(ref obj.GetProtectionStateRef(), ObjectProtectionState.Deleted, ObjectProtectionState.Unprotected) != ObjectProtectionState.Protected)
-            {// Successfully marked as deleted (Unprotected->Deleted or Deleted->Deleted)
-            }
-            else
-            {// Protected
-                return DataScopeResult.Timeout;
-            }
-
-            TObject.RemoveFromGoshujin(obj, (TGoshujin)this, true, true);
-        }
-
-        if (obj is IStructualObject y)
-        {
-            await y.Delete(forceDeleteAfter).ConfigureAwait(false);
-        }
-
-        return DataScopeResult.Success;
-
     /// <summary>
     /// Gets an array of all objects managed by the goshujin.
     /// </summary>
