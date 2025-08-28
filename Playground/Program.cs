@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Threading;
 using System.Threading.Tasks;
 using Arc.Threading;
@@ -115,7 +114,7 @@ public partial class SpClass
         [Link(Unique = true, Primary = true, Type = ChainType.Unordered)]
         public int Id { get; set; }
 
-        public SpClassPoint()
+        public SpClassPoint(int x)
         {
             this.SetData(new());
         }
@@ -138,7 +137,7 @@ internal class Program
     {
         Console.WriteLine("Hello, World");
 
-        var a = new SpClass.SpClassPoint();
+        var a = new SpClass.SpClassPoint(111);
         var g = new SpClass.SpClassPoint.GoshujinClass();
         var tc = await g.TryGet(123);
         using (var scope = await g.TryLock(123, AcquisitionMode.GetOrCreate))
