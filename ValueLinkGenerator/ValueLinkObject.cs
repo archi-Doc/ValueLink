@@ -832,6 +832,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     public void GenerateStoragePointHelper(ScopingStringBuilder ssb)
     {
+        var pointName = this.RegionalName;
         if (this.TargetDataObject?.FullName is not { } dataName)
         {
             return;
@@ -842,9 +843,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             return;
         }
 
-        ssb.AppendLine($"public static ValueTask<{this.LocalName}?> Find(this CrystalData.StoragePoint<{this.GoshujinFullName}> storagePoint, {keyName} key, CancellationToken cancellationToken = default) => Find(storagePoint, key, ValueLinkGlobal.LockTimeout, cancellationToken);");
+        ssb.AppendLine($"public static ValueTask<{pointName}?> Find(this CrystalData.StoragePoint<{this.GoshujinFullName}> storagePoint, {keyName} key, CancellationToken cancellationToken = default) => Find(storagePoint, key, ValueLinkGlobal.LockTimeout, cancellationToken);");
 
-        using (var tryLock = ssb.ScopeBrace($"public static async ValueTask<{this.LocalName}?> Find(this CrystalData.StoragePoint<{this.GoshujinFullName}> storagePoint, {keyName} key, TimeSpan timeout, CancellationToken cancellationToken = default)"))
+        using (var tryLock = ssb.ScopeBrace($"public static async ValueTask<{pointName}?> Find(this CrystalData.StoragePoint<{this.GoshujinFullName}> storagePoint, {keyName} key, TimeSpan timeout, CancellationToken cancellationToken = default)"))
         {
             using (var scope = ssb.ScopeBrace($"using (var scope = await storagePoint.TryLock(AcquisitionMode.Get, timeout, cancellationToken).ConfigureAwait(false))"))
             {
@@ -866,7 +867,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         using (var tryLock = ssb.ScopeBrace($"public static async ValueTask<DataScope<{dataName}>> TryLock(this CrystalData.StoragePoint<{this.GoshujinFullName}> storagePoint, {keyName} key, AcquisitionMode acquisitionMode, TimeSpan timeout, CancellationToken cancellationToken = default)"))
         {
-            ssb.AppendLine($"{this.LocalName}? point = default;");
+            ssb.AppendLine($"{pointName}? point = default;");
             using (var scope = ssb.ScopeBrace($"using (var scope = await storagePoint.TryLock(AcquisitionMode.GetOrCreate, timeout, cancellationToken).ConfigureAwait(false))"))
             {
                 ssb.AppendLine("if (scope.Data is { } g) point = g.Find(key, acquisitionMode);");
