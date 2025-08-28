@@ -235,7 +235,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
     }
 
     /// <summary>
-    /// Attempts to delete the object matching the specified key.
+    /// Deletes the object matching the specified key.
     /// If the object is protected, waits until it can be deleted or until <paramref name="forceDeleteAfter"/> is reached.
     /// </summary>
     /// <param name="key">The key of the object to delete.</param>
@@ -246,7 +246,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
     /// <returns>
     /// A <see cref="Task{DataScopeResult}"/> indicating the result of the deletion attempt.
     /// </returns>
-    public async Task<DataScopeResult> TryDelete(TKey key, DateTime forceDeleteAfter = default)
+    public async Task<DataScopeResult> Delete(TKey key, DateTime forceDeleteAfter = default)
     {
         TObject? obj;
         var delay = false;
@@ -272,7 +272,7 @@ Retry:
             else
             {// Protected
                 if (forceDeleteAfter == default ||
-                        DateTime.UtcNow <= forceDeleteAfter)
+                    DateTime.UtcNow <= forceDeleteAfter)
                 {// Wait for a specified time, then attempt deletion again.
                     delay = true;
                     goto Retry;

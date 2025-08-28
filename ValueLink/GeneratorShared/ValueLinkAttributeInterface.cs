@@ -23,7 +23,7 @@ public enum IsolationLevel
     Serializable,
 
     /// <summary>
-    /// Read committed isolation level.<br/>
+    /// Provides a Read committed isolation level based on StoragePoint.<br/>
     /// Does not guarantee repeatable reads (values may change between reads) and phantom reads may occur.<br/>
     /// The object must inherit from <see cref="IDataLocker{TData}"/>.
     /// </summary>
