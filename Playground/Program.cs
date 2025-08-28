@@ -105,22 +105,22 @@ public partial class LockedDataMock<TData> : IDataLocker<TData>, IDataUnlocker, 
 }
 
 [TinyhandObject(Structual = true)]
-[ValueLinkObject(Isolation = IsolationLevel.ReadCommitted)]
-public partial class SpClassPoint : CrystalData.StoragePoint<SpClass> // LockedDataMock<SpClass>
-{// Value, Link
-    [Key(1)]
-    [Link(Unique = true, Primary = true, Type = ChainType.Unordered)]
-    public int Id { get; set; }
-
-    public SpClassPoint()
-    {
-        this.SetData(new());
-    }
-}
-
-[TinyhandObject(Structual = true)]
 public partial class SpClass
 {
+    [TinyhandObject(Structual = true)]
+    [ValueLinkObject(Isolation = IsolationLevel.ReadCommitted)]
+    public partial class SpClassPoint : CrystalData.StoragePoint<SpClass> // LockedDataMock<SpClass>
+    {// Value, Link
+        [Key(1)]
+        [Link(Unique = true, Primary = true, Type = ChainType.Unordered)]
+        public int Id { get; set; }
+
+        public SpClassPoint()
+        {
+            this.SetData(new());
+        }
+    }
+
     public SpClass()
     {
     }
@@ -138,8 +138,8 @@ internal class Program
     {
         Console.WriteLine("Hello, World");
 
-        var a = new SpClassPoint();
-        var g = new SpClassPoint.GoshujinClass();
+        var a = new SpClass.SpClassPoint();
+        var g = new SpClass.SpClassPoint.GoshujinClass();
         var tc = await g.TryGet(123);
         using (var scope = await g.TryLock(123, AcquisitionMode.GetOrCreate))
         {
