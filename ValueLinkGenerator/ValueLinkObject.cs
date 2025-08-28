@@ -842,13 +842,13 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             return;
         }
 
-        ssb.AppendLine($"public static ValueTask<{this.LocalName}?> Find(this CrystalData.StoragePoint<{this.GoshujinFullName}> storagePoint, {keyName} key, AcquisitionMode acquisitionMode, CancellationToken cancellationToken = default) => Find(storagePoint, key, acquisitionMode, ValueLinkGlobal.LockTimeout, cancellationToken);");
+        ssb.AppendLine($"public static ValueTask<{this.LocalName}?> Find(this CrystalData.StoragePoint<{this.GoshujinFullName}> storagePoint, {keyName} key, CancellationToken cancellationToken = default) => Find(storagePoint, key, ValueLinkGlobal.LockTimeout, cancellationToken);");
 
-        using (var tryLock = ssb.ScopeBrace($"public static async ValueTask<{this.LocalName}?> Find(this CrystalData.StoragePoint<{this.GoshujinFullName}> storagePoint, {keyName} key, AcquisitionMode acquisitionMode, TimeSpan timeout, CancellationToken cancellationToken = default)"))
+        using (var tryLock = ssb.ScopeBrace($"public static async ValueTask<{this.LocalName}?> Find(this CrystalData.StoragePoint<{this.GoshujinFullName}> storagePoint, {keyName} key, TimeSpan timeout, CancellationToken cancellationToken = default)"))
         {
             using (var scope = ssb.ScopeBrace($"using (var scope = await storagePoint.TryLock(AcquisitionMode.Get, timeout, cancellationToken).ConfigureAwait(false))"))
             {
-                ssb.AppendLine("if (scope.Data is { } g) return g.Find(key, acquisitionMode);");
+                ssb.AppendLine("if (scope.Data is { } g) return g.Find(key, AcquisitionMode.Get);");
                 ssb.AppendLine("else return default;");
             }
         }
