@@ -865,6 +865,22 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             ssb.AppendLine("if (point is null) return new(DataScopeResult.NotFound);");
             ssb.AppendLine("else return await point.TryLock(AcquisitionMode.GetOrCreate, timeout, cancellationToken).ConfigureAwait(false);");
         }
+
+        ssb.AppendLine($"public static Task<DataScopeResult> Delete(this CrystalData.StoragePoint<{this.GoshujinFullName}> storagePoint, {keyName} key, DateTime forceDeleteAfter = default) => Delete(storagePoint, key, ValueLinkGlobal.LockTimeout, default, forceDeleteAfter);");
+
+        using (var tryLock = ssb.ScopeBrace($"public static async Task<DataScopeResult> Delete(this CrystalData.StoragePoint<{this.GoshujinFullName}> storagePoint, {keyName} key, TimeSpan timeout, CancellationToken cancellationToken = default, DateTime forceDeleteAfter = default)"))
+        {
+            ssb.AppendLine($"{this.LocalName}? point = default;");
+            using (var scope = ssb.ScopeBrace($"using (var scope = await storagePoint.TryLock(AcquisitionMode.Get, timeout, cancellationToken).ConfigureAwait(false))"))
+            {
+                ssb.AppendLine("if (scope.Data is { } g) point = g.FindFirst(key, AcquisitionMode.Get);");
+                ssb.AppendLine("else return scope.Result;");
+            }
+
+            ssb.AppendLine("if (point is null) return DataScopeResult.NotFound;");
+            ssb.AppendLine("await point.Delete(forceDeleteAfter).ConfigureAwait(false);");
+            ssb.AppendLine("return DataScopeResult.Success;");
+        }
     }
 
     public static void GenerateDeserializeChain(ValueLinkObject obj, ScopingStringBuilder ssb, object? info, Linkage link)
