@@ -188,15 +188,24 @@ internal static class Helper
 
     public static async Task<DataScopeResult> Delete(this CrystalData.StoragePoint<SpClassPoint.GoshujinClass> storagePoint, int key, TimeSpan timeout, CancellationToken cancellationToken, DateTime forceDeleteAfter = default)
     {
+        using (var scope = await storagePoint.TryLock(AcquisitionMode.Get, timeout, cancellationToken).ConfigureAwait(false))
+        {
+            if (scope.Data is { } g) return await g.Delete(key, forceDeleteAfter).ConfigureAwait(false);
+            else return scope.Result;
+        }
+    }
+
+    /*public static async Task<DataScopeResult> Delete(this CrystalData.StoragePoint<SpClassPoint.GoshujinClass> storagePoint, int key, TimeSpan timeout, CancellationToken cancellationToken, DateTime forceDeleteAfter = default)
+    {
         SpClassPoint? point = default;
         using (var scope = await storagePoint.TryLock(AcquisitionMode.Get, timeout, cancellationToken).ConfigureAwait(false))
         {
-            if (scope.Data is { } g) point = g.FindFirst(key);
+            if (scope.Data is { } g) point = g.FindFirst(key, AcquisitionMode.Get);
             else return scope.Result;
         }
 
         if (point is null) return DataScopeResult.NotFound;
         await point.Delete(forceDeleteAfter).ConfigureAwait(false);
         return DataScopeResult.Success;
-    }
+    }*/
 }
