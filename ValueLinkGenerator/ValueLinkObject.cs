@@ -842,6 +842,17 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             return;
         }
 
+        ssb.AppendLine($"public static ValueTask<{this.LocalName}?> Find(this CrystalData.StoragePoint<{this.GoshujinFullName}> storagePoint, {keyName} key, AcquisitionMode acquisitionMode, CancellationToken cancellationToken = default) => Find(storagePoint, key, acquisitionMode, ValueLinkGlobal.LockTimeout, cancellationToken);");
+
+        using (var tryLock = ssb.ScopeBrace($"public static async ValueTask<{this.LocalName}?> Find(this CrystalData.StoragePoint<{this.GoshujinFullName}> storagePoint, {keyName} key, AcquisitionMode acquisitionMode, TimeSpan timeout, CancellationToken cancellationToken = default)"))
+        {
+            using (var scope = ssb.ScopeBrace($"using (var scope = await storagePoint.TryLock(AcquisitionMode.Get, timeout, cancellationToken).ConfigureAwait(false))"))
+            {
+                ssb.AppendLine("if (scope.Data is { } g) return g.Find(key, acquisitionMode);");
+                ssb.AppendLine("else return default;");
+            }
+        }
+
         ssb.AppendLine($"public static ValueTask<{dataName}?> TryGet(this CrystalData.StoragePoint<{this.GoshujinFullName}> storagePoint, {keyName} key, CancellationToken cancellationToken = default) => TryGet(storagePoint, key, ValueLinkGlobal.LockTimeout, cancellationToken);");
 
         using (var tryGet = ssb.ScopeBrace($"public static async ValueTask<{dataName}?> TryGet(this CrystalData.StoragePoint<{this.GoshujinFullName}> storagePoint, {keyName} key, TimeSpan timeout, CancellationToken cancellationToken = default)"))
@@ -858,7 +869,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             ssb.AppendLine($"{this.LocalName}? point = default;");
             using (var scope = ssb.ScopeBrace($"using (var scope = await storagePoint.TryLock(AcquisitionMode.GetOrCreate, timeout, cancellationToken).ConfigureAwait(false))"))
             {
-                ssb.AppendLine("if (scope.Data is { } g) point = g.FindFirst(key, acquisitionMode);");
+                ssb.AppendLine("if (scope.Data is { } g) point = g.Find(key, acquisitionMode);");
                 ssb.AppendLine("else return new(scope.Result);");
             }
 
@@ -875,17 +886,6 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 ssb.AppendLine("if (scope.Data is { } g) return await g.Delete(key, forceDeleteAfter).ConfigureAwait(false);");
                 ssb.AppendLine("else return scope.Result;");
             }
-
-            /*ssb.AppendLine($"{this.LocalName}? point = default;");
-            using (var scope = ssb.ScopeBrace($"using (var scope = await storagePoint.TryLock(AcquisitionMode.Get, timeout, cancellationToken).ConfigureAwait(false))"))
-            {
-                ssb.AppendLine("if (scope.Data is { } g) point = g.FindFirst(key, AcquisitionMode.Get);");
-                ssb.AppendLine("else return scope.Result;");
-            }
-
-            ssb.AppendLine("if (point is null) return DataScopeResult.NotFound;");
-            ssb.AppendLine("await point.Delete(forceDeleteAfter).ConfigureAwait(false);");
-            ssb.AppendLine("return DataScopeResult.Success;");*/
         }
     }
 

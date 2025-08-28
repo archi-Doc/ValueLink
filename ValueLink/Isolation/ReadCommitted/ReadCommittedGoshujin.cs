@@ -103,7 +103,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
     /// <param name="key">The key of the object to find.</param>
     /// <param name="acquisitionMode">The data acquisition mode specifying get, create, or get-or-create behavior.</param>
     /// <returns>The object if found; otherwise, <c>null</c>.</returns>
-    public TObject? FindFirst(TKey key, AcquisitionMode acquisitionMode = AcquisitionMode.Get)
+    public TObject? Find(TKey key, AcquisitionMode acquisitionMode = AcquisitionMode.Get)
     {
         using (this.LockObject.EnterScope())
         {
