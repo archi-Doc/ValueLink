@@ -448,7 +448,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.CanCreateInstance))
         {// Type which can create an instance
-            if (this.GetMembers(VisceralTarget.Method).Any(a => a.Method_IsConstructor && a.Method_Parameters.Length == 0) != true)
+            if (this.GetMembers(VisceralTarget.Method).Any(a => a.ContainingObject == this && a.Method_IsConstructor && a.Method_Parameters.Length == 0) != true)
             {// No default constructor
                 this.ObjectFlag |= ValueLinkObjectFlag.NoDefaultConstructor;
             }
