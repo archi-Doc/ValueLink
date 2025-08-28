@@ -272,7 +272,7 @@ Retry:
             else
             {// Protected
                 if (forceDeleteAfter == default ||
-                        DateTime.UtcNow <= forceDeleteAfter)
+                    DateTime.UtcNow <= forceDeleteAfter)
                 {// Wait for a specified time, then attempt deletion again.
                     delay = true;
                     goto Retry;
