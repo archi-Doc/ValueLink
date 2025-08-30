@@ -2437,7 +2437,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 ssb.AppendLine("catch {}");
             }
 
-            using (var scopeRemove = ssb.ScopeBrace("else if (record == JournalRecord.Delete || record == JournalRecord.DeleteAndErase)"))
+            using (var scopeRemove = ssb.ScopeBrace("else if (record == JournalRecord.Delete)"))
             {// Remove
                 var typeObject = this.UniqueLink.Target.TypeObject;
                 ssb.AppendLine($"var key = {typeObject.CodeReader()};");
