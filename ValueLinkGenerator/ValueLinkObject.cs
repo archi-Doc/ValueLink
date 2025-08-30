@@ -1224,7 +1224,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             {
                 ssb.AppendLine($"if (g == {ssb.FullObject}.{this.GoshujinInstanceIdentifier}) return;");
 
-                ssb.AppendLine($"{this.ValueLinkInternalHelper}.{ValueLinkBody.RemoveFromGoshujinName}({ssb.FullObject}, null, false);");
+                ssb.AppendLine($"{this.ValueLinkInternalHelper}.{ValueLinkBody.RemoveFromGoshujinName}({ssb.FullObject}, null);");
                 ssb.AppendLine($"{this.ValueLinkInternalHelper}.{ValueLinkBody.AddToGoshujinName}({ssb.FullObject}, g);");
                 // ssb.AppendLine($"{ssb.FullObject}.{this.GoshujinInstanceIdentifier} = g;"); // AddToGoshujin()
             }
@@ -1275,7 +1275,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     {
         var goshujinInstance = this.GoshujinInstanceIdentifier; // goshujin + "Instance";
 
-        using (var enterScope = ssb.ScopeBrace($"static bool {this.IValueLinkObjectInternal}.{ValueLinkBody.RemoveFromGoshujinName}({this.LocalName} obj, {this.ObjectAttribute!.GoshujinClass}? g, bool erase, bool writeJournal)"))
+        using (var enterScope = ssb.ScopeBrace($"static bool {this.IValueLinkObjectInternal}.{ValueLinkBody.RemoveFromGoshujinName}({this.LocalName} obj, {this.ObjectAttribute!.GoshujinClass}? g, bool writeJournal)"))
         using (var scopeParamter = ssb.ScopeObject("obj"))
         {
             /*if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.AddSyncObject))
@@ -1398,7 +1398,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             this.Generate_RepeatableRead_WriterClass_Commit(ssb);
 
-            ssb.AppendLine($"public void DeleteAndErase() => this.__erase_flag__ = true;");
+            ssb.AppendLine($"public void Delete() => this.__erase_flag__ = true;");
             using (var scopeRollback = ssb.ScopeBrace($"public void Rollback()"))
             {
                 ssb.AppendLine("this.instance = null;");
@@ -1418,7 +1418,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             using (var scopeDispose = ssb.ScopeBrace($"public void Dispose()"))
             {
                 ssb.AppendLine($"var goshujin = this.original.{this.GoshujinInstanceIdentifier};");
-                ssb.AppendLine($"if (goshujin is not null) {{ using (goshujin.LockObject.EnterScope()) {{ if (this.original.State == RepeatableReadObjectState.Created) {this.ValueLinkInternalHelper}.{ValueLinkBody.RemoveFromGoshujinName}(this.original, null, false, false); (({ValueLinkBody.IRepeatableReadSemaphore})goshujin).ReleaseOne(); }} }}");
+                ssb.AppendLine($"if (goshujin is not null) {{ using (goshujin.LockObject.EnterScope()) {{ if (this.original.State == RepeatableReadObjectState.Created) {this.ValueLinkInternalHelper}.{ValueLinkBody.RemoveFromGoshujinName}(this.original, null, false); (({ValueLinkBody.IRepeatableReadSemaphore})goshujin).ReleaseOne(); }} }}");
 
                 ssb.AppendLine($"this.original.{ValueLinkBody.WriterSemaphoreName}.Exit();");
             }
@@ -1548,7 +1548,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     }
                 }
 
-                ssb.AppendLine($"if (goshujin is not null) {{ using (goshujin.LockObject.EnterScope()) {{ {this.ValueLinkInternalHelper}.{ValueLinkBody.RemoveFromGoshujinName}(this.original, null, this.__erase_flag__); (({ValueLinkBody.IRepeatableReadSemaphore})goshujin).ReleaseOne(); }} }}");
+                ssb.AppendLine($"if (goshujin is not null) {{ using (goshujin.LockObject.EnterScope()) {{ {this.ValueLinkInternalHelper}.{ValueLinkBody.RemoveFromGoshujinName}(this.original, null); (({ValueLinkBody.IRepeatableReadSemaphore})goshujin).ReleaseOne(); }} }}");
             }
 
             // Structual
@@ -2425,7 +2425,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 ssb.AppendLine("{");
                 ssb.IncrementIndent();
 
-                ssb.AppendLine($"if (this.{this.UniqueLink.ChainName}.FindFirst(obj.{this.UniqueLink.TargetName}) is {{ }} old) {this.ValueLinkInternalHelper}.{ValueLinkBody.RemoveFromGoshujinName}(old, null, false, false);");
+                ssb.AppendLine($"if (this.{this.UniqueLink.ChainName}.FindFirst(obj.{this.UniqueLink.TargetName}) is {{ }} old) {this.ValueLinkInternalHelper}.{ValueLinkBody.RemoveFromGoshujinName}(old, null, false);");
 
                 ssb.AppendLine($"{this.ValueLinkInternalHelper}.{ValueLinkBody.AddToGoshujinName}(obj, this, false);");
                 ssb.AppendLine("return true;");
@@ -2446,7 +2446,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
                 ssb.AppendLine("{");
                 ssb.IncrementIndent();
-                ssb.AppendLine($"{this.ValueLinkInternalHelper}.{ValueLinkBody.RemoveFromGoshujinName}(obj, null, record == JournalRecord.DeleteAndErase, false);");
+                ssb.AppendLine($"{this.ValueLinkInternalHelper}.{ValueLinkBody.RemoveFromGoshujinName}(obj, null, false);");
                 ssb.AppendLine("return true;");
                 ssb.DecrementIndent();
                 ssb.AppendLine("}");
@@ -2839,7 +2839,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
         else
         {
-            ssb.AppendLine($"public bool Remove({this.LocalName} x) => {this.ValueLinkInternalHelper}.{ValueLinkBody.RemoveFromGoshujinName}(x, this, false);");
+            ssb.AppendLine($"public bool Remove({this.LocalName} x) => {this.ValueLinkInternalHelper}.{ValueLinkBody.RemoveFromGoshujinName}(x, this);");
         }
 
         // ssb.AppendLine($"public void RemoveAll(ref TemporaryQueue<{this.LocalName}> queue) {{ foreach (var x in queue) this.Remove(x); }}");
