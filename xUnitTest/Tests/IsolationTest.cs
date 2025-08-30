@@ -231,7 +231,7 @@ public class IsolationTest
 
         using (var w = g2.TryLock(10, AcquisitionMode.Get)!)
         {
-            w.DeleteAndErase();
+            w.Delete();
             w.Commit();
         }
 
@@ -240,7 +240,7 @@ public class IsolationTest
 
         using (var w = g2.TryLock(10, AcquisitionMode.Create)!)
         {
-            w.DeleteAndErase();
+            w.Delete();
             w.Commit();
         }
 

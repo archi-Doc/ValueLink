@@ -184,7 +184,7 @@ internal static class JournalShared
             if (remove is null &&
                 obj.CodeWriter(ssb.FullObject) is { } writeAdd)
             {
-                ssb.AppendLine("writer.Write_Add();");
+                ssb.AppendLine("writer.Write(JournalRecord.AddItem);");
                 ssb.AppendLine(writeAdd);
             }
 
@@ -192,8 +192,7 @@ internal static class JournalShared
             if (remove is not null &&
                 remove.CodeWriter($"{ssb.FullObject}.{remove.SimpleName}") is { } writeRemove)
             {
-                ssb.AppendLine("if (erase) writer.Write(JournalRecord.DeleteAndErase);");
-                ssb.AppendLine("else writer.Write(JournalRecord.Delete);");
+                ssb.AppendLine("writer.Write(JournalRecord.DeleteItem);");
                 ssb.AppendLine(writeRemove);
             }
 

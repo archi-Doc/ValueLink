@@ -461,7 +461,7 @@ public class JournalTest
         {
             if (w is not null)
             {
-                w.DeleteAndErase();
+                w.Delete();
                 w.Commit();
             }
         }

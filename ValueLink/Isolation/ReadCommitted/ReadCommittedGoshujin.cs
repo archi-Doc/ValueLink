@@ -283,7 +283,7 @@ Retry:
                 }
             }
 
-            TObject.RemoveFromGoshujin(obj, (TGoshujin)this, true, true);
+            TObject.RemoveFromGoshujin(obj, (TGoshujin)this, true);
         }
 
         if (obj is IStructualObject y)
