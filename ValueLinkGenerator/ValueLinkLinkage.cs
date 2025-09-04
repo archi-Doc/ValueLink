@@ -208,7 +208,7 @@ public class Linkage
         if (linkage.AutoNotify && !linkage.AddValue)
         {
             linkage.AddValue = true;
-            obj.Body.AddDiagnostic(ValueLinkBody.Warning_AutoNotifyEnabled, attribute.Location);
+            // obj.Body.AddDiagnostic(ValueLinkBody.Warning_AutoNotifyEnabled, attribute.Location);
         }
 
         if (linkage.SetterAccessibility == Microsoft.CodeAnalysis.Accessibility.NotApplicable)
