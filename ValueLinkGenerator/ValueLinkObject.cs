@@ -1243,6 +1243,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.StructualEnabled))
             {
                 ssb.AppendLine($"(({TinyhandBody.IStructualObject}){ssb.FullObject}).SetupStructure(g);");
+                ssb.AppendLine($"(({TinyhandBody.IStructualObject}){ssb.FullObject}).StructualRoot?.AddToSaveQueue();");
             }
 
             using (var scopeIfNull2 = ssb.ScopeBrace($"if (g != null)"))
@@ -1326,6 +1327,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
                 if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.StructualEnabled))
                 {
+                    ssb.AppendLine($"(({TinyhandBody.IStructualObject}){ssb.FullObject}).StructualRoot?.AddToSaveQueue();");
                     ssb.AppendLine($"(({TinyhandBody.IStructualObject}){ssb.FullObject}).SetupStructure(null);");
                 }
 
