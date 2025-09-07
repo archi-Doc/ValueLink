@@ -5,7 +5,7 @@ using ValueLink;
 
 namespace Playground.NestedClass;
 
-/*public sealed partial class NestedClassA
+public sealed partial class NestedClassA
 {
     [TinyhandObject(LockObject = "lockObject")]
     private sealed partial class Data
@@ -35,4 +35,4 @@ namespace Playground.NestedClass;
 
         #endregion
     }
-}*/
+}
