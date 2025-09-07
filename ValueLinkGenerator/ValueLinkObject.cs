@@ -3030,7 +3030,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         if (this.Children != null)
         {
-            return this.Children.Any(a => a.ObjectFlag.HasFlag(ValueLinkObjectFlag.TinyhandObject));
+            return this.Children.Any(a => a.ContainTinyhandObjectAttribute());
         }
 
         return false;
