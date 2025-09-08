@@ -490,7 +490,7 @@ public class JournalTest
 
         while (reader.Consumed < data.Length)
         {
-            if (!reader.TryReadRecord(out var length, out var journalType))
+            if (!reader.TryReadJournal(out var length, out var journalType))
             {
                 return false;
             }
@@ -500,7 +500,7 @@ public class JournalTest
             {
                 if (journalType == JournalType.Record)
                 {
-                    if (obj.ReadRecord(ref reader))
+                    if (obj.ProcessJournalRecord(ref reader))
                     {// Success
                     }
                     else
@@ -508,7 +508,7 @@ public class JournalTest
                         success = false;
 
                         reader = fork;
-                        obj.ReadRecord(ref reader);
+                        obj.ProcessJournalRecord(ref reader);
                     }
                 }
                 else

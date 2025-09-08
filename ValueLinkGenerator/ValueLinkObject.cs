@@ -2398,7 +2398,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             return;
         }
 
-        using (var scopeMethod = ssb.ScopeBrace($"bool {TinyhandBody.IStructualObject}.ReadRecord(ref TinyhandReader reader)"))
+        using (var scopeMethod = ssb.ScopeBrace($"bool {TinyhandBody.IStructualObject}.ProcessJournalRecord(ref TinyhandReader reader)"))
         {
             ssb.AppendLine("if (!reader.TryReadJournalRecord(out JournalRecord record)) return false;");
 
@@ -2411,7 +2411,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
                 ssb.AppendLine("{");
                 ssb.IncrementIndent();
-                ssb.AppendLine("return obj.ReadRecord(ref reader);");
+                ssb.AppendLine("return obj.ProcessJournalRecord(ref reader);");
                 ssb.DecrementIndent();
                 ssb.AppendLine("}");
             }
