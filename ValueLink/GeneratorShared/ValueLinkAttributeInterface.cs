@@ -198,7 +198,8 @@ public sealed class LinkAttribute : Attribute
     public string Name { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets a value indicating whether or not to link the object automatically when the goshujin is set or changed [the default is <see langword="true"/>].
+    /// Gets or sets a value indicating whether or not to link the object automatically when the goshujin is set or changed [the default is <see langword="true"/>].<br/>
+    /// Even if <see cref="AutoLink" /> is false, the link will be updated when the Value property changes.
     /// </summary>
     public bool AutoLink { get; set; } = true;
 

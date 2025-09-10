@@ -1712,7 +1712,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
                     ssb.AppendLine($"{targetString} = value;");
 
-                    // if (main.AutoLink)
+                    // if (main.AutoLink) // Even if AutoLink is false, update the Link when the Value property changes (but do not auto-link when the Goshujin changes).
                     {
                         using (var obj = ssb.ScopeObject("this"))
                         {
