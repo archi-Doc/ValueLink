@@ -1712,7 +1712,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
                     ssb.AppendLine($"{targetString} = value;");
 
-                    if (main.AutoLink)
+                    // if (main.AutoLink)
                     {
                         using (var obj = ssb.ScopeObject("this"))
                         {
