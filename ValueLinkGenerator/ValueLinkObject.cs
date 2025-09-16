@@ -1133,8 +1133,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
 
         if (this.ObjectAttribute?.Isolation == IsolationLevel.ReadCommitted)
-        {
-            using (var scopeMethod = ssb.ScopeBrace($"public Task DeleteDataAndRemove(DateTime forceDeleteAfter = default)"))
+        {//
+            using (var scopeMethod = ssb.ScopeBrace($"public override Task Delete(DateTime forceDeleteAfter = default)"))
             {
                 ssb.AppendLine($"if (this.Goshujin is {{ }} goshujin) return goshujin.Delete(this.{this.UniqueLink?.TargetName}, forceDeleteAfter);");
                 ssb.AppendLine("else return this.DeleteData(forceDeleteAfter);");
