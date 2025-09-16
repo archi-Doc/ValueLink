@@ -1132,6 +1132,15 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             this.Generate_EnterGoshujinMethod(ssb, info);
         }
 
+        if (this.ObjectAttribute?.Isolation == IsolationLevel.ReadCommitted)
+        {
+            using (var scopeMethod = ssb.ScopeBrace($"public Task DeleteDataAndRemove(DateTime forceDeleteAfter = default)"))
+            {
+                ssb.AppendLine($"if (this.Goshujin is {{ }} goshujin) return goshujin.Delete(this.{this.UniqueLink?.TargetName}, forceDeleteAfter);");
+                ssb.AppendLine("else return this.DeleteData(forceDeleteAfter);");
+            }
+        }
+
         if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.StructualEnabled))
         {
             this.Generate_WriteLocator(ssb, info);
@@ -3015,7 +3024,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         using (var scopeProperty = ssb.ScopeBrace($"{goshujinAccessibility}{this.ObjectAttribute!.GoshujinClass}? {this.ObjectAttribute!.GoshujinInstance}"))
         {
             ssb.AppendLine($"get => this.{this.GoshujinInstanceIdentifier};");
-            ssb.AppendLine($"set => {this.ValueLinkInternalHelper}.{ValueLinkBody.SetGoshujinName}(this, value);");
+            if (this.ObjectAttribute.Isolation == IsolationLevel.None ||
+                this.ObjectAttribute.Isolation == IsolationLevel.Serializable)
+            {
+                ssb.AppendLine($"set => {this.ValueLinkInternalHelper}.{ValueLinkBody.SetGoshujinName}(this, value);");
+            }
         }
 
         ssb.AppendLine();

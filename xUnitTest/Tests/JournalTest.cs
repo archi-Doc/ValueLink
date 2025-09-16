@@ -325,9 +325,11 @@ public class JournalTest
         JournalHelper.ReadJournal(g3, journal).IsTrue();
         g.GoshujinEquals(g3).IsTrue();
 
-        g2.IdChain.FindFirst(new(1))!.Goshujin = null;
+        // g2.IdChain.FindFirst(new(1))!.Goshujin = null;
+        g2.Remove(g2.IdChain.FindFirst(new(1))!);
         g2.Add(new JournalTestClass2(new(4), "four"));
-        g2.IdChain.FindFirst(new(3))!.Goshujin = null;
+        // g2.IdChain.FindFirst(new(3))!.Goshujin = null;
+        g2.Remove(g2.IdChain.FindFirst(new(3))!);
 
         journal = tester.GetJournal();
         g3 = new JournalTestClass2.GoshujinClass();
