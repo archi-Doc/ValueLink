@@ -1567,7 +1567,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 ssb.AppendLine("this.instance.State = RepeatableReadObjectState.Obsolete;");
                 if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.StructualEnabled))
                 {
-                    ssb.AppendLine($"(({TinyhandBody.IStructualObject})this.instance).Delete().Wait();");
+                    ssb.AppendLine($"(({TinyhandBody.IStructualObject})this.instance).DeleteData().Wait();");
                 }
             }
 
@@ -2377,9 +2377,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGosjujin_Structual_Delete(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        ssb.AppendLine($"Task {TinyhandBody.IStructualObject}.Delete(DateTime forceDeleteAfter) => this.GoshujinDelete(forceDeleteAfter);");
+        ssb.AppendLine($"Task {TinyhandBody.IStructualObject}.DeleteData(DateTime forceDeleteAfter) => this.GoshujinDeleteData(forceDeleteAfter);");
 
-        /*using (var scopeMethod = ssb.ScopeBrace($"void {TinyhandBody.IStructualObject}.Delete()"))
+        /*using (var scopeMethod = ssb.ScopeBrace($"void {TinyhandBody.IStructualObject}.DeleteData()"))
         using (var scopeThis = ssb.ScopeObject("this"))
         {
             this.GenerateGoshujin_ClearChains(ssb, info, true);

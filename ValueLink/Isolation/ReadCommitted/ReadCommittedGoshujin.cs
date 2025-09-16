@@ -288,7 +288,7 @@ Retry:
 
         if (obj is IStructualObject y)
         {
-            await y.Delete(forceDeleteAfter).ConfigureAwait(false);
+            await y.DeleteData(forceDeleteAfter).ConfigureAwait(false);
         }
 
         return DataScopeResult.Success;
@@ -349,7 +349,7 @@ Retry:
     /// If <see cref="DateTime.MinValue"/>, waits indefinitely.
     /// </param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    protected async Task GoshujinDelete(DateTime forceDeleteAfter)
+    protected async Task GoshujinDeleteData(DateTime forceDeleteAfter)
     {
         TObject[] array = [];
         using (this.LockObject.EnterScope())
@@ -389,7 +389,7 @@ Retry: // Unprotected -> Deleted
 
             if (obj is IStructualObject y)
             {
-                await y.Delete(forceDeleteAfter).ConfigureAwait(false);
+                await y.DeleteData(forceDeleteAfter).ConfigureAwait(false);
             }
         }
     }
