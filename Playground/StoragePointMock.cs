@@ -44,4 +44,9 @@ public class StoragePoint<TData> : IStructualObject, IDataLocker<TData>
     {
         return Task.CompletedTask;
     }
+
+    Task IDataLocker<TData>.DeletePoint(DateTime forceDeleteAfter)
+    {
+        throw new NotImplementedException();
+    }
 }

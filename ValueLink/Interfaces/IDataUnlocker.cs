@@ -5,7 +5,7 @@ namespace ValueLink;
 /// <summary>
 /// Defines an interface for releasing a lock on a data resource.
 /// </summary>
-public interface IDataUnlocker // : IDataProtectionCounter
+public interface IDataUnlocker
 {
     /// <summary>
     /// Releases the lock on the data resource.

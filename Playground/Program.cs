@@ -72,6 +72,11 @@ public partial class LockedDataMock<TData> : IDataLocker<TData>, IDataUnlocker, 
         }
     }
 
+    Task IDataLocker<TData>.DeletePoint(DateTime forceDeleteAfter)
+    {
+        throw new NotImplementedException();
+    }
+
     public void Unlock()
     {
         // Protected -> Unprotected

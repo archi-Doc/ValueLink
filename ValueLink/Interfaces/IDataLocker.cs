@@ -41,4 +41,15 @@ public interface IDataLocker<TData>
     /// indicating the outcome of the lock attempt, and the locked data if successful.
     /// </returns>
     ValueTask<DataScope<TData>> TryLock(TimeSpan timeout, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Deletes the data point, optionally forcing deletion after the specified date and time.
+    /// If the object is protected, waits until it can be deleted or until <paramref name="forceDeleteAfter"/> is reached.
+    /// </summary>
+    /// <param name="forceDeleteAfter">
+    /// The time after which the deletion will be forced even if the object is protected.<br/>
+    /// If <see cref="DateTime.MinValue"/>, waits indefinitely.
+    /// </param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous delete operation.</returns>
+    Task DeletePoint(DateTime forceDeleteAfter);
 }
