@@ -15,7 +15,7 @@ public record struct DataScope<TData> : IDisposable
     where TData : notnull
 {// 24 bytes
     public readonly DataScopeResult Result;
-    public readonly bool NewlyCreated;
+    // public readonly bool NewlyCreated; // We considered adding NewlyCreated, but since TryLock does not always succeed, the determination and initialization of NewlyCreated will be handled on the object side rather than in DataScope.
     private TData? data;
     private IDataUnlocker? dataUnlocker;
 
@@ -37,11 +37,9 @@ public record struct DataScope<TData> : IDisposable
     /// </summary>
     /// <param name="data">The data instance to be scoped and locked.</param>
     /// <param name="dataUnlocker">The data instance responsible for releasing the lock on the data resource.</param>
-    /// <param name="newlyCreated">Indicates whether the data instance was newly created during the scope acquisition.</param>
-    public DataScope(TData data, IDataUnlocker dataUnlocker, bool newlyCreated = false)
+    public DataScope(TData data, IDataUnlocker dataUnlocker)
     {
         this.Result = DataScopeResult.Success;
-        this.NewlyCreated = newlyCreated;
         this.data = data;
         this.dataUnlocker = dataUnlocker;
     }
