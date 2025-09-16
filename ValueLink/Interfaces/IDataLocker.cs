@@ -12,22 +12,9 @@ namespace ValueLink;
 /// <typeparam name="TData">
 /// The type of data to be locked. Must be non-null.
 /// </typeparam>
-public interface IDataLocker<TData> // : IDataProtectionCounter
+public interface IDataLocker<TData>
     where TData : notnull
 {
-    /*public const int DeletedCount = int.MinValue / 2;
-
-    /// <summary>
-    /// Gets a reference to the protection counter.<br/>
-    /// &lt; 0: The data is deleted<br/>
-    /// = 0: The data is not protected (can be deleted).<br/>
-    /// &gt; 0: The data is protected.
-    /// </summary>
-    /// <returns>
-    /// A reference to an <see cref="int"/> representing the protection counter.
-    /// </returns>
-    ref int GetProtectionCounterRef();*/
-
     ref ObjectProtectionState GetProtectionStateRef();
 
     /// <summary>
