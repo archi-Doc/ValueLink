@@ -3015,7 +3015,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         using (var scopeProperty = ssb.ScopeBrace($"{goshujinAccessibility}{this.ObjectAttribute!.GoshujinClass}? {this.ObjectAttribute!.GoshujinInstance}"))
         {
             ssb.AppendLine($"get => this.{this.GoshujinInstanceIdentifier};");
-            ssb.AppendLine($"set => {this.ValueLinkInternalHelper}.{ValueLinkBody.SetGoshujinName}(this, value);");
+            if (this.ObjectAttribute.Isolation == IsolationLevel.None ||
+                this.ObjectAttribute.Isolation == IsolationLevel.Serializable)
+            {
+                ssb.AppendLine($"set => {this.ValueLinkInternalHelper}.{ValueLinkBody.SetGoshujinName}(this, value);");
+            }
         }
 
         ssb.AppendLine();
