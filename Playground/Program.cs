@@ -92,11 +92,11 @@ public partial class LockedDataMock<TData> : IDataLocker<TData>, IDataUnlocker, 
         }
     }
 
-    public Task Delete(DateTime forceDeleteAfter)
+    public Task DeleteData(DateTime forceDeleteAfter)
     {
         if (this.data is IStructualObject structualObject)
         {
-            return structualObject.Delete(forceDeleteAfter);
+            return structualObject.DeleteData(forceDeleteAfter);
         }
         else
         {
