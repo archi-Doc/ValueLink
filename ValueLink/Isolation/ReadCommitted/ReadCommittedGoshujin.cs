@@ -254,7 +254,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
 Retry:
         if (delay)
         {
-            await Task.Delay(DelayInMilliseconds);
+            await Task.Delay(DelayInMilliseconds).ConfigureAwait(false);
         }
 
         using (this.LockObject.EnterScope())
@@ -286,10 +286,12 @@ Retry:
             TObject.RemoveFromGoshujin(obj, (TGoshujin)this, true);
         }
 
-        if (obj is IStructualObject y)
+        await obj.DeletePoint(forceDeleteAfter).ConfigureAwait(false);
+
+        /*if (obj is IStructualObject y)
         {
             await y.DeleteData(forceDeleteAfter).ConfigureAwait(false);
-        }
+        }*/
 
         return DataScopeResult.Success;
     }
@@ -378,7 +380,7 @@ Retry: // Unprotected -> Deleted
                 if (forceDeleteAfter == default ||
                     DateTime.UtcNow <= forceDeleteAfter)
                 {// Wait for a specified time, then attempt deletion again.
-                    await Task.Delay(DelayInMilliseconds);
+                    await Task.Delay(DelayInMilliseconds).ConfigureAwait(false);
                     goto Retry;
                 }
                 else
