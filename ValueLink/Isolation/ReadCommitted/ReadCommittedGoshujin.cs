@@ -286,12 +286,12 @@ Retry:
             TObject.RemoveFromGoshujin(obj, (TGoshujin)this, true);
         }
 
-        await obj.DeletePoint(forceDeleteAfter).ConfigureAwait(false);
-
         /*if (obj is IStructualObject y)
         {
             await y.DeleteData(forceDeleteAfter).ConfigureAwait(false);
         }*/
+
+        await obj.DeletePoint(forceDeleteAfter).ConfigureAwait(false);
 
         return DataScopeResult.Success;
     }
@@ -389,10 +389,12 @@ Retry: // Unprotected -> Deleted
                 }
             }
 
-            if (obj is IStructualObject y)
+            /*if (obj is IStructualObject y)
             {
                 await y.DeleteData(forceDeleteAfter).ConfigureAwait(false);
-            }
+            }*/
+
+            await obj.DeletePoint(forceDeleteAfter).ConfigureAwait(false);
         }
     }
 }
