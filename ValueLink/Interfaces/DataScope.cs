@@ -2,7 +2,6 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Threading;
 
 namespace ValueLink;
 
@@ -14,8 +13,9 @@ namespace ValueLink;
 /// <typeparam name="TData">Type of the data instance managed by this scope. Must be a non-nullable type.</typeparam>
 public record struct DataScope<TData> : IDisposable
     where TData : notnull
-{
+{// 24 bytes
     public readonly DataScopeResult Result;
+    // public readonly bool NewlyCreated; // We considered adding NewlyCreated, but since TryLock does not always succeed, the determination and initialization of NewlyCreated will be handled on the object side rather than in DataScope.
     private TData? data;
     private IDataUnlocker? dataUnlocker;
 
