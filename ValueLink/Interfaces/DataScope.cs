@@ -2,7 +2,6 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Threading;
 
 namespace ValueLink;
 
@@ -14,8 +13,9 @@ namespace ValueLink;
 /// <typeparam name="TData">Type of the data instance managed by this scope. Must be a non-nullable type.</typeparam>
 public record struct DataScope<TData> : IDisposable
     where TData : notnull
-{
+{// 24 bytes
     public readonly DataScopeResult Result;
+    public readonly bool NewlyCreated;
     private TData? data;
     private IDataUnlocker? dataUnlocker;
 
@@ -37,9 +37,11 @@ public record struct DataScope<TData> : IDisposable
     /// </summary>
     /// <param name="data">The data instance to be scoped and locked.</param>
     /// <param name="dataUnlocker">The data instance responsible for releasing the lock on the data resource.</param>
-    public DataScope(TData data, IDataUnlocker dataUnlocker)
+    /// <param name="newlyCreated">Indicates whether the data instance was newly created during the scope acquisition.</param>
+    public DataScope(TData data, IDataUnlocker dataUnlocker, bool newlyCreated = false)
     {
         this.Result = DataScopeResult.Success;
+        this.NewlyCreated = newlyCreated;
         this.data = data;
         this.dataUnlocker = dataUnlocker;
     }

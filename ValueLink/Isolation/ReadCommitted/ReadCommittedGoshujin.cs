@@ -202,6 +202,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
     public ValueTask<DataScope<TData>> TryLock(TKey key, AcquisitionMode acquisitionMode, TimeSpan timeout, CancellationToken cancellationToken = default)
     {
         TObject? obj;
+        bool newlyCreated = false;
         using (this.LockObject.EnterScope())
         {
             if (!this.IsValid)
@@ -219,6 +220,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
                 else
                 {// Create or GetOrCreate
                     obj = this.NewObject(key);
+                    newlyCreated = true;
                     TObject.AddToGoshujin(obj, (TGoshujin)this, true);
                 }
             }

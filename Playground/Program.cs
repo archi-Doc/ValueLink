@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Arc.Threading;
@@ -135,7 +137,8 @@ internal class Program
 {
     static async Task Main(string[] args)
     {
-        Console.WriteLine("Hello, World");
+        var n = Unsafe.SizeOf<DataScope<byte[]>>();
+        Console.WriteLine($"Hello, World {n}");
 
         var a = new SpClass.SpClassPoint(111);
         var g = new SpClass.SpClassPoint.GoshujinClass();
