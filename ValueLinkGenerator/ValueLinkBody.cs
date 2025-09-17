@@ -308,7 +308,7 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
             return;
         }
 
-        using (var scope = ssb.ScopeBrace("public static class StoragePointHelper"))
+        using (var scope = ssb.ScopeBrace("public static partial class StoragePointHelper"))
         {
             foreach (var x in info.StoragePointHelper)
             {
