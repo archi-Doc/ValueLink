@@ -5,7 +5,7 @@ namespace ValueLink;
 /// <summary>
 /// Represents the protection state of the object.
 /// </summary>
-public enum ObjectProtectionState
+public enum ObjectProtectionState : byte
 {
     /// <summary>
     /// The object is not protected (can be deleted).
