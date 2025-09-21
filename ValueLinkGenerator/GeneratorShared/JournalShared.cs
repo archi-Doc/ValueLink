@@ -193,7 +193,6 @@ internal static class JournalShared
                 remove.CodeWriter($"{ssb.FullObject}.{remove.SimpleName}") is { } writeRemove)
             {
                 ssb.AppendLine("writer.Write(JournalRecord.DeleteItem);");
-                ssb.AppendLine("writer.Write_Key();");
                 ssb.AppendLine(writeRemove);
             }
 

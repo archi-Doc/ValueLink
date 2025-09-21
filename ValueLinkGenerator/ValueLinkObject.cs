@@ -2451,7 +2451,6 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             using (var scopeRemove = ssb.ScopeBrace("else if (record == JournalRecord.DeleteItem)"))
             {// Remove
-                ssb.AppendLine("reader.Read_Key();");
                 var typeObject = this.UniqueLink.Target.TypeObject;
                 ssb.AppendLine($"var key = {typeObject.CodeReader()};");
                 var keyIsNotNull = typeObject.Kind.IsValueType() ? string.Empty : "key is not null && ";
