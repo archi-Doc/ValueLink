@@ -14,6 +14,8 @@ public class StoragePoint<TData> : IStructualObject, IDataLocker<TData>
 {
     private ObjectProtectionState protectionState;
 
+    protected ulong pointId;
+
     IStructualRoot? IStructualObject.StructualRoot { get; set; }
 
     IStructualObject? IStructualObject.StructualParent { get; set; }
