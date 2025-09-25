@@ -250,6 +250,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
     {
         TObject? obj;
         var delay = false;
+        var deleted = false;
 
 Retry:
         if (delay)
@@ -265,25 +266,31 @@ Retry:
                 return DataScopeResult.NotFound;
             }
 
-            // Unprotected -> Deleted
-            if (Interlocked.CompareExchange(ref obj.GetProtectionStateRef(), ObjectProtectionState.Deleted, ObjectProtectionState.Unprotected) != ObjectProtectionState.Protected)
-            {// Successfully marked as deleted (Unprotected->Deleted or Deleted->Deleted)
-            }
-            else
-            {// Protected
-                if (forceDeleteAfter == default ||
-                    DateTime.UtcNow <= forceDeleteAfter)
-                {// Wait for a specified time, then attempt deletion again.
+            if (forceDeleteAfter == default ||
+                DateTime.UtcNow <= forceDeleteAfter)
+            {
+                var originalState = Interlocked.CompareExchange(ref obj.GetProtectionStateRef(), ObjectProtectionState.Deleted, ObjectProtectionState.Unprotected);
+                if (originalState == ObjectProtectionState.Unprotected)
+                {// Unprotected -> Deleted
+                    deleted = true;
+                }
+                else if (originalState == ObjectProtectionState.Protected)
+                {// Protected
                     delay = true;
                     goto Retry;
                 }
-                else
-                {// Force delete
-                    obj.GetProtectionStateRef() = ObjectProtectionState.Deleted;
-                }
+
+                // Deleted -> Deleted
+            }
+            else
+            {// Force delete
+                deleted = Interlocked.Exchange(ref obj.GetProtectionStateRef(), ObjectProtectionState.Deleted) != ObjectProtectionState.Deleted;
             }
 
-            TObject.RemoveFromGoshujin(obj, (TGoshujin)this, true);
+            if (deleted)
+            {
+                TObject.RemoveFromGoshujin(obj, (TGoshujin)this, true);
+            }
         }
 
         /*if (obj is IStructualObject y)
@@ -291,7 +298,10 @@ Retry:
             await y.DeleteData(forceDeleteAfter).ConfigureAwait(false);
         }*/
 
-        await obj.DeletePoint(forceDeleteAfter).ConfigureAwait(false);
+        if (deleted)
+        {
+            await obj.DeletePoint(forceDeleteAfter).ConfigureAwait(false);
+        }
 
         return DataScopeResult.Success;
     }
@@ -370,9 +380,37 @@ Retry:
         }
 
         foreach (var obj in array)
-        {
-Retry: // Unprotected -> Deleted
-            if (Interlocked.CompareExchange(ref obj.GetProtectionStateRef(), ObjectProtectionState.Deleted, ObjectProtectionState.Unprotected) != ObjectProtectionState.Protected)
+        {//
+Retry:
+            var deleted = false;
+            if (forceDeleteAfter == default ||
+                DateTime.UtcNow <= forceDeleteAfter)
+            {
+                var originalState = Interlocked.CompareExchange(ref obj.GetProtectionStateRef(), ObjectProtectionState.Deleted, ObjectProtectionState.Unprotected);
+                if (originalState == ObjectProtectionState.Unprotected)
+                {// Unprotected -> Deleted
+                    deleted = true;
+                }
+                else if (originalState == ObjectProtectionState.Protected)
+                {// Protected
+                    await Task.Delay(DelayInMilliseconds).ConfigureAwait(false);
+                    goto Retry;
+                }
+
+                // Deleted -> Deleted
+            }
+            else
+            {// Force delete
+                deleted = Interlocked.Exchange(ref obj.GetProtectionStateRef(), ObjectProtectionState.Deleted) != ObjectProtectionState.Deleted;
+            }
+
+            if (deleted)
+            {
+                await obj.DeletePoint(forceDeleteAfter).ConfigureAwait(false);
+                // TObject.RemoveFromGoshujin(obj, (TGoshujin)this, true);
+            }
+
+            /*if (Interlocked.CompareExchange(ref obj.GetProtectionStateRef(), ObjectProtectionState.Deleted, ObjectProtectionState.Unprotected) != ObjectProtectionState.Protected)
             {// Successfully marked as deleted (Unprotected->Deleted or Deleted->Deleted)
             }
             else
@@ -385,16 +423,9 @@ Retry: // Unprotected -> Deleted
                 }
                 else
                 {// Force delete
-                    obj.GetProtectionStateRef() = ObjectProtectionState.Deleted;
+                    Interlocked.Exchange(ref obj.GetProtectionStateRef(), ObjectProtectionState.Deleted);
                 }
-            }
-
-            /*if (obj is IStructualObject y)
-            {
-                await y.DeleteData(forceDeleteAfter).ConfigureAwait(false);
             }*/
-
-            await obj.DeletePoint(forceDeleteAfter).ConfigureAwait(false);
         }
     }
 }
