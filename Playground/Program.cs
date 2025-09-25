@@ -108,6 +108,16 @@ public partial class LockedDataMock<TData> : IDataLocker<TData>, IDataUnlocker, 
             return Task.FromResult(true);
         }
     }
+
+    bool IDataUnlocker.DeleteAfterUnlock()
+    {
+        throw new NotImplementedException();
+    }
+
+    void IDataUnlocker.Unlock()
+    {
+        throw new NotImplementedException();
+    }
 }
 
 [TinyhandObject(Structual = true)]
