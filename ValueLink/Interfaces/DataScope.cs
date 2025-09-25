@@ -57,6 +57,17 @@ public record struct DataScope<TData> : IDisposable
     }
 
     /// <summary>
+    /// Marks the underlying data for deletion after the lock is released.
+    /// </summary>
+    /// <returns>
+    /// <c>true</c> if the data will be deleted after unlocking; otherwise, <c>false</c>.
+    /// </returns>
+    public bool DeleteAfterUnlock()
+    {
+        return this.dataUnlocker?.DeleteAfterUnlock() == true;
+    }
+
+    /// <summary>
     /// Releases the lock associated with this scope (if still valid).<br/>
     /// Subsequent access to <see cref="Data"/> will return <c>null</c>.
     /// </summary>
