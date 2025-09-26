@@ -243,10 +243,11 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
     /// The time after which the deletion will be forced even if the object is protected.
     /// If <see cref="DateTime.MinValue"/>, waits indefinitely.
     /// </param>
+    /// <param name="writeJournal">Indicates whether to write the deletion operation to the journal.</param>
     /// <returns>
     /// A <see cref="Task{DataScopeResult}"/> indicating the result of the deletion attempt.
     /// </returns>
-    public async Task<DataScopeResult> Delete(TKey key, DateTime forceDeleteAfter = default)
+    public async Task<DataScopeResult> Delete(TKey key, DateTime forceDeleteAfter = default, bool writeJournal = true)
     {
         TObject? obj;
         var delay = false;
@@ -295,12 +296,12 @@ Retry:
 
         /*if (obj is IStructualObject y)
         {
-            await y.DeleteData(forceDeleteAfter).ConfigureAwait(false);
+            await y.DeleteData(forceDeleteAfter, writeJournal).ConfigureAwait(false);
         }*/
 
         if (deleted)
         {
-            await obj.DeletePoint(forceDeleteAfter, false).ConfigureAwait(false);
+            await obj.DeletePoint(forceDeleteAfter, writeJournal).ConfigureAwait(false);
         }
 
         return DataScopeResult.Success;
@@ -360,8 +361,9 @@ Retry:
     /// The time after which deletion will be forced even if objects are protected.
     /// If <see cref="DateTime.MinValue"/>, waits indefinitely.
     /// </param>
+    /// <param name="writeJournal">Indicates whether to write the deletion operation to the journal.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    protected async Task GoshujinDeleteData(DateTime forceDeleteAfter)
+    protected async Task GoshujinDeleteData(DateTime forceDeleteAfter, bool writeJournal)
     {
         TObject[] array = [];
         using (this.LockObject.EnterScope())
@@ -406,7 +408,7 @@ Retry:
 
             if (deleted)
             {
-                await obj.DeletePoint(forceDeleteAfter, true).ConfigureAwait(false);
+                await obj.DeletePoint(forceDeleteAfter, writeJournal).ConfigureAwait(false);
                 // TObject.RemoveFromGoshujin(obj, (TGoshujin)this, true);
             }
         }
