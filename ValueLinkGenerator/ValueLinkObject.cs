@@ -1139,7 +1139,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             using (var scopeMethod = ssb.ScopeBrace($"public {overrideString}Task DeleteData(DateTime forceDeleteAfter = default)"))
             {
                 ssb.AppendLine($"if (this.Goshujin is {{ }} goshujin) return goshujin.Delete(this.{this.UniqueLink?.TargetName}, forceDeleteAfter);");
-                ssb.AppendLine("else return this.DeleteData(forceDeleteAfter);");
+                ssb.AppendLine($"else return ((IDataLocker<{this.TargetDataObject?.FullName}>)this).DeletePoint(forceDeleteAfter, false);");
             }
         }
 
