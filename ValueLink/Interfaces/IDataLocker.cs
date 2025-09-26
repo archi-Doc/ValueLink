@@ -50,6 +50,9 @@ public interface IDataLocker<TData>
     /// The time after which the deletion will be forced even if the object is protected.<br/>
     /// If <see cref="DateTime.MinValue"/>, waits indefinitely.
     /// </param>
+    /// <param name="writeJournal">
+    /// Indicates whether to write the deletion operation to the journal.
+    /// </param>
     /// <returns>A <see cref="Task"/> representing the asynchronous delete operation.</returns>
-    Task DeletePoint(DateTime forceDeleteAfter);
+    Task DeletePoint(DateTime forceDeleteAfter, bool writeJournal);
 }

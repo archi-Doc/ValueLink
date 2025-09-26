@@ -72,7 +72,7 @@ public partial class LockedDataMock<TData> : IDataLocker<TData>, IDataUnlocker, 
         }
     }
 
-    Task IDataLocker<TData>.DeletePoint(DateTime forceDeleteAfter)
+    Task IDataLocker<TData>.DeletePoint(DateTime forceDeleteAfter, bool writeJournal)
     {
         throw new NotImplementedException();
     }
@@ -109,7 +109,7 @@ public partial class LockedDataMock<TData> : IDataLocker<TData>, IDataUnlocker, 
         }
     }
 
-    bool IDataUnlocker.DeleteAfterUnlock()
+    Task IDataUnlocker.UnlockAndDelete(DateTime forceDeleteAfter)
     {
         throw new NotImplementedException();
     }
