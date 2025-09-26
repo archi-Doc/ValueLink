@@ -2,6 +2,7 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 
 namespace ValueLink;
 
@@ -57,14 +58,25 @@ public record struct DataScope<TData> : IDisposable
     }
 
     /// <summary>
-    /// Marks the underlying data for deletion after the lock is released.
+    /// Releases the lock on the data resource and deletes it, optionally forcing deletion after the specified date and time.
     /// </summary>
-    /// <returns>
-    /// <c>true</c> if the data will be deleted after unlocking; otherwise, <c>false</c>.
-    /// </returns>
-    public bool DeleteAfterUnlock()
+    /// <param name="forceDeleteAfter">
+    /// The time after which the deletion will be forced even if the object is protected.<br/>
+    /// If <see langword="default"/>, waits indefinitely.
+    /// </param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous delete operation.</returns>
+    public Task UnlockAndDelete(DateTime forceDeleteAfter = default)
     {
-        return this.dataUnlocker?.DeleteAfterUnlock() == true;
+        this.data = default;
+        if (this.dataUnlocker is { } dataUnlocker)
+        {
+            this.dataUnlocker = default;
+            return dataUnlocker.UnlockAndDelete(forceDeleteAfter);
+        }
+        else
+        {
+            return Task.CompletedTask;
+        }
     }
 
     /// <summary>

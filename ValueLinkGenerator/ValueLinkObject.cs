@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Arc.Visceral;
 using Microsoft.CodeAnalysis;
 using Tinyhand.Generator;
@@ -1137,8 +1138,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             var overrideString = this.ObjectFlag.HasFlag(ValueLinkObjectFlag.DerivedFromStoragePoint) ? "override " : string.Empty;
             using (var scopeMethod = ssb.ScopeBrace($"public {overrideString}Task DeleteData(DateTime forceDeleteAfter = default, bool writeJournal = true)"))
             {
-                ssb.AppendLine($"if (this.Goshujin is {{ }} goshujin) return goshujin.Delete(this.{this.UniqueLink?.TargetName}, forceDeleteAfter, writeJournal);");
-                ssb.AppendLine("else return this.DeleteData(forceDeleteAfter, writeJournal);");
+                ssb.AppendLine($"if (this.Goshujin is {{ }} goshujin) return goshujin.Delete(this.{this.UniqueLink?.TargetName}, forceDeleteAfter);");
+                ssb.AppendLine($"else return ((IDataLocker<{this.TargetDataObject?.FullName}>)this).DeletePoint(forceDeleteAfter, false);");
             }
         }
 
@@ -2431,7 +2432,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 ssb.AppendLine("{");
                 ssb.IncrementIndent();
 
-                ssb.AppendLine($"if (this.{this.UniqueLink.ChainName}.FindFirst(obj.{this.UniqueLink.TargetName}) is {{ }} old) {this.ValueLinkInternalHelper}.{ValueLinkBody.RemoveFromGoshujinName}(old, null, false);");
+                using (var scopeOld = ssb.ScopeBrace($"if (this.{this.UniqueLink.ChainName}.FindFirst(obj.{this.UniqueLink.TargetName}) is {{ }} old)"))
+                {
+                    ssb.AppendLine($"{this.ValueLinkInternalHelper}.{ValueLinkBody.RemoveFromGoshujinName}(old, null, false);");
+                    ssb.AppendLine("((IStructualObject)old).DeleteData().ConfigureAwait(false).GetAwaiter().GetResult();");
+                }
 
                 ssb.AppendLine($"{this.ValueLinkInternalHelper}.{ValueLinkBody.AddToGoshujinName}(obj, this, false);");
                 ssb.AppendLine("return true;");
@@ -2453,6 +2458,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 ssb.AppendLine("{");
                 ssb.IncrementIndent();
                 ssb.AppendLine($"{this.ValueLinkInternalHelper}.{ValueLinkBody.RemoveFromGoshujinName}(obj, null, false);");
+                ssb.AppendLine("((IStructualObject)obj).DeleteData().ConfigureAwait(false).GetAwaiter().GetResult();");
                 ssb.AppendLine("return true;");
                 ssb.DecrementIndent();
                 ssb.AppendLine("}");

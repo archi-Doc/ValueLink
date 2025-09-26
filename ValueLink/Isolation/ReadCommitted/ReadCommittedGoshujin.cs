@@ -411,23 +411,6 @@ Retry:
                 await obj.DeletePoint(forceDeleteAfter, writeJournal).ConfigureAwait(false);
                 // TObject.RemoveFromGoshujin(obj, (TGoshujin)this, true);
             }
-
-            /*if (Interlocked.CompareExchange(ref obj.GetProtectionStateRef(), ObjectProtectionState.Deleted, ObjectProtectionState.Unprotected) != ObjectProtectionState.Protected)
-            {// Successfully marked as deleted (Unprotected->Deleted or Deleted->Deleted)
-            }
-            else
-            {// Protected
-                if (forceDeleteAfter == default ||
-                    DateTime.UtcNow <= forceDeleteAfter)
-                {// Wait for a specified time, then attempt deletion again.
-                    await Task.Delay(DelayInMilliseconds).ConfigureAwait(false);
-                    goto Retry;
-                }
-                else
-                {// Force delete
-                    Interlocked.Exchange(ref obj.GetProtectionStateRef(), ObjectProtectionState.Deleted);
-                }
-            }*/
         }
     }
 }
