@@ -72,7 +72,7 @@ public partial class LockedDataMock<TData> : IDataLocker<TData>, IDataUnlocker, 
         }
     }
 
-    Task IDataLocker<TData>.DeletePoint(DateTime forceDeleteAfter)
+    Task IDataLocker<TData>.DeletePoint(DateTime forceDeleteAfter, bool writeJournal)
     {
         throw new NotImplementedException();
     }
@@ -97,11 +97,11 @@ public partial class LockedDataMock<TData> : IDataLocker<TData>, IDataUnlocker, 
         }
     }
 
-    public Task DeleteData(DateTime forceDeleteAfter)
+    public Task DeleteData(DateTime forceDeleteAfter, bool writeJournal)
     {
         if (this.data is IStructualObject structualObject)
         {
-            return structualObject.DeleteData(forceDeleteAfter);
+            return structualObject.DeleteData(forceDeleteAfter, writeJournal);
         }
         else
         {

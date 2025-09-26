@@ -1135,10 +1135,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         if (this.ObjectAttribute?.Isolation == IsolationLevel.ReadCommitted)
         {
             var overrideString = this.ObjectFlag.HasFlag(ValueLinkObjectFlag.DerivedFromStoragePoint) ? "override " : string.Empty;
-            using (var scopeMethod = ssb.ScopeBrace($"public {overrideString}Task DeleteData(DateTime forceDeleteAfter = default)"))
+            using (var scopeMethod = ssb.ScopeBrace($"public {overrideString}Task DeleteData(DateTime forceDeleteAfter = default, bool writeJournal = true)"))
             {
-                ssb.AppendLine($"if (this.Goshujin is {{ }} goshujin) return goshujin.Delete(this.{this.UniqueLink?.TargetName}, forceDeleteAfter);");
-                ssb.AppendLine("else return this.DeleteData(forceDeleteAfter);");
+                ssb.AppendLine($"if (this.Goshujin is {{ }} goshujin) return goshujin.Delete(this.{this.UniqueLink?.TargetName}, forceDeleteAfter, writeJournal);");
+                ssb.AppendLine("else return this.DeleteData(forceDeleteAfter, writeJournal);");
             }
         }
 
@@ -2387,13 +2387,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGosjujin_Structual_Delete(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        ssb.AppendLine($"Task {TinyhandBody.IStructualObject}.DeleteData(DateTime forceDeleteAfter) => this.GoshujinDeleteData(forceDeleteAfter);");
-
-        /*using (var scopeMethod = ssb.ScopeBrace($"void {TinyhandBody.IStructualObject}.DeleteData()"))
-        using (var scopeThis = ssb.ScopeObject("this"))
-        {
-            this.GenerateGoshujin_ClearChains(ssb, info, true);
-        }*/
+        ssb.AppendLine($"Task {TinyhandBody.IStructualObject}.DeleteData(DateTime forceDeleteAfter, bool writeJournal) => this.GoshujinDeleteData(forceDeleteAfter, writeJournal);");
     }
 
     internal void GenerateGosjujin_Structual_NotifyDataChanged(ScopingStringBuilder ssb, GeneratorInformation info)

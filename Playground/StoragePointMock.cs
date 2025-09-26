@@ -42,12 +42,12 @@ public class StoragePoint<TData> : IStructualObject, IDataLocker<TData>
         return ValueTask.FromResult(new DataScope<TData>(DataScopeResult.Timeout));
     }
 
-    public virtual Task DeleteData(DateTime forceDeleteAfter = default)
+    public virtual Task DeleteData(DateTime forceDeleteAfter = default, bool writeJournal = true)
     {
         return Task.CompletedTask;
     }
 
-    Task IDataLocker<TData>.DeletePoint(DateTime forceDeleteAfter)
+    Task IDataLocker<TData>.DeletePoint(DateTime forceDeleteAfter, bool writeJournal)
     {
         throw new NotImplementedException();
     }
