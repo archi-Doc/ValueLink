@@ -16,12 +16,8 @@ public interface IDataUnlocker
     void Unlock();
 
     /// <summary>
-    /// Releases the lock on the data resource and deletes it, optionally forcing deletion after the specified date and time.
+    /// Releases the lock on the data resource and deletes it.
     /// </summary>
-    /// <param name="forceDeleteAfter">
-    /// The time after which the deletion will be forced even if the object is protected.<br/>
-    /// If <see langword="default"/>, waits indefinitely.
-    /// </param>
-    /// <returns>A <see cref="Task"/> representing the asynchronous delete operation.</returns>
-    Task UnlockAndDelete(DateTime forceDeleteAfter = default);
+    /// <returns>Returns <see langword="true" /> if the deletion succeeds, or <see langword="false" /> if it has already been deleted.</returns>
+    bool UnlockAndDelete();
 }
