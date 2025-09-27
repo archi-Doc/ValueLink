@@ -889,6 +889,17 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 ssb.AppendLine("else return scope.Result;");
             }
         }
+
+        /*ssb.AppendLine($"public static Task<DataScopeResult> Delete(this CrystalData.StoragePoint<{this.GoshujinFullName}> storagePoint, {keyName} key, DateTime forceDeleteAfter = default, bool writeJournal = true) => Delete(storagePoint, key, ValueLinkGlobal.LockTimeout, default, forceDeleteAfter, writeJournal);");
+
+        using (var tryLock = ssb.ScopeBrace($"public static async Task<DataScopeResult> Delete(this CrystalData.StoragePoint<{this.GoshujinFullName}> storagePoint, {keyName} key, TimeSpan timeout, CancellationToken cancellationToken = default, DateTime forceDeleteAfter = default, bool writeJournal = true)"))
+        {
+            using (var scope = ssb.ScopeBrace($"using (var scope = await storagePoint.TryLock(AcquisitionMode.Get, timeout, cancellationToken).ConfigureAwait(false))"))
+            {
+                ssb.AppendLine("if (scope.Data is { } g) return await g.Delete(key, forceDeleteAfter, writeJournal).ConfigureAwait(false);");
+                ssb.AppendLine("else return scope.Result;");
+            }
+        }*/
     }
 
     public static void GenerateDeserializeChain(ValueLinkObject obj, ScopingStringBuilder ssb, object? info, Linkage link)

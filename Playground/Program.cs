@@ -109,7 +109,7 @@ public partial class LockedDataMock<TData> : IDataLocker<TData>, IDataUnlocker, 
         }
     }
 
-    Task IDataUnlocker.UnlockAndDelete(DateTime forceDeleteAfter)
+    bool IDataUnlocker.UnlockAndDelete()
     {
         throw new NotImplementedException();
     }

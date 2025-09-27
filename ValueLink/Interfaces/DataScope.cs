@@ -3,6 +3,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
+using Tinyhand;
 
 namespace ValueLink;
 
@@ -14,11 +15,12 @@ namespace ValueLink;
 /// <typeparam name="TData">Type of the data instance managed by this scope. Must be a non-nullable type.</typeparam>
 public record struct DataScope<TData> : IDisposable
     where TData : notnull
-{// 24 bytes
+{// 32 bytes
     public readonly DataScopeResult Result;
     // public readonly bool NewlyCreated; // We considered adding NewlyCreated, but since TryLock does not always succeed, the determination and initialization of NewlyCreated will be handled on the object side rather than in DataScope.
     private TData? data;
     private IDataUnlocker? dataUnlocker;
+    private object? storagePoint;
 
     /// <summary>
     /// Gets the scoped data instance while the scope is valid; otherwise <c>null</c> after disposal or if lock failed.
@@ -71,12 +73,20 @@ public record struct DataScope<TData> : IDisposable
         if (this.dataUnlocker is { } dataUnlocker)
         {
             this.dataUnlocker = default;
-            return dataUnlocker.UnlockAndDelete(forceDeleteAfter);
+            if (dataUnlocker.UnlockAndDelete())
+            {// Deleted
+                if (this.storagePoint is IStructualObject structualObject)
+                {
+                    this.storagePoint = default;
+                    return structualObject.DeleteData(forceDeleteAfter, true);
+                }
+            }
         }
-        else
-        {
-            return Task.CompletedTask;
-        }
+
+        this.dataUnlocker = default;
+        this.storagePoint = default;
+
+        return Task.CompletedTask;
     }
 
     /// <summary>
