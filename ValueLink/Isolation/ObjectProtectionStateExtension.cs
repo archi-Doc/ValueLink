@@ -57,10 +57,11 @@ public static class ObjectProtectionStateHelper
     /// Attempts to mark the state as <c>PendingDeletion</c> if it is currently <c>Protected</c>.
     /// </summary>
     /// <param name="state">A reference to the state byte to mark as pending deletion.</param>
+    /// <returns><c>true</c> if the state was successfully changed to <c>PendingDeletion</c>; otherwise, <c>false</c>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void TryMarkPendingDeletion(ref byte state)
+    public static bool TryMarkPendingDeletion(ref byte state)
     {
-        Interlocked.CompareExchange(ref state, (byte)ObjectProtectionState.PendingDeletion, (byte)ObjectProtectionState.Protected);
+        return Interlocked.CompareExchange(ref state, (byte)ObjectProtectionState.PendingDeletion, (byte)ObjectProtectionState.Protected) == (byte)ObjectProtectionState.Protected;
     }
 
     /// <summary>
