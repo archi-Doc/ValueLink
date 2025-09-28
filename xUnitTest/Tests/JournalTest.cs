@@ -52,7 +52,7 @@ public readonly partial struct JournalIdentifier : IComparable<JournalIdentifier
 
 [ValueLinkObject(Isolation = IsolationLevel.Serializable)]
 [TinyhandObject(Structual = true)]
-public partial record JournalTestClass : IEquatableObject<JournalTestClass>
+public partial record JournalTestClass : IEquatableObject
 {
     public JournalTestClass()
     {
@@ -75,13 +75,20 @@ public partial record JournalTestClass : IEquatableObject<JournalTestClass>
     [Key("name", AddProperty = "Name")]
     private string name = string.Empty;
 
-    public bool ObjectEquals(JournalTestClass other)
-         => this.id == other.id && this.name == other.name && this.identifier.Equals(other.identifier);
+    public bool ObjectEquals(object other)
+    {
+        if (other is not JournalTestClass obj)
+        {
+            return false;
+        }
+
+        return this.id == obj.id && this.name == obj.name && this.identifier.Equals(obj.identifier);
+    }
 }
 
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 [TinyhandObject(Structual = true)]
-public partial record JournalTestClass2 : IEquatableObject<JournalTestClass2>
+public partial record JournalTestClass2 : IEquatableObject
 {
     public JournalTestClass2()
     {
@@ -116,8 +123,13 @@ public partial record JournalTestClass2 : IEquatableObject<JournalTestClass2>
     [Key(4)]
     private JournalTestClass2.GoshujinClass? children; // = new();
 
-    public bool ObjectEquals(JournalTestClass2 other)
+    public bool ObjectEquals(object otherObj)
     {
+        if (otherObj is not JournalTestClass2 other)
+        {
+            return false;
+        }
+
         if (!this.id.Equals(other.id))
         {
             return false;
@@ -151,7 +163,7 @@ public partial record JournalTestClass2 : IEquatableObject<JournalTestClass2>
             {
                 return false;
             }
-            else if (!this.children.GoshujinEquals(other.children))
+            else if (!this.children.ObjectEquals(other.children))
             {
                 return false;
             }
@@ -217,7 +229,7 @@ public partial record JournalTestBase3 : JournalTestBase2
 }*/
 
 [TinyhandObject(Structual = true)]
-public partial record JournalChildClass : IEquatableObject<JournalChildClass>
+public partial record JournalChildClass : IEquatableObject
 {
     public JournalChildClass()
     {
@@ -231,8 +243,15 @@ public partial record JournalChildClass : IEquatableObject<JournalChildClass>
     [Key(0, AddProperty = "Age")]
     private double age;
 
-    public bool ObjectEquals(JournalChildClass other)
-        => this.age == other.age;
+    public bool ObjectEquals(object other)
+    {
+        if (other is not JournalChildClass obj)
+        {
+            return false;
+        }
+
+        return this.age == obj.age;
+    }
 }
 
 [TinyhandObject(Structual = true)]
@@ -286,12 +305,12 @@ public class JournalTest
         g2.Add(new JournalTestClass(1, "one"));
         g2.Add(new JournalTestClass(2, "two"));
         g2.Add(new JournalTestClass(3, "3"));
-        g.GoshujinEquals(g2).IsTrue();
+        g.ObjectEquals(g2).IsTrue();
 
         var journal = tester.GetJournal();
         var g3 = new JournalTestClass.GoshujinClass();
         JournalHelper.ReadJournal(g3, journal).IsTrue();
-        g.GoshujinEquals(g3).IsTrue();
+        g.ObjectEquals(g3).IsTrue();
 
         g2.IdChain.FindFirst(1)!.Goshujin = null;
         g2.Add(new JournalTestClass(4, "four"));
@@ -300,7 +319,7 @@ public class JournalTest
         journal = tester.GetJournal();
         g3 = new JournalTestClass.GoshujinClass();
         JournalHelper.ReadJournal(g3, journal).IsTrue();
-        g2.GoshujinEquals(g3).IsTrue();
+        g2.ObjectEquals(g3).IsTrue();
     }
 
     [Fact]
@@ -318,12 +337,12 @@ public class JournalTest
         g2.Add(new JournalTestClass2(new(1), "one"));
         g2.Add(new JournalTestClass2(new(2), "two"));
         g2.Add(new JournalTestClass2(new(3), "3"));
-        g.GoshujinEquals(g2).IsTrue();
+        g.ObjectEquals(g2).IsTrue();
 
         var journal = tester.GetJournal();
         var g3 = new JournalTestClass2.GoshujinClass();
         JournalHelper.ReadJournal(g3, journal).IsTrue();
-        g.GoshujinEquals(g3).IsTrue();
+        g.ObjectEquals(g3).IsTrue();
 
         // g2.IdChain.FindFirst(new(1))!.Goshujin = null;
         g2.Remove(g2.IdChain.FindFirst(new(1))!);
@@ -334,7 +353,7 @@ public class JournalTest
         journal = tester.GetJournal();
         g3 = new JournalTestClass2.GoshujinClass();
         JournalHelper.ReadJournal(g3, journal).IsTrue();
-        g2.GoshujinEquals(g3).IsTrue();
+        g2.ObjectEquals(g3).IsTrue();
 
         using (var w = g2.TryLock(new JournalIdentifier(2)))
         {
@@ -355,7 +374,7 @@ public class JournalTest
         journal = tester.GetJournal();
         g3 = new JournalTestClass2.GoshujinClass();
         this.ReadJournal(g3, journal).IsTrue();
-        g2.GoshujinEquals(g3).IsTrue();
+        g2.ObjectEquals(g3).IsTrue();
 
         using (var w = g2.TryLock(new JournalIdentifier(222)))
         {
@@ -471,7 +490,7 @@ public class JournalTest
         journal = tester.GetJournal();
         g3 = new JournalTestClass2.GoshujinClass();
         this.ReadJournal(g3, journal).IsTrue();
-        g2.GoshujinEquals(g3).IsTrue();
+        g2.ObjectEquals(g3).IsTrue();
 
         ((IRepeatableReadSemaphore)g2).State.Is(GoshujinState.Valid);
         ((IRepeatableReadSemaphore)g2).SemaphoreCount.Is(0);

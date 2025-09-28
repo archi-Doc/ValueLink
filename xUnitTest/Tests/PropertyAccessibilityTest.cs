@@ -8,7 +8,7 @@ namespace xUnitTest;
 
 [TinyhandObject]
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
-public partial record PropertyAccessibilityClass : IEquatableObject<PropertyAccessibilityClass>
+public partial record PropertyAccessibilityClass : IEquatableObject
 {
     [Key(0, AddProperty = "Id", PropertyAccessibility = PropertyAccessibility.PublicSetter)]
     [Link(Unique = true, Primary = true, Type = ChainType.Unordered)]
@@ -32,8 +32,13 @@ public partial record PropertyAccessibilityClass : IEquatableObject<PropertyAcce
     [Link(Type = ChainType.Ordered)]
     private string _z = string.Empty;
 
-    bool IEquatableObject<PropertyAccessibilityClass>.ObjectEquals(PropertyAccessibilityClass other)
+    public bool ObjectEquals(object otherObj)
     {
+        if (otherObj is not PropertyAccessibilityClass other)
+        {
+            return false;
+        }
+
         return this._id == other._id && this._b == other._b && this._c == other._c && this._x == other._x;
     }
 }
@@ -99,6 +104,6 @@ public class PropertyAccessibilityTest
 
         var b = TinyhandSerializer.Serialize(g);
         var g2 = TinyhandSerializer.Deserialize<PropertyAccessibilityClass.GoshujinClass>(b);
-        g.GoshujinEquals(g2!).IsTrue();
+        g.ObjectEquals(g2!).IsTrue();
     }
 }

@@ -11,7 +11,7 @@ namespace xUnitTest;
 
 [TinyhandObject]
 [ValueLinkObject(Integrality = true)]
-public partial class SimpleIntegralityClass : IEquatableObject<SimpleIntegralityClass>
+public partial class SimpleIntegralityClass : IEquatableObject
 {
     public class Integrality : Integrality<GoshujinClass, SimpleIntegralityClass>
     {
@@ -66,13 +66,20 @@ public partial class SimpleIntegralityClass : IEquatableObject<SimpleIntegrality
     [Key(1)]
     public string Name { get; set; } = string.Empty;
 
-    bool IEquatableObject<SimpleIntegralityClass>.ObjectEquals(SimpleIntegralityClass other)
-        => this.Id == other.Id && this.Name == other.Name;
+    public bool ObjectEquals(object other)
+    {
+        if (other is not SimpleIntegralityClass obj)
+        {
+            return false;
+        }
+
+        return this.Id == obj.Id && this.Name == obj.Name;
+    }
 }
 
 [TinyhandObject]
 [ValueLinkObject(Integrality = true, Isolation = IsolationLevel.Serializable)]
-public partial class SerializableIntegralityClass : IEquatableObject<SerializableIntegralityClass>
+public partial class SerializableIntegralityClass : IEquatableObject
 {
     public SerializableIntegralityClass()
     {
@@ -91,8 +98,15 @@ public partial class SerializableIntegralityClass : IEquatableObject<Serializabl
     [Key(1)]
     public string Name { get; set; } = string.Empty;
 
-    bool IEquatableObject<SerializableIntegralityClass>.ObjectEquals(SerializableIntegralityClass other)
-        => this.Id == other.Id && this.Name == other.Name;
+    public bool ObjectEquals(object other)
+    {
+        if (other is not SerializableIntegralityClass obj)
+        {
+            return false;
+        }
+
+        return this.Id == obj.Id && this.Name == obj.Name;
+    }
 }
 
 public static class IntegralityTestHelper
@@ -117,11 +131,11 @@ public class IntegralityTest
         g.Add(new(3, "C"));
 
         g2 = new(); // 1, 2, 3
-        g2.GoshujinEquals(g).IsFalse();
+        g2.ObjectEquals(g).IsFalse();
 
         var resultAndCount = SimpleIntegralityClass.Integrality.Instance10.IntegrateForTest(g2, g);
         resultAndCount.Result.Is(IntegralityResult.Success);
-        g2.GoshujinEquals(g).IsTrue();
+        g2.ObjectEquals(g).IsTrue();
 
         g2 = new(); // 1, 2
         resultAndCount = SimpleIntegralityClass.Integrality.Instance2.IntegrateForTest(g2, g);
@@ -129,7 +143,7 @@ public class IntegralityTest
         g2.IdChain.FindFirst(1).IsNotNull();
         g2.IdChain.FindFirst(2).IsNotNull();
         g2.IdChain.FindFirst(3).IsNull();
-        g2.GoshujinEquals(g).IsFalse();
+        g2.ObjectEquals(g).IsFalse();
 
         g2 = new(); // 1, 3
         resultAndCount = SimpleIntegralityClass.IntegralityNotB.Instance.IntegrateForTest(g2, g);
@@ -137,10 +151,10 @@ public class IntegralityTest
         g2.IdChain.FindFirst(1).IsNotNull();
         g2.IdChain.FindFirst(2).IsNull();
         g2.IdChain.FindFirst(3).IsNotNull();
-        g2.GoshujinEquals(g).IsFalse();
+        g2.ObjectEquals(g).IsFalse();
 
         g2 = new();
-        g2.GoshujinEquals(g).IsFalse();
+        g2.ObjectEquals(g).IsFalse();
 
         resultAndCount = SimpleIntegralityClass.Integrality.Instance10.IntegrateForTest(g, g2);
         resultAndCount.Result.Is(IntegralityResult.Incomplete);
