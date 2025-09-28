@@ -338,7 +338,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             this.PropertyChangedDeclaration = DeclarationCondition.ImplicitlyDeclared;
         }
 
-        if (this.AllInterfaces.Any(x => x.StartsWith("ValueLink.IEquatableObject")))
+        if (this.ObjectAttribute?.Isolation != IsolationLevel.ReadCommitted &&
+            this.AllInterfaces.Any(x => x.StartsWith("ValueLink.IEquatableObject")))
         {
             this.ObjectFlag |= ValueLinkObjectFlag.EquatableObject;
         }
