@@ -13,12 +13,17 @@ public enum ObjectProtectionState : byte
     Unprotected,
 
     /// <summary>
-    /// The object is protected.
+    /// The object is protected (cannot be deleted).
     /// </summary>
     Protected,
 
     /// <summary>
-    /// The object is deleted.
+    /// The object is pending deletion (scheduled to be removed).
+    /// </summary>
+    PendingDeletion,
+
+    /// <summary>
+    /// The object has already been deleted.
     /// </summary>
     Deleted,
 }
