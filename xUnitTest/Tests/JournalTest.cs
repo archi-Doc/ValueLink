@@ -75,7 +75,7 @@ public partial record JournalTestClass : IEquatableObject
     [Key("name", AddProperty = "Name")]
     private string name = string.Empty;
 
-    public bool ObjectEquals(object other)
+    public bool ObjectEquals(object? other)
     {
         if (other is not JournalTestClass obj)
         {
@@ -123,7 +123,7 @@ public partial record JournalTestClass2 : IEquatableObject
     [Key(4)]
     private JournalTestClass2.GoshujinClass? children; // = new();
 
-    public bool ObjectEquals(object otherObj)
+    public bool ObjectEquals(object? otherObj)
     {
         if (otherObj is not JournalTestClass2 other)
         {
@@ -243,7 +243,7 @@ public partial record JournalChildClass : IEquatableObject
     [Key(0, AddProperty = "Age")]
     private double age;
 
-    public bool ObjectEquals(object other)
+    public bool ObjectEquals(object? other)
     {
         if (other is not JournalChildClass obj)
         {

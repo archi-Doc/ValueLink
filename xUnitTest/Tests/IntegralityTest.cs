@@ -66,7 +66,7 @@ public partial class SimpleIntegralityClass : IEquatableObject
     [Key(1)]
     public string Name { get; set; } = string.Empty;
 
-    public bool ObjectEquals(object other)
+    public bool ObjectEquals(object? other)
     {
         if (other is not SimpleIntegralityClass obj)
         {
@@ -98,7 +98,7 @@ public partial class SerializableIntegralityClass : IEquatableObject
     [Key(1)]
     public string Name { get; set; } = string.Empty;
 
-    public bool ObjectEquals(object other)
+    public bool ObjectEquals(object? other)
     {
         if (other is not SerializableIntegralityClass obj)
         {
