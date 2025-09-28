@@ -12,7 +12,7 @@ namespace CrystalData;
 public class StoragePoint<TData> : IStructualObject, IDataLocker<TData>
     where TData : notnull
 {
-    private ObjectProtectionState protectionState;
+    private byte protectionState;
 
     protected ulong pointId;
 
@@ -26,7 +26,7 @@ public class StoragePoint<TData> : IStructualObject, IDataLocker<TData>
     {
     }
 
-    ref ObjectProtectionState IDataLocker<TData>.GetProtectionStateRef() => ref this.protectionState;
+    ref byte IDataLocker<TData>.GetProtectionStateRef() => ref this.protectionState;
 
     public ValueTask<TData?> TryGet() => ValueTask.FromResult<TData?>(default);
 

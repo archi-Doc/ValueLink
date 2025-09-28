@@ -20,7 +20,7 @@ public record struct DataScope<TData> : IDisposable
     // public readonly bool NewlyCreated; // We considered adding NewlyCreated, but since TryLock does not always succeed, the determination and initialization of NewlyCreated will be handled on the object side rather than in DataScope.
     private TData? data;
     private IDataUnlocker? dataUnlocker;
-    private object? storagePoint;
+    private IStructualObject? structualObject;
 
     /// <summary>
     /// Gets the scoped data instance while the scope is valid; otherwise <c>null</c> after disposal or if lock failed.
@@ -40,11 +40,13 @@ public record struct DataScope<TData> : IDisposable
     /// </summary>
     /// <param name="data">The data instance to be scoped and locked.</param>
     /// <param name="dataUnlocker">The data instance responsible for releasing the lock on the data resource.</param>
-    public DataScope(TData data, IDataUnlocker dataUnlocker)
+    /// <param name="structualObject">The structural object associated with the data, used for deletion if needed.</param>
+    public DataScope(TData data, IDataUnlocker dataUnlocker, IStructualObject structualObject)
     {
         this.Result = DataScopeResult.Success;
         this.data = data;
         this.dataUnlocker = dataUnlocker;
+        this.structualObject = structualObject;
     }
 
     /// <summary>
@@ -75,16 +77,13 @@ public record struct DataScope<TData> : IDisposable
             this.dataUnlocker = default;
             if (dataUnlocker.UnlockAndDelete())
             {// Deleted
-                if (this.storagePoint is IStructualObject structualObject)
+                if (this.structualObject is { } structualObject)
                 {
-                    this.storagePoint = default;
+                    this.structualObject = default;
                     return structualObject.DeleteData(forceDeleteAfter, true);
                 }
             }
         }
-
-        this.dataUnlocker = default;
-        this.storagePoint = default;
 
         return Task.CompletedTask;
     }
@@ -95,11 +94,13 @@ public record struct DataScope<TData> : IDisposable
     /// </summary>
     public void Dispose()
     {
-        this.data = default;
         if (this.dataUnlocker is not null)
         {
             this.dataUnlocker.Unlock();
-            this.dataUnlocker = default;
         }
+
+        this.data = default;
+        this.dataUnlocker = default;
+        this.structualObject = default;
     }
 }
