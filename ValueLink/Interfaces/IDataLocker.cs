@@ -15,7 +15,14 @@ namespace ValueLink;
 public interface IDataLocker<TData>
     where TData : notnull
 {
-    ref ObjectProtectionState GetProtectionStateRef();
+    /// <summary>
+    /// Gets a reference to the protection state (<see cref="ObjectProtectionState"/>) for the underlying data resource.<br/>
+    /// This state can be used to determine or modify the protection status of the data.
+    /// </summary>
+    /// <returns>
+    /// A reference to a <see cref="byte"/> representing the protection state.
+    /// </returns>
+    ref byte GetProtectionStateRef();
 
     /// <summary>
     /// Attempts to retrieve the data instance if available, without acquiring a lock.

@@ -251,7 +251,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
     {
         TObject? obj;
         var delay = false;
-        var deleted = false;
+        bool deleted = false;
 
 Retry:
         if (delay)
@@ -270,22 +270,17 @@ Retry:
             if (forceDeleteAfter == default ||
                 DateTime.UtcNow <= forceDeleteAfter)
             {
-                var originalState = Interlocked.CompareExchange(ref obj.GetProtectionStateRef(), ObjectProtectionState.Deleted, ObjectProtectionState.Unprotected);
-                if (originalState == ObjectProtectionState.Unprotected)
-                {// Unprotected -> Deleted
-                    deleted = true;
-                }
-                else if (originalState == ObjectProtectionState.Protected)
+                if (!ObjectProtectionStateHelper.TryDelete(ref obj.GetProtectionStateRef(), out var originalState))
                 {// Protected
                     delay = true;
                     goto Retry;
                 }
 
-                // Deleted -> Deleted
+                deleted = originalState != ObjectProtectionState.Deleted;
             }
             else
             {// Force delete
-                deleted = Interlocked.Exchange(ref obj.GetProtectionStateRef(), ObjectProtectionState.Deleted) != ObjectProtectionState.Deleted;
+                deleted = ObjectProtectionStateHelper.ForceDelete(ref obj.GetProtectionStateRef());
             }
 
             if (deleted)
@@ -388,22 +383,17 @@ Retry:
             if (forceDeleteAfter == default ||
                 DateTime.UtcNow <= forceDeleteAfter)
             {
-                var originalState = Interlocked.CompareExchange(ref obj.GetProtectionStateRef(), ObjectProtectionState.Deleted, ObjectProtectionState.Unprotected);
-                if (originalState == ObjectProtectionState.Unprotected)
-                {// Unprotected -> Deleted
-                    deleted = true;
-                }
-                else if (originalState == ObjectProtectionState.Protected)
+                if (!ObjectProtectionStateHelper.TryDelete(ref obj.GetProtectionStateRef(), out var originalState))
                 {// Protected
                     await Task.Delay(DelayInMilliseconds).ConfigureAwait(false);
                     goto Retry;
                 }
 
-                // Deleted -> Deleted
+                deleted = originalState != ObjectProtectionState.Deleted;
             }
             else
             {// Force delete
-                deleted = Interlocked.Exchange(ref obj.GetProtectionStateRef(), ObjectProtectionState.Deleted) != ObjectProtectionState.Deleted;
+                deleted = ObjectProtectionStateHelper.ForceDelete(ref obj.GetProtectionStateRef());
             }
 
             if (deleted)
