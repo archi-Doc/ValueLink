@@ -2259,15 +2259,15 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             return;
         }
 
-        using (var scopeMethod = ssb.ScopeBrace($"public bool ObjectEquals(object other)"))
+        using (var scopeMethod = ssb.ScopeBrace($"public bool ObjectEquals(object? otherObject)"))
         {
-            ssb.AppendLine($"if (other is not {this.GoshujinFullName} obj) return false;");
+            ssb.AppendLine($"if (otherObject is not {this.GoshujinFullName} other) return false;");
             if (this.UniqueLink is not null)
             {
-                ssb.AppendLine("if (this.Count != obj.Count) return false;");
+                ssb.AppendLine("if (this.Count != other.Count) return false;");
                 using (var scopeForeach = ssb.ScopeBrace("foreach (var x in this)"))
                 {
-                    ssb.AppendLine($"var y = obj.{this.UniqueLink.ChainName}.FindFirst(x.{this.UniqueLink.TargetName});");
+                    ssb.AppendLine($"var y = other.{this.UniqueLink.ChainName}.FindFirst(x.{this.UniqueLink.TargetName});");
                     ssb.AppendLine("if (y is null) return false;");
                     ssb.AppendLine($"if (!((Tinyhand.IEquatableObject)y).ObjectEquals(x)) return false;");
                 }
@@ -2275,7 +2275,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             else
             {
                 ssb.AppendLine("var array = System.Linq.Enumerable.ToArray(this);");
-                ssb.AppendLine("var array2 = System.Linq.Enumerable.ToArray(obj);");
+                ssb.AppendLine("var array2 = System.Linq.Enumerable.ToArray(other);");
                 ssb.AppendLine("if (array.Length != array2.Length) return false;");
                 using (var scopeFor = ssb.ScopeBrace("for (var i = 0; i < array.Length; i++)"))
                 {

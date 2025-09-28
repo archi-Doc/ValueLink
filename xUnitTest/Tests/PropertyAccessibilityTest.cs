@@ -32,7 +32,7 @@ public partial record PropertyAccessibilityClass : IEquatableObject
     [Link(Type = ChainType.Ordered)]
     private string _z = string.Empty;
 
-    public bool ObjectEquals(object otherObj)
+    public bool ObjectEquals(object? otherObj)
     {
         if (otherObj is not PropertyAccessibilityClass other)
         {
