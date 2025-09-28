@@ -151,7 +151,7 @@ public partial record JournalTestClass2 : IEquatableObject<JournalTestClass2>
             {
                 return false;
             }
-            else if (!this.children.GoshujinEquals(other.children))
+            else if (!this.children.ObjectEquals(other.children))
             {
                 return false;
             }
@@ -286,12 +286,12 @@ public class JournalTest
         g2.Add(new JournalTestClass(1, "one"));
         g2.Add(new JournalTestClass(2, "two"));
         g2.Add(new JournalTestClass(3, "3"));
-        g.GoshujinEquals(g2).IsTrue();
+        g.ObjectEquals(g2).IsTrue();
 
         var journal = tester.GetJournal();
         var g3 = new JournalTestClass.GoshujinClass();
         JournalHelper.ReadJournal(g3, journal).IsTrue();
-        g.GoshujinEquals(g3).IsTrue();
+        g.ObjectEquals(g3).IsTrue();
 
         g2.IdChain.FindFirst(1)!.Goshujin = null;
         g2.Add(new JournalTestClass(4, "four"));
@@ -300,7 +300,7 @@ public class JournalTest
         journal = tester.GetJournal();
         g3 = new JournalTestClass.GoshujinClass();
         JournalHelper.ReadJournal(g3, journal).IsTrue();
-        g2.GoshujinEquals(g3).IsTrue();
+        g2.ObjectEquals(g3).IsTrue();
     }
 
     [Fact]
@@ -318,12 +318,12 @@ public class JournalTest
         g2.Add(new JournalTestClass2(new(1), "one"));
         g2.Add(new JournalTestClass2(new(2), "two"));
         g2.Add(new JournalTestClass2(new(3), "3"));
-        g.GoshujinEquals(g2).IsTrue();
+        g.ObjectEquals(g2).IsTrue();
 
         var journal = tester.GetJournal();
         var g3 = new JournalTestClass2.GoshujinClass();
         JournalHelper.ReadJournal(g3, journal).IsTrue();
-        g.GoshujinEquals(g3).IsTrue();
+        g.ObjectEquals(g3).IsTrue();
 
         // g2.IdChain.FindFirst(new(1))!.Goshujin = null;
         g2.Remove(g2.IdChain.FindFirst(new(1))!);
@@ -334,7 +334,7 @@ public class JournalTest
         journal = tester.GetJournal();
         g3 = new JournalTestClass2.GoshujinClass();
         JournalHelper.ReadJournal(g3, journal).IsTrue();
-        g2.GoshujinEquals(g3).IsTrue();
+        g2.ObjectEquals(g3).IsTrue();
 
         using (var w = g2.TryLock(new JournalIdentifier(2)))
         {
@@ -355,7 +355,7 @@ public class JournalTest
         journal = tester.GetJournal();
         g3 = new JournalTestClass2.GoshujinClass();
         this.ReadJournal(g3, journal).IsTrue();
-        g2.GoshujinEquals(g3).IsTrue();
+        g2.ObjectEquals(g3).IsTrue();
 
         using (var w = g2.TryLock(new JournalIdentifier(222)))
         {
@@ -471,7 +471,7 @@ public class JournalTest
         journal = tester.GetJournal();
         g3 = new JournalTestClass2.GoshujinClass();
         this.ReadJournal(g3, journal).IsTrue();
-        g2.GoshujinEquals(g3).IsTrue();
+        g2.ObjectEquals(g3).IsTrue();
 
         ((IRepeatableReadSemaphore)g2).State.Is(GoshujinState.Valid);
         ((IRepeatableReadSemaphore)g2).SemaphoreCount.Is(0);

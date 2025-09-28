@@ -117,11 +117,11 @@ public class IntegralityTest
         g.Add(new(3, "C"));
 
         g2 = new(); // 1, 2, 3
-        g2.GoshujinEquals(g).IsFalse();
+        g2.ObjectEquals(g).IsFalse();
 
         var resultAndCount = SimpleIntegralityClass.Integrality.Instance10.IntegrateForTest(g2, g);
         resultAndCount.Result.Is(IntegralityResult.Success);
-        g2.GoshujinEquals(g).IsTrue();
+        g2.ObjectEquals(g).IsTrue();
 
         g2 = new(); // 1, 2
         resultAndCount = SimpleIntegralityClass.Integrality.Instance2.IntegrateForTest(g2, g);
@@ -129,7 +129,7 @@ public class IntegralityTest
         g2.IdChain.FindFirst(1).IsNotNull();
         g2.IdChain.FindFirst(2).IsNotNull();
         g2.IdChain.FindFirst(3).IsNull();
-        g2.GoshujinEquals(g).IsFalse();
+        g2.ObjectEquals(g).IsFalse();
 
         g2 = new(); // 1, 3
         resultAndCount = SimpleIntegralityClass.IntegralityNotB.Instance.IntegrateForTest(g2, g);
@@ -137,10 +137,10 @@ public class IntegralityTest
         g2.IdChain.FindFirst(1).IsNotNull();
         g2.IdChain.FindFirst(2).IsNull();
         g2.IdChain.FindFirst(3).IsNotNull();
-        g2.GoshujinEquals(g).IsFalse();
+        g2.ObjectEquals(g).IsFalse();
 
         g2 = new();
-        g2.GoshujinEquals(g).IsFalse();
+        g2.ObjectEquals(g).IsFalse();
 
         resultAndCount = SimpleIntegralityClass.Integrality.Instance10.IntegrateForTest(g, g2);
         resultAndCount.Result.Is(IntegralityResult.Incomplete);

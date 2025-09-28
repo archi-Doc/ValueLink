@@ -99,6 +99,6 @@ public class PropertyAccessibilityTest
 
         var b = TinyhandSerializer.Serialize(g);
         var g2 = TinyhandSerializer.Deserialize<PropertyAccessibilityClass.GoshujinClass>(b);
-        g.GoshujinEquals(g2!).IsTrue();
+        g.ObjectEquals(g2!).IsTrue();
     }
 }

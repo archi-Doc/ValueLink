@@ -1893,7 +1893,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.EquatableObject))
         {
-            goshujinInterface += $", ValueLink.IEquatableGoshujin<{this.GoshujinFullName}>";
+            goshujinInterface += $", Tinyhand.IEquatableObject";
         }
 
         if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.IntegralityEnabled))
@@ -2259,14 +2259,15 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             return;
         }
 
-        using (var scopeMethod = ssb.ScopeBrace($"public bool GoshujinEquals({this.GoshujinFullName} other)"))
+        using (var scopeMethod = ssb.ScopeBrace($"public bool ObjectEquals(object other)"))
         {
+            ssb.AppendLine($"if (other is not {this.GoshujinFullName} obj) return false;");
             if (this.UniqueLink is not null)
             {
-                ssb.AppendLine("if (this.Count != other.Count) return false;");
+                ssb.AppendLine("if (this.Count != obj.Count) return false;");
                 using (var scopeForeach = ssb.ScopeBrace("foreach (var x in this)"))
                 {
-                    ssb.AppendLine($"var y = other.{this.UniqueLink.ChainName}.FindFirst(x.{this.UniqueLink.TargetName});");
+                    ssb.AppendLine($"var y = obj.{this.UniqueLink.ChainName}.FindFirst(x.{this.UniqueLink.TargetName});");
                     ssb.AppendLine("if (y is null) return false;");
                     ssb.AppendLine($"if (!((ValueLink.IEquatableObject<{this.LocalName}>)y).ObjectEquals(x)) return false;");
                 }
@@ -2274,7 +2275,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             else
             {
                 ssb.AppendLine("var array = System.Linq.Enumerable.ToArray(this);");
-                ssb.AppendLine("var array2 = System.Linq.Enumerable.ToArray(other);");
+                ssb.AppendLine("var array2 = System.Linq.Enumerable.ToArray(obj);");
                 ssb.AppendLine("if (array.Length != array2.Length) return false;");
                 using (var scopeFor = ssb.ScopeBrace("for (var i = 0; i < array.Length; i++)"))
                 {
