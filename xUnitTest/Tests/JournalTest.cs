@@ -52,7 +52,7 @@ public readonly partial struct JournalIdentifier : IComparable<JournalIdentifier
 
 [ValueLinkObject(Isolation = IsolationLevel.Serializable)]
 [TinyhandObject(Structual = true)]
-public partial record JournalTestClass : IEquatableObject<JournalTestClass>
+public partial record JournalTestClass : IEquatableObject
 {
     public JournalTestClass()
     {
@@ -75,13 +75,20 @@ public partial record JournalTestClass : IEquatableObject<JournalTestClass>
     [Key("name", AddProperty = "Name")]
     private string name = string.Empty;
 
-    public bool ObjectEquals(JournalTestClass other)
-         => this.id == other.id && this.name == other.name && this.identifier.Equals(other.identifier);
+    public bool ObjectEquals(object other)
+    {
+        if (other is not JournalTestClass obj)
+        {
+            return false;
+        }
+
+        return this.id == obj.id && this.name == obj.name && this.identifier.Equals(obj.identifier);
+    }
 }
 
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 [TinyhandObject(Structual = true)]
-public partial record JournalTestClass2 : IEquatableObject<JournalTestClass2>
+public partial record JournalTestClass2 : IEquatableObject
 {
     public JournalTestClass2()
     {
@@ -116,8 +123,13 @@ public partial record JournalTestClass2 : IEquatableObject<JournalTestClass2>
     [Key(4)]
     private JournalTestClass2.GoshujinClass? children; // = new();
 
-    public bool ObjectEquals(JournalTestClass2 other)
+    public bool ObjectEquals(object otherObj)
     {
+        if (otherObj is not JournalTestClass2 other)
+        {
+            return false;
+        }
+
         if (!this.id.Equals(other.id))
         {
             return false;
@@ -217,7 +229,7 @@ public partial record JournalTestBase3 : JournalTestBase2
 }*/
 
 [TinyhandObject(Structual = true)]
-public partial record JournalChildClass : IEquatableObject<JournalChildClass>
+public partial record JournalChildClass : IEquatableObject
 {
     public JournalChildClass()
     {
@@ -231,8 +243,15 @@ public partial record JournalChildClass : IEquatableObject<JournalChildClass>
     [Key(0, AddProperty = "Age")]
     private double age;
 
-    public bool ObjectEquals(JournalChildClass other)
-        => this.age == other.age;
+    public bool ObjectEquals(object other)
+    {
+        if (other is not JournalChildClass obj)
+        {
+            return false;
+        }
+
+        return this.age == obj.age;
+    }
 }
 
 [TinyhandObject(Structual = true)]

@@ -11,7 +11,7 @@ namespace xUnitTest;
 
 [TinyhandObject]
 [ValueLinkObject(Integrality = true)]
-public partial class SimpleIntegralityClass : IEquatableObject<SimpleIntegralityClass>
+public partial class SimpleIntegralityClass : IEquatableObject
 {
     public class Integrality : Integrality<GoshujinClass, SimpleIntegralityClass>
     {
@@ -66,13 +66,20 @@ public partial class SimpleIntegralityClass : IEquatableObject<SimpleIntegrality
     [Key(1)]
     public string Name { get; set; } = string.Empty;
 
-    bool IEquatableObject<SimpleIntegralityClass>.ObjectEquals(SimpleIntegralityClass other)
-        => this.Id == other.Id && this.Name == other.Name;
+    public bool ObjectEquals(object other)
+    {
+        if (other is not SimpleIntegralityClass obj)
+        {
+            return false;
+        }
+
+        return this.Id == obj.Id && this.Name == obj.Name;
+    }
 }
 
 [TinyhandObject]
 [ValueLinkObject(Integrality = true, Isolation = IsolationLevel.Serializable)]
-public partial class SerializableIntegralityClass : IEquatableObject<SerializableIntegralityClass>
+public partial class SerializableIntegralityClass : IEquatableObject
 {
     public SerializableIntegralityClass()
     {
@@ -91,8 +98,15 @@ public partial class SerializableIntegralityClass : IEquatableObject<Serializabl
     [Key(1)]
     public string Name { get; set; } = string.Empty;
 
-    bool IEquatableObject<SerializableIntegralityClass>.ObjectEquals(SerializableIntegralityClass other)
-        => this.Id == other.Id && this.Name == other.Name;
+    public bool ObjectEquals(object other)
+    {
+        if (other is not SerializableIntegralityClass obj)
+        {
+            return false;
+        }
+
+        return this.Id == obj.Id && this.Name == obj.Name;
+    }
 }
 
 public static class IntegralityTestHelper

@@ -339,7 +339,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
 
         if (this.ObjectAttribute?.Isolation != IsolationLevel.ReadCommitted &&
-            this.AllInterfaces.Any(x => x.StartsWith("ValueLink.IEquatableObject")))
+            this.AllInterfaces.Any(x => x == "Tinyhand.IEquatableObject"))
         {
             this.ObjectFlag |= ValueLinkObjectFlag.EquatableObject;
         }
@@ -2269,7 +2269,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 {
                     ssb.AppendLine($"var y = obj.{this.UniqueLink.ChainName}.FindFirst(x.{this.UniqueLink.TargetName});");
                     ssb.AppendLine("if (y is null) return false;");
-                    ssb.AppendLine($"if (!((ValueLink.IEquatableObject<{this.LocalName}>)y).ObjectEquals(x)) return false;");
+                    ssb.AppendLine($"if (!((Tinyhand.IEquatableObject)y).ObjectEquals(x)) return false;");
                 }
             }
             else
