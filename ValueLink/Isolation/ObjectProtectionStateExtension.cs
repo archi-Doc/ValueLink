@@ -16,9 +16,20 @@ public static class ObjectProtectionStateHelper
     /// <param name="state">The protection state to check.</param>
     /// <returns><c>true</c> if the state is <c>Deleted</c> or <c>PendingDeletion</c>; otherwise, <c>false</c>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsObsolete(this ObjectProtectionState state)
+    public static bool IsObsolete(ObjectProtectionState state)
     {
         return state == ObjectProtectionState.Deleted || state == ObjectProtectionState.PendingDeletion;
+    }
+
+    /// <summary>
+    /// Determines whether the specified <see cref="ObjectProtectionState"/> is obsolete (either <c>Deleted</c> or <c>PendingDeletion</c>).
+    /// </summary>
+    /// <param name="state">The protection state to check.</param>
+    /// <returns><c>true</c> if the state is <c>Deleted</c> or <c>PendingDeletion</c>; otherwise, <c>false</c>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsObsolete(byte state)
+    {
+        return state == (byte)ObjectProtectionState.Deleted || state == (byte)ObjectProtectionState.PendingDeletion;
     }
 
     /// <summary>
