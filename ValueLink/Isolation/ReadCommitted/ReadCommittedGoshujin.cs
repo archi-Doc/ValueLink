@@ -289,7 +289,7 @@ Retry:
             }
         }
 
-        /*if (obj is IStructualObject y)
+        /*if (obj is IStructuralObject y)
         {
             await y.DeleteData(forceDeleteAfter, writeJournal).ConfigureAwait(false);
         }*/
@@ -340,7 +340,7 @@ Retry:
         var array = this.GetArray();
         foreach (var x in array)
         {
-            if (x is IStructualObject y && await y.StoreData(storeMode).ConfigureAwait(false) == false)
+            if (x is IStructuralObject y && await y.StoreData(storeMode).ConfigureAwait(false) == false)
             {
                 return false;
             }

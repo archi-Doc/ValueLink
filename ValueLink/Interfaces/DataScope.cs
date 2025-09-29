@@ -20,7 +20,7 @@ public record struct DataScope<TData> : IDisposable
     // public readonly bool NewlyCreated; // We considered adding NewlyCreated, but since TryLock does not always succeed, the determination and initialization of NewlyCreated will be handled on the object side rather than in DataScope.
     private TData? data;
     private IDataUnlocker? dataUnlocker;
-    private IStructualObject? structualObject;
+    private IStructuralObject? structuralObject;
 
     /// <summary>
     /// Gets the scoped data instance while the scope is valid; otherwise <c>null</c> after disposal or if lock failed.
@@ -40,13 +40,13 @@ public record struct DataScope<TData> : IDisposable
     /// </summary>
     /// <param name="data">The data instance to be scoped and locked.</param>
     /// <param name="dataUnlocker">The data instance responsible for releasing the lock on the data resource.</param>
-    /// <param name="structualObject">The structural object associated with the data, used for deletion if needed.</param>
-    public DataScope(TData data, IDataUnlocker dataUnlocker, IStructualObject structualObject)
+    /// <param name="structuralObject">The structural object associated with the data, used for deletion if needed.</param>
+    public DataScope(TData data, IDataUnlocker dataUnlocker, IStructuralObject structuralObject)
     {
         this.Result = DataScopeResult.Success;
         this.data = data;
         this.dataUnlocker = dataUnlocker;
-        this.structualObject = structualObject;
+        this.structuralObject = structuralObject;
     }
 
     /// <summary>
@@ -77,10 +77,10 @@ public record struct DataScope<TData> : IDisposable
             this.dataUnlocker = default;
             if (dataUnlocker.UnlockAndDelete())
             {// Deleted
-                if (this.structualObject is { } structualObject)
+                if (this.structuralObject is { } structuralObject)
                 {
-                    this.structualObject = default;
-                    return structualObject.DeleteData(forceDeleteAfter, true);
+                    this.structuralObject = default;
+                    return structuralObject.DeleteData(forceDeleteAfter, true);
                 }
             }
         }
@@ -101,6 +101,6 @@ public record struct DataScope<TData> : IDisposable
 
         this.data = default;
         this.dataUnlocker = default;
-        this.structualObject = default;
+        this.structuralObject = default;
     }
 }

@@ -56,7 +56,7 @@ public abstract class RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter> 
 
         foreach (var x in array)
         {
-            if (x is IStructualObject y && await y.StoreData(storeMode).ConfigureAwait(false) == false)
+            if (x is IStructuralObject y && await y.StoreData(storeMode).ConfigureAwait(false) == false)
             {
                 return false;
             }
@@ -87,7 +87,7 @@ public abstract class RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter> 
 
         foreach (var x in array)
         {
-            if (x is IStructualObject y)
+            if (x is IStructuralObject y)
             {
                 await y.DeleteData(forceDeleteAfter, writeJournal).ConfigureAwait(false);
             }

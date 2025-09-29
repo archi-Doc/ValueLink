@@ -9,18 +9,18 @@ using ValueLink;
 
 namespace CrystalData;
 
-public class StoragePoint<TData> : IStructualObject, IDataLocker<TData>
+public class StoragePoint<TData> : IStructuralObject, IDataLocker<TData>
     where TData : notnull
 {
     private byte protectionState;
 
     protected ulong pointId;
 
-    IStructualRoot? IStructualObject.StructualRoot { get; set; }
+    IStructuralRoot? IStructuralObject.StructuralRoot { get; set; }
 
-    IStructualObject? IStructualObject.StructualParent { get; set; }
+    IStructuralObject? IStructuralObject.StructuralParent { get; set; }
 
-    int IStructualObject.StructualKey { get; set; }
+    int IStructuralObject.StructuralKey { get; set; }
 
     public void SetData(TData data)
     {

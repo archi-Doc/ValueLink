@@ -165,7 +165,7 @@ internal static class JournalShared
 
     public static void CodeJournal2(this ValueLinkObject obj, ScopingStringBuilder ssb, ValueLinkObject? remove, InterfaceImplementation customJournal)
     {
-        using (var journalScope = ssb.ScopeBrace($"if (writeJournal && (({TinyhandBody.IStructualObject}){ssb.FullObject}).TryGetJournalWriter(out var root, out var writer, false))"))
+        using (var journalScope = ssb.ScopeBrace($"if (writeJournal && (({TinyhandBody.IStructuralObject}){ssb.FullObject}).TryGetJournalWriter(out var root, out var writer, false))"))
         {
             // Custom locator
             if (customJournal == InterfaceImplementation.Unknown)
@@ -207,7 +207,7 @@ internal static class JournalShared
             return;
         }
 
-        using (var journalScope = ssb.ScopeBrace($"if ((({TinyhandBody.IStructualObject})this.original).TryGetJournalWriter(out var root, out var writer, true))"))
+        using (var journalScope = ssb.ScopeBrace($"if ((({TinyhandBody.IStructuralObject})this.original).TryGetJournalWriter(out var root, out var writer, true))"))
         {
             // Custom locator
             if (customJournal == InterfaceImplementation.Unknown)
