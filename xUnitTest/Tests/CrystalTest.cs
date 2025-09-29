@@ -7,7 +7,7 @@ using Xunit;
 
 namespace xUnitTest.CrystalDataTest;
 
-[TinyhandObject(Structual = true)]
+[TinyhandObject(Structural = true)]
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 public partial record CreditData
 {
@@ -23,7 +23,7 @@ public partial record CreditData
     // private StorageData<Borrower.GoshujinClass> borrowers = new();
 }
 
-[TinyhandObject(Structual = true)]
+[TinyhandObject(Structural = true)]
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 public sealed partial record Borrower // : ITinyhandCustomJournal
 {

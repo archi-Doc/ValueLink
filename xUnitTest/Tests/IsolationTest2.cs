@@ -12,7 +12,7 @@ using Xunit;
 
 namespace xUnitTest;
 
-[TinyhandObject(ExplicitKeyOnly = true, Structual = true)]
+[TinyhandObject(ExplicitKeyOnly = true, Structural = true)]
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 public partial record RepeatableItem
 {

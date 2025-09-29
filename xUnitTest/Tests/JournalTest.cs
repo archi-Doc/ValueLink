@@ -51,7 +51,7 @@ public readonly partial struct JournalIdentifier : IComparable<JournalIdentifier
 }
 
 [ValueLinkObject(Isolation = IsolationLevel.Serializable)]
-[TinyhandObject(Structual = true)]
+[TinyhandObject(Structural = true)]
 public partial record JournalTestClass : IEquatableObject
 {
     public JournalTestClass()
@@ -87,13 +87,13 @@ public partial record JournalTestClass : IEquatableObject
 }
 
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
-[TinyhandObject(Structual = true)]
+[TinyhandObject(Structural = true)]
 public partial record JournalTestClass2 : IEquatableObject
 {
     public JournalTestClass2()
     {
         this.child = new();
-        // ((IStructualObject)this.child).SetupStructure(this, 2);
+        // ((IStructuralObject)this.child).SetupStructure(this, 2);
     }
 
     public JournalTestClass2(JournalIdentifier id, string name)
@@ -102,7 +102,7 @@ public partial record JournalTestClass2 : IEquatableObject
         this.name = name;
 
         this.child = new();
-        // ((IStructualObject)this.child).SetupStructure(this, 2);
+        // ((IStructuralObject)this.child).SetupStructure(this, 2);
         this.child.Age = id.Id0 + 0.1d;
     }
 
@@ -173,7 +173,7 @@ public partial record JournalTestClass2 : IEquatableObject
     }
 }
 
-[TinyhandObject(Structual = true, ExplicitKeyOnly = true)]
+[TinyhandObject(Structural = true, ExplicitKeyOnly = true)]
 public partial record JournalTestBase
 {
     public const int Number = 10;
@@ -199,7 +199,7 @@ public partial record JournalTestBase
     private string name = string.Empty;
 }
 
-[TinyhandObject(Structual = true, ExplicitKeyOnly = true)]
+[TinyhandObject(Structural = true, ExplicitKeyOnly = true)]
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 public partial record JournalTestBase2 : JournalTestBase
 {
@@ -215,7 +215,7 @@ public partial record JournalTestBase2 : JournalTestBase
     public readonly int Id3;
 }
 
-/*[TinyhandObject(Structual = true, ExplicitKeyOnly = true)]
+/*[TinyhandObject(Structural = true, ExplicitKeyOnly = true)]
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 public partial record JournalTestBase3 : JournalTestBase2
 {
@@ -228,7 +228,7 @@ public partial record JournalTestBase3 : JournalTestBase2
     public int Id3 { get; set; }
 }*/
 
-[TinyhandObject(Structual = true)]
+[TinyhandObject(Structural = true)]
 public partial record JournalChildClass : IEquatableObject
 {
     public JournalChildClass()
@@ -254,7 +254,7 @@ public partial record JournalChildClass : IEquatableObject
     }
 }
 
-[TinyhandObject(Structual = true)]
+[TinyhandObject(Structural = true)]
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 internal partial record StandardData
 {
@@ -279,7 +279,7 @@ public class JournalTest
         var c = new JournalTestClass(1, "one");
 
         var cc = new JournalTestClass();
-        ((IStructualObject)cc).StructualRoot = tester;
+        ((IStructuralObject)cc).StructuralRoot = tester;
         cc.Id = c.Id;
         cc.Name = c.Name;
 
@@ -301,7 +301,7 @@ public class JournalTest
         var g = new JournalTestClass.GoshujinClass { c1, c2, c3 };
         var g2 = new JournalTestClass.GoshujinClass();
 
-        g2.StructualRoot = tester;
+        g2.StructuralRoot = tester;
         g2.Add(new JournalTestClass(1, "one"));
         g2.Add(new JournalTestClass(2, "two"));
         g2.Add(new JournalTestClass(3, "3"));
@@ -333,7 +333,7 @@ public class JournalTest
         var g = new JournalTestClass2.GoshujinClass { c1, c2, c3 };
         var g2 = new JournalTestClass2.GoshujinClass();
 
-        g2.StructualRoot = tester;
+        g2.StructuralRoot = tester;
         g2.Add(new JournalTestClass2(new(1), "one"));
         g2.Add(new JournalTestClass2(new(2), "two"));
         g2.Add(new JournalTestClass2(new(3), "3"));
@@ -504,7 +504,7 @@ public class JournalTest
         // ((IGoshujinSemaphore)g2).State.Is(GoshujinState.Obsolete);
     }
 
-    public bool ReadJournal(IStructualObject obj, ReadOnlyMemory<byte> data)
+    public bool ReadJournal(IStructuralObject obj, ReadOnlyMemory<byte> data)
     {
         var reader = new TinyhandReader(data.Span);
         var success = true;

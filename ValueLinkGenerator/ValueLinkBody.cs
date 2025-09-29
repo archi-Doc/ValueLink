@@ -19,8 +19,8 @@ namespace ValueLink.Generator;
 
 public static class TinyhandBody
 {
-    public static readonly string IStructualRoot = "IStructualRoot";
-    public static readonly string IStructualObject = "IStructualObject";
+    public static readonly string IStructuralRoot = "IStructuralRoot";
+    public static readonly string IStructuralObject = "IStructuralObject";
     public static readonly string ITinyhandCustomJournal = "Tinyhand.ITinyhandCustomJournal";
 }
 
@@ -200,7 +200,7 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
         category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor Error_NoPrimaryLink = new DiagnosticDescriptor(
-        id: "CLG035", title: "No primary link", messageFormat: "A primary link must be set in order to preserve the correct hierarchy",
+        id: "CLG035", title: "No primary link", messageFormat: "If Structural is enabled, set a primary link to maintain the correct hierarchy",
         category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
     public ValueLinkBody(GeneratorExecutionContext context)
