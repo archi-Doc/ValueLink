@@ -199,6 +199,10 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
         id: "CLG034", title: "Read committed", messageFormat: "The object must inherit from ILockableData<TData> when Read Committed isolation is specified",
         category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
+    public static readonly DiagnosticDescriptor Error_NoPrimaryLink = new DiagnosticDescriptor(
+        id: "CLG035", title: "No primary link", messageFormat: "A primary link must be set in order to preserve the correct hierarchy",
+        category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
     public ValueLinkBody(GeneratorExecutionContext context)
         : base(context)
     {

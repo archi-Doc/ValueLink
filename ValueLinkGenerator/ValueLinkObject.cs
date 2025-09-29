@@ -588,7 +588,14 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             }
             else if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.TinyhandObject))
             {// No primary link
-                this.Body.AddDiagnostic(ValueLinkBody.Warning_NoPrimaryLink, this.Location);
+                if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.StructualEnabled))
+                {
+                    this.Body.AddDiagnostic(ValueLinkBody.Error_NoPrimaryLink, this.Location);
+                }
+                else
+                {
+                    this.Body.AddDiagnostic(ValueLinkBody.Warning_NoPrimaryLink, this.Location);
+                }
             }
 
             // Unique link
@@ -2338,16 +2345,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         this.GenerateGosjujin_Structual_ReadRecord(ssb, info);
 
-        if (this.ObjectAttribute?.Isolation == IsolationLevel.Serializable ||
-            this.ObjectAttribute?.Isolation == IsolationLevel.ReadCommitted ||
-            this.ObjectAttribute?.Isolation == IsolationLevel.RepeatableRead)
-        {
-            // this.GenerateGosjujin_Structual_Save(ssb, info);
-            this.GenerateGosjujin_Structual_StoreData(ssb, info);
-            this.GenerateGosjujin_Structual_Delete(ssb, info);
-            this.GenerateGosjujin_Structual_SetParent(ssb, info);
-            // this.GenerateGosjujin_Structual_NotifyDataChanged(ssb, info);
-        }
+        // this.GenerateGosjujin_Structual_Save(ssb, info);
+        this.GenerateGosjujin_Structual_StoreData(ssb, info);
+        this.GenerateGosjujin_Structual_Delete(ssb, info);
+        this.GenerateGosjujin_Structual_SetParent(ssb, info);
+        // this.GenerateGosjujin_Structual_NotifyDataChanged(ssb, info);
     }
 
     internal void GenerateGosjujin_Structual_Save(ScopingStringBuilder ssb, GeneratorInformation info)
