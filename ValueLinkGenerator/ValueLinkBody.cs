@@ -124,7 +124,7 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
         category: "ValueLinkGenerator", DiagnosticSeverity.Warning, isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor Warning_NoKeyAttribute = new DiagnosticDescriptor(
-        id: "CLG016", title: "No Key attribute", messageFormat: "Consider adding Key or KeyAsName attribute to this member so that ValueLink can serialize it properly",
+        id: "CLG016", title: "No Key attribute", messageFormat: "Consider adding Key or MemberNameAsKey attribute to this member so that ValueLink can serialize it properly",
         category: "ValueLinkGenerator", DiagnosticSeverity.Warning, isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor Error_DerivedClass = new DiagnosticDescriptor(

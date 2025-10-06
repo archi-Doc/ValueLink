@@ -14,14 +14,14 @@ public partial class AdditionalMethodClass
     public static int TotalAge;
 
     [Link(Primary = true, Type = ChainType.Ordered, AddValue = true)]
-    [KeyAsName]
+    [MemberNameAsKey]
     private int Id;
 
     [Link(Type = ChainType.Ordered)]
-    [KeyAsName]
+    [MemberNameAsKey]
     public int Age { get; set; }
 
-    [KeyAsName]
+    [MemberNameAsKey]
     public string Name { get; set; } = string.Empty;
 
     // [Link<DelegateTestClass>(Name = "StartingWithA", Type = ChainType.LinkedList, PredicateLink = Predicate)]

@@ -47,7 +47,7 @@ public enum ValueLinkObjectFlag
     AddGoshujinProperty = 1 << 24,
     EquatableObject = 1 << 25, // Has IEquatableObject
     AddValueProperty = 1 << 26, // AddValue property
-    HasKeyOrKeyAsName = 1 << 27, // Has KeyAttribute or KeyAsNameAttribute
+    HasKeyOrMemberNameAsKey = 1 << 27, // Has KeyAttribute or MemberNameAsKeyAttribute
     NoDefaultConstructor = 1 << 28, // No default constructor
     DerivedFromStoragePoint = 1 << 29, // Derived from StoragePoint<TData>
 }
@@ -747,9 +747,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             {// TinyhandObject
                 if (this.AllAttributes.Any(x =>
                 x.FullName == "Tinyhand.KeyAttribute" ||
-                x.FullName == "Tinyhand.KeyAsNameAttribute"))
-                {// Has KeyAttribute or KeyAsNameAttribute
-                    this.ObjectFlag |= ValueLinkObjectFlag.HasKeyOrKeyAsName;
+                x.FullName == "Tinyhand.MemberNameAsKeyAttribute"))
+                {// Has KeyAttribute or MemberNameAsKeyAttribute
+                    this.ObjectFlag |= ValueLinkObjectFlag.HasKeyOrMemberNameAsKey;
                 }
                 else
                 {
@@ -1648,7 +1648,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     internal void GenerateLink(ScopingStringBuilder ssb, GeneratorInformation info, Linkage main, Linkage[] sub)
     {
         var tinyhandProperty = this.TinyhandAttribute is not null &&
-            main.Target?.AllAttributes.Any(x => x.FullName == Tinyhand.Generator.KeyAttributeMock.FullName || x.FullName == Tinyhand.Generator.KeyAsNameAttributeMock.FullName) == true;
+            main.Target?.AllAttributes.Any(x => x.FullName == Tinyhand.Generator.KeyAttributeMock.FullName || x.FullName == Tinyhand.Generator.MemberNameAsKeyAttributeMock.FullName) == true;
 
         if (main.AddValue)
         {// Value property
@@ -1697,7 +1697,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
 
         if (main.LinkedObject.IsPartialProperty &&
-            main.LinkedObject.ObjectFlag.HasFlag(ValueLinkObjectFlag.HasKeyOrKeyAsName))
+            main.LinkedObject.ObjectFlag.HasFlag(ValueLinkObjectFlag.HasKeyOrMemberNameAsKey))
         {// Tinyhand generates the target property.
             return;
         }

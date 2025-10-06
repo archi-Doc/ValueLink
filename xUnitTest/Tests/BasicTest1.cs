@@ -25,7 +25,7 @@ public partial class TestClass1Derived : TestClass1
 public partial class TestClass1 : IComparable<TestClass1>
 {
     [Link(Type = ChainType.Ordered, AddValue = true)]
-    [KeyAsName]
+    [MemberNameAsKey]
     private int Id;
 
     [Link(Type = ChainType.Ordered)]
@@ -33,11 +33,11 @@ public partial class TestClass1 : IComparable<TestClass1>
     private string? Name = default!;
 
     [Link(Type = ChainType.Ordered)]
-    [KeyAsName]
+    [MemberNameAsKey]
     public partial byte Age { get; private set; }
 
     /*[Link(Type = ChainType.Ordered)]
-    [KeyAsName]
+    [MemberNameAsKey]
     public double Height { get; } // Error! */
 
     [Link(Type = ChainType.StackList, Primary = true, Name = "Stack")]
@@ -88,12 +88,12 @@ public partial class TestClass1 : IComparable<TestClass1>
     }
 }
 
-[TinyhandObject(ImplicitKeyAsName = true)]
+[TinyhandObject(ImplicitMemberNameAsKey = true)]
 public partial class TestClass2
 {
     public int N { get; set; }
 
-    [KeyAsName]
+    [MemberNameAsKey]
     public TestClass1.GoshujinClass G { get; set; } = default!;
 }
 
@@ -102,11 +102,11 @@ public partial class TestClass2
 public partial class GenericTestClass<T>
 {
     [Link(Type = ChainType.Ordered, Primary = true)]
-    [KeyAsName]
+    [MemberNameAsKey]
     private int id;
 
     [Link(Type = ChainType.Ordered)]
-    [KeyAsName]
+    [MemberNameAsKey]
     private T value = default!;
 
     public GenericTestClass()
@@ -141,15 +141,15 @@ public partial class GenericTestClass<T>
 public partial class GenericTestClass2<T>
 {
     [Link(Type = ChainType.Ordered, Primary = true, AddValue = true)]
-    [KeyAsName]
+    [MemberNameAsKey]
     private int Id;
 
     [Link(Type = ChainType.Ordered)]
-    [KeyAsName]
+    [MemberNameAsKey]
     private T Value = default!;
 
     [Link(Type = ChainType.Ordered, AddValue = true)]
-    [KeyAsName]
+    [MemberNameAsKey]
     private NestedClass<double, int> Nested = default!;
 
     public GenericTestClass2()
@@ -184,14 +184,14 @@ public partial class GenericTestClass2<T>
     public partial class NestedClass<X, Y> : IComparable<NestedClass<X, Y>>
     {
         [Link(Type = ChainType.Ordered, Primary = true)]
-        [KeyAsName]
+        [MemberNameAsKey]
         private string name = default!;
 
         [Link(Type = ChainType.Ordered)]
-        [KeyAsName]
+        [MemberNameAsKey]
         private X xvalue = default!;
 
-        [KeyAsName]
+        [MemberNameAsKey]
         private Y yvalue = default!;
 
         public NestedClass()
@@ -221,7 +221,7 @@ public partial class GenericTestClass2<T>
     public partial class NestedClass2
     {
         [Link(Type = ChainType.Ordered, Primary = true)]
-        [KeyAsName]
+        [MemberNameAsKey]
         private double height;
 
         public NestedClass2()

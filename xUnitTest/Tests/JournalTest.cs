@@ -173,7 +173,7 @@ public partial record JournalTestClass2 : IEquatableObject
     }
 }
 
-[TinyhandObject(Structural = true, ExplicitKeyOnly = true)]
+[TinyhandObject(Structural = true, ExplicitKeysOnly = true)]
 public partial record JournalTestBase
 {
     public const int Number = 10;
@@ -199,7 +199,7 @@ public partial record JournalTestBase
     private string name = string.Empty;
 }
 
-[TinyhandObject(Structural = true, ExplicitKeyOnly = true)]
+[TinyhandObject(Structural = true, ExplicitKeysOnly = true)]
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 public partial record JournalTestBase2 : JournalTestBase
 {
@@ -215,7 +215,7 @@ public partial record JournalTestBase2 : JournalTestBase
     public readonly int Id3;
 }
 
-/*[TinyhandObject(Structural = true, ExplicitKeyOnly = true)]
+/*[TinyhandObject(Structural = true, ExplicitKeysOnly = true)]
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 public partial record JournalTestBase3 : JournalTestBase2
 {

@@ -27,11 +27,11 @@ public partial class TestClass
     }
 
     [Link(Type = ChainType.Ordered)]
-    [KeyAsName]
+    [MemberNameAsKey]
     private int id;
 
     [Link(Type = ChainType.Ordered)]
-    [KeyAsName]
+    [MemberNameAsKey]
     private string name = default!;
 }
 

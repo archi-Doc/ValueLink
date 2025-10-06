@@ -15,15 +15,15 @@ namespace xUnitTest;
 public partial record TestRecord
 {
     [Link(Type = ChainType.Ordered, AddValue = true)]
-    [KeyAsName]
+    [MemberNameAsKey]
     private int Id;
 
     [Link(Type = ChainType.Ordered)]
-    [KeyAsName]
+    [MemberNameAsKey]
     private string Name = default!;
 
     [Link(Type = ChainType.Ordered)]
-    [KeyAsName]
+    [MemberNameAsKey]
     private byte Age;
 
     [Link(Type = ChainType.StackList, Primary = true, Name = "Stack")]
