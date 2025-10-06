@@ -10,7 +10,7 @@ using System.Collections;
 
 namespace Benchmark.Serializer;
 
-[TinyhandObject(ExplicitKeyOnly = true)]
+[TinyhandObject(ExplicitKeysOnly = true)]
 public partial class SerializerBaseClass
 {
     public sealed partial class GoshujinClass : IGoshujin, ITinyhandSerializable
@@ -249,10 +249,10 @@ public partial class SerializerBaseClass
 
     private int serializeIndex;
 
-    [KeyAsName]
+    [MemberNameAsKey]
     public int Id { get; set; }
 
-    [KeyAsName]
+    [MemberNameAsKey]
     public string Name { get; set; } = string.Empty;
 
     public StackListChain<SerializerBaseClass>.Link StackLink;

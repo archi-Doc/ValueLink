@@ -39,13 +39,13 @@ public partial class TestClass3
 {
     [Link(Primary = true, Type = ChainType.Ordered, AddValue = false, Accessibility = ValueLinkAccessibility.Public)]
     [Link(Name = "Id2", Type = ChainType.Unordered)]
-    [KeyAsName]
+    [MemberNameAsKey]
     private int Id;
 
     [Link(Primary = true, Type = ChainType.Ordered)]
     [Link(Name = "AgeUn", Type = ChainType.Unordered)]
     [Link(Name = "AgeRev", Type = ChainType.ReverseOrdered)]
-    [KeyAsName]
+    [MemberNameAsKey]
     public int Age { get; set; }
 
     // [Link(Type = ChainType.Ordered)]
