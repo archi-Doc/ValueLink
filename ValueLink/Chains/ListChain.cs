@@ -1,10 +1,8 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
-using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Arc.Collections;
-
-#pragma warning disable SA1124 // Do not use regions
 
 namespace ValueLink;
 
@@ -41,7 +39,15 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
 
     public struct Link : ILink<T>
     {
-        public bool IsLinked { get; internal set; }
+        internal int RawIndex;
+
+        public bool IsLinked => this.RawIndex > 0;
+
+        public int Index
+        {
+            get => this.RawIndex - 1;
+            internal set => this.RawIndex = value + 1;
+        }
     }
 
     #region ICollection
@@ -66,11 +72,11 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
         ref Link link = ref this.objectToLink(obj);
         if (link.IsLinked)
         {
-            this.chain.Remove(obj);
+            this.RemoveInternal(link.Index);
         }
 
         this.chain.Add(obj);
-        link.IsLinked = true;
+        link.RawIndex = this.chain.Count;
     }
 
     /// <summary>
@@ -88,11 +94,11 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
 
         if (link.IsLinked)
         {
-            this.chain.Remove(obj);
+            this.RemoveInternal(link.Index);
         }
 
         this.chain.Add(obj);
-        link.IsLinked = true;
+        link.RawIndex = this.chain.Count;
     }
 
     /// <summary>
@@ -103,7 +109,7 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
         foreach (var x in this)
         {
             ref Link link = ref this.objectToLink(x);
-            link.IsLinked = false;
+            link.RawIndex = 0;
         }
 
         this.chain.Clear();
@@ -143,10 +149,11 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
             throw new UnmatchedGoshujinException();
         }
 
-        var index = this.IndexOf(obj);
-        if (index >= 0)
+        ref Link link = ref this.objectToLink(obj);
+        if (link.IsLinked)
         {
-            this.RemoveAt(index);
+            this.RemoveInternal(link.Index);
+            link.RawIndex = 0;
             return true;
         }
 
@@ -167,10 +174,10 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
             throw new UnmatchedGoshujinException();
         }
 
-        var index = this.IndexOf(obj);
-        if (index >= 0)
+        if (link.IsLinked)
         {
-            this.RemoveAt(index);
+            this.RemoveInternal(link.Index);
+            link.RawIndex = 0;
             return true;
         }
 
@@ -184,10 +191,13 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
             throw new UnmatchedGoshujinException();
         }
 
-        var index = this.chain.IndexOf(previousInstance);
-        if (index >= 0)
+        ref Link link = ref this.objectToLink(previousInstance);
+        if (link.IsLinked)
         {
-            this.chain[index] = newInstance;
+            this.chain[link.Index] = newInstance;
+            ref Link link2 = ref this.objectToLink(newInstance);
+            link2.RawIndex = link.RawIndex;
+            link.RawIndex = 0;
         }
     }
 
@@ -217,7 +227,11 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
     /// </summary>
     /// <param name="obj">The object to locate in the list.</param>
     /// <returns>The zero-based index of the first occurrence of item.</returns>
-    public int IndexOf(T obj) => this.chain.IndexOf(obj);
+    public int IndexOf(T obj)
+    {
+        ref Link link = ref this.objectToLink(obj);
+        return link.Index;
+    }
 
     /// <summary>
     /// Inserts an element into the <see cref="UnorderedList{T}"/> at the specified index.
@@ -235,11 +249,16 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
         ref Link link = ref this.objectToLink(obj);
         if (link.IsLinked)
         {
-            this.chain.Remove(obj);
+            this.RemoveInternal(link.Index);
         }
 
         this.chain.Insert(index, obj);
-        link.IsLinked = true;
+        link.Index = index;
+        for (var i = index + 1; i < this.chain.Count; i++)
+        {
+            ref Link link2 = ref this.objectToLink(this.chain[i]);
+            link2.RawIndex++;
+        }
     }
 
     /// <summary>
@@ -253,7 +272,7 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
         ref Link link = ref this.objectToLink(obj);
 
         this.chain.RemoveAt(index);
-        link.IsLinked = false;
+        link.RawIndex = 0;
     }
 
     #endregion
@@ -267,4 +286,16 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
     System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => this.chain.GetEnumerator();
 
     #endregion
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void RemoveInternal(int index)
+    {// Decrement the indices of the subsequent objects and remove this object from the list.
+        for (var i = index + 1; i < this.chain.Count; i++)
+        {
+            ref Link link = ref this.objectToLink(this.chain[i]);
+            link.RawIndex--;
+        }
+
+        this.chain.RemoveAt(index);
+    }
 }
