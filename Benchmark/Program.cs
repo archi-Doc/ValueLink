@@ -23,15 +23,15 @@ public class Program
     {
         DebugRun<DeferedListBenchmark>();
 
-        var switcher = new BenchmarkSwitcher(new[]
-        {
+        var switcher = new BenchmarkSwitcher(
+        [
             typeof(DeferedListBenchmark),
             typeof(IsolationBenchmark),
             typeof(CloneClassBenchmark),
             typeof(Serializer.SerializerBenchmark),
             typeof(H2HBenchmark),
             typeof(Draft.DraftBenchmark),
-        });
+        ]);
 
         switcher.Run(args);
     }

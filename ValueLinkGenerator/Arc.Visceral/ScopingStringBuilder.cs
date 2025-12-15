@@ -132,7 +132,7 @@ public class ScopingStringBuilder
 
     public void Append(ScopingStringBuilder ssb)
     {
-        var list = ssb.sb.ToString().Replace("\r\n", "\n").Split(new[] { '\n', '\r' });
+        var list = ssb.sb.ToString().Replace("\r\n", "\n").Split(['\n', '\r']);
         if (list == null)
         {
             return;

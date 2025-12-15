@@ -257,20 +257,29 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
     private ObjectToLinkDelegete objectToLink;
     private UnorderedLinkedList<T> chain = new();
 
+    /// <summary>
+    /// Represents a link in a doubly linked list chain.
+    /// </summary>
     public struct Link : ILink<T>
     {
+        /// <summary>
+        /// Gets a value indicating whether this link is currently part of a linked list.
+        /// </summary>
         public bool IsLinked => this.Node != null;
 
         /// <summary>
-        /// Gets the previous object.
+        /// Gets the previous object in the linked list, or null if this is the first object or not linked.
         /// </summary>
         public T? Previous => this.Node == null || this.Node.Previous == null ? default(T) : this.Node.Previous.Value;
 
         /// <summary>
-        /// Gets the next object.
+        /// Gets the next object in the linked list, or null if this is the last object or not linked.
         /// </summary>
         public T? Next => this.Node == null || this.Node.Next == null ? default(T) : this.Node.Next.Value;
 
+        /// <summary>
+        /// Gets or sets the internal node reference in the underlying linked list structure.
+        /// </summary>
         internal UnorderedLinkedList<T>.Node? Node { get; set; }
     }
 

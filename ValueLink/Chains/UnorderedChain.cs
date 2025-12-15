@@ -244,10 +244,19 @@ public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     private ObjectToKeyDelegete? objectToKey;
     private UnorderedMultiMap<TKey, TObj> chain = new();
 
+    /// <summary>
+    /// Represents a link structure that holds node information for an object in the <see cref="UnorderedChain{TKey, TObj}"/>.
+    /// </summary>
     public struct Link : ILink<TObj>
     {
+        /// <summary>
+        /// Gets a value indicating whether the link is currently associated with a node in the chain.
+        /// </summary>
         public bool IsLinked => this.RawIndex > 0;
 
+        /// <summary>
+        /// Gets the index of the node in the chain.
+        /// </summary>
         public int NodeIndex
         {
             get => this.RawIndex - 1;
@@ -257,6 +266,9 @@ public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
             }
         }
 
+        /// <summary>
+        /// Gets or sets the raw index value used internally to track the node association.
+        /// </summary>
         internal int RawIndex { get; set; }
     }
 

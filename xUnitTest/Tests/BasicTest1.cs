@@ -247,10 +247,10 @@ public class BasicTest1
         new TestClass1(1, "Z", 12).Goshujin = g;
         new TestClass1(2, "1", 15).Goshujin = g;
 
-        g.StackChain.Select(x => x.IdValue).SequenceEqual(new int[] { 0, 1, 2 }).IsTrue();
-        g.IdChain.Select(x => x.IdValue).SequenceEqual(new int[] { 0, 1, 2 }).IsTrue();
-        g.NameChain.Select(x => x.IdValue).SequenceEqual(new int[] { 2, 0, 1 }).IsTrue();
-        g.AgeChain.Select(x => x.IdValue).SequenceEqual(new int[] { 1, 2, 0 }).IsTrue();
+        g.StackChain.Select(x => x.IdValue).SequenceEqual([0, 1, 2]).IsTrue();
+        g.IdChain.Select(x => x.IdValue).SequenceEqual([0, 1, 2]).IsTrue();
+        g.NameChain.Select(x => x.IdValue).SequenceEqual([2, 0, 1]).IsTrue();
+        g.AgeChain.Select(x => x.IdValue).SequenceEqual([1, 2, 0]).IsTrue();
 
         var st = TinyhandSerializer.SerializeToString(g);
         var g2 = TinyhandSerializer.Deserialize<TestClass1.GoshujinClass>(TinyhandSerializer.Serialize(g));
@@ -279,7 +279,7 @@ public class BasicTest1
         tc2a.G.NameChain.SequenceEqual(g.NameChain).IsTrue();
         tc2a.G.AgeChain.SequenceEqual(g.AgeChain).IsTrue();
 
-        g.IdChain.Select(x => x.IdValue).SequenceEqual(new int[] { 0, 1, 2 }).IsTrue();
+        g.IdChain.Select(x => x.IdValue).SequenceEqual([0, 1, 2]).IsTrue();
 
         var i = g.IdChain.FindFirst(1);
         i.IsNotNull();
@@ -290,7 +290,7 @@ public class BasicTest1
             x.Goshujin = default;
         }
 
-        g.IdChain.Select(x => x.IdValue).SequenceEqual(new int[] { 0, 2 }).IsTrue();
+        g.IdChain.Select(x => x.IdValue).SequenceEqual([0, 2]).IsTrue();
     }
 
     [Fact]
