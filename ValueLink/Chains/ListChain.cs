@@ -37,12 +37,26 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
     private ObjectToLinkDelegete objectToLink;
     private UnorderedList<T> chain = new();
 
+    /// <summary>
+    /// Represents a link structure that maintains the position of an object within the <see cref="ListChain{T}"/>.
+    /// </summary>
     public struct Link : ILink<T>
     {
+        /// <summary>
+        /// The internal raw index value. A value of 0 indicates the object is not linked, values > 0 represent (actual index + 1).
+        /// </summary>
         internal int RawIndex;
 
+        /// <summary>
+        /// Gets a value indicating whether this link is currently associated with an object in the chain.
+        /// </summary>
+        /// <value><c>true</c> if the object is linked to the chain; otherwise, <c>false</c>.</value>
         public bool IsLinked => this.RawIndex > 0;
 
+        /// <summary>
+        /// Gets the zero-based index of the object in the list.
+        /// </summary>
+        /// <value>The zero-based index position of the linked object, or -1 if not linked.</value>
         public int Index
         {
             get => this.RawIndex - 1;
@@ -270,9 +284,9 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
     {
         var obj = this[index];
         ref Link link = ref this.objectToLink(obj);
-
-        this.chain.RemoveAt(index);
         link.RawIndex = 0;
+
+        this.RemoveInternal(index);
     }
 
     #endregion

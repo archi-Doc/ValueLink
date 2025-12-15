@@ -313,20 +313,35 @@ public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     private ObjectToKeyDelegete? objectToKey;
     private OrderedMultiMap<TKey, TObj> chain;
 
+    /// <summary>
+    /// Represents a link to a node within an <see cref="OrderedChain{TKey, TObj}"/>.
+    /// </summary>
+    /// <remarks>
+    /// The link is used to track the position of an object inside the internal ordered structure
+    /// and to navigate to the previous or next object in the chain.
+    /// </remarks>
     public struct Link : ILink<TObj>
     {
+        /// <summary>
+        /// Gets a value indicating whether this link is currently associated with a node in the chain.
+        /// </summary>
         public bool IsLinked => this.Node != null;
 
         /// <summary>
-        /// Gets the previous object.
+        /// Gets the previous object in the chain, or <c>default</c> if this link is not associated
+        /// with a node or there is no previous node.
         /// </summary>
         public TObj? Previous => this.Node == null || this.Node.Previous == null ? default(TObj) : this.Node.Previous.Value;
 
         /// <summary>
-        /// Gets the next object.
+        /// Gets the next object in the chain, or <c>default</c> if this link is not associated
+        /// with a node or there is no next node.
         /// </summary>
         public TObj? Next => this.Node == null || this.Node.Next == null ? default(TObj) : this.Node.Next.Value;
 
+        /// <summary>
+        /// Gets or sets the underlying node in the <see cref="OrderedMultiMap{TKey, TObj}"/> that this link refers to.
+        /// </summary>
         internal OrderedMultiMap<TKey, TObj>.Node? Node { get; set; }
     }
 

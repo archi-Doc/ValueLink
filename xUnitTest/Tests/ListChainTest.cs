@@ -37,6 +37,19 @@ public class ListChainTest
         new ListChainTestClass(3).Goshujin = g;
         new ListChainTestClass(4).Goshujin = g;
 
+        g.ListChain.Select(x => x.Id).SequenceEqual([0, 1, 2, 3, 4]).IsTrue();
+        var c3 = g.ListChain[3]!;
+        var c4 = g.ListChain[4]!;
+        c3.Goshujin = default;
+        c3.ListLink.Index.Is(-1);
+        g.ListChain.Select(x => x.Id).SequenceEqual([0, 1, 2, 4]).IsTrue();
+        c4.ListLink.Index.Is(3);
+        c4.Goshujin = default;
+        c4.ListLink.Index.Is(-1);
+        g.ListChain.Select(x => x.Id).SequenceEqual([0, 1, 2]).IsTrue();
+        c3.Goshujin = g;
+        c4.Goshujin = g;
+
         g.IdChain.Select(x => x.Id).SequenceEqual([0, 1, 2, 3, 4]).IsTrue();
         g.ListChain.Select(x => x.Id).SequenceEqual([0, 1, 2, 3, 4]).IsTrue();
 
