@@ -30,7 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Arc.Collections" Version="1.28.1" />
+    <PackageReference Include="Arc.Collections" Version="1.28.4" />
     <PackageReference Include="Arc.Threading" Version="0.36.0" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556">
       <PrivateAssets>all</PrivateAssets>

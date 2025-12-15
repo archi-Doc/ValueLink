@@ -11,10 +11,10 @@ public static class IntegralityResultHelper
     {
         byte[] bytes;
 
-        bytes = new byte[] { (byte)IntegralityResult.Incomplete, };
+        bytes = [(byte)IntegralityResult.Incomplete,];
         Incomplete = BytePool.RentArray.CreateFrom(bytes).AsMemory();
 
-        bytes = new byte[] { (byte)IntegralityResult.InvalidData, };
+        bytes = [(byte)IntegralityResult.InvalidData,];
         InvalidData = BytePool.RentArray.CreateFrom(bytes).AsMemory();
 
         // bytes = new byte[] { (byte)IntegralityResult.NotImplemented, };

@@ -79,9 +79,9 @@ public class AdditionalMethodTest
         g.Add(c3);
         g.Add(c4);
 
-        g.IdChain.Select(x => x.IdValue).ToArray().SequenceEqual(new int[] { 1, 2, 3, 4, });
-        g.StartingWithAChain.Select(x => x.IdValue).ToArray().SequenceEqual(new int[] { 3, });
-        g.AgeChain.Select(x => x.IdValue).ToArray().SequenceEqual(new int[] { 3, 4, });
+        g.IdChain.Select(x => x.IdValue).ToArray().SequenceEqual([1, 2, 3, 4,]);
+        g.StartingWithAChain.Select(x => x.IdValue).ToArray().SequenceEqual([3,]);
+        g.AgeChain.Select(x => x.IdValue).ToArray().SequenceEqual([3, 4,]);
 
         AdditionalMethodClass.TotalAge.Is(60);
 
@@ -100,9 +100,9 @@ public class AdditionalMethodTest
         var bytes = TinyhandSerializer.Serialize(g);
         var g2 = TinyhandSerializer.Deserialize<AdditionalMethodClass.GoshujinClass>(bytes)!;
 
-        g2.IdChain.Select(x => x.IdValue).ToArray().SequenceEqual(new int[] { 1, 2, 3, 4, });
-        g2.StartingWithAChain.Select(x => x.IdValue).ToArray().SequenceEqual(new int[] { 3, });
-        g2.AgeChain.Select(x => x.IdValue).ToArray().SequenceEqual(new int[] { 3, 4, });
+        g2.IdChain.Select(x => x.IdValue).ToArray().SequenceEqual([1, 2, 3, 4,]);
+        g2.StartingWithAChain.Select(x => x.IdValue).ToArray().SequenceEqual([3,]);
+        g2.AgeChain.Select(x => x.IdValue).ToArray().SequenceEqual([3, 4,]);
 
         AdditionalMethodClass.TotalAge.Is(120);
     }

@@ -30,7 +30,7 @@ public partial record CloneClass
         this.Id5 = id5;
         this.Name5 = name5;
 
-        this.IntArray = new int[] { 0, 100, 10000, 10, 2, 3, 4, 5, 6, };
+        this.IntArray = [0, 100, 10000, 10, 2, 3, 4, 5, 6,];
     }
 
     [Key(0)]

@@ -210,7 +210,7 @@ public class LockTest
         var tc = new LockTestClass();
 
         var tc2 = new IsolationTestClass();
-        tc2.IntArray = new int[] { 1, };
+        tc2.IntArray = [1,];
         using (var writer = tc2.TryLock())
         {
             if (writer is not null)
@@ -220,7 +220,7 @@ public class LockTest
             }
         }
 
-        tc2.IntArray = new int[] { 1, 2, 3, };
+        tc2.IntArray = [1, 2, 3,];
         var r3 = await TestAsync(tc2);
 
         async Task<IsolationTestClass?> TestAsync(IsolationTestClass t)

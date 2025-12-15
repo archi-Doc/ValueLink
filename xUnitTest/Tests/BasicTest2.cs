@@ -76,17 +76,17 @@ public class BasicTest2
         g.Add(new TestClass3(2, 2));
 
         var array = g.AgeChain.Select(a => a.Age).ToArray();
-        array.SequenceEqual(new int[] { 0, 1, 2, 3, 5, }).IsTrue();
+        array.SequenceEqual([0, 1, 2, 3, 5,]).IsTrue();
 
         array = g.AgeRevChain.Select(a => a.Age).ToArray();
-        array.SequenceEqual(new int[] { 5, 3, 2, 1, 0, }).IsTrue();
+        array.SequenceEqual([5, 3, 2, 1, 0,]).IsTrue();
 
         tc3.Goshujin = null;
 
         array = g.AgeChain.Select(a => a.Age).ToArray();
-        array.SequenceEqual(new int[] { 0, 1, 2, 5, }).IsTrue();
+        array.SequenceEqual([0, 1, 2, 5,]).IsTrue();
 
         array = g.AgeRevChain.Select(a => a.Age).ToArray();
-        array.SequenceEqual(new int[] { 5, 2, 1, 0, }).IsTrue();
+        array.SequenceEqual([5, 2, 1, 0,]).IsTrue();
     }
 }
