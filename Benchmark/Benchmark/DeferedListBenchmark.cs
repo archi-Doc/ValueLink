@@ -97,7 +97,7 @@ public class DeferedListBenchmark
     [Benchmark]
     public DeferedTestClass.GoshujinClass TemporaryObjects_AddToGoshujin()
     {
-        var objects = default(TemporaryObjects<DeferedTestClass.GoshujinClass, DeferedTestClass>);
+        var objects = default(TemporaryObjectsObsolete<DeferedTestClass.GoshujinClass, DeferedTestClass>);
         objects.Add(new(1, "a"));
         objects.Add(new(2, "b"));
         objects.Add(new(10, "c"));

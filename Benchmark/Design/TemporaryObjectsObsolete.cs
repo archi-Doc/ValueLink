@@ -2,8 +2,9 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using ValueLink;
 
-namespace ValueLink;
+namespace Arc.Collections;
 
 /// <summary>
 /// A queue of temporary objects created using a ref struct.<br/>
@@ -12,7 +13,7 @@ namespace ValueLink;
 /// </summary>
 /// <typeparam name="TGoshujin">The type of the goshujin.</typeparam>
 /// <typeparam name="TObject">The type of the objects.</typeparam>
-public ref struct TemporaryObjects<TGoshujin, TObject>
+public ref struct TemporaryObjectsObsolete<TGoshujin, TObject>
     where TGoshujin : class, IGoshujin
     where TObject : class, IValueLinkObjectInternal<TGoshujin, TObject>
 {
