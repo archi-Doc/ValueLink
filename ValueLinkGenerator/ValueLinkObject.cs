@@ -1928,7 +1928,6 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             {
                 this.GenerateGoshujin_Add(ssb, info);
                 this.GenerateGoshujin_Remove(ssb, info);
-                this.GenerateGoshujin_Clear(ssb, info);
                 this.GenerateGoshujin_IGoshujin(ssb, info);
                 ssb.AppendLine();
             }
@@ -2973,9 +2972,13 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
     }
 
-    internal void GenerateGoshujin_Clear(ScopingStringBuilder ssb, GeneratorInformation info)
+    internal void GenerateGoshujin_IGoshujin(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        // ssb.AppendLine($"public void ClearChains() => ((IGoshujin)this).ClearChainsInternal();");
+        if (this.ObjectAttribute is null)
+        {
+            return;
+        }
+
         using (var scopeMethod = ssb.ScopeBrace($"public void ClearChains()"))
         {
             if (this.Links != null)
@@ -2994,12 +2997,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             }
         }
 
-        if (this.ObjectAttribute is null ||
-            this.PrimaryLink is null ||
+        if (this.PrimaryLink is null ||
             this.ObjectAttribute.Isolation == IsolationLevel.ReadCommitted ||
             this.ObjectAttribute.Isolation == IsolationLevel.RepeatableRead)
         {
-            // ssb.AppendLine($"public void ClearChains() => ((IGoshujin)this).ClearChainsInternal();");
             ssb.AppendLine("void IGoshujin.ClearAll() { throw new NotImplementedException(); }");
         }
         else
@@ -3014,10 +3015,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 }
             }
         }
-    }
 
-    internal void GenerateGoshujin_IGoshujin(ScopingStringBuilder ssb, GeneratorInformation info)
-    {
         if (this.PrimaryLink is not null)
         {
             ssb.AppendLine($"IEnumerable IGoshujin.GetEnumerableInternal() => this.{this.PrimaryLink.ChainName};");
