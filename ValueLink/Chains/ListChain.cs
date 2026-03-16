@@ -1,8 +1,11 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Arc.Collections;
+using Tinyhand.Tree;
 
 namespace ValueLink;
 
@@ -13,6 +16,9 @@ namespace ValueLink;
 /// <typeparam name="T">The type of elements in the list.</typeparam>
 public class ListChain<T> : IList<T>, IReadOnlyList<T>
 {
+    private const int InitialCapacity = 4;
+    private const int MaxCapacity = 0X7FFFFFFF;
+
     public delegate IGoshujin? ObjectToGoshujinDelegete(T obj);
 
     public delegate ref Link ObjectToLinkDelegete(T obj);
@@ -30,12 +36,17 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
         this.objectToLink = objectToLink;
     }
 
-    public int Count => this.chain.Count;
+    public int Count { get; private set; }
+
+    /// <summary>
+    /// Gets the total number of elements the internal data structure can hold without resizing.
+    /// </summary>
+    public int Capacity => this.array.Length;
 
     private IGoshujin goshujin;
     private ObjectToGoshujinDelegete objectToGoshujin;
     private ObjectToLinkDelegete objectToLink;
-    private UnorderedList<T> chain = new();
+    private T[] array = new T[InitialCapacity];
 
     /// <summary>
     /// Represents a link structure that maintains the position of an object within the <see cref="ListChain{T}"/>.
@@ -89,8 +100,13 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
             this.RemoveInternal(link.Index);
         }
 
-        this.chain.Add(obj);
-        link.RawIndex = this.chain.Count;
+        if (this.Count >= this.Capacity)
+        {
+            this.DoubleCapacity();
+        }
+
+        this.array[this.Count++] = obj;
+        link.RawIndex = this.Count;
     }
 
     /// <summary>
@@ -111,8 +127,13 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
             this.RemoveInternal(link.Index);
         }
 
-        this.chain.Add(obj);
-        link.RawIndex = this.chain.Count;
+        if (this.Count >= this.Capacity)
+        {
+            this.DoubleCapacity();
+        }
+
+        this.array[this.Count++] = obj;
+        link.RawIndex = this.Count;
     }
 
     /// <summary>
@@ -126,7 +147,7 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
             link.RawIndex = 0;
         }
 
-        this.chain.Clear();
+        Array.Clear(this.array, 0, this.Count);
     }
 
     /// <summary>
@@ -142,7 +163,7 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
     /// </summary>
     /// <param name="array">The one-dimensional Array that is the destination of the elements copied from list.</param>
     /// <param name="arrayIndex">The zero-based index in array at which copying begins.</param>
-    public void CopyTo(T[] array, int arrayIndex) => this.chain.CopyTo(array, arrayIndex);
+    public void CopyTo(T[] array, int arrayIndex) => this.array.CopyTo(array, arrayIndex);
 
     /// <summary>
     /// Copies the list or a portion of it to an array.
@@ -208,7 +229,7 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
         ref Link link = ref this.objectToLink(previousInstance);
         if (link.IsLinked)
         {
-            this.chain[link.Index] = newInstance;
+            this.array[link.Index] = newInstance;
             ref Link link2 = ref this.objectToLink(newInstance);
             link2.RawIndex = link.RawIndex;
             link.RawIndex = 0;
@@ -226,7 +247,7 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
     /// <returns>The element at the specified index.</returns>
     public T this[int index]
     {
-        get => this.chain[index];
+        get => this.array[index];
 
         set
         {
@@ -260,19 +281,28 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
             throw new UnmatchedGoshujinException();
         }
 
+        if (this.Count >= this.Capacity)
+        {
+            this.DoubleCapacity();
+        }
+
         ref Link link = ref this.objectToLink(obj);
         if (link.IsLinked)
         {
             this.RemoveInternal(link.Index);
         }
 
-        this.chain.Insert(index, obj);
-        link.Index = index;
-        for (var i = index + 1; i < this.chain.Count; i++)
-        {//opt
-            ref Link link2 = ref this.objectToLink(this.chain[i]);
-            link2.RawIndex++;
+        if (index < this.Count)
+        {
+            var objToMove = this.array[index];
+            ref Link link2 = ref this.objectToLink(objToMove);
+            this.array[this.Count] = objToMove;
+            link2.Index = this.Count;
         }
+
+        this.array[index] = obj;
+        link.Index = index;
+        this.Count++;
     }
 
     /// <summary>
@@ -293,23 +323,75 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
 
     #region Enumerator
 
-    public UnorderedList<T>.Enumerator GetEnumerator() => this.chain.GetEnumerator();
+    public Enumerator GetEnumerator() => new Enumerator(this.array, this.Count);
 
-    IEnumerator<T> IEnumerable<T>.GetEnumerator() => this.chain.GetEnumerator();
+    IEnumerator<T> IEnumerable<T>.GetEnumerator() => new Enumerator(this.array, this.Count);
 
-    System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => this.chain.GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => new Enumerator(this.array, this.Count);
+
+    public struct Enumerator : IEnumerator<T>
+    {
+        private readonly T[] array;
+        private readonly int count;
+        private int index;
+
+        internal Enumerator(T[] array, int count)
+        {
+            this.array = array;
+            this.count = count;
+            this.index = -1;
+        }
+
+        public T Current => this.array[this.index];
+
+        object IEnumerator.Current => this.Current!;
+
+        public bool MoveNext()
+        {
+            var next = this.index + 1;
+            if (next < this.count)
+            {
+                this.index = next;
+                return true;
+            }
+
+            return false;
+        }
+
+        public void Reset() => this.index = -1;
+
+        public void Dispose()
+        {
+        }
+    }
 
     #endregion
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void RemoveInternal(int index)
-    {// Decrement the indices of the subsequent objects and remove this object from the list.
-        for (var i = index + 1; i < this.chain.Count; i++)
-        {//opt
-            ref Link link = ref this.objectToLink(this.chain[i]);
-            link.RawIndex--;
+    {
+        this.Count--;
+        var obj = this.array[this.Count];
+        this.array[index] = obj;
+
+        ref Link link = ref this.objectToLink(obj);
+        link.Index = index;
+    }
+
+    private void DoubleCapacity()
+    {
+        var newCapacity = this.array.Length * 2;
+        if ((uint)newCapacity > MaxCapacity)
+        {
+            newCapacity = MaxCapacity;
         }
 
-        this.chain.RemoveAt(index);
+        var newArray = new T[newCapacity];
+        if (this.Count > 0)
+        {
+            Array.Copy(this.array, 0, newArray, 0, this.Count);
+        }
+
+        this.array = newArray;
     }
 }
