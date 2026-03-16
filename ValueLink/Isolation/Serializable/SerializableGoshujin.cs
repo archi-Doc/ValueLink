@@ -73,7 +73,7 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : ISerializableSe
         using (this.LockObject.EnterScope())
         {
             var g = this as IGoshujin;
-            g?.ClearInternal();
+            g?.ClearChains();
 
             var e = (this as IEnumerable<TObject>) ?? [];
             foreach (var x in e)

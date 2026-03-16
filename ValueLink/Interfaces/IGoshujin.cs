@@ -10,10 +10,18 @@ namespace ValueLink;
 public interface IGoshujin
 {
     /// <summary>
-    /// Clears all objects from the Goshujin.<br/>
-    /// Note that if mutual exclusion is enabled, this must be called within a lock statement.
+    /// Clears the objects registered in Goshujin's Chains.<br/>
+    /// Note that references to the Goshujin instance are preserved,<br/>
+    /// and if exclusive control is enabled, call this method within a lock statement.
     /// </summary>
-    void ClearInternal();
+    void ClearChains();
+
+    /// <summary>
+    /// Clears the objects registered in Goshujin's Primary Chain<br/>
+    /// and resets their references to the Goshujin instance.<br/>
+    /// If exclusive control is enabled, call this method within a lock statement.
+    /// </summary>
+    void ClearAll();
 
     /// <summary>
     /// Gets an <see cref="IEnumerable"/> that iterates through the objects managed by the Goshujin.

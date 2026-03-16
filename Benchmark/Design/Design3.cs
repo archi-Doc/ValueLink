@@ -131,7 +131,12 @@ public sealed class TestGoshujin4 : IGoshujin
         this.IdChain.Remove(x);
     }
 
-    void IGoshujin.ClearInternal()
+    void IGoshujin.ClearChains()
+    {
+        throw new NotImplementedException();
+    }
+
+    void IGoshujin.ClearAll()
     {
         throw new NotImplementedException();
     }

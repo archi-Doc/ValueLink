@@ -81,7 +81,7 @@ public abstract class RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter> 
             ((IRepeatableReadSemaphore)this).SetObsolete();
 
             var g = this as IGoshujin;
-            g?.ClearInternal();
+            g?.ClearChains();
             array = (this is IEnumerable<TObject> e) ? e.ToArray() : Array.Empty<TObject>();
         }
 
