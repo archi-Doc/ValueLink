@@ -5,12 +5,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Arc.Collections;
-using Tinyhand.Tree;
 
 namespace ValueLink;
 
 /// <summary>
 /// Represents a list of objects that can be accessed by index.<br/>
+/// Bote that the object order is not guaranteed (the order may change on insert and remove operations).<br/>
 /// Structure: Array.
 /// </summary>
 /// <typeparam name="T">The type of elements in the list.</typeparam>
@@ -152,7 +152,7 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
 
     /// <summary>
     /// Determines whether an element is in the list.
-    /// <br/>O(n) operation.
+    /// <br/>O(1) operation.
     /// </summary>
     /// <param name="value">The value to locate in the list.</param>
     /// <returns>true if value is found in the list.</returns>
@@ -172,8 +172,8 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
     public void CopyTo(T[] array) => this.CopyTo(array, 0);
 
     /// <summary>
-    /// Removes the first occurrence of a specific object from the <see cref="UnorderedList{T}"/>.
-    /// <br/>O(n) operation.
+    /// Removes the object from the <see cref="UnorderedList{T}"/>.<br/>
+    /// O(1) operation.
     /// </summary>
     /// <param name="obj">The object to remove from the <see cref="UnorderedList{T}"/>. </param>
     /// <returns>true if item is successfully removed.</returns>
@@ -197,7 +197,7 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
 
     /// <summary>
     /// Removes the first occurrence of a specific object from the <see cref="UnorderedList{T}"/>.
-    /// <br/>O(n) operation.
+    /// <br/>O(1) operation.
     /// </summary>
     /// <param name="obj">The object to remove from the <see cref="UnorderedList{T}"/>. </param>
     /// <param name="link">The reference to a link that holds node information in the chain.</param>
@@ -252,13 +252,12 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
         set
         {
             this.Insert(index, value);
-            // throw new InvalidOperationException();
         }
     }
 
     /// <summary>
     /// Returns the zero-based index of the first occurrence of a value in the list.
-    /// <br/>O(n) operation.
+    /// <br/>O(1) operation.
     /// </summary>
     /// <param name="obj">The object to locate in the list.</param>
     /// <returns>The zero-based index of the first occurrence of item.</returns>
@@ -270,7 +269,7 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
 
     /// <summary>
     /// Inserts an element into the <see cref="UnorderedList{T}"/> at the specified index.
-    /// <br/>O(n) operation.
+    /// <br/>O(1) operation.
     /// </summary>
     /// <param name="index">The zero-based index at which item should be inserted.</param>
     /// <param name="obj">The object to insert.</param>
@@ -281,15 +280,20 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
             throw new UnmatchedGoshujinException();
         }
 
-        if (this.Count >= this.Capacity)
+        if ((uint)index > (uint)this.Count)
         {
-            this.DoubleCapacity();
+            throw new IndexOutOfRangeException();
         }
 
         ref Link link = ref this.objectToLink(obj);
         if (link.IsLinked)
         {
             this.RemoveInternal(link.Index);
+        }
+
+        if (this.Count >= this.Capacity)
+        {
+            this.DoubleCapacity();
         }
 
         if (index < this.Count)
@@ -307,7 +311,7 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
 
     /// <summary>
     /// Removes the element at the specified index of the list.
-    /// <br/>O(n) operation.
+    /// <br/>O(1) operation.
     /// </summary>
     /// <param name="index">The zero-based index of the element to remove.</param>
     public void RemoveAt(int index)
@@ -371,11 +375,16 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
     private void RemoveInternal(int index)
     {
         this.Count--;
-        var obj = this.array[this.Count];
-        this.array[index] = obj;
+        if (index < this.Count)
+        {
+            var obj = this.array[this.Count];
+            this.array[index] = obj;
 
-        ref Link link = ref this.objectToLink(obj);
-        link.Index = index;
+            ref Link link = ref this.objectToLink(obj);
+            link.Index = index;
+        }
+
+        this.array[this.Count] = default!;
     }
 
     private void DoubleCapacity()
