@@ -2975,8 +2975,12 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGoshujin_Clear(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        // ssb.AppendLine($"public void ClearChains() => ((IGoshujin)this).ClearChainsInternal();");
+        if (this.ObjectAttribute is null)
+        {
+            return;
+        }
 
+        // ssb.AppendLine($"public void ClearChains() => ((IGoshujin)this).ClearChainsInternal();");
         using (var scopeMethod = ssb.ScopeBrace($"public void ClearChains()"))
         {
             if (this.Links != null)
@@ -2995,10 +2999,24 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             }
         }
 
-        // if (this.PrimaryLink is null)
+        if (this.PrimaryLink is null ||
+            this.ObjectAttribute.Isolation == IsolationLevel.ReadCommitted ||
+            this.ObjectAttribute.Isolation == IsolationLevel.RepeatableRead)
         {
             // ssb.AppendLine($"public void ClearChains() => ((IGoshujin)this).ClearChainsInternal();");
             ssb.AppendLine("void IGoshujin.ClearAll() { throw new NotImplementedException(); }");
+        }
+        else
+        {
+            using (var scopeMethod = ssb.ScopeBrace($"public void ClearAll()"))
+            {
+                ssb.AppendLine("var array = this.ToArray();");
+                using (var scopeForeach = ssb.ScopeBrace($"foreach (var x in array)"))
+                {// RemoveFromGoshujin
+                    // ssb.AppendLine($"x.{this.ObjectAttribute.GoshujinInstance} = default;");
+                    ssb.AppendLine($"{this.ValueLinkInternalHelper}.{ValueLinkBody.RemoveFromGoshujinName}(x, this);");
+                }
+            }
         }
     }
 
