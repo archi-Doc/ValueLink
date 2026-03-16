@@ -2975,11 +2975,6 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGoshujin_Clear(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        if (this.ObjectAttribute is null)
-        {
-            return;
-        }
-
         // ssb.AppendLine($"public void ClearChains() => ((IGoshujin)this).ClearChainsInternal();");
         using (var scopeMethod = ssb.ScopeBrace($"public void ClearChains()"))
         {
@@ -2999,7 +2994,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             }
         }
 
-        if (this.PrimaryLink is null ||
+        if (this.ObjectAttribute is null ||
+            this.PrimaryLink is null ||
             this.ObjectAttribute.Isolation == IsolationLevel.ReadCommitted ||
             this.ObjectAttribute.Isolation == IsolationLevel.RepeatableRead)
         {
