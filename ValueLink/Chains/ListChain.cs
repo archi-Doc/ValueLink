@@ -269,7 +269,7 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
         this.chain.Insert(index, obj);
         link.Index = index;
         for (var i = index + 1; i < this.chain.Count; i++)
-        {
+        {//opt
             ref Link link2 = ref this.objectToLink(this.chain[i]);
             link2.RawIndex++;
         }
@@ -305,7 +305,7 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
     private void RemoveInternal(int index)
     {// Decrement the indices of the subsequent objects and remove this object from the list.
         for (var i = index + 1; i < this.chain.Count; i++)
-        {
+        {//opt
             ref Link link = ref this.objectToLink(this.chain[i]);
             link.RawIndex--;
         }

@@ -49,7 +49,8 @@ public enum ChainType
     /// <summary>
     /// Represents a list of objects (<see cref="ListChain{T}"/>).<br/>
     /// Structure: Array (<see cref="UnorderedList{T}"/>).<br/>
-    /// List is not recommended due to the time-consuming nature of adding and removing objects.
+    /// Array access is supported, but the object order is not guaranteed (the order may change when items are removed).<br/>
+    /// If order matters, use a <see cref="ChainType.LinkedList" />.
     /// </summary>
     List,
 
