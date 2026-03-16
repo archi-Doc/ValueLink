@@ -372,7 +372,7 @@ Retry:
                     array = enumerable.ToArray();
                 }
 
-                goshujin.ClearInternal();
+                goshujin.ClearChains();
             }
         }
 

@@ -30,7 +30,12 @@ public class TestClassGeneric<T>
         // public LinkedListChain6<TestClass6> IdChain = new(static x => x.IdLink, static (x, y) => { x.IdLink = y; });
         public LinkedListChain<TestClassGeneric<T>> IdChain { get; }
 
-        void IGoshujin.ClearInternal()
+        void IGoshujin.ClearChains()
+        {
+            throw new NotImplementedException();
+        }
+
+        void IGoshujin.ClearAll()
         {
             throw new NotImplementedException();
         }

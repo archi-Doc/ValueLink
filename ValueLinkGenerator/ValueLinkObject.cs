@@ -2975,17 +2975,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGoshujin_Clear(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        ssb.AppendLine($"public void Clear() => ((IGoshujin)this).ClearInternal();");
-        /*using (var scopeMethod = ssb.ScopeBrace($"public void Clear()"))
-        using (var scopeThis = ssb.ScopeObject("this"))
-        {
-            this.GenerateGoshujin_ClearChains(ssb, info, false);
-        }*/
-    }
+        // ssb.AppendLine($"public void ClearChains() => ((IGoshujin)this).ClearChainsInternal();");
 
-    internal void GenerateGoshujin_IGoshujin(ScopingStringBuilder ssb, GeneratorInformation info)
-    {
-        using (var scopeMethod = ssb.ScopeBrace($"void IGoshujin.ClearInternal()"))
+        using (var scopeMethod = ssb.ScopeBrace($"public void ClearChains()"))
         {
             if (this.Links != null)
             {
@@ -3003,6 +2995,15 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             }
         }
 
+        // if (this.PrimaryLink is null)
+        {
+            // ssb.AppendLine($"public void ClearChains() => ((IGoshujin)this).ClearChainsInternal();");
+            ssb.AppendLine("void IGoshujin.ClearAll() { throw new NotImplementedException(); }");
+        }
+    }
+
+    internal void GenerateGoshujin_IGoshujin(ScopingStringBuilder ssb, GeneratorInformation info)
+    {
         if (this.PrimaryLink is not null)
         {
             ssb.AppendLine($"IEnumerable IGoshujin.GetEnumerableInternal() => this.{this.PrimaryLink.ChainName};");
