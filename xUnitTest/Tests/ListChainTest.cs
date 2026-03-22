@@ -33,7 +33,7 @@ public partial class ListChainTestClass
     public override string ToString() => this.Id.ToString();
 }
 
-/*[ValueLinkObject]
+[ValueLinkObject]
 public partial class ListChainTestClass2
 {
     public partial class GoshujinClass
@@ -55,19 +55,23 @@ public partial class ListChainTestClass2
     }
 
     public override string ToString() => this.Id.ToString();
-}*/
+}
 
 public class ListChainTest
 {
-    /*[Fact]
+    [Fact]
     public void Test2()
     {
         var g = new ListChainTestClass2.GoshujinClass();
         var c0 = new ListChainTestClass2(0);
         c0.Goshujin = g;
+        g.ListChain.Add(c0);
         var c1 = new ListChainTestClass2(1);
         c1.Goshujin = g;
-    }*/
+
+        var array = g.ToArray();
+        array = g.ListChain.ToArray();
+    }
 
     [Fact]
     public void Test1()

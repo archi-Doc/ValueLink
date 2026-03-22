@@ -163,7 +163,7 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
     /// </summary>
     /// <param name="array">The one-dimensional Array that is the destination of the elements copied from list.</param>
     /// <param name="arrayIndex">The zero-based index in array at which copying begins.</param>
-    public void CopyTo(T[] array, int arrayIndex) => this.array.CopyTo(array, arrayIndex);
+    public void CopyTo(T[] array, int arrayIndex) => Array.Copy(this.array, 0, array, arrayIndex, this.Count);
 
     /// <summary>
     /// Copies the list or a portion of it to an array.
