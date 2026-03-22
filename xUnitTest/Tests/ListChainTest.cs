@@ -33,8 +33,46 @@ public partial class ListChainTestClass
     public override string ToString() => this.Id.ToString();
 }
 
+[ValueLinkObject]
+public partial class ListChainTestClass2
+{
+    public partial class GoshujinClass
+    {
+        public int[] GetArray()
+            => this.ListChain.Select(x => x.Id).ToArray();
+
+        public bool SequenceEqual(IEnumerable<int> e)
+            => this.ListChain.Select(x => x.Id).SequenceEqual(e);
+    }
+
+    [Link(Primary = true, Type = ChainType.Ordered)]
+    public partial int Id { get; set; }
+
+    [Link(Type = ChainType.List, Name = "List", AutoLink = false)]
+    public ListChainTestClass2(int id)
+    {
+        this.Id = id;
+    }
+
+    public override string ToString() => this.Id.ToString();
+}
+
 public class ListChainTest
 {
+    [Fact]
+    public void Test2()
+    {
+        var g = new ListChainTestClass2.GoshujinClass();
+        var c0 = new ListChainTestClass2(0);
+        c0.Goshujin = g;
+        g.ListChain.Add(c0);
+        var c1 = new ListChainTestClass2(1);
+        c1.Goshujin = g;
+
+        var array = g.ToArray();
+        array = g.ListChain.ToArray();
+    }
+
     [Fact]
     public void Test1()
     {
