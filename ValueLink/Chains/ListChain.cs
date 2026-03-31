@@ -148,6 +148,7 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
         }
 
         Array.Clear(this.array, 0, this.Count);
+        this.Count = 0;
     }
 
     /// <summary>
