@@ -5,33 +5,80 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Arc.Threading;
+using CrystalData;
 using Tinyhand;
 using ValueLink;
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
-namespace Playground;
-
-[ValueLinkObject]
-public partial class TestClass
+namespace QuickStart.Evolution
 {
-    public partial class GoshujinClass
+
+    [TinyhandObject(LockObject = "syncObject")]
+    [ValueLinkObject]
+    public partial class Class1
     {
+        [Key(0)]
+        [Link(Primary = true, Unique = true, Type = ChainType.Unordered)]
+        public int Id { get; set; }
+
+        private readonly Lock syncObject = new();
+
+        public Class1(int id)
+        {
+            this.Id = id;
+        }
+
         public void Test()
         {
-            var array = this.ToArray();
+            using (this.syncObject.EnterScope())
+            {
+                this.Id++;
+                Console.WriteLine($"Class1: {this}");
+            }
         }
+
+        public override string ToString()
+            => this.Id.ToString();
     }
 
-    [Link(Primary = true, Type = ChainType.Unordered)]
-    public int Id { get; set; }
+    [TinyhandObject(Structural = true)]
+    [ValueLinkObject(Isolation = IsolationLevel.ReadCommitted)]
+    public partial class Class1Point : StoragePoint<Class1>
+    {
+        [Key(1)]
+        [Link(Unique = true, Primary = true, Type = ChainType.Unordered)]
+        public int Id { get; private set; }
+
+        public Class1Point(int id)
+        {
+        }
+    }
 }
 
-internal class Program
+namespace Playground
 {
-    static async Task Main(string[] args)
+    [ValueLinkObject]
+    public partial class TestClass
     {
-        var n = Unsafe.SizeOf<DataScope<byte[]>>();
-        Console.WriteLine($"Hello, World {n}");
+        public partial class GoshujinClass
+        {
+            public void Test()
+            {
+                var array = this.ToArray();
+            }
+        }
+
+        [Link(Primary = true, Type = ChainType.Unordered)]
+        public int Id { get; set; }
+    }
+
+    internal class Program
+    {
+        static async Task Main(string[] args)
+        {
+            var n = Unsafe.SizeOf<DataScope<byte[]>>();
+            Console.WriteLine($"Hello, World {n}");
+        }
     }
 }
