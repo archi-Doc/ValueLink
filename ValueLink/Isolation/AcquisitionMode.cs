@@ -11,7 +11,7 @@ public enum AcquisitionMode
     /// Retrieve the existing data. If an identifier is specified, obtain the data that matches the identifier.<br/>
     /// If it does not exist, it returns null.
     /// </summary>
-    Get,
+    GetOnly,
 
     /// <summary>
     /// Retrieve the existing data. If an identifier is specified, obtain the data that matches the identifier.<br/>
@@ -23,5 +23,5 @@ public enum AcquisitionMode
     /// Create the data. If an identifier is specified, create the data that matches the identifier.<br/>
     /// If it already exists, it returns null.
     /// </summary>
-    Create,
+    CreateOnly,
 }

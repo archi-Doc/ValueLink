@@ -857,9 +857,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         using (var tryLock = ssb.ScopeBrace($"public static async ValueTask<{pointName}?> Find(this CrystalData.StoragePoint<{this.GoshujinFullName}> storagePoint, {keyName} key, TimeSpan timeout, CancellationToken cancellationToken = default)"))
         {
-            using (var scope = ssb.ScopeBrace($"using (var scope = await storagePoint.TryLock(AcquisitionMode.Get, timeout, cancellationToken).ConfigureAwait(false))"))
+            using (var scope = ssb.ScopeBrace($"using (var scope = await storagePoint.TryLock(AcquisitionMode.GetOnly, timeout, cancellationToken).ConfigureAwait(false))"))
             {
-                ssb.AppendLine("if (scope.Data is { } g) return g.Find(key, AcquisitionMode.Get);");
+                ssb.AppendLine("if (scope.Data is { } g) return g.Find(key, AcquisitionMode.GetOnly);");
                 ssb.AppendLine("else return default;");
             }
         }
@@ -892,7 +892,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         using (var tryLock = ssb.ScopeBrace($"public static async Task<DataScopeResult> Delete(this CrystalData.StoragePoint<{this.GoshujinFullName}> storagePoint, {keyName} key, TimeSpan timeout, CancellationToken cancellationToken = default, DateTime forceDeleteAfter = default)"))
         {
-            using (var scope = ssb.ScopeBrace($"using (var scope = await storagePoint.TryLock(AcquisitionMode.Get, timeout, cancellationToken).ConfigureAwait(false))"))
+            using (var scope = ssb.ScopeBrace($"using (var scope = await storagePoint.TryLock(AcquisitionMode.GetOnly, timeout, cancellationToken).ConfigureAwait(false))"))
             {
                 ssb.AppendLine("if (scope.Data is { } g) return await g.Delete(key, forceDeleteAfter).ConfigureAwait(false);");
                 ssb.AppendLine("else return scope.Result;");
@@ -903,7 +903,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         using (var tryLock = ssb.ScopeBrace($"public static async Task<DataScopeResult> Delete(this CrystalData.StoragePoint<{this.GoshujinFullName}> storagePoint, {keyName} key, TimeSpan timeout, CancellationToken cancellationToken = default, DateTime forceDeleteAfter = default, bool writeJournal = true)"))
         {
-            using (var scope = ssb.ScopeBrace($"using (var scope = await storagePoint.TryLock(AcquisitionMode.Get, timeout, cancellationToken).ConfigureAwait(false))"))
+            using (var scope = ssb.ScopeBrace($"using (var scope = await storagePoint.TryLock(AcquisitionMode.GetOnly, timeout, cancellationToken).ConfigureAwait(false))"))
             {
                 ssb.AppendLine("if (scope.Data is { } g) return await g.Delete(key, forceDeleteAfter, writeJournal).ConfigureAwait(false);");
                 ssb.AppendLine("else return scope.Result;");

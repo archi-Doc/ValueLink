@@ -103,7 +103,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
     /// <param name="key">The key of the object to find.</param>
     /// <param name="acquisitionMode">The data acquisition mode specifying get, create, or get-or-create behavior.</param>
     /// <returns>The object if found; otherwise, <c>null</c>.</returns>
-    public TObject? Find(TKey key, AcquisitionMode acquisitionMode = AcquisitionMode.Get)
+    public TObject? Find(TKey key, AcquisitionMode acquisitionMode = AcquisitionMode.GetOnly)
     {
         using (this.LockObject.EnterScope())
         {
@@ -115,7 +115,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
             var obj = this.FindObject(key);
             if (obj is null)
             {// Object not found
-                if (acquisitionMode == AcquisitionMode.Get)
+                if (acquisitionMode == AcquisitionMode.GetOnly)
                 {// Get
                     return default;
                 }
@@ -127,7 +127,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
             }
             else
             {// Object found
-                if (acquisitionMode == AcquisitionMode.Create)
+                if (acquisitionMode == AcquisitionMode.CreateOnly)
                 {// Create
                     return default;
                 }
@@ -212,7 +212,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
             obj = this.FindObject(key);
             if (obj is null)
             {// Object not found
-                if (acquisitionMode == AcquisitionMode.Get)
+                if (acquisitionMode == AcquisitionMode.GetOnly)
                 {// Get
                     return ValueTask.FromResult(new DataScope<TData>(DataScopeResult.NotFound));
                 }
@@ -224,7 +224,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
             }
             else
             {// Object found
-                if (acquisitionMode == AcquisitionMode.Create)
+                if (acquisitionMode == AcquisitionMode.CreateOnly)
                 {// Create
                     return ValueTask.FromResult(new DataScope<TData>(DataScopeResult.AlreadyExists));
                 }
