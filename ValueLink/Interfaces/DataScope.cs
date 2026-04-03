@@ -35,15 +35,32 @@ public record struct DataScope<TData> : IDisposable
     public bool IsValid => this.data is not null;
 
     /// <summary>
+    /// Gets a value indicating whether this scope represents data that was successfully retrieved during lock acquisition.<br/>
+    /// Returns <see langword="true"/> only when <see cref="Result"/> is <see cref="DataScopeResult.Retrieved"/>
+    /// and <see cref="Data"/> is available.
+    /// </summary>
+    [MemberNotNullWhen(true, nameof(Data))]
+    public bool IsRetrieved => this.Result == DataScopeResult.Retrieved && this.data is not null;
+
+    /// <summary>
+    /// Gets a value indicating whether this scope represents data that was newly created during lock acquisition.<br/>
+    /// Returns <see langword="true"/> only when <see cref="Result"/> is <see cref="DataScopeResult.Created"/>
+    /// and <see cref="Data"/> is available.
+    /// </summary>
+    [MemberNotNullWhen(true, nameof(Data))]
+    public bool IsCreated => this.Result == DataScopeResult.Created && this.data is not null;
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="DataScope{TData}"/> struct with a valid data instance and unlocker.<br/>
     /// The scope is considered valid and will automatically release the lock upon disposal.
     /// </summary>
+    /// <param name="result">The result indicating whether the data was retrieved, created, or another status.</param>
     /// <param name="data">The data instance to be scoped and locked.</param>
     /// <param name="dataUnlocker">The data instance responsible for releasing the lock on the data resource.</param>
     /// <param name="structuralObject">The structural object associated with the data, used for deletion if needed.</param>
-    public DataScope(TData data, IDataUnlocker dataUnlocker, IStructuralObject structuralObject)
+    public DataScope(DataScopeResult result, TData data, IDataUnlocker dataUnlocker, IStructuralObject structuralObject)
     {
-        this.Result = default;
+        this.Result = result;
         this.data = data;
         this.dataUnlocker = dataUnlocker;
         this.structuralObject = structuralObject;
