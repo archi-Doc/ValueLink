@@ -172,7 +172,7 @@ public class IsolationTest
             r.IsNotNull();
         }
 
-        using (var r = g1.TryLock(1, AcquisitionMode.Create))
+        using (var r = g1.TryLock(1, AcquisitionMode.CreateOnly))
         {
             r.IsNull();
         }
@@ -214,7 +214,7 @@ public class IsolationTest
             }
         }
 
-        using (var w = g2.TryLock(10, AcquisitionMode.Create))
+        using (var w = g2.TryLock(10, AcquisitionMode.CreateOnly))
         {
             w!.Commit();
         }
@@ -222,14 +222,14 @@ public class IsolationTest
         rr = g2.TryGet(10);
         rr.IsNotNull();
 
-        using (var w = g2.TryLock(11, AcquisitionMode.Create))
+        using (var w = g2.TryLock(11, AcquisitionMode.CreateOnly))
         {
         }
 
         rr = g2.TryGet(11);
         rr.IsNull();
 
-        using (var w = g2.TryLock(10, AcquisitionMode.Get)!)
+        using (var w = g2.TryLock(10, AcquisitionMode.GetOnly)!)
         {
             w.Delete();
             w.Commit();
@@ -238,7 +238,7 @@ public class IsolationTest
         rr = g2.TryGet(10);
         rr.IsNull();
 
-        using (var w = g2.TryLock(10, AcquisitionMode.Create)!)
+        using (var w = g2.TryLock(10, AcquisitionMode.CreateOnly)!)
         {
             w.Delete();
             w.Commit();
