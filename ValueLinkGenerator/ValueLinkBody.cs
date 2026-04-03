@@ -279,7 +279,7 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
             }
 
             // Helper
-            this.GenerateHelper(ssb, info);
+            this.GenerateHelper(ssb, x.Value);
 
             var result = ssb.Finalize();
 
@@ -305,20 +305,20 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
         this.FlushDiagnostic();
     }
 
-    private void GenerateHelper(ScopingStringBuilder ssb, GeneratorInformation info)
+    private void GenerateHelper(ScopingStringBuilder ssb, List<ValueLinkObject> list)
     {
-        if (info.StoragePointHelper.Count == 0)
-        {
-            return;
-        }
+        ScopingStringBuilder.IScope? scope = default;
 
-        using (var scope = ssb.ScopeBrace("public static partial class StoragePointHelper"))
+        foreach (var x in list)
         {
-            foreach (var x in info.StoragePointHelper)
+            if (x.ObjectFlag.HasFlag(ValueLinkObjectFlag.DerivedFromStoragePoint))
             {
+                scope ??= ssb.ScopeBrace("public static partial class StoragePointHelper");
                 x.GenerateStoragePointHelper(ssb);
             }
         }
+
+        scope?.Dispose();
     }
 
     private void GenerateHeader(ScopingStringBuilder ssb, bool tinyhandFlag)
