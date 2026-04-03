@@ -508,6 +508,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             else if (this.IsDerivedFrom(ValueLinkBody.StoragePoint))
             {
                 this.ObjectFlag |= ValueLinkObjectFlag.DerivedFromStoragePoint;
+                this.ObjectFlag |= ValueLinkObjectFlag.StructuralEnabled; // Enable Structual to ensure StoragePoint works correctly.
             }
         }
 
@@ -605,7 +606,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 this.ObjectFlag |= ValueLinkObjectFlag.HasUniqueLink;
             }
 
-            if (this.TinyhandAttribute?.Structural == true)
+            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.StructuralEnabled))
             {// Required
                 if (this.UniqueLink is null/* || !this.UniqueLink.Type.IsLocatable()*/)
                 {
@@ -1294,7 +1295,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     ssb.AppendLine($"(({ValueLinkBody.IIntegralityObject})g).ClearIntegralityHash();");
                 }
 
-                if (this.TinyhandAttribute?.Structural == true)
+                if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.StructuralEnabled))
                 {
                     this.CodeJournal2(ssb, null, this.ITinyhandCustomJournalImplementation);
                 }
@@ -1348,7 +1349,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     ssb.AppendLine($"(({ValueLinkBody.IIntegralityObject}){ssb.FullObject}.{goshujinInstance}).ClearIntegralityHash();");
                 }
 
-                if (this.UniqueLink is not null && this.TinyhandAttribute?.Structural == true)
+                if (this.UniqueLink is not null && this.ObjectFlag.HasFlag(ValueLinkObjectFlag.StructuralEnabled))
                 {
                     this.CodeJournal2(ssb, this.UniqueLink.Target, this.ITinyhandCustomJournalImplementation);
                 }
@@ -1539,7 +1540,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                         }
                     }
 
-                    if (this.TinyhandAttribute?.Structural == true)
+                    if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.StructuralEnabled))
                     {
                         ssb.AppendLine();
                         this.CodeJournal3(ssb, this.ITinyhandCustomJournalImplementation);
