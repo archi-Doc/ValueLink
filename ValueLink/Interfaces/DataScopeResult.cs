@@ -8,6 +8,12 @@ namespace ValueLink;
 public enum DataScopeResult
 {
     /// <summary>
+    /// The object was not found, so the requested retrieval could not be performed.<br/>
+    /// <see cref="AcquisitionMode.GetOnly" /> -> <see cref="DataScopeResult.Retrieved"/> or <see cref="DataScopeResult.NotFound"/>.
+    /// </summary>
+    NotFound,
+
+    /// <summary>
     /// An existing object was successfully retrieved.<br/>
     /// <see cref="AcquisitionMode.GetOnly" /> -> <see cref="DataScopeResult.Retrieved"/> or <see cref="DataScopeResult.NotFound"/>.<br/>
     /// <see cref="AcquisitionMode.GetOrCreate" /> -> <see cref="DataScopeResult.Retrieved"/> or <see cref="DataScopeResult.Created"/>.
@@ -26,12 +32,6 @@ public enum DataScopeResult
     /// <see cref="AcquisitionMode.CreateOnly" /> -> <see cref="DataScopeResult.Created"/> or <see cref="DataScopeResult.AlreadyExists"/>.
     /// </summary>
     AlreadyExists,
-
-    /// <summary>
-    /// The object was not found, so the requested retrieval could not be performed.<br/>
-    /// <see cref="AcquisitionMode.GetOnly" /> -> <see cref="DataScopeResult.Retrieved"/> or <see cref="DataScopeResult.NotFound"/>.
-    /// </summary>
-    NotFound,
 
     /// <summary>
     /// The object was deleted successfully.
