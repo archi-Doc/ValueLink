@@ -252,6 +252,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
         TObject? obj;
         var delay = false;
         bool deleted = false;
+        var result = DataScopeResult.Deleted;
 
 Retry:
         if (delay)
@@ -281,6 +282,7 @@ Retry:
             else
             {// Force delete
                 deleted = ObjectProtectionStateHelper.ForceDelete(ref obj.GetProtectionStateRef());
+                result = DataScopeResult.ForceDeleted;
             }
 
             if (deleted)
@@ -299,7 +301,7 @@ Retry:
             await obj.DeletePoint(forceDeleteAfter, writeJournal).ConfigureAwait(false);
         }
 
-        return DataScopeResult.Success;
+        return result;
     }
 
     /// <summary>

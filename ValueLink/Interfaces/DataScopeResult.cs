@@ -8,9 +8,14 @@ namespace ValueLink;
 public enum DataScopeResult
 {
     /// <summary>
-    /// The lock was successfully acquired.
+    /// The object was deleted successfully.
     /// </summary>
-    Success,
+    Deleted,
+
+    /// <summary>
+    /// The deletion operation timed out, and the object was force-deleted.
+    /// </summary>
+    ForceDeleted,
 
     /// <summary>
     /// The specified data was not found.

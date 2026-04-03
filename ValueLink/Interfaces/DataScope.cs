@@ -43,7 +43,7 @@ public record struct DataScope<TData> : IDisposable
     /// <param name="structuralObject">The structural object associated with the data, used for deletion if needed.</param>
     public DataScope(TData data, IDataUnlocker dataUnlocker, IStructuralObject structuralObject)
     {
-        this.Result = DataScopeResult.Success;
+        this.Result = default;
         this.data = data;
         this.dataUnlocker = dataUnlocker;
         this.structuralObject = structuralObject;
