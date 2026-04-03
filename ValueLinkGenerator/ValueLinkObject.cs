@@ -1047,7 +1047,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
                 if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.DerivedFromStoragePoint))
                 {// Add StoragePoint helper
-                    info.StoragePointHelper.Add(this);
+                    // info.StoragePointHelper.Add(this);
                 }
             }
             else if (this.ObjectAttribute.Isolation == IsolationLevel.Serializable)
