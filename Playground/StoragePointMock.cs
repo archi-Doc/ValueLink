@@ -28,10 +28,7 @@ public class StoragePoint<TData> : IStructuralObject, IDataLocker<TData>
 
     ref byte IDataLocker<TData>.GetProtectionStateRef() => ref this.protectionState;
 
-    DataControlState IDataLocker<TData>.GetControlState()
-    {
-        return default;
-    }
+    // DataControlState IDataLocker<TData>.GetControlState() => default;
 
     public ValueTask<TData?> TryGet() => ValueTask.FromResult<TData?>(default);
 

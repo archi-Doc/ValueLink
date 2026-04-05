@@ -149,7 +149,8 @@ public abstract class RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter> 
                 x = this.FindObject(key);
                 if (x is null)
                 {// No object
-                    if (mode == AcquisitionMode.GetOnly)
+                    if (mode == AcquisitionMode.GetOnly ||
+                        mode == AcquisitionMode.GetOnlyIgnoreState)
                     {// Get
                         ((IRepeatableReadSemaphore)this).Release(ref count);
                         return default;
@@ -211,7 +212,8 @@ Created:
                 x = this.FindObject(key);
                 if (x is null)
                 {// No object
-                    if (mode == AcquisitionMode.GetOnly)
+                    if (mode == AcquisitionMode.GetOnly ||
+                        mode == AcquisitionMode.GetOnlyIgnoreState)
                     {// Get
                         ((IRepeatableReadSemaphore)this).Release(ref count);
                         return default;
