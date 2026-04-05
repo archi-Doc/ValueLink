@@ -11,13 +11,14 @@ namespace ValueLink;
 public enum DataControlState : byte
 {
     /// <summary>
-    /// Indicates the object is pinned and guaranteed to remain only in memory<br/> and will never be released and written to disk.
+    /// Indicates the object is pinned and guaranteed to remain only in memory,<br/>
+    /// and will never be released and written to disk.
     /// </summary>
     Pinned = 1,
 
     /// <summary>
-    /// The data has been invalidated and can no longer be used.<br/>
+    /// The data cannot be locked.<br/>
     /// Use this before deleting the parent or for other similar purposes.
     /// </summary>
-    Invalid = 2,
+    NotLockable = 2,
 }
