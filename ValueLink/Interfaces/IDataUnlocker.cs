@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace ValueLink;
 
 /// <summary>
-/// Defines members for releasing and managing the validity of a lock on a data resource.
+/// Defines members for releasing a lock and managing the control state of an associated data resource.
 /// </summary>
 public interface IDataUnlocker
 {
@@ -25,12 +25,18 @@ public interface IDataUnlocker
     bool UnlockAndDelete();
 
     /// <summary>
-    /// Marks tthe associated data resource as valid.
+    /// Gets the current control state of the associated data resource.
     /// </summary>
-    void Validate();
+    /// <returns>
+    /// The current <see cref="DataControlState" /> value.
+    /// </returns>
+    DataControlState GetControlState();
 
     /// <summary>
-    /// Marks tthe associated data resource as invalid.
+    /// Sets the control state of the associated data resource.
     /// </summary>
-    void Invalidate();
+    /// <param name="state">
+    /// The <see cref="DataControlState" /> to apply.
+    /// </param>
+    void SetControlState(DataControlState state);
 }

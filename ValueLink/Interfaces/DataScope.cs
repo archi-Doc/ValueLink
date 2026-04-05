@@ -79,6 +79,35 @@ public record struct DataScope<TData> : IDisposable
     }
 
     /// <summary>
+    /// Gets the current control state from the data associated with this scope.
+    /// </summary>
+    /// <returns>
+    /// The current <see cref="DataControlState"/> when the scope is still linked to an unlocker;
+    /// otherwise <see langword="default"/> if the scope is no longer valid.
+    /// </returns>
+    public DataControlState GetControlState()
+    {
+        if (this.dataUnlocker is { } dataUnlocker)
+        {
+            return dataUnlocker.GetControlState();
+        }
+
+        return default;
+    }
+
+    /// <summary>
+    /// Sets the control state on the data associated with this scope.
+    /// </summary>
+    /// <param name="state">The <see cref="DataControlState"/> value to apply.</param>
+    /// <remarks>
+    /// If the scope has already been disposed or does not contain an unlocker, this call has no effect.
+    /// </remarks>
+    public void SetControlState(DataControlState state)
+    {
+        this.dataUnlocker?.SetControlState(state);
+    }
+
+    /// <summary>
     /// Releases the lock on the data resource and deletes it, optionally forcing deletion after the specified date and time.
     /// </summary>
     /// <param name="forceDeleteAfter">
