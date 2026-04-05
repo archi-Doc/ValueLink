@@ -115,8 +115,9 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
             var obj = this.FindObject(key);
             if (obj is null)
             {// Object not found
-                if (acquisitionMode == AcquisitionMode.GetOnly)
-                {// Get
+                if (acquisitionMode == AcquisitionMode.GetOnly ||
+                    acquisitionMode == AcquisitionMode.GetOnlyIgnoreState)
+                {// Get or GetOnlyIgnoreState
                     return default;
                 }
                 else
@@ -127,6 +128,14 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
             }
             else
             {// Object found
+                /*if (obj.GetControlState().HasFlag(DataControlState.Invalid))
+                {// Invalid
+                    if (acquisitionMode != AcquisitionMode.GetOnlyIgnoreState)
+                    {
+                        return default;
+                    }
+                }*/
+
                 if (acquisitionMode == AcquisitionMode.CreateOnly)
                 {// Create
                     return default;
@@ -168,8 +177,9 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
             }
 
             obj = this.FindObject(key);
-            if (obj is null)
-            {
+            if (obj is null/* ||
+                obj.GetControlState().HasFlag(DataControlState.Invalid)*/)
+            {// Not found or invalid.
                 return ValueTask.FromResult<TData?>(default);
             }
         }
@@ -212,8 +222,9 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
             obj = this.FindObject(key);
             if (obj is null)
             {// Object not found
-                if (acquisitionMode == AcquisitionMode.GetOnly)
-                {// Get
+                if (acquisitionMode == AcquisitionMode.GetOnly ||
+                    acquisitionMode == AcquisitionMode.GetOnlyIgnoreState)
+                {// GetOnly or GetOnlyIgnoreState
                     return ValueTask.FromResult(new DataScope<TData>(DataScopeResult.NotFound));
                 }
                 else
@@ -224,6 +235,12 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
             }
             else
             {// Object found
+                /*if (obj.GetControlState().HasFlag(DataControlState.Invalid) &&
+                    acquisitionMode != AcquisitionMode.GetOnlyIgnoreState)
+                {
+                    return ValueTask.FromResult(new DataScope<TData>(DataScopeResult.Obsolete));
+                }*/
+
                 if (acquisitionMode == AcquisitionMode.CreateOnly)
                 {// Create
                     return ValueTask.FromResult(new DataScope<TData>(DataScopeResult.AlreadyExists));
@@ -231,7 +248,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
             }
         }
 
-        return obj.TryLock(timeout, cancellationToken);
+        return obj.TryLock(acquisitionMode, timeout, cancellationToken);
     }
 
     /// <summary>

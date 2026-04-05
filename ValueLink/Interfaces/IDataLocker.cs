@@ -24,6 +24,14 @@ public interface IDataLocker<TData>
     /// </returns>
     ref byte GetProtectionStateRef();
 
+    /*/// <summary>
+    /// Gets the current control state of the associated data resource.
+    /// </summary>
+    /// <returns>
+    /// The current <see cref="DataControlState" /> value.
+    /// </returns>
+    DataControlState GetControlState();*/
+
     /// <summary>
     /// Attempts to retrieve the data instance if available, without acquiring a lock.
     /// </summary>
@@ -39,6 +47,7 @@ public interface IDataLocker<TData>
     /// <summary>
     /// Attempts to acquire a lock on the data resource asynchronously.
     /// </summary>
+    /// <param name="acquisitionMode">The data acquisition mode specifying get, create, or get-or-create behavior.</param>
     /// <param name="timeout">The maximum time to wait for the lock. If <see cref="TimeSpan.Zero"/>, the method returns immediately.</param>
     /// <param name="cancellationToken">
     /// A <see cref="CancellationToken"/> to observe while waiting to acquire the lock.
@@ -47,7 +56,7 @@ public interface IDataLocker<TData>
     /// A <see cref="ValueTask"/> containing a tuple with the <see cref="DataScopeResult"/><br/>
     /// indicating the outcome of the lock attempt, and the locked data if successful.
     /// </returns>
-    ValueTask<DataScope<TData>> TryLock(TimeSpan timeout, CancellationToken cancellationToken);
+    ValueTask<DataScope<TData>> TryLock(AcquisitionMode acquisitionMode, TimeSpan timeout, CancellationToken cancellationToken);
 
     /// <summary>
     /// Deletes the data point, optionally forcing deletion after the specified date and time.<br/>

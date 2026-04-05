@@ -27,4 +27,11 @@ public enum AcquisitionMode
     /// TryLock() -> <see cref="DataScopeResult.Created"/> or <see cref="DataScopeResult.AlreadyExists"/>.
     /// </summary>
     CreateOnly,
+
+    /// <summary>
+    /// Retrieve the existing data regardless of the object's state.
+    /// If it does not exist, it returns null.<br/>
+    /// TryLock() -> <see cref="DataScopeResult.Retrieved"/> or <see cref="DataScopeResult.NotFound"/>.
+    /// </summary>
+    GetOnlyIgnoreState,
 }
