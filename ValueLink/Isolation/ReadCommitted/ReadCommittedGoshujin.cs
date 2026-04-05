@@ -248,7 +248,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
             }
         }
 
-        return obj.TryLock(timeout, cancellationToken);
+        return obj.TryLock(acquisitionMode, timeout, cancellationToken);
     }
 
     /// <summary>

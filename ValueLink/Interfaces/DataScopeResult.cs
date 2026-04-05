@@ -54,6 +54,11 @@ public enum DataScopeResult
     Obsolete,
 
     /// <summary>
+    /// The lock attempt failed because the object is in an unlockable state.
+    /// </summary>
+    Unlockable,
+
+    /// <summary>
     /// Failed to acquire lock due to the storage engine being shut down.
     /// </summary>
     Rip,
