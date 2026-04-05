@@ -28,6 +28,11 @@ public class StoragePoint<TData> : IStructuralObject, IDataLocker<TData>
 
     ref byte IDataLocker<TData>.GetProtectionStateRef() => ref this.protectionState;
 
+    DataControlState IDataLocker<TData>.GetControlState()
+    {
+        return default;
+    }
+
     public ValueTask<TData?> TryGet() => ValueTask.FromResult<TData?>(default);
 
     public ValueTask<DataScope<TData>> TryLock(AcquisitionMode acquisitionMode, TimeSpan timeout, CancellationToken cancellationToken = default) => ValueTask.FromResult(new DataScope<TData>(DataScopeResult.Timeout));

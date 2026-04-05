@@ -25,6 +25,14 @@ public interface IDataLocker<TData>
     ref byte GetProtectionStateRef();
 
     /// <summary>
+    /// Gets the current control state of the associated data resource.
+    /// </summary>
+    /// <returns>
+    /// The current <see cref="DataControlState" /> value.
+    /// </returns>
+    DataControlState GetControlState();
+
+    /// <summary>
     /// Attempts to retrieve the data instance if available, without acquiring a lock.
     /// </summary>
     /// <param name="timeout">The maximum time to wait for the lock. If <see cref="TimeSpan.Zero"/>, the method returns immediately.</param>
