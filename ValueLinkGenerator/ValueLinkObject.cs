@@ -857,7 +857,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         using (var tryLock = ssb.ScopeBrace($"public static async ValueTask<{pointName}?> Find(this CrystalData.StoragePoint<{this.GoshujinFullName}> storagePoint, {keyName} key, TimeSpan timeout, CancellationToken cancellationToken = default)"))
         {
-            using (var scope = ssb.ScopeBrace($"using (var scope = await storagePoint.{ValueLinkBody.TryLockMethodName}(AcquisitionMode.GetOnly, timeout, cancellationToken).ConfigureAwait(false))"))
+            using (var scope = ssb.ScopeBrace($"using (var scope = await storagePoint.{ValueLinkBody.TryLockMethodName}(AcquisitionMode.GetOnly, timeout, cancellationToken, default).ConfigureAwait(false))"))
             {
                 ssb.AppendLine("if (scope.Data is { } g) return g.Find(key, AcquisitionMode.GetOnly);");
                 ssb.AppendLine("else return default;");
@@ -873,26 +873,26 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             ssb.AppendLine("else return await g.TryGet(key, timeout, cancellationToken).ConfigureAwait(false);");
         }
 
-        ssb.AppendLine($"public static ValueTask<DataScope<{dataName}>> {ValueLinkBody.TryLockMethodName}(this CrystalData.StoragePoint<{this.GoshujinFullName}> storagePoint, {keyName} key, AcquisitionMode acquisitionMode, CancellationToken cancellationToken = default) => {ValueLinkBody.TryLockMethodName}(storagePoint, key, acquisitionMode, ValueLinkGlobal.LockTimeout, cancellationToken);");
+        ssb.AppendLine($"public static ValueTask<DataScope<{dataName}>> {ValueLinkBody.TryLockMethodName}(this CrystalData.StoragePoint<{this.GoshujinFullName}> storagePoint, {keyName} key, AcquisitionMode acquisitionMode, CancellationToken cancellationToken = default, Func<IStructuralObject, {dataName}>? factory = default) => {ValueLinkBody.TryLockMethodName}(storagePoint, key, acquisitionMode, ValueLinkGlobal.LockTimeout, cancellationToken, factory);");
 
-        using (var tryLock = ssb.ScopeBrace($"public static async ValueTask<DataScope<{dataName}>> {ValueLinkBody.TryLockMethodName}(this CrystalData.StoragePoint<{this.GoshujinFullName}> storagePoint, {keyName} key, AcquisitionMode acquisitionMode, TimeSpan timeout, CancellationToken cancellationToken = default)"))
+        using (var tryLock = ssb.ScopeBrace($"public static async ValueTask<DataScope<{dataName}>> {ValueLinkBody.TryLockMethodName}(this CrystalData.StoragePoint<{this.GoshujinFullName}> storagePoint, {keyName} key, AcquisitionMode acquisitionMode, TimeSpan timeout, CancellationToken cancellationToken = default, Func<IStructuralObject, {dataName}>? factory = default)"))
         {
             ssb.AppendLine($"{pointName}? point = default;");
-            using (var scope = ssb.ScopeBrace($"using (var scope = await storagePoint.{ValueLinkBody.TryLockMethodName}(AcquisitionMode.GetOrCreate, timeout, cancellationToken).ConfigureAwait(false))"))
+            using (var scope = ssb.ScopeBrace($"using (var scope = await storagePoint.{ValueLinkBody.TryLockMethodName}(AcquisitionMode.GetOrCreate, timeout, cancellationToken, default).ConfigureAwait(false))"))
             {
                 ssb.AppendLine("if (scope.Data is { } g) point = g.Find(key, acquisitionMode);");
                 ssb.AppendLine("else return new(scope.Result);");
             }
 
             ssb.AppendLine("if (point is null) return new(DataScopeResult.NotFound);");
-            ssb.AppendLine($"else return await point.{ValueLinkBody.TryLockMethodName}(AcquisitionMode.GetOrCreate, timeout, cancellationToken).ConfigureAwait(false);");
+            ssb.AppendLine($"else return await point.{ValueLinkBody.TryLockMethodName}(AcquisitionMode.GetOrCreate, timeout, cancellationToken, factory).ConfigureAwait(false);");
         }
 
         ssb.AppendLine($"public static Task<DataScopeResult> Delete(this CrystalData.StoragePoint<{this.GoshujinFullName}> storagePoint, {keyName} key, DateTime forceDeleteAfter = default) => Delete(storagePoint, key, ValueLinkGlobal.LockTimeout, default, forceDeleteAfter);");
 
         using (var tryLock = ssb.ScopeBrace($"public static async Task<DataScopeResult> Delete(this CrystalData.StoragePoint<{this.GoshujinFullName}> storagePoint, {keyName} key, TimeSpan timeout, CancellationToken cancellationToken = default, DateTime forceDeleteAfter = default)"))
         {
-            using (var scope = ssb.ScopeBrace($"using (var scope = await storagePoint.{ValueLinkBody.TryLockMethodName}(AcquisitionMode.GetOnly, timeout, cancellationToken).ConfigureAwait(false))"))
+            using (var scope = ssb.ScopeBrace($"using (var scope = await storagePoint.{ValueLinkBody.TryLockMethodName}(AcquisitionMode.GetOnly, timeout, cancellationToken, default).ConfigureAwait(false))"))
             {
                 ssb.AppendLine("if (scope.Data is { } g) return await g.Delete(key, forceDeleteAfter).ConfigureAwait(false);");
                 ssb.AppendLine("else return scope.Result;");
@@ -1618,7 +1618,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         ssb.AppendLine($"public {ValueLinkBody.RepeatableReadObjectState} State {{ get; private set; }}");
 
         var semaphore = $"this.{this.GoshujinInstanceIdentifier} as {ValueLinkBody.IRepeatableReadSemaphore}";
-        ssb.AppendLine($"public {ValueLinkBody.WriterClassName}? {ValueLinkBody.TryLockMethodName}() => (({this.IRepeatableReadObject})this).TryLockInternal({semaphore});");
+        ssb.AppendLine($"public {ValueLinkBody.WriterClassName}? TryLock() => (({this.IRepeatableReadObject})this).TryLockInternal({semaphore});");
         ssb.AppendLine($"public ValueTask<{ValueLinkBody.WriterClassName}?> {ValueLinkBody.TryLockAsyncMethodName}() => (({this.IRepeatableReadObject})this).TryLockAsyncInternal({semaphore});");
         ssb.AppendLine($"public ValueTask<{ValueLinkBody.WriterClassName}?> {ValueLinkBody.TryLockAsyncMethodName}(int millisecondsTimeout) => (({this.IRepeatableReadObject})this).TryLockAsyncInternal({semaphore}, millisecondsTimeout);");
         ssb.AppendLine($"public ValueTask<{ValueLinkBody.WriterClassName}?> {ValueLinkBody.TryLockAsyncMethodName}(int millisecondsTimeout, CancellationToken cancellationToken) => (({this.IRepeatableReadObject})this).TryLockAsyncInternal({semaphore}, millisecondsTimeout, cancellationToken);");
