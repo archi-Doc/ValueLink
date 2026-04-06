@@ -206,10 +206,11 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
     /// <param name="acquisitionMode">The data acquisition mode specifying get, create, or get-or-create behavior.</param>
     /// <param name="timeout">The maximum time to wait for the lock. If <see cref="TimeSpan.Zero"/>, the method returns immediately.</param>
     /// <param name="cancellationToken">A token to observe while waiting for the operation to complete.</param>
+    /// <param name="factory">An optional factory function to create the data instance if it does not exist.</param>
     /// <returns>
     /// A <see cref="ValueTask{DataScope}"/> containing the result and the locked data if successful.
     /// </returns>
-    public ValueTask<DataScope<TData>> TryLock(TKey key, AcquisitionMode acquisitionMode, TimeSpan timeout, CancellationToken cancellationToken = default)
+    public ValueTask<DataScope<TData>> TryLock(TKey key, AcquisitionMode acquisitionMode, TimeSpan timeout, CancellationToken cancellationToken = default, Func<IStructuralObject, TData>? factory = default)
     {
         TObject? obj;
         using (this.LockObject.EnterScope())
@@ -248,7 +249,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
             }
         }
 
-        return obj.TryLock(acquisitionMode, timeout, cancellationToken);
+        return obj.TryLock(acquisitionMode, timeout, cancellationToken, factory);
     }
 
     /// <summary>

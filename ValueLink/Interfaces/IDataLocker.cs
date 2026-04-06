@@ -3,6 +3,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Tinyhand;
 
 namespace ValueLink;
 
@@ -52,11 +53,12 @@ public interface IDataLocker<TData>
     /// <param name="cancellationToken">
     /// A <see cref="CancellationToken"/> to observe while waiting to acquire the lock.
     /// </param>
+    /// <param name="factory">An optional factory function to create the data instance if it does not exist.</param>
     /// <returns>
     /// A <see cref="ValueTask"/> containing a tuple with the <see cref="DataScopeResult"/><br/>
     /// indicating the outcome of the lock attempt, and the locked data if successful.
     /// </returns>
-    ValueTask<DataScope<TData>> TryLock(AcquisitionMode acquisitionMode, TimeSpan timeout, CancellationToken cancellationToken);
+    ValueTask<DataScope<TData>> TryLock(AcquisitionMode acquisitionMode, TimeSpan timeout, CancellationToken cancellationToken, Func<IStructuralObject, TData>? factory);
 
     /// <summary>
     /// Deletes the data point, optionally forcing deletion after the specified date and time.<br/>
