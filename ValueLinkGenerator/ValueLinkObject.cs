@@ -875,7 +875,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         ssb.AppendLine($"public static ValueTask<DataScope<{dataName}>> TryLock(this CrystalData.StoragePoint<{this.GoshujinFullName}> storagePoint, {keyName} key, AcquisitionMode acquisitionMode, CancellationToken cancellationToken = default) => TryLock(storagePoint, key, acquisitionMode, ValueLinkGlobal.LockTimeout, cancellationToken);");
 
-        using (var tryLock = ssb.ScopeBrace($"public static async ValueTask<DataScope<{dataName}>> TryLock(this CrystalData.StoragePoint<{this.GoshujinFullName}> storagePoint, {keyName} key, AcquisitionMode acquisitionMode, TimeSpan timeout, CancellationToken cancellationToken = default)"))
+        using (var tryLock = ssb.ScopeBrace($"public static async ValueTask<DataScope<{dataName}>> {ValueLinkBody.TryLockMethodName}(this CrystalData.StoragePoint<{this.GoshujinFullName}> storagePoint, {keyName} key, AcquisitionMode acquisitionMode, TimeSpan timeout, CancellationToken cancellationToken = default)"))
         {
             ssb.AppendLine($"{pointName}? point = default;");
             using (var scope = ssb.ScopeBrace($"using (var scope = await storagePoint.TryLock(AcquisitionMode.GetOrCreate, timeout, cancellationToken).ConfigureAwait(false))"))
