@@ -39,7 +39,7 @@ public class StoragePoint<TData> : IStructuralObject, IDataLocker<TData>
         return ValueTask.FromResult<TData?>(default);
     }
 
-    ValueTask<DataScope<TData>> IDataLocker<TData>.TryLock(AcquisitionMode acquisitionMode, TimeSpan timeout, CancellationToken cancellationToken)
+    ValueTask<DataScope<TData>> IDataLocker<TData>.TryLock(AcquisitionMode acquisitionMode, TimeSpan timeout, CancellationToken cancellationToken, Func<IStructuralObject, TData>? factory)
     {
         return ValueTask.FromResult(new DataScope<TData>(DataScopeResult.Timeout));
     }
