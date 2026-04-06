@@ -11,6 +11,11 @@ namespace ValueLink;
 public enum DataControlState : byte
 {
     /// <summary>
+    /// Represents the default state with no special control flags set.
+    /// </summary>
+    Default = 0,
+
+    /// <summary>
     /// Indicates the object is pinned and guaranteed to remain only in memory,<br/>
     /// and will never be released and written to disk.
     /// </summary>
