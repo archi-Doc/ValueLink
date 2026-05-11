@@ -1873,7 +1873,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.TinyhandObject))
         {// ITinyhandSerializable
-            goshujinInterface += $", ITinyhandSerializable<{this.GoshujinFullName}>, ITinyhandReconstructable<{this.GoshujinFullName}>, ITinyhandCloneable<{this.GoshujinFullName}>, ITinyhandSerializable";
+            goshujinInterface += $", ITinyhandSerializable<{this.GoshujinFullName}>, ITinyhandReconstructable<{this.GoshujinFullName}>, ITinyhandCloneable<{this.GoshujinFullName}>, ITinyhandSerializable, ITinyhandSingleLayoutSerializable";
         }
 
         if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.StructuralEnabled))
