@@ -36,6 +36,9 @@ namespace QuickStart.Evolution
             }
         }
 
+        [IgnoreMember]
+        public partial GoshujinClass? Goshujin { get; set; }
+
         public override string ToString()
             => this.Id.ToString();
     }

@@ -92,6 +92,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     public VisceralIdentifier Identifier { get; private set; } = VisceralIdentifier.Default;
 
+    public bool IsPartialGoshujin { get; private set; }
+
     public string GoshujinInstanceIdentifier = string.Empty;
 
     // public string GoshujinLockIdentifier = string.Empty;
@@ -517,7 +519,21 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         // Check Goshujin Class / Instance
         // this.CheckKeyword(this.ObjectAttribute!.GoshujinClass, this.Location);
-        this.CheckKeyword(this.ObjectAttribute!.GoshujinInstance, this.Location);
+        if (this.Identifier.Contains(this.ObjectAttribute!.GoshujinInstance))
+        {
+            if (this.AllMembers.FirstOrDefault(x => x.SimpleName == this.ObjectAttribute!.GoshujinInstance) is { } obj)
+            {
+                if (obj.IsPartialProperty)
+                {// partial GoshujinClass? Goshujin { get; set; }
+                    this.IsPartialGoshujin = true;
+                }
+                else
+                {
+                    this.CheckKeyword(this.ObjectAttribute!.GoshujinInstance, this.Location);
+                }
+            }
+        }
+
         this.GoshujinInstanceIdentifier = this.Identifier.GetIdentifier();
         this.GoshujinFullName = this.FullName + "." + this.ObjectAttribute!.GoshujinClass;
 
@@ -3054,7 +3070,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     internal void GenerateGoshujinProperty(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         var goshujinAccessibility = this.ObjectAttribute!.Restricted ? "internal " : "public ";
-        using (var scopeProperty = ssb.ScopeBrace($"{goshujinAccessibility}{this.ObjectAttribute!.GoshujinClass}? {this.ObjectAttribute!.GoshujinInstance}"))
+        var isPartial = this.IsPartialGoshujin ? "partial " : string.Empty;
+        using (var scopeProperty = ssb.ScopeBrace($"{goshujinAccessibility}{isPartial}{this.ObjectAttribute!.GoshujinClass}? {this.ObjectAttribute!.GoshujinInstance}"))
         {
             ssb.AppendLine($"get => this.{this.GoshujinInstanceIdentifier};");
             if (this.ObjectAttribute.Isolation == IsolationLevel.None ||

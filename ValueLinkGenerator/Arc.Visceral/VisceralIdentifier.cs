@@ -24,7 +24,11 @@ public class VisceralIdentifier
         this.identifierFormat = identifierFormat;
     }
 
-    public bool Add(string identifier) => this.identifier.Add(identifier);
+    public bool Add(string identifier)
+        => this.identifier.Add(identifier);
+
+    public bool Contains(string identifier)
+        => this.identifier.Contains(identifier);
 
     public string GetIdentifier()
     {
