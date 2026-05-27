@@ -30,6 +30,8 @@ public partial class ListChainTestClass
         this.Id = id;
     }
 
+    public partial GoshujinClass? Goshujin { get; set; }
+
     public override string ToString() => this.Id.ToString();
 }
 
