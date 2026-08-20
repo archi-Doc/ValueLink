@@ -379,7 +379,7 @@ public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
 
     #endregion
 
-    public OrderedMultiMap<TKey, TObj>.ValueCollection.Enumerator GetEnumerator() => this.chain.Values.GetEnumerator();
+    public OrderedMultiMap<TKey, TObj>.ValueEnumerable.Enumerator GetEnumerator() => this.chain.Values.GetEnumerator();
 
     IEnumerator<TObj> IEnumerable<TObj>.GetEnumerator() => this.chain.Values.GetEnumerator();
 

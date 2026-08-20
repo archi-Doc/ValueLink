@@ -86,7 +86,7 @@ public enum ChainType
 
     /// <summary>
     /// Represents a collection of objects stored in a hash table (<see cref="UnorderedChain{TKey, TValue}"/>).<br/>
-    /// Structure: Hash table (<see cref="UnorderedMultiMap{TKey, TValue}"/>).
+    /// Structure: Hash table (<see cref="UnorderedMap{TKey, TValue}"/>).
     /// </summary>
     Unordered,
 
