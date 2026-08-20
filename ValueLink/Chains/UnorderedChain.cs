@@ -170,7 +170,7 @@ public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
         }
     }
 
-    public (UnorderedMultiMap<TKey, TObj>.Node[] Nodes, int Max) UnsafeGetNodes()
+    public (UnorderedMap<TKey, TObj>.Node[] Nodes, int Max) UnsafeGetNodes()
         => this.chain.UnsafeGetNodes();
 
     public int Count => this.chain.Count;
@@ -201,13 +201,6 @@ public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
         this.chain.TryGetValue(key, out var value);
         return value;
     }
-
-    /// <summary>
-    /// Gets the most duplicate key and the number of duplicates.
-    /// </summary>
-    /// <returns>The most duplicate key and the number of duplicates.</returns>
-    public (TKey? Key, int Count) TryGetMostDuplicateKey()
-        => this.chain.TryGetMostDuplicateKey();
 
     /// <summary>
     /// Enumerates elements with the specified key.
@@ -242,7 +235,7 @@ public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     private ObjectToGoshujinDelegete objectToGoshujin;
     private ObjectToLinkDelegete objectToLink;
     private ObjectToKeyDelegete? objectToKey;
-    private UnorderedMultiMap<TKey, TObj> chain = new();
+    private UnorderedMap<TKey, TObj> chain = new(true);
 
     /// <summary>
     /// Represents a link structure that holds node information for an object in the <see cref="UnorderedChain{TKey, TObj}"/>.
@@ -301,7 +294,7 @@ public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
 
     #endregion
 
-    public UnorderedMultiMap<TKey, TObj>.ValueCollection.Enumerator GetEnumerator() => this.chain.Values.GetEnumerator();
+    public UnorderedMap<TKey, TObj>.ValueEnumerable.Enumerator GetEnumerator() => this.chain.Values.GetEnumerator();
 
     IEnumerator<TObj> IEnumerable<TObj>.GetEnumerator() => this.chain.Values.GetEnumerator();
 
