@@ -169,3 +169,48 @@ public class ListChainTest
         g.ListChain.Select(x => x.Id).SequenceEqual([3, 0, 4, 2]).IsTrue();
     }*/
 }
+
+public class ListChainInsertTest
+{
+    [Fact]
+    public void Insert_RelinkingAtTheEnd_KeepsTheChainConsistent()
+    {
+        var g = new ListChainTestClass.GoshujinClass();
+        for (var i = 0; i < 5; i++)
+        {
+            new ListChainTestClass(i).Goshujin = g;
+        }
+
+        var chain = g.ListChain;
+        chain.Count.Is(5);
+
+        // Re-insert an already-linked object at index == Count.
+        var obj = chain[0];
+        chain.Insert(chain.Count, obj);
+
+        chain.Count.Is(5);
+        chain.IndexOf(obj).Is(4);
+        chain[4].Is(obj);
+        for (var i = 0; i < chain.Count; i++)
+        {
+            chain[i].IsNotNull();
+            chain.IndexOf(chain[i]).Is(i);
+        }
+
+        chain.ToArray().Length.Is(5);
+    }
+
+    [Fact]
+    public void Indexer_RejectsIndexesPastCount()
+    {
+        var g = new ListChainTestClass.GoshujinClass();
+        new ListChainTestClass(0).Goshujin = g;
+
+        var chain = g.ListChain;
+        chain.Count.Is(1);
+
+        // The backing array starts at capacity 4, so index 1..3 used to read stale slots.
+        Assert.Throws<ArgumentOutOfRangeException>(() => chain[1]);
+        Assert.Throws<ArgumentOutOfRangeException>(() => chain[-1]);
+    }
+}

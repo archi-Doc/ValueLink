@@ -3,7 +3,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using Arc.Collections;
 
 #pragma warning disable SA1124 // Do not use regions
@@ -47,20 +46,13 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
         }
 
         ref Link link = ref this.objectToLink(obj);
-        /*if (link.Node != null)
-        {
-            this.chain.Remove(link.Node);
-        }
-
-        link.Node = this.chain.AddFirst(obj);*/
-
         if (link.Node != null)
         {
             this.chain.MoveToFirst(link.Node);
         }
         else
         {
-            link.Node = this.chain.AddLast(obj);
+            link.Node = this.chain.AddFirst(obj);
         }
     }
 
@@ -77,13 +69,6 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
         }
 
         ref Link link = ref this.objectToLink(obj);
-        /*if (link.Node != null)
-        {
-            this.chain.Remove(link.Node);
-        }
-
-        link.Node = this.chain.AddLast(obj);*/
-
         if (link.Node != null)
         {
             this.chain.MoveToLast(link.Node);
@@ -132,7 +117,7 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
         ref Link link = ref this.objectToLink(obj);
         if (link.Node is null)
         {
-            link.Node = this.chain.AddLast(obj);
+            link.Node = this.chain.AddFirst(obj);
         }
     }
 
@@ -241,15 +226,16 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
     /// <returns>The first object that contains the specified value, if found; otherwise, null.</returns>
     public T? Find(T value)
     {
-        if (value != null)
+        var comparer = EqualityComparer<T>.Default;
+        foreach (var x in this.chain)
         {
-            var c = EqualityComparer<T>.Default;
-            return this.chain.FirstOrDefault(x => c.Equals(x, value));
+            if (comparer.Equals(x, value))
+            {
+                return x;
+            }
         }
-        else
-        {
-            return this.chain.FirstOrDefault(x => x == null);
-        }
+
+        return default;
     }
 
     private IGoshujin goshujin;
@@ -295,17 +281,10 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
     /// </summary>
     public void Clear()
     {
-        UnorderedLinkedList<T>.Node? node;
-        while (true)
+        while (this.chain.Last is { } node)
         {
-            node = this.chain.Last;
-            if (node == null)
-            {
-                break;
-            }
-
             ref Link link = ref this.objectToLink(node.Value);
-            this.chain.Remove(node.Value);
+            this.chain.Remove(node);
             link.Node = null;
         }
     }

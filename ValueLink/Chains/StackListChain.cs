@@ -4,7 +4,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using Arc.Collections;
 
 #pragma warning disable SA1124 // Do not use regions
@@ -129,10 +128,12 @@ public class StackListChain<T> : IReadOnlyCollection<T>, ICollection
         ref Link link = ref this.objectToLink(obj);
         if (link.Node != null)
         {
-            this.chain.Remove(link.Node);
+            this.chain.MoveToLast(link.Node);
         }
-
-        link.Node = this.chain.AddLast(obj);
+        else
+        {
+            link.Node = this.chain.AddLast(obj);
+        }
     }
 
     /// <summary>
@@ -150,10 +151,12 @@ public class StackListChain<T> : IReadOnlyCollection<T>, ICollection
 
         if (link.Node != null)
         {
-            this.chain.Remove(link.Node);
+            this.chain.MoveToLast(link.Node);
         }
-
-        link.Node = this.chain.AddLast(obj);
+        else
+        {
+            link.Node = this.chain.AddLast(obj);
+        }
     }
 
     /// <summary>
@@ -270,17 +273,10 @@ public class StackListChain<T> : IReadOnlyCollection<T>, ICollection
     /// </summary>
     public void Clear()
     {
-        UnorderedLinkedList<T>.Node? node;
-        while (true)
+        while (this.chain.Last is { } node)
         {
-            node = this.chain.Last;
-            if (node == null)
-            {
-                break;
-            }
-
             ref Link link = ref this.objectToLink(node.Value);
-            this.chain.Remove(node.Value);
+            this.chain.Remove(node);
             link.Node = null;
         }
     }

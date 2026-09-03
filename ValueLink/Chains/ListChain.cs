@@ -248,7 +248,15 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
     /// <returns>The element at the specified index.</returns>
     public T this[int index]
     {
-        get => this.array[index];
+        get
+        {
+            if ((uint)index >= (uint)this.Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(index));
+            }
+
+            return this.array[index];
+        }
 
         set
         {
@@ -290,6 +298,10 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
         if (link.IsLinked)
         {
             this.RemoveInternal(link.Index);
+            if (index > this.Count)
+            {// Unlinking the object shrank the list; append instead.
+                index = this.Count;
+            }
         }
 
         if (this.Count >= this.Capacity)

@@ -3,7 +3,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using Arc.Collections;
 
 #pragma warning disable SA1124 // Do not use regions
@@ -246,15 +245,16 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     /// <returns>The first object that contains the specified value, if found; otherwise, null.</returns>
     public T? Find(T value)
     {
-        if (value != null)
+        var comparer = EqualityComparer<T>.Default;
+        foreach (var x in this.chain)
         {
-            var c = EqualityComparer<T>.Default;
-            return this.chain.FirstOrDefault(x => c.Equals(x, value));
+            if (comparer.Equals(x, value))
+            {
+                return x;
+            }
         }
-        else
-        {
-            return this.chain.FirstOrDefault(x => x == null);
-        }
+
+        return default;
     }
 
     private IGoshujin goshujin;

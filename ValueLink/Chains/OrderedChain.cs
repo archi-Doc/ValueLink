@@ -38,7 +38,6 @@ public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
         this.goshujin = goshujin;
         this.objectToGoshujin = objectToGoshujin;
         this.objectToLink = objectToLink;
-        this.objectToKey = objectToKey;
         this.Reverse = reverse;
     }
 
@@ -56,32 +55,6 @@ public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
         this.objectToGoshujin = objectToGoshujin;
         this.objectToLink = objectToLink;
     }
-
-    /*public void Add(TObj obj)
-    {
-        if (this.objectToGoshujin(obj) != this.goshujin)
-        {// Check Goshujin
-            throw new UnmatchedGoshujinException();
-        }
-
-        if (this.objectToKey == null)
-        {
-            throw new InvalidOperationException();
-        }
-
-        ref Link link = ref this.objectToLink(obj);
-        ref TKey key = ref this.objectToKey(obj);
-
-        if (link.Node != null)
-        {
-            this.chain.ReplaceNode(link.Node, key);
-        }
-        else
-        {
-            var result = this.chain.Add(key, obj);
-            link.Node = result.node;
-        }
-    }*/
 
     /// <summary>
     /// Adds a new object to the collection.
@@ -310,7 +283,6 @@ public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     private IGoshujin goshujin;
     private ObjectToGoshujinDelegete objectToGoshujin;
     private ObjectToLinkDelegete objectToLink;
-    private ObjectToKeyDelegete? objectToKey;
     private OrderedMultiMap<TKey, TObj> chain;
 
     /// <summary>
@@ -357,16 +329,10 @@ public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     /// </summary>
     public void Clear()
     {
-        while (true)
+        while (this.chain.Last is { } node)
         {
-            var node = this.chain.Last;
-            if (node == null)
-            {
-                break;
-            }
-
             ref Link link = ref this.objectToLink(node.Value);
-            this.chain.RemoveNode(link.Node!);
+            this.chain.RemoveNode(node);
             link.Node = null;
         }
     }

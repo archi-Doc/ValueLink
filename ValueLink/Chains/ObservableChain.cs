@@ -68,6 +68,8 @@ public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCo
     /// </summary>
     public bool IsReadOnly => false;
 
+    void ICollection.CopyTo(Array array, int index) => ((ICollection)this.chain).CopyTo(array, index);
+
     bool ICollection.IsSynchronized => false;
 
     object ICollection.SyncRoot => this;
@@ -214,7 +216,6 @@ public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCo
         set
         {
             this.Insert(index, value);
-            // throw new InvalidOperationException();
         }
     }
 
@@ -279,11 +280,6 @@ public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCo
     IEnumerator<T> IEnumerable<T>.GetEnumerator() => this.chain.GetEnumerator();
 
     System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => this.chain.GetEnumerator();
-
-    void ICollection.CopyTo(Array array, int index)
-    {
-        throw new NotImplementedException();
-    }
 
     #endregion
 }
