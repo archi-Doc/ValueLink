@@ -726,11 +726,13 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 this.Body.AddDiagnostic(ValueLinkBody.Error_IntegralityTinyhand, this.Location);
             }
 
+            ISymbol? integralityKey = null;
+            this.UniqueLink?.TypeObject.GetRawInformation(out integralityKey, out _, out _);
             if (this.UniqueLink is null ||
-                this.UniqueLink.TypeObject.Kind != VisceralObjectKind.Struct)
-            {// The object must have a unique link, and its type must be either a primitive type or a struct.
+                this.UniqueLink.TypeObject.Kind != VisceralObjectKind.Struct ||
+                integralityKey is not ITypeSymbol { IsUnmanagedType: true })
+            {// Keys are copied as raw bytes and must not contain managed references.
                 this.Body.AddDiagnostic(ValueLinkBody.Error_IntegralityLink, this.Location);
-                this.Body.AddDiagnostic(ValueLinkBody.Error_IntegralityIsolation, this.Location);
             }
 
             if (this.ObjectAttribute is not null)
@@ -947,86 +949,6 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             ssb.AppendLine("if (i >= max) throw new IndexOutOfRangeException();");
             ssb.AppendLine("var x = array[i];");
             obj.Generate_AddLink(ssb, (GeneratorInformation)info!, link, prevObject);
-        }
-    }
-
-    internal void GenerateFlatLoader(ScopingStringBuilder ssb, GeneratorInformation info)
-    {
-        if (this.ObjectAttribute == null)
-        {
-        }
-        else if (this.ConstructedObjects == null)
-        {
-        }
-        else if (!this.ObjectFlag.HasFlag(ValueLinkObjectFlag.TinyhandObject))
-        {
-        }
-        else
-        {
-            this.GenerateLoaderCore(ssb, info, true);
-        }
-
-        if (this.Children?.Count > 0)
-        {
-            foreach (var x in this.Children)
-            {
-                x.GenerateFlatLoader(ssb, info);
-            }
-        }
-    }
-
-    internal void GenerateLoaderCore(ScopingStringBuilder ssb, GeneratorInformation info, bool checkAccessibility)
-    {
-        var isAccessible = true;
-        if (checkAccessibility && this.ContainsNonPublicObject())
-        {
-            isAccessible = false;
-        }
-
-        if (this.Generics_Kind != VisceralGenericsKind.OpenGeneric)
-        {// FormatterContainsNonPublic
-            if (isAccessible)
-            {
-                ssb.AppendLine($"GeneratedResolver.Instance.SetFormatter(new Tinyhand.Formatters.TinyhandObjectFormatter<{this.GoshujinFullName}>());");
-            }
-            else
-            {
-                var fullName = this.GetGenericsName();
-                ssb.AppendLine($"GeneratedResolver.Instance.SetFormatterGenerator(Type.GetType(\"{fullName}+{this.ObjectAttribute!.GoshujinClass}\")!, static (x, y) =>");
-                ssb.AppendLine("{");
-                ssb.IncrementIndent();
-
-                ssb.AppendLine($"var formatter = Activator.CreateInstance(typeof(Tinyhand.Formatters.TinyhandObjectFormatter<>).MakeGenericType(x));");
-                ssb.AppendLine("return (ITinyhandFormatter)formatter!;");
-
-                ssb.DecrementIndent();
-                ssb.AppendLine("});");
-            }
-        }
-        else
-        {// Formatter generator
-            string typeName;
-            if (isAccessible)
-            {
-                var generic = this.GetClosedGenericName(null);
-                typeName = $"typeof({generic.Name}.{this.ObjectAttribute!.GoshujinClass})";
-            }
-            else
-            {
-                var fullName = this.GetGenericsName();
-                typeName = $"Type.GetType(\"{fullName}+{this.ObjectAttribute!.GoshujinClass}\")!";
-            }
-
-            ssb.AppendLine($"GeneratedResolver.Instance.SetFormatterGenerator({typeName}, static (x, y) =>");
-            ssb.AppendLine("{");
-            ssb.IncrementIndent();
-
-            ssb.AppendLine($"var ft = x.MakeGenericType(y);");
-            ssb.AppendLine($"var formatter = Activator.CreateInstance(typeof(Tinyhand.Formatters.TinyhandObjectFormatter<>).MakeGenericType(ft));");
-            ssb.AppendLine("return (ITinyhandFormatter)formatter!;");
-
-            ssb.DecrementIndent();
-            ssb.AppendLine("});");
         }
     }
 
@@ -1706,6 +1628,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 {
                     this.Generate_AddLink(ssb, info, x, $"this.{this.GoshujinInstanceIdentifier}?");
                 }
+
+                this.GenerateObject_Add_ClearIntegralityHash(ssb);
             }
         }
     }
@@ -1777,6 +1701,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                             {
                                 this.Generate_AddLink(ssb, info, x, $"this.{this.GoshujinInstanceIdentifier}?");
                             }
+
+                            this.GenerateObject_Add_ClearIntegralityHash(ssb);
 
                             if (main.AutoNotify)
                             {

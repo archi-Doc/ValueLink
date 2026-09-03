@@ -4,6 +4,7 @@ The suite uses xUnit v3 and Microsoft.Testing.Platform on .NET 10. Run commands
 from the repository root:
 
 ```powershell
+pwsh -File eng/Prepare-Tinyhand.ps1
 dotnet test --project xUnitTest/xUnitTest.csproj -c Release --timeout 60s
 dotnet test --project xUnitTest/xUnitTest.csproj -c Debug --timeout 60s
 dotnet build ValueLink.slnx -c Release
@@ -25,6 +26,7 @@ external storage engines and performance measurements are outside this test suit
 | `ChainContractTest` | All eight chain implementations, including forward/reverse ordered variants; regular and `ref Link` add/remove; foreign-owner rejection; enumeration; copying; clearing; reuse; ownership transfer; index updates |
 | `ChainBehaviorTest` | Queue/stack ordering and empty operations; bidirectional links; duplicate keys and bounds; list growth and randomized mutations; sliding capacity/holes/positions; collection and property notifications |
 | `SerializationContractTest` | Empty, single-item and large Tinyhand round trips; all automatically linked chain types; independent memberships and order; Unicode data; cloning; restored links and ownership |
+| `NativeAotContractTest` | Shared native/JIT checks for static registration, private and cross-assembly generic owners, unions, chains, isolation, and synchronization hash invalidation |
 | `IsolationPrimitiveTest` | Every protection-state transition; concurrent protection; every data-scope result; state forwarding; disposal and deletion; semaphore acquisition and release |
 | `ReadCommittedContractTest` | Acquisition modes; missing/existing/obsolete owners; timeout/token/factory forwarding; protected and forced deletion; journal policy; snapshots; store/delete traversal |
 | `RepeatableReadContractTest` | Commit and rollback; immutable snapshots; concurrent writers; timeout and cancellation before/during waiting through all three entry points; release lifecycle; recursive deletion |
@@ -54,3 +56,5 @@ Consumer compilations deliberately exclude the generator and test assemblies.
   properties in generated code.
 
 Each regression is exercised by the suite alongside its production fix.
+
+The NativeAOT additions also cover stale synchronization hashes after generated setter updates, managed integrality keys, external-only generic owner registration, and recursively expanding type graphs. Run the separate published executable to validate native execution; see [NativeAOT validation](../doc/NativeAOT.md).

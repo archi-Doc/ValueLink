@@ -67,7 +67,18 @@ public class ValueLinkGeneratorV2 : IIncrementalGenerator, IGeneratorInformation
         this.AssemblyId = this.AssemblyName.GetHashCode();
         this.OutputKind = compilation.Options.OutputKind;
 
-        var body = new ValueLinkBody(context);
+        // Bound recursive type expansion before preparing the generated object graph.
+        var registration = new StaticOwnerRegistration(compilation, context);
+        var ownerRegistration = registration.Generate();
+        if (registration.HasErrors)
+        {
+            return;
+        }
+
+        var body = new ValueLinkBody(context)
+        {
+            OwnerRegistration = ownerRegistration,
+        };
         var processed = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
 
         this.generatorOptionIsSet = false;

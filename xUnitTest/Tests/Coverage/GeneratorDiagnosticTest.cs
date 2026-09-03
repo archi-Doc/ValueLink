@@ -119,6 +119,62 @@ public class GeneratorDiagnosticTest
         Assert.Equal(GeneratedText(Driver().RunGenerators(withoutOptions, TestContext.Current.CancellationToken)), GeneratedText(driver));
     }
 
+    [Theory]
+    [InlineData("public struct ManagedKey { public string Text; }", "ManagedKey")]
+    [InlineData("", "string")]
+    public void IntegralityRejectsManagedKeysWithoutAnUnrelatedIsolationError(string keyDeclaration, string keyType)
+    {
+        var result = Driver().RunGenerators(Compile(keyDeclaration +
+            " [Tinyhand.TinyhandObject, ValueLinkObject(Integrality=true, Isolation=IsolationLevel.Serializable)] public partial class Item { " +
+            "[Tinyhand.Key(0), Link(Type=ChainType.Unordered, Unique=true, Primary=true)] public " + keyType + " Id {get;set;} }"), TestContext.Current.CancellationToken).GetRunResult();
+        Assert.All(result.Results, x => Assert.Null(x.Exception));
+        Assert.Single(result.Diagnostics.Where(x => x.Id == "CLG031"));
+        Assert.DoesNotContain(result.Diagnostics, x => x.Id == "CLG032");
+    }
+
+    [Fact]
+    public void ConsumerWithoutLocalModelsRegistersExternalGenericOwners()
+    {
+        var compilation = Compile("public class Consumer { public NativeAotTest.GenericItem<int>.GoshujinClass Items = new(); }");
+        var driver = Driver().RunGeneratorsAndUpdateCompilation(compilation, out var output, out var diagnostics, TestContext.Current.CancellationToken);
+        AssertNoErrors(output, diagnostics);
+        Assert.All(driver.GetRunResult().Results, x => Assert.Null(x.Exception));
+        Assert.NotNull(output.GetTypeByMetadataName("ValueLink.ValueLinkModule_GeneratorContract"));
+    }
+
+    [Fact]
+    public void PrivateGenericArgumentsRequireAPartialContainingType()
+    {
+        var result = Driver().RunGenerators(Compile("""
+            [Tinyhand.TinyhandObject, Linked] public partial class Item<T> {}
+            public class Outer { private class Payload {} private Item<Payload> item = new(); }
+            """), TestContext.Current.CancellationToken).GetRunResult();
+        Assert.All(result.Results, x => Assert.Null(x.Exception));
+        Assert.Single(result.Diagnostics.Where(x => x.Id == "CLG036"));
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    public void RecursiveGenericGraphsAreBoundedAndIgnoredMembersAreSkipped(bool ignore, bool linked)
+    {
+        var declaration = "[Tinyhand.TinyhandObject, Linked] public partial class Trigger {} " +
+            (linked ? "[Tinyhand.TinyhandObject, Linked] " : string.Empty) + "public partial class Item<T> { " +
+            (ignore ? "[Tinyhand.IgnoreMember] " : string.Empty) +
+            "public Item<System.Collections.Generic.List<T>> Next {get;set;} = null!; } public class Root { public Item<int> Item = new(); }";
+        var result = Driver().RunGenerators(Compile(declaration), TestContext.Current.CancellationToken).GetRunResult();
+        Assert.All(result.Results, x => Assert.Null(x.Exception));
+        if (ignore)
+        {
+            Assert.DoesNotContain(result.Diagnostics, x => x.Severity == DiagnosticSeverity.Error);
+        }
+        else
+        {
+            Assert.Single(result.Diagnostics.Where(x => x.Id == "CLG037"));
+        }
+    }
+
     private static CSharpCompilation Compile(string declaration) => CSharpCompilation.Create(
         "GeneratorContract",
         [CSharpSyntaxTree.ParseText("using ValueLink; using Linked = ValueLink.ValueLinkObjectAttribute; " + declaration, ParseOptions, "Input.cs")],

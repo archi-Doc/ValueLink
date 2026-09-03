@@ -12,10 +12,12 @@
   <ItemGroup>
     <ProjectReference Include="..\ValueLinkGenerator\ValueLinkGenerator.csproj" ReferenceOutputAssembly="true" OutputItemType="Analyzer" Aliases="ValueLinkGenerator" />
     <ProjectReference Include="..\ValueLink\ValueLink.csproj" />
+    <ProjectReference Include="../NativeAotModels/NativeAotModels.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Compile Remove="Generated\*" />
+    <Compile Include="../NativeAotTest/NativeContracts.cs" Link="Tests/Coverage/NativeContracts.cs" />
   </ItemGroup>
 
   <ItemGroup>

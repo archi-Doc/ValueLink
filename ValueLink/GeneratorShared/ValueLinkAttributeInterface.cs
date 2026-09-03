@@ -153,7 +153,7 @@ public sealed class ValueLinkObjectAttribute : Attribute
     public bool Restricted { get; set; } = false;
 
     /// <summary>
-    /// Gets or sets a value indicating whether to generate Tinyhand-based difference synchronization. Requires a unique value-type key and None or Serializable isolation.
+    /// Gets or sets a value indicating whether to generate Tinyhand-based difference synchronization. Requires a unique unmanaged struct key and None or Serializable isolation.
     /// </summary>
     public bool Integrality { get; set; } = false;
 

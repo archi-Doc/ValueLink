@@ -17,6 +17,7 @@ Features include ordered and hash indexes, lists, queues, stacks, observable col
 - [Attribute options](#attribute-options)
 - [Notifications and callbacks](#notifications-and-callbacks)
 - [Serialization and journaling](#serialization-and-journaling)
+- [NativeAOT](#nativeaot)
 - [Isolation](#isolation)
 - [Incremental synchronization](#incremental-synchronization)
 - [Performance](#performance)
@@ -252,6 +253,23 @@ Initialize ordinary properties before adding objects; use generated setters for 
 
 `[TinyhandObject(Structural = true)]` enables structural/journal integration. Use a primary chain and a unique keyed link, then connect the owner to an `IStructuralRoot` implementation. Generated operations can record changes, but storage, journal persistence, and replay are supplied by the host application. Serializing an owner alone does not provide durable storage. See [JournalTest](xUnitTest/Tests/JournalTest.cs).
 
+## NativeAOT
+
+ValueLink generates static Tinyhand formatter registrations for owners, including closed generic models, private nested models, and unions. It does not construct owner formatters through runtime reflection. The library enables .NET trimming and AOT analyzers with `IsAotCompatible`.
+
+This checkout requires a local Tinyhand registration fix. Run `pwsh -File eng/Prepare-Tinyhand.ps1` before restoring or building; see [NativeAOT setup and limitations](doc/NativeAOT.md). The script builds an unpublished package from pinned upstream source plus the included patch. A released Tinyhand dependency is required before publishing ValueLink.
+
+On a host with the [NativeAOT prerequisites](https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/), publish and run the smoke test:
+
+```powershell
+dotnet publish NativeAotTest/NativeAotTest.csproj -c Release -r win-x64 -o artifacts/native-aot/publish
+./artifacts/native-aot/publish/NativeAotTest.exe
+```
+
+Windows x64 has been verified locally. The CI workflow also includes Linux x64; use `linux-x64` and run the executable without `.exe` on Linux. Always test the published executable; `dotnet test` alone verifies JIT execution.
+
+Closed generic types must be discoverable at compilation time. Explicit `[assembly: TinyhandRegister(typeof(MyModel<int>))]` roots cover types used only through external generic helpers. Containing types needed to access private generic arguments must be partial. When another generated model stores a collection of owners, declare the owner as a partial class with `[TinyhandObject(External = true)]` so Tinyhand can resolve its type before ValueLink runs; see [NativeContracts](NativeAotTest/NativeContracts.cs).
+
 ## Isolation
 
 | Mode | Model |
@@ -323,7 +341,7 @@ Both keyed isolation modes use `AcquisitionMode.GetOnly`, `GetOrCreate`, and `Cr
 
 ## Incremental synchronization
 
-**Integrality** compares cached hashes, requests differing objects, and integrates responses. Enable `[ValueLinkObject(Integrality = true)]` together with `[TinyhandObject]`, a unique value-type key such as `int`, and `None` or `Serializable` isolation.
+**Integrality** compares cached hashes, requests differing objects, and integrates responses. Enable `[ValueLinkObject(Integrality = true)]` together with `[TinyhandObject]`, a unique unmanaged struct key such as `int`, and `None` or `Serializable` isolation. Structs containing managed references are rejected because keys are copied as raw bytes.
 
 This local broker demonstrates the request/response contract; replace it with your transport as needed:
 
@@ -368,7 +386,7 @@ public partial class SyncItem
 
 The broker transfers ownership of its returned `BytePool.RentMemory` to the engine. When calling `Differentiate` outside a broker, return that buffer after use. Request bytes are valid only until the broker task completes.
 
-Integration may make partial changes before returning an incomplete/error result. Broker exceptions and cancellation propagate. Serialize concurrent runs targeting the same owner. Reported counts cover integration and trimming, but exclude removals during key comparison; `IsModified` is not a complete change log. After changing serialized content, call `((IIntegralityObject)item).ClearIntegralityHash()`; generated object implementations also invalidate the owner's hash. Index maintenance alone does not ensure hash invalidation.
+Integration may make partial changes before returning an incomplete/error result. Broker exceptions and cancellation propagate. Serialize concurrent runs targeting the same owner. Reported counts cover integration and trimming, but exclude removals during key comparison; `IsModified` is not a complete change log. Generated link setters, including Tinyhand partial-property update hooks, invalidate both object and owner hashes. After directly changing serialized fields, ordinary properties, or nested mutable content, call `((IIntegralityObject)item).ClearIntegralityHash()` yourself.
 
 ## Performance
 
@@ -387,6 +405,7 @@ Use Release builds and compare both timings and allocations. Results depend on r
 Run from the repository root:
 
 ```shell
+pwsh -File eng/Prepare-Tinyhand.ps1
 dotnet restore ValueLink.slnx
 dotnet build ValueLink.slnx -c Release --no-restore
 dotnet test --project xUnitTest/xUnitTest.csproj -c Release --timeout 60s
@@ -400,6 +419,8 @@ The suite uses xUnit v3 and Microsoft.Testing.Platform, configured in `global.js
 | `ValueLink` | Public attributes, chains, isolation, and synchronization APIs |
 | `ValueLinkGenerator` | Roslyn source generator |
 | `xUnitTest` | Contract, integration, and regression tests |
+| `NativeAotTest` | Native executable sharing behavioral checks with xUnit |
+| `NativeAotModels` | Cross-assembly generic fixtures for native and xUnit checks |
 | `QuickStart` | Runnable usage examples |
 | `Playground` | Development experiments and storage adapter examples |
 | `Benchmark` | BenchmarkDotNet performance experiments |
