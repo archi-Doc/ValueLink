@@ -214,3 +214,119 @@ public class ListChainInsertTest
         Assert.Throws<ArgumentOutOfRangeException>(() => chain[-1]);
     }
 }
+
+public class ListChainIndexerTest
+{
+    private static ListChainTestClass.GoshujinClass CreateGoshujin(int count)
+    {
+        var g = new ListChainTestClass.GoshujinClass();
+        for (var i = 0; i < count; i++)
+        {
+            new ListChainTestClass(i).Goshujin = g;
+        }
+
+        return g;
+    }
+
+    private static void AssertConsistent(ListChain<ListChainTestClass> chain)
+    {
+        for (var i = 0; i < chain.Count; i++)
+        {
+            chain[i].IsNotNull();
+            chain.IndexOf(chain[i]).Is(i);
+            chain[i].ListLink.IsLinked.IsTrue();
+        }
+    }
+
+    [Fact]
+    public void Set_ReplacesTheElementInPlace()
+    {
+        var g = CreateGoshujin(5);
+        var chain = g.ListChain;
+        var replaced = chain[2];
+
+        // A fresh object that belongs to the Goshujin but is not in the List chain.
+        var fresh = new ListChainTestClass(99) { Goshujin = g, };
+        chain.Remove(fresh);
+        chain.Count.Is(5);
+
+        chain[2] = fresh;
+
+        chain.Count.Is(5); // Replace, not insert.
+        chain[2].Is(fresh);
+        chain.IndexOf(fresh).Is(2);
+        replaced.ListLink.IsLinked.IsFalse();
+        chain.Contains(replaced).IsFalse();
+        AssertConsistent(chain);
+    }
+
+    [Fact]
+    public void Set_WithTheSameObject_IsANoOp()
+    {
+        var g = CreateGoshujin(3);
+        var chain = g.ListChain;
+        var obj = chain[1];
+
+        chain[1] = obj;
+
+        chain.Count.Is(3);
+        chain[1].Is(obj);
+        AssertConsistent(chain);
+    }
+
+    [Fact]
+    public void Set_WithAnObjectAlreadyInTheChain_MovesItAndShrinks()
+    {
+        var g = CreateGoshujin(5);
+        var chain = g.ListChain;
+        var moved = chain[0];
+        var replaced = chain[3];
+
+        chain[3] = moved;
+
+        chain.Count.Is(4); // Two slots collapsed into one.
+        replaced.ListLink.IsLinked.IsFalse();
+        moved.ListLink.IsLinked.IsTrue();
+        chain.Contains(moved).IsTrue();
+        chain.Contains(replaced).IsFalse();
+        AssertConsistent(chain);
+    }
+
+    [Fact]
+    public void Set_WithAnObjectAtTheLastSlot_StaysConsistent()
+    {
+        var g = CreateGoshujin(5);
+        var chain = g.ListChain;
+        var moved = chain[4];
+        var replaced = chain[1];
+
+        chain[1] = moved;
+
+        chain.Count.Is(4);
+        chain[1].Is(moved);
+        replaced.ListLink.IsLinked.IsFalse();
+        AssertConsistent(chain);
+    }
+
+    [Fact]
+    public void Set_RejectsOutOfRangeIndexes()
+    {
+        var g = CreateGoshujin(2);
+        var chain = g.ListChain;
+        var fresh = new ListChainTestClass(99) { Goshujin = g, };
+        chain.Remove(fresh);
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => chain[2] = fresh);
+        Assert.Throws<ArgumentOutOfRangeException>(() => chain[-1] = fresh);
+        chain.Count.Is(2);
+    }
+
+    [Fact]
+    public void Set_RejectsObjectsFromAnotherGoshujin()
+    {
+        var g = CreateGoshujin(2);
+        var other = new ListChainTestClass(99) { Goshujin = new ListChainTestClass.GoshujinClass(), };
+
+        Assert.Throws<UnmatchedGoshujinException>(() => g.ListChain[0] = other);
+    }
+}

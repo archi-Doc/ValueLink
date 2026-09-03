@@ -22,25 +22,6 @@ public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
 
     public delegate ref Link ObjectToLinkDelegete(TObj obj);
 
-    public delegate ref TKey ObjectToKeyDelegete(TObj obj);
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="OrderedChain{TKey, TObj}"/> class (OrderedMultiMap).
-    /// </summary>
-    /// <param name="goshujin">The instance of Goshujin.</param>
-    /// <param name="objectToGoshujin">ObjectToGoshujinDelegete.</param>
-    /// <param name="objectToKey">ObjectToKeyDelegete.</param>
-    /// <param name="objectToLink">ObjectToLinkDelegete.</param>
-    /// <param name="reverse">true to reverses the order.</param>
-    public OrderedChain(IGoshujin goshujin, ObjectToGoshujinDelegete objectToGoshujin, ObjectToKeyDelegete objectToKey, ObjectToLinkDelegete objectToLink, bool reverse = false)
-    {
-        this.chain = new(reverse);
-        this.goshujin = goshujin;
-        this.objectToGoshujin = objectToGoshujin;
-        this.objectToLink = objectToLink;
-        this.Reverse = reverse;
-    }
-
     /// <summary>
     /// Initializes a new instance of the <see cref="OrderedChain{TKey, TObj}"/> class (OrderedMultiMap).
     /// </summary>
@@ -54,6 +35,7 @@ public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
         this.goshujin = goshujin;
         this.objectToGoshujin = objectToGoshujin;
         this.objectToLink = objectToLink;
+        this.Reverse = reverse;
     }
 
     /// <summary>

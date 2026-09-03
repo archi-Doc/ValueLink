@@ -22,24 +22,8 @@ public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
 
     public delegate ref Link ObjectToLinkDelegete(TObj obj);
 
-    public delegate ref TKey ObjectToKeyDelegete(TObj obj);
-
     /// <summary>
     /// Initializes a new instance of the <see cref="UnorderedChain{TKey, TObj}"/> class (UnorderedMultiMap).
-    /// </summary>
-    /// <param name="goshujin">The instance of Goshujin.</param>
-    /// <param name="objectToGoshujin">ObjectToGoshujinDelegete.</param>
-    /// <param name="objectToKey">ObjectToKeyDelegete.</param>
-    /// <param name="objectToLink">ObjectToLinkDelegete.</param>
-    public UnorderedChain(IGoshujin goshujin, ObjectToGoshujinDelegete objectToGoshujin, ObjectToKeyDelegete objectToKey, ObjectToLinkDelegete objectToLink)
-    {
-        this.goshujin = goshujin;
-        this.objectToGoshujin = objectToGoshujin;
-        this.objectToLink = objectToLink;
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="UnorderedChain{TKey, TObj}"/> class (OrderedMultiMap).
     /// </summary>
     /// <param name="goshujin">The instance of Goshujin.</param>
     /// <param name="objectToGoshujin">ObjectToGoshujinDelegete.</param>

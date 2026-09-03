@@ -242,7 +242,10 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
     #region IList
 
     /// <summary>
-    /// Gets or sets the element at the specified index.
+    /// Gets or sets the element at the specified index.<br/>
+    /// Setting replaces the element currently at <paramref name="index"/>: the replaced object is
+    /// unlinked from the chain, and the new object takes its place.<br/>
+    /// If the new object is already linked elsewhere in this chain it is moved, and the list shrinks by one.
     /// </summary>
     /// <param name="index">The zero-based index of the element to get or set.</param>
     /// <returns>The element at the specified index.</returns>
@@ -260,7 +263,37 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
 
         set
         {
-            this.Insert(index, value);
+            if (this.objectToGoshujin(value) != this.goshujin)
+            {// Check Goshujin
+                throw new UnmatchedGoshujinException();
+            }
+
+            if ((uint)index >= (uint)this.Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(index));
+            }
+
+            var previous = this.array[index];
+            ref Link newLink = ref this.objectToLink(value);
+            if (newLink.IsLinked)
+            {
+                if (newLink.Index == index)
+                {// Already at this position.
+                    return;
+                }
+
+                // Vacate the slot the new object currently occupies. This may relocate
+                // the replaced object, so its position is read from its link afterwards.
+                this.RemoveInternal(newLink.Index);
+                newLink.RawIndex = 0;
+            }
+
+            ref Link previousLink = ref this.objectToLink(previous);
+            var target = previousLink.Index;
+            previousLink.RawIndex = 0;
+
+            this.array[target] = value;
+            newLink.Index = target;
         }
     }
 
