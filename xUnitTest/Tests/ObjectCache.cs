@@ -6,9 +6,15 @@ using ValueLink;
 
 namespace xUnitTest;
 
+/// <summary>
+/// Exercises a bounded object cache backed by generated chains.
+/// </summary>
 public partial class ObjectCache<TKey, TObject> : IDisposable
     where TKey : IEquatable<TKey>
 {
+    /// <summary>
+    /// Provides a fixture for tests of chain-backed object caching.
+    /// </summary>
     [TinyhandObject]
     public partial class TestClass
     {

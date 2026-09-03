@@ -8,6 +8,9 @@ using ValueLink;
 
 namespace Benchmark.Draft;
 
+/// <summary>
+/// Provides a comparison model for array-backed link designs.
+/// </summary>
 public class ListChain3<T>
 {
     public ListChain3(Func<T, Link> objectToLink)
@@ -51,6 +54,9 @@ public class ListChain3<T>
     private Func<T, Link> ObjectToLink;
     private List<T> chain = new();
 
+    /// <summary>
+    /// Stores per-object membership for this experimental chain.
+    /// </summary>
     public sealed class Link : ILink<T>
     {
         public Link()
@@ -61,6 +67,9 @@ public class ListChain3<T>
     }
 }
 
+/// <summary>
+/// Owns objects in a hand-written collection benchmark.
+/// </summary>
 public sealed class TestGoshujin3
 {
     public TestGoshujin3()
@@ -81,6 +90,9 @@ public sealed class TestGoshujin3
     public ListChain3<TestClass3> IdChain { get; }
 }
 
+/// <summary>
+/// Provides a comparison model for array-backed link designs.
+/// </summary>
 public class TestClass3
 {
     public TestClass3(int id)
@@ -114,6 +126,9 @@ public class TestClass3
     public string Name { get; set; } = string.Empty;
 }
 
+/// <summary>
+/// Owns objects in a hand-written collection benchmark.
+/// </summary>
 public sealed class TestGoshujin4 : IGoshujin
 {
     public TestGoshujin4()
@@ -147,6 +162,9 @@ public sealed class TestGoshujin4 : IGoshujin
     public LinkedListChain<TestClass4> IdChain { get; }
 }
 
+/// <summary>
+/// Provides a comparison model for array-backed link designs.
+/// </summary>
 public class TestClass4
 {
     public TestClass4(int id)

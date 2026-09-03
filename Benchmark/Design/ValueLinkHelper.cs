@@ -10,7 +10,7 @@ using Arc.Collections;
 namespace ValueLink;
 
 /// <summary>
-/// Helper functions for ValueLink.
+/// Applies batches of owner changes in collection-design benchmarks.
 /// </summary>
 public static class ValueLinkHelper
 {

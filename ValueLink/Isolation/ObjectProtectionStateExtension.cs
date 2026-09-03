@@ -81,7 +81,7 @@ public static class ObjectProtectionStateHelper
     /// <param name="state">A reference to the state byte to delete.</param>
     /// <param name="originalState">When this method returns, contains the original <see cref="ObjectProtectionState"/> value before deletion.</param>
     /// <returns>
-    /// <c>true</c> if the state was successfully changed to <c>Deleted</c>;
+    /// <c>true</c> if the resulting state is <c>Deleted</c>, including an already deleted state;
     /// <c>false</c> if the state was <c>Protected</c> and could not be deleted.
     /// </returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

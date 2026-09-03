@@ -1,741 +1,428 @@
-## ValueLink
-![Nuget](https://img.shields.io/nuget/v/ValueLink) ![Build and Test](https://github.com/archi-Doc/ValueLink/workflows/Build%20and%20Test/badge.svg)
+# ValueLink
 
-ValueLink is a C# Library for creating and managing multiple links between objects.
+![NuGet](https://img.shields.io/nuget/v/ValueLink) ![Build and Test](https://github.com/archi-Doc/ValueLink/workflows/Build%20and%20Test/badge.svg)
 
-It's like generic collections for objects, like ```List<T>``` for ```T```, but ValueLink is more flexible and faster than generic collections.
+ValueLink is a C# source generator and collection library for managing objects through multiple indexes and orderings. Each object stores its own links; a generated **Goshujin** (owner) maintains the corresponding **chains**. Generated setters keep indexes in sync with value changes.
 
+Features include ordered and hash indexes, lists, queues, stacks, observable collections, bounded sliding windows, Tinyhand serialization, configurable isolation, and incremental synchronization.
 
+[Japanese guide](doc/README.jp.md)
 
-This document may be inaccurate. It would be greatly appreciated if anyone could make additions and corrections.
+## Contents
 
-日本語ドキュメントは[こちら](/doc/README.jp.md)
-
-
-
-## Table of Contents
-
-- [Requirements](#requirements)
-- [Quick Start](#quick-start)
-- [Performance](#performance)
-- [How it works](#how-it-works)
+- [Requirements and installation](#requirements-and-installation)
+- [Quick start](#quick-start)
+- [Ownership and generated members](#ownership-and-generated-members)
 - [Chains](#chains)
-- [Features](#features)
-  - [Serialization](#serialization)
-  - [Isolation level](#isolation-level)
-  - [Additional methods](#additional-methods)
-  - [TargetMember](#targetmember)
-  - [AutoNotify](#autonotify)
-  - [AutoLink](#autolink)
-  - [ObservableCollection](#observablecollection)
+- [Attribute options](#attribute-options)
+- [Notifications and callbacks](#notifications-and-callbacks)
+- [Serialization and journaling](#serialization-and-journaling)
+- [NativeAOT](#nativeaot)
+- [Isolation](#isolation)
+- [Incremental synchronization](#incremental-synchronization)
+- [Performance](#performance)
+- [Build and tests](#build-and-tests)
 
+## Requirements and installation
 
+Use the .NET 10 SDK or later, a `net10.0` or later target, and C# 14 or later. The NuGet package includes the source generator.
 
-## Requirements
-
-**Visual Studio 2026** or later for Source Generator V2.
-
-**C# 14** or later for generated codes.
-
-**.NET 10** or later target framework.
-
-
-
-## Quick Start
-
-First, install ValueLink using Package Manager Console.
-
-```
-Install-Package ValueLink
+```shell
+dotnet add package ValueLink
 ```
 
-This is a sample code to use ValueLink.
+Declare linked models as `partial` classes or record classes and annotate them with `[ValueLinkObject]`. Nested models require partial containing types. Generic models are supported. A linked model may inherit ordinary members, but inheriting from another `[ValueLinkObject]` model is not supported.
+
+## Quick start
+
+This complete console example indexes the same people by ID and age. `AddValue = true` requests a generated setter; it is **false by default**.
 
 ```csharp
 using System;
-using System.Collections.Generic;
 using ValueLink;
 
-namespace ConsoleApp1;
+var people = new Person.GoshujinClass();
+var ada = new Person(1, "Ada", 30);
+people.Add(ada);
+people.Add(new Person(2, "Bea", 20));
 
-[ValueLinkObject] // Annote a ValueLinkObject attribute.
-public partial class TestClass // Partial class is required for source generator.
+Console.WriteLine(people.IdChain.FindFirst(1)?.Name); // Ada
+ada.AgeValue = 18; // Updates AgeChain as well as the underlying field.
+
+foreach (var person in people.AgeChain)
 {
-    [Link(Type = ChainType.Ordered)] // Sorted link associated with id.
-    private int id; // Generated value name: IdValue (Name + Value), chain name: IdChain (Name + Chain)
-    // Generated value is for changing values and updating links.
-    // Generated link is for storing information between objects, similar to a node in a collection.
+    Console.WriteLine($"{person.Name}: {person.AgeValue}");
+}
+// Ada: 18
+// Bea: 20
 
-    [Link(Type = ChainType.Ordered)] // Sorted link associated with name.
-    public string Name { get; private set; } = string.Empty; // Generated property name: NameValue, chain name: NameChain
+people.Remove(ada); // Removes all of Ada's links and clears her owner.
+Console.WriteLine(ada.Goshujin is null); // True
 
-    [Link(Type = ChainType.Ordered, Accessibility = ValueLinkAccessibility.Public)] // Sorted link associated with age.
-    [Link(Name = "AgeRev", Type = ChainType.ReverseOrdered)] // Specify a different name for the target in order to set up multiple links.
-    private int age; // Generated property name: AgeValue, chain name: AgeChain
+/// <summary>Represents a person indexed by ID and age.</summary>
+[ValueLinkObject]
+public partial class Person
+{
+    [Link(Type = ChainType.Ordered, Primary = true)]
+    public int Id { get; private set; }
 
-    [Link(Type = ChainType.StackList, Name = "Stack")] // Stack
-    [Link(Type = ChainType.List, Name = "List")] // List
-    public TestClass(int id, string name, int age)
+    public string Name { get; private set; }
+
+    [Link(Type = ChainType.Ordered, AddValue = true,
+        Accessibility = ValueLinkAccessibility.Public)]
+    private int age;
+
+    public Person(int id, string name, int age)
     {
-        this.id = id;
+        this.Id = id;
         this.Name = name;
         this.age = age;
     }
-
-    public override string ToString() => $"ID:{this.id,2}, {this.Name,-5}, {this.age,2}";
 }
+```
 
-public class Program
+## Ownership and generated members
+
+By default, the generator adds a nested `GoshujinClass`, an object's `Goshujin` property, and one `NameChain`/`NameLink` pair per link. A field named `age` produces `AgeChain`, `AgeLink`, and, when requested, `AgeValue`.
+
+For `None` and `Serializable` isolation, assigning `obj.Goshujin = owner` or calling `owner.Add(obj)` transfers ownership and updates automatic links. Assigning `null` or calling `owner.Remove(obj)` removes the object from all chains. Each object has one owner at a time.
+
+Direct chain operations change only that chain's membership. Assign the owner first; inserting an object into another owner's chain throws `UnmatchedGoshujinException`. Link fields contain collection state and should not be copied or edited directly. Likewise, copying a linked record with `with` does not create an independently linked object; use a RepeatableRead writer for record updates.
+
+Set `Primary = true` on a chain that contains every owned object. It supplies the owner's `Count`, enumeration order, and serialization order. ReadCommitted owners expose their contents through operations such as `ForEach` and `GetArray`, rather than `IEnumerable<T>`.
+
+| Operation | Effect |
+| --- | --- |
+| `owner.SomeChain.Clear()` | Clears that chain; preserves owner references and other chains |
+| `owner.ClearChains()` | Clears all chains; preserves object owner references |
+| `owner.ClearAll()` | Removes objects found in the primary chain from all chains and clears their owner references |
+
+`ClearAll` is generated as a public operation only for `None` or `Serializable` owners with a primary chain. Other configurations throw `NotImplementedException` through `IGoshujin.ClearAll`. Acquire the owner lock when clearing synchronized owners. Materialize a snapshot before mutating a chain during enumeration.
+
+Use generated value properties or partial properties to change indexed values. Writing a backing field or an ordinary property directly bypasses index maintenance and notifications.
+
+### Partial properties
+
+A partial property can provide the public API directly, without a separate `Value` suffix:
+
+```csharp
+using ValueLink;
+
+/// <summary>Represents an item with an automatically maintained ID index.</summary>
+[ValueLinkObject]
+public partial class IndexedItem
 {
-    public static void Main(string[] args)
-    {
-        Console.WriteLine("ValueLink Quick Start.");
-        Console.WriteLine();
-
-        var g = new TestClass.GoshujinClass(); // Create a Goshujin (Owner) instance
-        new TestClass(1, "Hoge", 27).Goshujin = g; // Create a TestClass and associate with the Goshujin (Owner)
-        new TestClass(2, "Fuga", 15).Goshujin = g;
-        new TestClass(1, "A", 7).Goshujin = g;
-        new TestClass(0, "Zero", 50).Goshujin = g;
-
-        ConsoleWriteIEnumerable("[List]", g.ListChain); // ListChain is virtually List<TestClass>
-        /* Result;  displayed in the order in which they were created.
-             ID: 1, Hoge , 27
-             ID: 2, Fuga , 15
-             ID: 1, A    ,  7
-             ID: 0, Zero , 50 */
-
-        Console.WriteLine("ListChain[2] : "); // ListChain can be accessed by index.
-        Console.WriteLine(g.ListChain[2]); // ID: 1, A    ,  7
-        Console.WriteLine();
-
-        ConsoleWriteIEnumerable("[Sorted by Id]", g.IdChain);
-        /* Sorted by Id
-             ID: 0, Zero , 50
-             ID: 1, Hoge , 27
-             ID: 1, A    ,  7
-             ID: 2, Fuga , 15 */
-
-        ConsoleWriteIEnumerable("[Sorted by Name]", g.NameChain);
-        /* Sorted by Name
-             ID: 1, A    ,  7
-             ID: 2, Fuga , 15
-             ID: 1, Hoge , 27
-             ID: 0, Zero , 50 */
-
-        ConsoleWriteIEnumerable("[Sorted by Age]", g.AgeChain);
-        /* Sorted by Age
-             ID: 1, A    ,  7
-             ID: 2, Fuga , 15
-             ID: 1, Hoge , 27
-             ID: 0, Zero , 50 */
-
-        ConsoleWriteIEnumerable("[Sorted by Age in reverse order]", g.AgeRevChain);
-        /* Sorted by Age
-             ID: 0, Zero , 50
-             ID: 1, Hoge , 27
-             ID: 2, Fuga , 15
-             ID: 1, A    ,  7
-              */
-
-        var t = g.ListChain[1];
-        Console.WriteLine($"{t.NameValue} age {t.AgeValue} => 95"); // Change Fuga's age to 95.
-        t.AgeValue = 95;
-        ConsoleWriteIEnumerable("[Sorted by Age]", g.AgeChain);
-        /* AgeChain will be updated automatically.
-             ID: 1, A    ,  7
-             ID: 1, Hoge , 27
-             ID: 0, Zero , 50
-             ID: 2, Fuga , 95 */
-
-        ConsoleWriteIEnumerable("[Stack]", g.StackChain);
-        /* Stack chain
-             ID: 1, Hoge , 27
-             ID: 2, Fuga , 95
-             ID: 1, A    ,  7
-             ID: 0, Zero , 50 */
-
-        t = g.StackChain.Pop(); // Pop an object. Note that only StackChain is affected.
-        Console.WriteLine($"{t.NameValue} => Pop");
-        t.Goshujin = null; // To remove the object from other chains, you need to set Goshujin to null.
-        Console.WriteLine();
-
-        ConsoleWriteIEnumerable("[Stack]", g.StackChain);
-        /* Zero is removed.
-             ID: 1, Hoge , 27
-             ID: 2, Fuga , 95
-             ID: 1, A    ,  7 */
-
-        var g2 = new TestClass.GoshujinClass(); // New Goshujin2
-        t = g.ListChain[0];
-        Console.WriteLine($"{t.Name} Goshujin => Goshujin2");
-        Console.WriteLine();
-        t.Goshujin = g2; // Change from Goshujin to Goshujin2.
-        ConsoleWriteIEnumerable("[Goshujin]", g.ListChain);
-        ConsoleWriteIEnumerable("[Goshujin2]", g2.ListChain);
-        /*
-         * [Goshujin]
-             ID: 2, Fuga , 95
-             ID: 1, A    ,  7
-            [Goshujin2]
-             ID: 1, Hoge , 27*/
-
-        // g.IdChain.Remove(t); // Exception is thrown because this object belongs to Goshujin2.
-        // t.Goshujin.IdChain.Remove(t); // No exception.
-
-        Console.WriteLine("[IdChain First/Next]");
-        t = g.IdChain.First; // Enumerate objects using Link interface.
-        while (t != null)
-        {
-            Console.WriteLine(t);
-            t = t.IdLink.Next; // Note that Next is not a Link, but an object.
-        }
-
-        Console.WriteLine();
-        Console.WriteLine("Goshujin.Remove");
-        g.Remove(g.ListChain[0]); // You can use Remove() instead of 'g.ListChain[0].Goshujin = null;'
-        ConsoleWriteIEnumerable("[Goshujin]", g.ListChain);
-
-        static void ConsoleWriteIEnumerable<T>(string? header, IEnumerable<T> e)
-        {
-            if (header != null)
-            {
-                Console.WriteLine(header);
-            }
-
-            foreach (var x in e)
-            {
-                Console.WriteLine(x!.ToString());
-            }
-
-            Console.WriteLine();
-        }
-    }
+    [Link(Type = ChainType.Ordered, Primary = true)]
+    public partial int Id { get; set; }
 }
 ```
-
-
-
-## Performance
-
-Performance is the top priority.
-
-Although ValueLink do a little bit complex process than generic collections, ValueLink works faster than generic collections.
-
-This is a benchmark with the generic collection ```SortedDictionary<TKey, TValue>```.
-The following code creates an instance of a collection, creates a H2HClass and adds to the collection in sorted order.
-
-```csharp
-var g = new SortedDictionary<int, H2HClass>();
-foreach (var x in this.IntArray)
-{
-    g.Add(x, new H2HClass(x));
-}
-```
-
-This is the ValueLink version and it does almost the same process (In fact, ValueLink is more scalable and flexible).
-
-```csharp
-var g = new H2HClass2.GoshujinClass();
-foreach (var x in this.IntArray)
-{
-    new H2HClass2(x).Goshujin = g;
-}
-```
-
-The result; ValueLink is faster than plain ```SortedDictionary<TKey, TValue>```.
-
-| Method                     | Length |       Mean |    Error |   StdDev |  Gen 0 |  Gen 1 | Gen 2 | Allocated |
-| -------------------------- | ------ | ---------: | -------: | -------: | -----: | -----: | ----: | --------: |
-| NewAndAdd_SortedDictionary | 100    | 7,209.8 ns | 53.98 ns | 77.42 ns | 1.9379 |      - |     - |    8112 B |
-| NewAndAdd_ValueLink        | 100    | 4,942.6 ns | 12.28 ns | 17.99 ns | 2.7084 | 0.0076 |     - |   11328 B |
-
-When it comes to modifying an object (remove/add), ValueLink is much faster than the generic collection.
-
-| Method                        | Length |       Mean |    Error |   StdDev |  Gen 0 | Gen 1 | Gen 2 | Allocated |
-| ----------------------------- | ------ | ---------: | -------: | -------: | -----: | ----: | ----: | --------: |
-| RemoveAndAdd_SortedDictionary | 100    | 1,491.1 ns | 13.01 ns | 18.24 ns | 0.1335 |     - |     - |     560 B |
-| RemoveAndAdd_ValueLink        | 100    |   524.1 ns |  3.76 ns |  5.63 ns | 0.1717 |     - |     - |     720 B |
-
-
-
-## How it works
-
-ValueLink works by adding an inner class and some properties to the existing class. 
-
-The actual behavior is
-
-1. Adds an inner class named ```GoshujinClass``` to the target object.
-2. Adds a property named ```Goshujin``` to the target object.
-3. Creates a property which corresponds to the member with a Link attribute. The first letter of the property will be capitalized. For example, ```id``` becomes ```Id```. 
-4. Creates a ```Link``` field. The name of the field will the concatenation of the property name and ```Link```. For example, ```Id``` becomes ```IdLink```.
-
-
-
-The terms
-
-- ```Object```: An object that stores information and is the target to be connected.
-- ```Goshujin```: An owner class of the objects.  It's for storing and manipulating objects.
-- ```Chain```: Chain is like a generic collection. Goshujin can have multiple Chains that manage objects in various ways.
-- ```Link```: Link is like a node. An object can have multiple Links that hold information about relationships between objects.
-
-
-
-This is a tiny class to demonstrate how ValueLink works.
-
-```csharp
-public partial class TinyClass // Partial class is required for source generator.
-{
-    [Link(Type = ChainType.Ordered)] // Add a Link attribute to a member.
-    private int Id;
-}
-```
-
-When building a project, ValueLink first creates an inner class called ```GoshujinClass```. ```GoshujinClass``` is an owner class for storing and manipulating multiple ```TinyClass``` instances.
-
-```csharp
-public sealed class GoshujinClass : IGoshujin // IGoshujin is a base interface for Goshujin
-{// Goshujin-sama means an owner in Japanese.
-    
-    public GoshujinClass()
-    {
-        // IdChain is a collection of TinyClass that are maintained in a sorted order.
-        this.IdChain = new(this, static x => x.__gen_cl_identifier__001, static x => ref x.IdLink);
-    }
-
-    public OrderedChain<int, TinyClass> IdChain { get; }
-}
-```
-
-The following code adds a field and a property that holds a ```Goshujin``` instance.
-
-```csharp
-private GoshujinClass? __gen_cl_identifier__001; // Actual Goshujin instance.
-
-public GoshujinClass? Goshujin
-{
-    get => this.__gen_cl_identifier__001; // Getter
-    set
-    {// Set a Goshujin instance.
-        if (value != this.__gen_cl_identifier__001)
-        {
-            if (this.__gen_cl_identifier__001 != null)
-            {// Remove the TinyClass from the previous Goshujin.
-                this.__gen_cl_identifier__001.IdChain.Remove(this);
-            }
-
-            this.__gen_cl_identifier__001 = value;// Set a new value.
-            if (value != null)
-            {// Add the TinyClass to the new Goshujin.
-                value.IdChain.Add(this.Id, this);
-            }
-        }
-    }
-}
-```
-
-Finally, ValueLink adds a link and a property which is used to modify the collection and change the value.
-
-```csharp
-public OrderedChain<int, TinyClass>.Link IdLink; // Link is like a Node.
-
-public int IdValue
-{// Property "IdValue" is created from a member "Id".
-    get => this.Id;
-    set
-    {
-        if (value != this.Id)
-        {
-            this.Id = value;
-            // IdChain will be updated when the value is changed.
-            this.Goshujin.IdChain.Add(this.Id, this);
-        }
-    }
-}
-```
-
-
 
 ## Chains
 
-Chain is like a generic collection. `Goshujin` can have multiple chains corresponding to the Link attributes.
+`n` is the number of linked objects. Costs below refer to direct operations on one chain, without callbacks or owner-wide updates. No chain provides synchronization by itself.
 
-ValueLink provides several kinds of chains.
+| `ChainType` | Collection | Main operations and costs |
+| --- | --- | --- |
+| `List` | `ListChain<T>` | Index, membership, and removal: O(1). Add/insert: amortized O(1). Removal fills the gap with the last object; insertion may move the displaced object to the end. |
+| `LinkedList` | `LinkedListChain<T>` | Add, move, remove by object, and link navigation: O(1). Preserves explicit list order. |
+| `StackList` | `StackListChain<T>` | Push, peek, pop, and remove by object: O(1). Enumeration runs from bottom to top. |
+| `QueueList` | `QueueListChain<T>` | Enqueue, peek, dequeue, and remove by object: O(1). Enumeration follows dequeue order. |
+| `Ordered` | `OrderedChain<TKey, TObject>` | Key search, add, remove, and bounds: O(log n). Ascending key order; duplicate keys allowed. |
+| `ReverseOrdered` | `OrderedChain<TKey, TObject>` | The same ordered chain with reversed comparison and traversal. |
+| `Unordered` | `UnorderedChain<TKey, TObject>` | Hash lookup, add, and removal: expected O(1), worst-case O(n). Duplicate keys allowed; enumeration is unsorted. |
+| `Observable` | `ObservableChain<T>` | Index: O(1). Append: amortized O(1); moving an existing object, search, insertion, and removal: O(n). Raises collection-change notifications. |
+| `SlidingList` | `SlidingListChain<T>` | Bounded circular window. Position lookup and append: O(1). Head removal can scan holes; resizing and enumeration scale with window capacity. |
+| `None` | No collection | Generates value/notification support without a chain. |
 
-| Name                  | Structure   | Access | Add      | Remove   | Search   | Sort       | Enum.    |
-| --------------------- | ----------- | ------ | -------- | -------- | -------- | ---------- | -------- |
-| ```ListChain```       | Array       | Index  | O(1)     | O(n)     | O(n)     | O(n log n) | O(1)     |
-| ```LinkedListChain``` | Linked list | Node   | O(1)     | O(1)     | O(n)     | O(n log n) | O(1)     |
-| ```QueueListChain```  | Linked list | Node   | O(1)     | O(1)     | O(n)     | O(n log n) | O(1)     |
-| ```StackListChain```  | Linked list | Node   | O(1)     | O(1)     | O(n)     | O(n log n) | O(1)     |
-| ```OrderedChain```    | RB Tree     | Node   | O(log n) | O(log n) | O(log n) | Sorted     | O(log n) |
-| `ReverseOrderedChain` | RB Tree     | Node   | O(log n) | O(log n) | O(log n) | Sorted     | O(log n) |
-| ```UnorderedChain```  | Hash table  | Node   | O(1)     | O(1)     | O(1)     | -          | O(1)     |
-| ```ObservableChain``` | Array       | Index  | O(1)     | O(n)     | O(n)     | O(n log n) | O(1)     |
+Enumeration takes O(n) for ordinary lists and trees. Hash chains may scan unused backing slots; sliding chains may scan empty window positions. Constructing an enumerator is not the same cost as traversing the collection.
 
-If you want a new chain to be implemented, please let me know with a GitHub issue.
+Ordered and unordered chains provide `FindFirst`, `ContainsKey`, `TryGetValue`, `Keys`, `Objects`, and `KeyObjects`. Use ordered `FindAll(key)` or unordered `Enumerate(key)` to enumerate duplicate keys. A missing `FindFirst` result is `null` for class models. Ordered chains also expose `GetLowerBound`, `GetUpperBound`, and inclusive `GetRange`; bounds follow the configured comparison order. Links on linked and ordered chains allow neighbor navigation.
 
+### Sliding windows
 
-
-## Link
-
-Link is like a node. An object can have multiple Links that hold information about relationships between objects.
-
-Each link corresponds to a chain.
-
-
-
-## Features
-
-### Serialization
-
-Serializing multiple linked objects is a complicated task. However, with [Tinyhand](https://github.com/archi-Doc/Tinyhand), you can easily serialize/deserialize objects.
-
-All you need to do is install ```Tinyhand``` package and add a ```TinyhandObject``` attribute and ```Key``` attributes to the existing object.
-
-```
-Install-Package Tinyhand
-```
+Sliding chains start with zero capacity and always require manual insertion, regardless of `AutoLink`:
 
 ```csharp
+using System;
+using ValueLink;
+
+var owner = new WindowItem.GoshujinClass();
+owner.WindowChain.Resize(4);
+var item = new WindowItem { Goshujin = owner };
+Console.WriteLine(owner.WindowChain.Add(item)); // True
+int position = item.WindowLink.Position;
+Console.WriteLine(owner.WindowChain.Get(position) == item); // True
+
+/// <summary>Represents an object placed manually in a bounded window.</summary>
 [ValueLinkObject]
-[TinyhandObject] // Add a TinyhandObject attribute to use TinyhandSerializer.
-public partial class SerializeClass
+public partial class WindowItem
 {
-    [Link(Type = ChainType.Ordered, Primary = true)] // Set primary link that is guaranteed to holds all objects in the collection in order to maximize the performance of serialization.
-    [Key(0)] // Add a Key attribute to specify the key for serialization as a number or string.
-    private int id;
-
-    [Link(Type = ChainType.Ordered)]
-    [Key(1)]
-    private string name = default!;
-
-    public SerializeClass()
-    {// Default constructor is required for Tinyhand.
-    }
-
-    public SerializeClass(int id, string name)
-    {
-        this.id = id;
-        this.name = name;
-    }
+    [Link(Type = ChainType.SlidingList, Name = "Window")]
+    public WindowItem() { }
 }
 ```
 
-Test code:
+`Count` counts live objects; `Consumed` also counts holes left by removal. `StartPosition` is the logical window start, and `EndPosition` is exclusive. Positions wrap within the underlying integer range. `Add` returns `false` when full or already linked. `Set(position, obj)` can replace an entry within the capacity window and unlinks the displaced object. `Resize` preserves logical positions and returns `false` if the new capacity is smaller than `Consumed`.
+
+## Attribute options
+
+### `ValueLinkObject`
+
+| Option | Default | Purpose |
+| --- | --- | --- |
+| `GoshujinClass` | `"GoshujinClass"` | Generated owner type name |
+| `GoshujinInstance` | `"Goshujin"` | Generated owner property name |
+| `ExplicitPropertyChanged` | `"PropertyChanged"` | Event name used for generated notifications |
+| `Isolation` | `None` | Concurrency model described below |
+| `Restricted` | `false` | Makes the owner property internal and defaults links to private access with `AddValue = false`; explicit link options can override those defaults |
+| `Integrality` | `false` | Enables hash-based difference synchronization |
+
+Empty name options select the defaults above.
+
+### `Link`
+
+| Option | Default | Purpose |
+| --- | --- | --- |
+| `Type` | `None` | Chain implementation |
+| `Name` | Target member name, initial letter capitalized | Prefix for chain, link, and generated value names; specify distinct names for multiple indexes on one member |
+| `Primary` | `false` | Selects the chain used for owner enumeration and serialization |
+| `Unique` | `false` | Identifies the key used by isolation, journaling, and synchronization |
+| `AddValue` | `false` | Generates a property that updates links when the value changes |
+| `AutoLink` | `true` | Adds the link when ownership is assigned; ignored for sliding insertion |
+| `AutoNotify` | `false` | Raises `PropertyChanged` from generated value changes |
+| `Accessibility` | `PublicGetter` | Controls generated value/link access |
+| `TargetMember` | Empty | Selects an accessible field or property for a constructor-level link |
+| `UnsafeTargetChain` | Empty | Shares another chain instead of creating a new chain |
+
+`Unique` does not turn the underlying chain into a duplicate-rejecting collection. RepeatableRead commits check the selected unique key; callers that manipulate raw chains must preserve their own uniqueness invariant.
+
+`PublicGetter` gives the generated value a public getter and inherits setter access from the target. Use `Public` to expose both accessors, or `Protected`, `Private`, or `Inherit` as needed. Getter-only targets do not receive writable value properties. Partial properties retain their declared accessor visibility.
+
+With `AutoLink = false`, manually choose initial membership after assigning the owner. A generated value change can still add or update that link. Constructor attributes can define unkeyed chains or index a member using `TargetMember`. `UnsafeTargetChain` requires compatible key/object types and the correct `ref obj.SomeLink` argument for each shared entry; see [TargetChainTest](xUnitTest/Tests/TargetChainTest.cs).
+
+### Generator options
+
+Apply `[ValueLinkGeneratorOption]` to a class to set `GenerateToFile` or `CustomNamespace`. `GenerateToFile = true` writes source into an existing `Generated` folder beside that file; otherwise the compiler receives the generated source normally. `CustomNamespace` changes the module initializer namespace, not model namespaces. `AttachDebugger` is currently a reserved option with no effect.
+
+## Notifications and callbacks
+
+Use `AutoNotify = true` with `AddValue = true` to generate `INotifyPropertyChanged` support. If the model already provides the event, the generator uses it. `ExplicitPropertyChanged` selects a custom event name. Value equality suppresses redundant setter updates and notifications.
+
+`ObservableChain<T>` separately implements `INotifyCollectionChanged` and `INotifyPropertyChanged` for collection changes. Its notifications run on the calling thread; UI applications must perform mutations on the appropriate thread. It identifies reference-type objects by identity, so distinct equal-valued records can coexist.
+
+For a link named `Age`, the generator recognizes these optional instance methods:
 
 ```csharp
-var g = new SerializeClass.GoshujinClass(); // Create a new Goshujin.
-new SerializeClass(1, "Hoge").Goshujin = g; // Add an object.
-new SerializeClass(2, "Fuga").Goshujin = g;
-
-var st = TinyhandSerializer.SerializeToString(g); // Serialize the Goshujin to string.
-var g2 = TinyhandSerializer.Deserialize<SerializeClass.GoshujinClass>(TinyhandSerializer.Serialize(g)); // Serialize to a byte array and deserialize it.
+private bool AgeLinkPredicate() => this.age >= 18;
+private void AgeLinkAdded() { /* React to generated insertion. */ }
+private void AgeLinkRemoved() { /* React to generated removal. */ }
 ```
 
+The predicate controls generated insertion. Added/removed callbacks accompany generated link operations; direct calls to a chain bypass these model callbacks. Keep them short and account for the calling operation's lock scope. See [AdditionalMethodTest](xUnitTest/Tests/AdditionalMethodTest.cs) and [NotifyPropertyChangedTest](xUnitTest/Tests/NotifyPropertyChangedTest.cs).
 
+## Serialization and journaling
 
-### Isolation level
-
-ValueLink offers several different isolation levels.
-
-
-
-#### IsolationLevel.None
-
-There is no additional code generated for isolation
-
-
-
-#### IsolationLevel.Serializable
-
-For lock-based concurrency control, the following code is added to the `Goshujin` class.
-
-Please lock the `SyncObject` on the user side to perform exclusive operations.
+Add `[TinyhandObject]` and `[Key]` attributes to serialize models and their generated owners with [Tinyhand](https://github.com/archi-Doc/Tinyhand). Choose a primary chain that contains all objects. The generated owner serializer preserves supported chain memberships and ordering and restores object ownership.
 
 ```csharp
-public object SyncObject { get; }
-```
+using System;
+using Tinyhand;
+using ValueLink;
 
-```csharp
-[ValueLinkObject(Isolation = IsolationLevel.Serializable)]
-public partial record SerializableRoom
-{
-    [Link(Primary = true, Type = ChainType.Ordered, AddValue = false)]
-    public int RoomId { get; set; }
+var original = new StoredItem.GoshujinClass();
+original.Add(new StoredItem { Id = 1, Name = "Ada" });
+byte[] bytes = TinyhandSerializer.Serialize(original);
+var restored = TinyhandSerializer.Deserialize<StoredItem.GoshujinClass>(bytes)!;
+Console.WriteLine(restored.IdChain.FindFirst(1)?.Name); // Ada
 
-    public SerializableRoom(int roomId)
-    {
-    }
-}
-```
-
-
-
-#### IsolationLevel.RepeatableRead
-
-Unlike the above-mentioned Isolation levels, a lot of code is added.
-
-Essentially, Objects become immutable, allowing for arbitrary reads. To write, you need to retrieve the object by calling `TryLock()` from the `Goshujin` class and then invoke `Commit()`.
-
-```csharp
-// An example of an object with the IsolationLevel set to RepeatableRead.
+/// <summary>Represents a serializable item indexed by ID.</summary>
 [TinyhandObject]
-[ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
-public partial record RepeatableClass
-{// Record class is required for IsolationLevel.RepeatableRead.
-    public RepeatableClass()
-    {// Default constructor is required.
-    }
-
-    public RepeatableClass(int id)
-    {
-        this.Id = id;
-    }
-
-    // A unique link is required for IsolationLevel.RepeatableRead, and a primary link is preferred for TinyhandSerializer.
+[ValueLinkObject]
+public partial class StoredItem
+{
     [Key(0)]
-    [Link(Primary = true, Unique = true, Type = ChainType.Ordered)]
+    [Link(Type = ChainType.Ordered, Primary = true)]
+    public int Id { get; set; }
+
+    [Key(1)]
+    public string Name { get; set; } = string.Empty;
+}
+```
+
+Initialize ordinary properties before adding objects; use generated setters for later indexed changes. Treat sliding-window capacity and membership as runtime configuration to restore explicitly. See [SerializationContractTest](xUnitTest/Tests/Coverage/SerializationContractTest.cs) for round trips, cloning, and independent memberships.
+
+`[TinyhandObject(Structural = true)]` enables structural/journal integration. Use a primary chain and a unique keyed link, then connect the owner to an `IStructuralRoot` implementation. Generated operations can record changes, but storage, journal persistence, and replay are supplied by the host application. Serializing an owner alone does not provide durable storage. See [JournalTest](xUnitTest/Tests/JournalTest.cs).
+
+## NativeAOT
+
+ValueLink generates static Tinyhand formatter registrations for owners, including closed generic models, private nested models, and unions. It does not construct owner formatters through runtime reflection. The library enables .NET trimming and AOT analyzers with `IsAotCompatible`.
+
+This checkout requires a local Tinyhand registration fix. Run `pwsh -File eng/Prepare-Tinyhand.ps1` before restoring or building; see [NativeAOT setup and limitations](doc/NativeAOT.md). The script builds an unpublished package from pinned upstream source plus the included patch. A released Tinyhand dependency is required before publishing ValueLink.
+
+On a host with the [NativeAOT prerequisites](https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/), publish and run the smoke test:
+
+```powershell
+dotnet publish NativeAotTest/NativeAotTest.csproj -c Release -r win-x64 -o artifacts/native-aot/publish
+./artifacts/native-aot/publish/NativeAotTest.exe
+```
+
+Windows x64 has been verified locally. The CI workflow also includes Linux x64; use `linux-x64` and run the executable without `.exe` on Linux. Always test the published executable; `dotnet test` alone verifies JIT execution.
+
+Closed generic types must be discoverable at compilation time. Explicit `[assembly: TinyhandRegister(typeof(MyModel<int>))]` roots cover types used only through external generic helpers. Containing types needed to access private generic arguments must be partial. When another generated model stores a collection of owners, declare the owner as a partial class with `[TinyhandObject(External = true)]` so Tinyhand can resolve its type before ValueLink runs; see [NativeContracts](NativeAotTest/NativeContracts.cs).
+
+## Isolation
+
+| Mode | Model |
+| --- | --- |
+| `None` | Caller controls all synchronization |
+| `Serializable` | Generated owner provides `LockObject`; callers lock compound reads and mutations |
+| `ReadCommitted` | Keyed owner delegates data retrieval and locking to `IDataLocker<TData>` adapters |
+| `RepeatableRead` | Record classes publish updated copies through exclusive writers |
+
+### Serializable
+
+Protect collection operations and indexed mutations with the owner's lock. For a model configured with `Isolation = IsolationLevel.Serializable`:
+
+```csharp
+using (owner.LockObject.EnterScope())
+{
+    // Read or mutate this owner's chains and objects here.
+}
+```
+
+`GetArray()` takes a snapshot under the lock and copies object references. The Serializable `LockObject` is a non-reentrant semaphore: call `GetArray()` outside an already-held owner lock. Storage lifecycle operations also synchronize their work. Coordinate both owners when transferring objects between them.
+
+### ReadCommitted
+
+Configure a unique key and implement `IDataLocker<TData>` on the linked adapter. The generated owner supplies `Find`, `TryGet`, `TryLock`, `TryDelete`, `ForEach`, and `GetArray`. Timeouts, cancellation tokens, and optional factories are forwarded to the adapter, which implements data storage and locking.
+
+`TryLock` returns `ValueTask<DataScope<TData>>`. Inspect `Result` for `Retrieved`, `Created`, or a failure, and dispose the scope to release its lock. Do not dispose multiple copies of this mutable struct. For value-type data, `IsValid` is only a non-null check and does not prove acquisition succeeded; use `Result`. `UnlockAndDelete` releases the lock and requests deletion through the associated storage object.
+
+Protected objects delay deletion unless forced. Store/release and delete operations propagate through Tinyhand structural objects. See [ReadCommittedContractTest](xUnitTest/Tests/Coverage/ReadCommittedContractTest.cs) for an in-memory adapter and lifecycle examples.
+
+### RepeatableRead
+
+Use a partial record class with a unique keyed link. Acquire a writer, change its properties, call `Commit`, and dispose it. `Commit` returns the published record, or `null` if it cannot publish, such as on a unique-key conflict. Disposing without a commit discards unpublished edits.
+
+```csharp
+using System;
+using ValueLink;
+
+var accounts = new Account.GoshujinClass();
+using (var writer = await accounts.TryLockAsync(1, AcquisitionMode.GetOrCreate))
+{
+    if (writer is null)
+    {
+        throw new InvalidOperationException("The account could not be acquired.");
+    }
+
+    writer.Balance = 100;
+    Account published = writer.Commit()
+        ?? throw new InvalidOperationException("The account could not be committed.");
+    Console.WriteLine(published.Balance); // 100
+}
+
+/// <summary>Represents an account updated through a repeatable-read writer.</summary>
+[ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
+public partial record Account
+{
+    [Link(Type = ChainType.Unordered, Primary = true, Unique = true)]
     public int Id { get; private set; }
 
+    public int Balance { get; private set; }
+}
+```
+
+Readers retain the record version they acquired. Record copies are shallow: clone a mutable list, array, or nested object before changing it through the writer. Do not mutate a published record or a shared reference directly.
+
+`TryGet` retrieves a record. `TryLock` waits synchronously for a writer; `TryLockAsync` supports a timeout and cancellation token. A timeout returns `null`; cancellation while waiting propagates as `OperationCanceledException`. Overloads without a timeout use `ValueLinkGlobal.LockTimeout`. Direct chain reads still require the owner lock or a snapshot.
+
+Both keyed isolation modes use `AcquisitionMode.GetOnly`, `GetOrCreate`, and `CreateOnly`. `GetOnlyIgnoreState` requests adapter-specific state handling; it does not bypass an invalid owner or create missing data.
+
+## Incremental synchronization
+
+**Integrality** compares cached hashes, requests differing objects, and integrates responses. Enable `[ValueLinkObject(Integrality = true)]` together with `[TinyhandObject]`, a unique unmanaged struct key such as `int`, and `None` or `Serializable` isolation. Structs containing managed references are rejected because keys are copied as raw bytes.
+
+This local broker demonstrates the request/response contract; replace it with your transport as needed:
+
+```csharp
+using System;
+using System.Threading.Tasks;
+using Tinyhand;
+using ValueLink;
+using ValueLink.Integrality;
+
+var source = new SyncItem.GoshujinClass();
+var target = new SyncItem.GoshujinClass();
+source.Add(new SyncItem { Id = 1, Name = "Ada" });
+var engine = new Integrality<SyncItem.GoshujinClass, SyncItem>
+{
+    MaxItems = 1_000,
+    RemoveIfItemNotFound = true,
+};
+
+var result = await engine.Integrate(target, (request, cancellationToken) =>
+{
+    cancellationToken.ThrowIfCancellationRequested();
+    return Task.FromResult(engine.Differentiate(source, request));
+});
+Console.WriteLine(result.Result); // Success
+
+/// <summary>Represents an item synchronized by a unique ID.</summary>
+[TinyhandObject]
+[ValueLinkObject(Integrality = true)]
+public partial class SyncItem
+{
+    [Key(0)]
+    [Link(Type = ChainType.Unordered, Primary = true, Unique = true)]
+    public int Id { get; set; }
+
     [Key(1)]
-    public string Name { get; private set; } = string.Empty;
-
-    [Key(2)]
-    public List<int> IntList { get; private set; } = new();
-
-    public override string ToString()
-        => $"Id: {this.Id.ToString()}, Name: {this.Name}";
-
-    public static void Test()
-    {
-        var g = new RepeatableClass.GoshujinClass(); // Create a goshujin.
-
-        g.Add(new RepeatableClass(0)); // Adds an object with id 0.
-
-        using (var w = g.TryLock(1, TryLockMode.Create))
-        {// Alternative: adds an object with id 1.
-            w?.Commit(); // Commit the change.
-        }
-
-        var r0 = g.TryGet(0);
-        Console.WriteLine(r0?.ToString()); // Id: 0, Name:
-        Console.WriteLine();
-
-        using (var w = g.TryLock(0))
-        {
-            if (w is not null)
-            {
-                w.Name = "Zero";
-                w.Commit();
-            }
-        }
-    }
+    public string Name { get; set; } = string.Empty;
 }
 ```
 
+`MaxItems` limits reported keys and new items; `RemoveIfItemNotFound` removes local entries absent from the remote key list. `MaxMemoryLength` limits object-response packets, not probe responses. `MaxIntegrationCount` limits object-request iterations after probing. Override `Validate` to accept/reject incoming objects and `Trim` for application-specific removal; the default `Trim` removes nothing.
 
+The broker transfers ownership of its returned `BytePool.RentMemory` to the engine. When calling `Differentiate` outside a broker, return that buffer after use. Request bytes are valid only until the broker task completes.
 
-### Additional methods
+Integration may make partial changes before returning an incomplete/error result. Broker exceptions and cancellation propagate. Serialize concurrent runs targeting the same owner. Reported counts cover integration and trimming, but exclude removals during key comparison; `IsModified` is not a complete change log. Generated link setters, including Tinyhand partial-property update hooks, invalidate both object and owner hashes. After directly changing serialized fields, ordinary properties, or nested mutable content, call `((IIntegralityObject)item).ClearIntegralityHash()` yourself.
 
-By adding methods within the class, you can determine whether to link or not, and add code to perform actions after the link has been added or removed.
+## Performance
 
-```csharp
-[ValueLinkObject]
-public partial class AdditionalMethodClass
-{
-    public static int TotalAge;
+Choose chains for the operations you need and add only the indexes you use. Embedded links avoid searching for an object's node when removing it. Each additional chain consumes memory and adds work to ownership changes or indexed updates. Record writers allocate copies, and callbacks or serialization can dominate collection costs.
 
-    [Link(Type = ChainType.Ordered)]
-    private int age;
+Measure against representative workloads using the benchmarks in this repository:
 
-    protected bool AgeLinkPredicate()
-    {// bool Name+Link+Predicate(): Determines whether to add the object to the chain or not.
-        return this.age >= 20;
-    }
-
-    protected void AgeLinkAdded()
-    {// void Name+Link+Added(): Performs post-processing after the object has been added to the chain.
-        TotalAge += this.age;
-    }
-
-    protected void AgeLinkRemoved()
-    {// void Name+Link+Removed(): Performs post-processing after the object has been removed from the chain.
-        TotalAge -= this.age;
-    }
-}
+```shell
+dotnet run --project Benchmark/Benchmark.csproj -c Release -- --filter "*ChainMaintenanceBenchmark*"
 ```
 
+Use Release builds and compare both timings and allocations. Results depend on runtime, hardware, collection size, key distribution, and enabled features.
 
+## Build and tests
 
-### TargetMember
+Run from the repository root:
 
-If you want to create multiple goshujins from a single class, use `TargetMember` property.
-
-```csharp
-public class BaseClass
-{// Base class is not ValueLinkObject.
-    protected int id;
-
-    protected string name = string.Empty;
-}
-
-[ValueLinkObject]
-public partial class DerivedClass : BaseClass
-{
-    // Add Link attribute to constructor and set TargetMember.
-    [Link(TargetMember = nameof(id), Type = ChainType.Ordered)]
-    [Link(TargetMember = nameof(name), Type = ChainType.Ordered)]
-    public DerivedClass()
-    {
-    }
-}
-
-[ValueLinkObject]
-public partial class DerivedClass2 : BaseClass
-{
-    // Multiple ValueLinkObject can be created from the same base class.
-    [Link(TargetMember = nameof(id), Type = ChainType.Unordered)]
-    [Link(TargetMember = nameof(name), Type = ChainType.ReverseOrdered)]
-    public DerivedClass2()
-    {
-    }
-}
-
-/*[ValueLinkObject] // Error! Derivation from other ValueLink objects is not supported.
-public partial class DerivedClass3 : DerivedClass
-{
-    [Link(Type = ChainType.Ordered)]
-    protected string name2 = string.Empty;
-}*/
-
+```shell
+pwsh -File eng/Prepare-Tinyhand.ps1
+dotnet restore ValueLink.slnx
+dotnet build ValueLink.slnx -c Release --no-restore
+dotnet test --project xUnitTest/xUnitTest.csproj -c Release --timeout 60s
+dotnet test --solution ValueLink.slnx -c Debug --timeout 60s
 ```
 
+The suite uses xUnit v3 and Microsoft.Testing.Platform, configured in `global.json`; use the `--project` or `--solution` switch. It exercises chains, ownership, serialization, isolation, synchronization, and source generation. See the [test coverage map](xUnitTest/README.md) for contracts and limitations.
 
+| Project | Purpose |
+| --- | --- |
+| `ValueLink` | Public attributes, chains, isolation, and synchronization APIs |
+| `ValueLinkGenerator` | Roslyn source generator |
+| `xUnitTest` | Contract, integration, and regression tests |
+| `NativeAotTest` | Native executable sharing behavioral checks with xUnit |
+| `NativeAotModels` | Cross-assembly generic fixtures for native and xUnit checks |
+| `QuickStart` | Runnable usage examples |
+| `Playground` | Development experiments and storage adapter examples |
+| `Benchmark` | BenchmarkDotNet performance experiments |
 
-### AutoNotify
-
-By adding a ```Link``` attribute and setting ```AutoNotify``` to true, ValueLink can implement the `INotifyPropertyChanged` pattern automatically.
-
-```csharp
-[ValueLinkObject]
-public partial class AutoNotifyClass
-{
-    [Link(AutoNotify = true)] // Set AutoNotify to true.
-    private int id;
-
-    public void Reset()
-    {
-        this.SetProperty(ref this.id, 0); // Change the value manually and invoke PropertyChanged.
-    }
-}
-```
-
-Test code:
-
-```csharp
-var c = new AutoNotifyClass();
-c.PropertyChanged += (s, e) => { Console.WriteLine($"Id changed: {((AutoNotifyClass)s!).idValue}"); };
-c.idValue = 1; // Change the value and automatically invoke PropertyChange.
-c.Reset(); // Reset the value.
-```
-
-Generated code:
-
-```csharp
-public partial class AutoNotifyClass : System.ComponentModel.INotifyPropertyChanged
-{
-    public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
-
-    protected virtual bool SetProperty<T>(ref T storage, T value, [CallerMemberName] string? propertyName = null)
-    {
-        if (EqualityComparer<T>.Default.Equals(storage, value))
-        {
-            return false;
-        }
-        
-        storage = value;
-        this.PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(propertyName));
-        return true;
-    }
-
-    public int idValue
-    {
-        get => this.id;
-        set
-        {
-            if (value != this.id)
-            {
-                this.id = value;
-                this.PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs("idValue"));
-            }
-        }
-    }
-}
-```
-
-
-
-### AutoLink
-
-By default, ValueLink will automatically link the object when a goshujin is set or changed.
-
-You can change this behavior by setting AutoLink to false.
-
- ```csharp
-[ValueLinkObject]
-public partial class ManualLinkClass
-{
-    [Link(Type = ChainType.Ordered, AutoLink = false)] // Set AutoLink to false.
-    private int id;
-
-    public ManualLinkClass(int id)
-    {
-        this.id = id;
-    }
-
-    public static void Test()
-    {
-        var g = new ManualLinkClass.GoshujinClass();
-
-        var c = new ManualLinkClass(1);
-        c.Goshujin = g;
-        Debug.Assert(g.idChain.Count == 0, "Chain is empty.");
-
-        g.IdChain.Add(c.id, c); // Link the object manually.
-        Debug.Assert(g.idChain.Count == 1, "Object is linked.");
-    }
-}
- ```
-
-
-
-### ObservableCollection
-
-You can make the collection available for binding by adding ```ObservableChain```.
-
-```ObservableChain``` is actually a wrapper class of ```ObservableCollection<T>```.
-
-```csharp
-[ValueLinkObject]
-public partial class ObservableClass
-{
-    [Link(Type = ChainType.Ordered, AutoNotify = true)]
-    private int Id { get; set; }
-
-    [Link(Type = ChainType.Observable, Name = "Observable")]
-    public ObservableClass(int id)
-    {
-        this.Id = id;
-    }
-}
-```
-
-Test code:
-
-```csharp
-var g = new ObservableClass.GoshujinClass();
-ListView.ItemSource = g.ObservableChain;// You can use ObservableChain as ObservableCollection.
-new ObservableClass(1).Goshujin = g;// ListView will be updated.
-```
-
+ValueLink is distributed under the [MIT license](LICENSE).

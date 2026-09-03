@@ -6,6 +6,9 @@ using Xunit;
 
 namespace xUnitTest;
 
+/// <summary>
+/// Provides a fixture for tests of generated property visibility.
+/// </summary>
 [TinyhandObject]
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 public partial record PropertyAccessibilityClass : IEquatableObject
@@ -43,6 +46,9 @@ public partial record PropertyAccessibilityClass : IEquatableObject
     }
 }
 
+/// <summary>
+/// Provides a fixture for tests of generated property visibility.
+/// </summary>
 [ValueLinkObject]
 public partial record AccessibilityTestClass
 {
@@ -60,6 +66,9 @@ public partial record AccessibilityTestClass
     public double Age { get; set; }
 }
 
+/// <summary>
+/// Provides a fixture for tests of generated property visibility.
+/// </summary>
 [ValueLinkObject(Restricted = true)]
 public partial record AccessibilityTestClass2
 {
@@ -77,6 +86,9 @@ public partial record AccessibilityTestClass2
     public double Age { get; set; }
 }
 
+/// <summary>
+/// Tests generated property visibility.
+/// </summary>
 public class PropertyAccessibilityTest
 {
     [Fact]

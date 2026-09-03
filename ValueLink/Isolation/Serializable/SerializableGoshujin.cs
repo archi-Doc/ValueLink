@@ -12,7 +12,7 @@ using Tinyhand;
 namespace ValueLink;
 
 /// <summary>
-/// A base interface for serializable.
+/// Provides snapshots and storage lifecycle operations for a semaphore-protected owner.
 /// </summary>
 /// <typeparam name="TObject">The type of object class.</typeparam>
 /// <typeparam name="TGoshujin">The type of goshujin class.</typeparam>
@@ -70,18 +70,20 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : ISerializableSe
 
     protected async Task GoshujinDeleteData(DateTime forceDeleteAfter, bool writeJournal)
     {
+        TObject[] array;
         using (this.LockObject.EnterScope())
         {
+            array = (this is IEnumerable<TObject> e) ? e.ToArray() : [];
+
             var g = this as IGoshujin;
             g?.ClearChains();
+        }
 
-            var e = (this as IEnumerable<TObject>) ?? [];
-            foreach (var x in e)
+        foreach (var x in array)
+        {
+            if (x is IStructuralObject y)
             {
-                if (x is IStructuralObject y)
-                {
-                    await y.DeleteData(forceDeleteAfter, writeJournal).ConfigureAwait(false);
-                }
+                await y.DeleteData(forceDeleteAfter, writeJournal).ConfigureAwait(false);
             }
         }
     }

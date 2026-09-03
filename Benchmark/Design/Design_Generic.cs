@@ -8,8 +8,14 @@ using ValueLink;
 
 namespace Benchmark.Draft;
 
+/// <summary>
+/// Provides a comparison model for generic owner designs.
+/// </summary>
 public class TestClassGeneric<T>
 {
+    /// <summary>
+    /// Owns objects in a hand-written collection benchmark.
+    /// </summary>
     public sealed class TestGoshujinGeneric : IGoshujin
     {
         public TestGoshujinGeneric()

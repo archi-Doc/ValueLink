@@ -52,6 +52,9 @@ public enum ValueLinkObjectFlag
     DerivedFromStoragePoint = 1 << 29, // Derived from StoragePoint<TData>
 }
 
+/// <summary>
+/// Models a ValueLink type or member and emits its generated implementation.
+/// </summary>
 public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 {
     public ValueLinkObject()
@@ -723,11 +726,13 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 this.Body.AddDiagnostic(ValueLinkBody.Error_IntegralityTinyhand, this.Location);
             }
 
+            ISymbol? integralityKey = null;
+            this.UniqueLink?.TypeObject.GetRawInformation(out integralityKey, out _, out _);
             if (this.UniqueLink is null ||
-                this.UniqueLink.TypeObject.Kind != VisceralObjectKind.Struct)
-            {// The object must have a unique link, and its type must be either a primitive type or a struct.
+                this.UniqueLink.TypeObject.Kind != VisceralObjectKind.Struct ||
+                integralityKey is not ITypeSymbol { IsUnmanagedType: true })
+            {// Keys are copied as raw bytes and must not contain managed references.
                 this.Body.AddDiagnostic(ValueLinkBody.Error_IntegralityLink, this.Location);
-                this.Body.AddDiagnostic(ValueLinkBody.Error_IntegralityIsolation, this.Location);
             }
 
             if (this.ObjectAttribute is not null)
@@ -944,86 +949,6 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             ssb.AppendLine("if (i >= max) throw new IndexOutOfRangeException();");
             ssb.AppendLine("var x = array[i];");
             obj.Generate_AddLink(ssb, (GeneratorInformation)info!, link, prevObject);
-        }
-    }
-
-    internal void GenerateFlatLoader(ScopingStringBuilder ssb, GeneratorInformation info)
-    {
-        if (this.ObjectAttribute == null)
-        {
-        }
-        else if (this.ConstructedObjects == null)
-        {
-        }
-        else if (!this.ObjectFlag.HasFlag(ValueLinkObjectFlag.TinyhandObject))
-        {
-        }
-        else
-        {
-            this.GenerateLoaderCore(ssb, info, true);
-        }
-
-        if (this.Children?.Count > 0)
-        {
-            foreach (var x in this.Children)
-            {
-                x.GenerateFlatLoader(ssb, info);
-            }
-        }
-    }
-
-    internal void GenerateLoaderCore(ScopingStringBuilder ssb, GeneratorInformation info, bool checkAccessibility)
-    {
-        var isAccessible = true;
-        if (checkAccessibility && this.ContainsNonPublicObject())
-        {
-            isAccessible = false;
-        }
-
-        if (this.Generics_Kind != VisceralGenericsKind.OpenGeneric)
-        {// FormatterContainsNonPublic
-            if (isAccessible)
-            {
-                ssb.AppendLine($"GeneratedResolver.Instance.SetFormatter(new Tinyhand.Formatters.TinyhandObjectFormatter<{this.GoshujinFullName}>());");
-            }
-            else
-            {
-                var fullName = this.GetGenericsName();
-                ssb.AppendLine($"GeneratedResolver.Instance.SetFormatterGenerator(Type.GetType(\"{fullName}+{this.ObjectAttribute!.GoshujinClass}\")!, static (x, y) =>");
-                ssb.AppendLine("{");
-                ssb.IncrementIndent();
-
-                ssb.AppendLine($"var formatter = Activator.CreateInstance(typeof(Tinyhand.Formatters.TinyhandObjectFormatter<>).MakeGenericType(x));");
-                ssb.AppendLine("return (ITinyhandFormatter)formatter!;");
-
-                ssb.DecrementIndent();
-                ssb.AppendLine("});");
-            }
-        }
-        else
-        {// Formatter generator
-            string typeName;
-            if (isAccessible)
-            {
-                var generic = this.GetClosedGenericName(null);
-                typeName = $"typeof({generic.Name}.{this.ObjectAttribute!.GoshujinClass})";
-            }
-            else
-            {
-                var fullName = this.GetGenericsName();
-                typeName = $"Type.GetType(\"{fullName}+{this.ObjectAttribute!.GoshujinClass}\")!";
-            }
-
-            ssb.AppendLine($"GeneratedResolver.Instance.SetFormatterGenerator({typeName}, static (x, y) =>");
-            ssb.AppendLine("{");
-            ssb.IncrementIndent();
-
-            ssb.AppendLine($"var ft = x.MakeGenericType(y);");
-            ssb.AppendLine($"var formatter = Activator.CreateInstance(typeof(Tinyhand.Formatters.TinyhandObjectFormatter<>).MakeGenericType(ft));");
-            ssb.AppendLine("return (ITinyhandFormatter)formatter!;");
-
-            ssb.DecrementIndent();
-            ssb.AppendLine("});");
         }
     }
 
@@ -1345,7 +1270,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 {
                     foreach (var link in this.Links.Where(a => a.IsValidLink))
                     {
-                        var refLink = link.UnsafeTargetChain ? $", ref {ssb.FullObject}.{link.LinkName}" : string.Empty;
+                        var refLink = $", ref {ssb.FullObject}.{link.LinkName}";
                         if (link.RemovedMethodName != null)
                         {
                             using (var scopeRemove = ssb.ScopeBrace($"if ({ssb.FullObject}.{goshujinInstance}.{link.ChainName}.Remove({ssb.FullObject}{refLink}))"))
@@ -1427,6 +1352,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     internal void Generate_RepeatableRead_WriterClass(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         ssb.AppendLine();
+        ssb.AppendLine("/// <summary>Edits a record copy under an exclusive writer lock and publishes changes on commit.</summary>");
+        ssb.AppendLine("/// <remarks>Acquire through TryLock or TryLockAsync and dispose after use. Copy mutable reference-type members before editing them.</remarks>");
 
         using (var scopeClass = ssb.ScopeBrace($"public partial class {ValueLinkBody.WriterClassName} : IDisposable"))
         {
@@ -1701,6 +1628,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 {
                     this.Generate_AddLink(ssb, info, x, $"this.{this.GoshujinInstanceIdentifier}?");
                 }
+
+                this.GenerateObject_Add_ClearIntegralityHash(ssb);
             }
         }
     }
@@ -1773,6 +1702,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                                 this.Generate_AddLink(ssb, info, x, $"this.{this.GoshujinInstanceIdentifier}?");
                             }
 
+                            this.GenerateObject_Add_ClearIntegralityHash(ssb);
+
                             if (main.AutoNotify)
                             {
                                 this.Generate_Notify(ssb, info, main);
@@ -1832,7 +1763,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             scopePredicate = ssb.ScopeBrace($"if ({ssb.FullObject}.{link.PredicateMethodName}())");
         }
 
-        var refLink = link.UnsafeTargetChain ? $", ref {ssb.FullObject}.{link.LinkName}" : string.Empty;
+        var refLink = $", ref {ssb.FullObject}.{link.LinkName}";
         if (link.Type == ChainType.Ordered || link.Type == ChainType.ReverseOrdered || link.Type == ChainType.Unordered)
         {
             ssb.AppendLine($"{prefix}.{link.ChainName}.Add({ssb.FullObject}.{link.Target!.SimpleName}, {ssb.FullObject}{refLink});");
@@ -1930,7 +1861,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             goshujinInterface += $", {this.RepeatableReadGoshujin}";
         }*/
 
-        // selaed -> partial
+        ssb.AppendLine("/// <summary>Owns linked objects and exposes their generated chains and configured isolation operations.</summary>");
         using (var scopeClass = ssb.ScopeBrace("public partial class " + this.ObjectAttribute!.GoshujinClass + goshujinInterface))
         {
             // Constructor
@@ -2072,29 +2003,38 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         using (var methodScope = ssb.ScopeBrace($"ulong {ValueLinkBody.IIntegralityObject}.GetIntegralityHash()"))
         {
-            ssb.AppendLine("if (this.integralityHash != 0) return this.integralityHash;");
-
             var scopeLock = this.TryCreateLockScope(ssb);
+            ssb.AppendLine("return this.GetIntegralityHashCore();");
+            scopeLock?.Dispose();
+        }
+
+        using (ssb.ScopeBrace("private ulong GetIntegralityHashCore()"))
+        {
+            ssb.AppendLine("if (this.integralityHash != 0) return this.integralityHash;");
 
             ssb.AppendLine("byte[]? rent = null;");
             ssb.AppendLine($"var keyLength = Unsafe.SizeOf<{this.UniqueLink.TypeObject.FullName}>();");
-            ssb.AppendLine($"var length = (keyLength + sizeof(ulong)) * this.{this.UniqueLink.ChainName}.Count;");
-            ssb.AppendLine($"Span<byte> span = length <= {ValueLinkBody.StackallocThreshold} ? stackalloc byte[length] : (rent = System.Buffers.ArrayPool<byte>.Shared.Rent(length));");
-            ssb.AppendLine("var s = span;");
-
-            using (var scopeFor = ssb.ScopeBrace($"foreach (var x in this.{this.UniqueLink.ChainName})"))
+            ssb.AppendLine($"var length = checked((keyLength + sizeof(ulong)) * this.{this.UniqueLink.ChainName}.Count);");
+            ssb.AppendLine($"Span<byte> span = length <= {ValueLinkBody.StackallocThreshold} ? stackalloc byte[length] : (rent = System.Buffers.ArrayPool<byte>.Shared.Rent(length)).AsSpan(0, length);");
+            using (ssb.ScopeBrace("try"))
             {
-                ssb.AppendLine($"Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(s), x.{this.UniqueLink.TargetName});");
-                ssb.AppendLine("s = s.Slice(keyLength);");
-                ssb.AppendLine($"Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(s), (({ValueLinkBody.IIntegralityObject})x).GetIntegralityHash());");
-                ssb.AppendLine("s = s.Slice(sizeof(ulong));");
+                ssb.AppendLine("var s = span;");
+                using (var scopeFor = ssb.ScopeBrace($"foreach (var x in this.{this.UniqueLink.ChainName})"))
+                {
+                    ssb.AppendLine($"Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(s), x.{this.UniqueLink.TargetName});");
+                    ssb.AppendLine("s = s.Slice(keyLength);");
+                    ssb.AppendLine($"Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(s), (({ValueLinkBody.IIntegralityObject})x).GetIntegralityHash());");
+                    ssb.AppendLine("s = s.Slice(sizeof(ulong));");
+                }
+
+                ssb.AppendLine("this.integralityHash = Arc.Crypto.XxHash3.Hash64(span);");
+                ssb.AppendLine("return this.integralityHash;");
             }
 
-            ssb.AppendLine("this.integralityHash = Arc.Crypto.XxHash3.Hash64(span);");
-            ssb.AppendLine("if (rent is not null) System.Buffers.ArrayPool<byte>.Shared.Return(rent);");
-            ssb.AppendLine("return this.integralityHash;");
-
-            scopeLock?.Dispose();
+            using (ssb.ScopeBrace("finally"))
+            {
+                ssb.AppendLine("if (rent is not null) System.Buffers.ArrayPool<byte>.Shared.Return(rent);");
+            }
         }
 
         this.GenerateGosjujin_Integrality_Differentiate(ssb, info);
@@ -2125,8 +2065,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
                 using (var probeScope = ssb.ScopeBrace("if (state == IntegralityState.Probe)"))
                 {
-                    ssb.AppendLine($"var hash = (({ValueLinkBody.IIntegralityObject})this).GetIntegralityHash();");
+                    ssb.AppendLine("var hash = this.GetIntegralityHashCore();");
                     ssb.AppendLine("var writer = TinyhandWriter.CreateFromBytePool();");
+                    var writerScope = ssb.ScopeBrace("try");
                     ssb.AppendLine("writer.WriteUnsafe((byte)IntegralityState.ProbeResponse);");
                     ssb.AppendLine("writer.WriteUnsafe(hash);");
 
@@ -2135,7 +2076,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                         ssb.AppendLine("var count = 0;");
                         using (var forScope = ssb.ScopeBrace($"foreach (var x in this.{this.UniqueLink.ChainName})"))
                         {
-                            ssb.AppendLine("if (count >= engine.MaxItems) break;");
+                            ssb.AppendLine("if (count++ >= engine.MaxItems) break;");
                             ssb.AppendLine($"writer.WriteUnsafe(x.{this.UniqueLink.TargetName});");
                             ssb.AppendLine($"writer.WriteUnsafe((({ValueLinkBody.IIntegralityObject})x).GetIntegralityHash());");
                         }
@@ -2143,11 +2084,17 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
                     // ssb.AppendLine($"writer.WriteRawUInt8((byte)IntegralityResult.Success);");
                     ssb.AppendLine("return writer.FlushAndGetRentMemory();");
+                    writerScope.Dispose();
+                    using (ssb.ScopeBrace("finally"))
+                    {
+                        ssb.AppendLine("writer.Dispose();");
+                    }
                 }
 
                 using (var getScope = ssb.ScopeBrace("else if (state == IntegralityState.Get)"))
                 {
                     ssb.AppendLine("var writer = TinyhandWriter.CreateFromBytePool();");
+                    var writerScope = ssb.ScopeBrace("try");
                     ssb.AppendLine("writer.WriteUnsafe((byte)IntegralityState.GetResponse);");
                     ssb.AppendLine("int written = 0;");
 
@@ -2157,12 +2104,17 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                         ssb.AppendLine("writer.WriteUnsafe(key);");
                         ssb.AppendLine($"if (this.{this.UniqueLink.ChainName}.FindFirst(key) is {{ }} obj) TinyhandSerializer.SerializeObject(ref writer, obj);");
                         ssb.AppendLine("else writer.WriteNil();");
-                        ssb.AppendLine("if (writer.Written < engine.MaxMemoryLength) written = (int)writer.Written;");
+                        ssb.AppendLine("if (writer.Written <= engine.MaxMemoryLength) written = (int)writer.Written;");
                         ssb.AppendLine("else break;");
                     }
 
                     ssb.AppendLine($"if (written == 0) return IntegralityResultHelper.Incomplete;");
                     ssb.AppendLine("return writer.FlushAndGetRentMemory().Slice(0, written);");
+                    writerScope.Dispose();
+                    using (ssb.ScopeBrace("finally"))
+                    {
+                        ssb.AppendLine("writer.Dispose();");
+                    }
                 }
             }
 
@@ -2185,22 +2137,18 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             var scopeLock = this.TryCreateLockScope(ssb);
 
-            using (var tryScope = ssb.ScopeBrace("try"))
+            ssb.AppendLine($"if (this.{ValueLinkBody.KeyHashDictionaryName} is null) this.{ValueLinkBody.KeyHashDictionaryName} = new();");
+            using (var readScope = ssb.ScopeBrace("while (!reader.End)"))
             {
-                ssb.AppendLine($"if (this.{ValueLinkBody.KeyHashDictionaryName} is null) this.{ValueLinkBody.KeyHashDictionaryName} = new();");
-                using (var readScope = ssb.ScopeBrace("while (!reader.End)"))
-                {
-                    ssb.AppendLine($"var key = reader.ReadUnsafe<{this.UniqueLink.TypeObject.FullName}>();");
-                    ssb.AppendLine("if (reader.TryReadNil()) continue;");
-                    ssb.AppendLine($"var obj = TinyhandSerializer.DeserializeObject<{this.TypeObject!.FullName}>(ref reader);");
-                    ssb.AppendLine($"this.{ValueLinkBody.KeyHashDictionaryName}.Remove(key);");
-                    ssb.AppendLine($"if ((({ValueLinkBody.IIntegralityGoshujin})this).IntegrateObject(engine, obj) == IntegralityResult.Success) integratedObjects++;");
-                }
-
-                ssb.AppendLine($"foreach (var x in this.{ValueLinkBody.KeyHashDictionaryName}.Keys) writer.WriteUnsafe(x);");
+                ssb.AppendLine($"var key = reader.ReadUnsafe<{this.UniqueLink.TypeObject.FullName}>();");
+                ssb.AppendLine("if (reader.TryReadNil()) continue;");
+                ssb.AppendLine($"var obj = TinyhandSerializer.DeserializeObject<{this.TypeObject!.FullName}>(ref reader);");
+                ssb.AppendLine($"this.{ValueLinkBody.KeyHashDictionaryName}.Remove(key);");
+                ssb.AppendLine("if (this.IntegrateObjectCore(engine, obj) == IntegralityResult.Success) integratedObjects++;");
             }
 
-            ssb.AppendLine("catch { }");
+            ssb.AppendLine($"foreach (var x in this.{ValueLinkBody.KeyHashDictionaryName}.Keys) writer.WriteUnsafe(x);");
+
             scopeLock?.Dispose();
         }
     }
@@ -2208,6 +2156,13 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     internal void GenerateGosjujin_Integrality_Integrate2(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         using (var methodScope = ssb.ScopeBrace($"IntegralityResult {ValueLinkBody.IIntegralityGoshujin}.IntegrateObject({ValueLinkBody.Integrality} engine, object? obj)"))
+        {
+            var scopeLock = this.TryCreateLockScope(ssb);
+            ssb.AppendLine("return this.IntegrateObjectCore(engine, obj);");
+            scopeLock?.Dispose();
+        }
+
+        using (ssb.ScopeBrace($"private IntegralityResult IntegrateObjectCore({ValueLinkBody.Integrality} engine, object? obj)"))
         {
             if (this.UniqueLink is null)
             {
@@ -2239,37 +2194,35 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             ssb.AppendLine($"if (this.{ValueLinkBody.KeyHashDictionaryName} is null) this.{ValueLinkBody.KeyHashDictionaryName} = new();");
             ssb.AppendLine($"else this.{ValueLinkBody.KeyHashDictionaryName}.Clear();");
-            using (var tryScope = ssb.ScopeBrace("try"))
+            ssb.AppendLine($"HashSet<{this.UniqueLink.TypeObject.FullName}>? existingKeys = engine.RemoveIfItemNotFound ? new() : null;");
+            using (var readScope = ssb.ScopeBrace("while (!reader.End)"))
             {
-                using (var readScope = ssb.ScopeBrace("while (!reader.End)"))
+                ssb.AppendLine($"var key = reader.ReadUnsafe<{this.UniqueLink.TypeObject.FullName}>();");
+                ssb.AppendLine("var hash = reader.ReadUnsafe<ulong>();");
+                ssb.AppendLine("existingKeys?.Add(key);");
+                using (var ifScope = ssb.ScopeBrace($"if (this.{this.UniqueLink.ChainName}.FindFirst(key) is not {ValueLinkBody.IIntegralityObject} obj || obj.GetIntegralityHash() != hash)"))
                 {
-                    ssb.AppendLine($"var key = reader.ReadUnsafe<{this.UniqueLink.TypeObject.FullName}>();");
-                    ssb.AppendLine("var hash = reader.ReadUnsafe<ulong>();");
-                    using (var ifScope = ssb.ScopeBrace($"if (this.{this.UniqueLink.ChainName}.FindFirst(key) is not {ValueLinkBody.IIntegralityObject} obj || obj.GetIntegralityHash() != hash)"))
+                    using (ssb.ScopeBrace($"if (this.{ValueLinkBody.KeyHashDictionaryName}.Count < engine.MaxItems && this.{ValueLinkBody.KeyHashDictionaryName}.TryAdd(key, hash))"))
                     {
-                        ssb.AppendLine($"if (this.{ValueLinkBody.KeyHashDictionaryName}.Count >= engine.MaxItems) break;");
-                        ssb.AppendLine($"this.{ValueLinkBody.KeyHashDictionaryName}.TryAdd(key, hash);");
                         ssb.AppendLine("writer.WriteUnsafe(key);");
                     }
                 }
-
-                using (var removeScope = ssb.ScopeBrace("if (engine.RemoveIfItemNotFound)"))
-                {
-                    ssb.AppendLine($"List<{this.TypeObject!.FullName}>? list = default;");
-                    using (var forScope = ssb.ScopeBrace($"foreach (var x in this.{this.UniqueLink.ChainName})"))
-                    {
-                        using (var ifScope = ssb.ScopeBrace($"if (!this.{ValueLinkBody.KeyHashDictionaryName}.ContainsKey(x.{this.UniqueLink.TargetName}))"))
-                        {
-                            ssb.AppendLine("list ??= new();");
-                            ssb.AppendLine("list.Add(x);");
-                        }
-                    }
-
-                    ssb.AppendLine("if (list is not null) foreach (var x in list) x.Goshujin = default;");
-                }
             }
 
-            ssb.AppendLine("catch {}");
+            using (var removeScope = ssb.ScopeBrace("if (existingKeys is not null)"))
+            {
+                ssb.AppendLine($"List<{this.TypeObject!.FullName}>? list = default;");
+                using (var forScope = ssb.ScopeBrace($"foreach (var x in this.{this.UniqueLink.ChainName})"))
+                {
+                    using (var ifScope = ssb.ScopeBrace($"if (!existingKeys.Contains(x.{this.UniqueLink.TargetName}))"))
+                    {
+                        ssb.AppendLine("list ??= new();");
+                        ssb.AppendLine("list.Add(x);");
+                    }
+                }
+
+                ssb.AppendLine("if (list is not null) foreach (var x in list) x.Goshujin = default;");
+            }
 
             scopeLock?.Dispose();
         }
@@ -2297,16 +2250,21 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             }
             else
             {
-                ssb.AppendLine("var array = System.Linq.Enumerable.ToArray(this);");
-                ssb.AppendLine("var array2 = System.Linq.Enumerable.ToArray(other);");
-                ssb.AppendLine("if (array.Length != array2.Length) return false;");
-                using (var scopeFor = ssb.ScopeBrace("for (var i = 0; i < array.Length; i++)"))
+                ssb.AppendLine("if (this.Count != other.Count) return false;");
+                ssb.AppendLine($"using var enumerator = this.{this.PrimaryLink!.ChainName}.GetEnumerator();");
+                ssb.AppendLine($"using var otherEnumerator = other.{this.PrimaryLink.ChainName}.GetEnumerator();");
+                using (var scopeFor = ssb.ScopeBrace("while (enumerator.MoveNext())"))
                 {
-                    ssb.AppendLine("if (!array[i].ObjectEquals(array2[i])) return false;");
+                    ssb.AppendLine("if (!otherEnumerator.MoveNext() || !((Tinyhand.IEquatableObject)enumerator.Current).ObjectEquals(otherEnumerator.Current)) return false;");
                 }
+
+                ssb.AppendLine("return !otherEnumerator.MoveNext();");
             }
 
-            ssb.AppendLine("return true;");
+            if (this.UniqueLink is not null)
+            {
+                ssb.AppendLine("return true;");
+            }
         }
     }
 
@@ -2998,6 +2956,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         using (var scopeMethod = ssb.ScopeBrace($"public void ClearChains()"))
         {
+            if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.IntegralityEnabled))
+            {
+                ssb.AppendLine("this.integralityHash = 0;");
+            }
+
             if (this.Links != null)
             {
                 foreach (var link in this.Links)

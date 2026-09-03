@@ -7,6 +7,9 @@ using Xunit;
 
 namespace xUnitTest;
 
+/// <summary>
+/// Provides a fixture for tests of isolation modes, commit behavior, and key conflicts.
+/// </summary>
 [TinyhandObject]
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 public partial record class NoDefaultConstructorClass
@@ -25,6 +28,9 @@ public partial record class NoDefaultConstructorClass
     public string Name { get; set; } = string.Empty;
 }
 
+/// <summary>
+/// Provides a fixture for tests of isolation modes, commit behavior, and key conflicts.
+/// </summary>
 [ValueLinkObject(Isolation = IsolationLevel.Serializable)]
 public partial record SerializableRoom
 {
@@ -36,6 +42,9 @@ public partial record SerializableRoom
     }
 }
 
+/// <summary>
+/// Provides a fixture for tests of isolation modes, commit behavior, and key conflicts.
+/// </summary>
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 public partial record RepeatableRoom
 {
@@ -55,6 +64,9 @@ public partial record RepeatableRoom
         this.RoomId = roomId;
     }
 
+    /// <summary>
+    /// Provides a fixture for tests of isolation modes, commit behavior, and key conflicts.
+    /// </summary>
     [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
     public partial record Booking
     {
@@ -75,6 +87,9 @@ public partial record RepeatableRoom
     }
 }
 
+/// <summary>
+/// Tests isolation modes, commit behavior, and key conflicts.
+/// </summary>
 public class IsolationTest
 {
     [Fact]

@@ -6,6 +6,9 @@ using Arc.Visceral;
 
 namespace ValueLink.Generator;
 
+/// <summary>
+/// Tracks shared source blocks and formatter initialization during generation.
+/// </summary>
 public class GeneratorInformation
 {
     // public const string BuiltinMethod = "global::Tinyhand.Formatters.Builtin";
@@ -47,6 +50,9 @@ public class GeneratorInformation
     private Dictionary<string, GeneratorBlock> keyToBlock = new();
 }
 
+/// <summary>
+/// Stores a named source block and its generation sequence number.
+/// </summary>
 public class GeneratorBlock
 {
     public string BlockKey { get; }

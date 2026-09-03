@@ -8,6 +8,9 @@ using ValueLink;
 
 namespace Benchmark;
 
+/// <summary>
+/// Provides a comparison model for deferred collection changes.
+/// </summary>
 [ValueLinkObject]
 public partial record DeferedTestClass
 {
@@ -27,6 +30,9 @@ public partial record DeferedTestClass
     public string Name { get; private set; } = string.Empty;
 }
 
+/// <summary>
+/// Measures deferred collection changes.
+/// </summary>
 [Config(typeof(BenchmarkConfig))]
 public class DeferedListBenchmark
 {

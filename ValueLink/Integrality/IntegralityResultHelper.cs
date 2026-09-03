@@ -1,10 +1,14 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
+using System;
 using System.Runtime.CompilerServices;
 using Arc.Collections;
 
 namespace ValueLink.Integrality;
 
+/// <summary>
+/// Encodes shared status responses and distinguishes them from protocol payloads.
+/// </summary>
 public static class IntegralityResultHelper
 {
     static IntegralityResultHelper()
@@ -12,10 +16,11 @@ public static class IntegralityResultHelper
         byte[] bytes;
 
         bytes = [(byte)IntegralityResult.Incomplete,];
-        Incomplete = BytePool.RentArray.CreateFrom(bytes).AsMemory();
+        // The memory overload wraps ordinary storage without a shared reference counter.
+        Incomplete = BytePool.RentMemory.CreateFrom(bytes.AsMemory());
 
         bytes = [(byte)IntegralityResult.InvalidData,];
-        InvalidData = BytePool.RentArray.CreateFrom(bytes).AsMemory();
+        InvalidData = BytePool.RentMemory.CreateFrom(bytes.AsMemory());
 
         // bytes = new byte[] { (byte)IntegralityResult.NotImplemented, };
         // NotImplemented = BytePool.RentArray.CreateFrom(bytes).AsMemory();

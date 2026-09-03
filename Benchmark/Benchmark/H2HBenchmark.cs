@@ -7,6 +7,9 @@ using ValueLink;
 
 namespace Benchmark;
 
+/// <summary>
+/// Provides a comparison model for standard collections and generated owners.
+/// </summary>
 public class H2HClass
 {
     public H2HClass(int id)
@@ -17,6 +20,9 @@ public class H2HClass
     public int Id { get; }
 }
 
+/// <summary>
+/// Provides a comparison model for standard collections and generated owners.
+/// </summary>
 [ValueLinkObject]
 public partial class H2HClass2
 {
@@ -29,6 +35,9 @@ public partial class H2HClass2
     private int Id;
 }
 
+/// <summary>
+/// Measures standard collections and generated owners.
+/// </summary>
 [Config(typeof(BenchmarkConfig))]
 public class H2HBenchmark
 {

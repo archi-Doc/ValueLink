@@ -11,43 +11,35 @@ using Arc.Collections;
 namespace ValueLink;
 
 /// <summary>
-/// Represents a collection of objects that is maintained in sorted order.<br/>
-/// Structure: Red-Black Tree + Linked List.
+/// Indexes owned objects by key in a red-black tree, allowing duplicate keys.
 /// </summary>
 /// <typeparam name="TKey">The type of keys in the collection.</typeparam>
 /// <typeparam name="TObj">The type of objects in the collection.</typeparam>
+/// <remarks>
+/// The reverse option changes traversal and comparison order. The chain does not provide synchronization.
+/// </remarks>
 public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
 {
+    /// <summary>
+    /// Returns the owner of an object.
+    /// </summary>
+    /// <param name="obj">The object whose link or owner is requested.</param>
+    /// <returns>The object's owner, or null when unowned.</returns>
     public delegate IGoshujin? ObjectToGoshujinDelegete(TObj obj);
 
+    /// <summary>
+    /// Returns a reference to an object's link for this chain.
+    /// </summary>
+    /// <param name="obj">The object whose link or owner is requested.</param>
+    /// <returns>A reference to the object's link for this chain.</returns>
     public delegate ref Link ObjectToLinkDelegete(TObj obj);
 
-    public delegate ref TKey ObjectToKeyDelegete(TObj obj);
-
     /// <summary>
     /// Initializes a new instance of the <see cref="OrderedChain{TKey, TObj}"/> class (OrderedMultiMap).
     /// </summary>
     /// <param name="goshujin">The instance of Goshujin.</param>
-    /// <param name="objectToGoshujin">ObjectToGoshujinDelegete.</param>
-    /// <param name="objectToKey">ObjectToKeyDelegete.</param>
-    /// <param name="objectToLink">ObjectToLinkDelegete.</param>
-    /// <param name="reverse">true to reverses the order.</param>
-    public OrderedChain(IGoshujin goshujin, ObjectToGoshujinDelegete objectToGoshujin, ObjectToKeyDelegete objectToKey, ObjectToLinkDelegete objectToLink, bool reverse = false)
-    {
-        this.chain = new(reverse);
-        this.goshujin = goshujin;
-        this.objectToGoshujin = objectToGoshujin;
-        this.objectToLink = objectToLink;
-        this.objectToKey = objectToKey;
-        this.Reverse = reverse;
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="OrderedChain{TKey, TObj}"/> class (OrderedMultiMap).
-    /// </summary>
-    /// <param name="goshujin">The instance of Goshujin.</param>
-    /// <param name="objectToGoshujin">ObjectToGoshujinDelegete.</param>
-    /// <param name="objectToLink">ObjectToLinkDelegete.</param>
+    /// <param name="objectToGoshujin">A delegate that returns an object's owner.</param>
+    /// <param name="objectToLink">A delegate that returns a reference to this chain's link.</param>
     /// <param name="reverse">true to reverses the order.</param>
     public OrderedChain(IGoshujin goshujin, ObjectToGoshujinDelegete objectToGoshujin, ObjectToLinkDelegete objectToLink, bool reverse = false)
     {
@@ -55,37 +47,11 @@ public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
         this.goshujin = goshujin;
         this.objectToGoshujin = objectToGoshujin;
         this.objectToLink = objectToLink;
+        this.Reverse = reverse;
     }
 
-    /*public void Add(TObj obj)
-    {
-        if (this.objectToGoshujin(obj) != this.goshujin)
-        {// Check Goshujin
-            throw new UnmatchedGoshujinException();
-        }
-
-        if (this.objectToKey == null)
-        {
-            throw new InvalidOperationException();
-        }
-
-        ref Link link = ref this.objectToLink(obj);
-        ref TKey key = ref this.objectToKey(obj);
-
-        if (link.Node != null)
-        {
-            this.chain.ReplaceNode(link.Node, key);
-        }
-        else
-        {
-            var result = this.chain.Add(key, obj);
-            link.Node = result.node;
-        }
-    }*/
-
     /// <summary>
-    /// Adds a new object to the collection.
-    /// <br/>O(log n) operation.
+    /// Adds an object or updates the key of its existing link.
     /// </summary>
     /// <param name="key">The key of the object to add.</param>
     /// <param name="obj">The object to add.</param>
@@ -110,8 +76,7 @@ public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     }
 
     /// <summary>
-    /// Adds a new object to the collection.
-    /// <br/>O(log n) operation.
+    /// Adds an object or updates the key of its existing link.
     /// </summary>
     /// <param name="key">The key of the object to add.</param>
     /// <param name="obj">The object to add.</param>
@@ -186,6 +151,14 @@ public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
         }
     }
 
+    /// <summary>
+    /// Replaces the instance stored in an existing link without changing ownership.
+    /// </summary>
+    /// <remarks>
+    /// For generated copy-on-write updates. The replacement must already carry the correct owner and copied link state.
+    /// </remarks>
+    /// <param name="previousInstance">The instance currently stored in the chain.</param>
+    /// <param name="newInstance">The replacement instance with the required owner and link state.</param>
     public void UnsafeReplaceInstance(TObj previousInstance, TObj newInstance)
     {
         if (this.objectToGoshujin(previousInstance) != this.goshujin)
@@ -200,14 +173,16 @@ public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
         }
     }
 
+    /// <summary>
+    /// Gets the number of objects currently linked to this chain.
+    /// </summary>
     public int Count => this.chain.Count;
 
     /// <summary>
-    /// Gets the element with the specified key.
-    /// <br/>O(log n) operation.
+    /// Gets the first object with the specified key, or default if none exists.
     /// </summary>
-    /// <param name="key">The key of the element to get or set.</param>
-    /// <returns>The element with the specified key.</returns>
+    /// <param name="key">The key to look up.</param>
+    /// <returns>The first matching object, or default if none exists.</returns>
     public TObj? this[TKey key]
     {
         get
@@ -218,11 +193,10 @@ public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     }
 
     /// <summary>
-    /// Gets the first element with the specified key.
-    /// <br/>O(log n) operation.
+    /// Returns the first object with the specified key, or default if none exists.
     /// </summary>
-    /// <param name="key">The key of the element to get or set.</param>
-    /// <returns>The first element with the specified key.</returns>
+    /// <param name="key">The key to look up.</param>
+    /// <returns>The first matching object, or default if none exists.</returns>
     public TObj? FindFirst(TKey key)
     {
         var node = this.chain.FindFirstNode(key);
@@ -236,10 +210,19 @@ public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     /// <returns>The elements with the specified key.</returns>
     public IEnumerable<TObj> Enumerate(TKey? key) => this.chain.EnumerateValue(key);
 
+    /// <summary>
+    /// Gets the keys in chain enumeration order, including duplicates.
+    /// </summary>
     public IEnumerable<TKey> Keys => this.chain.Keys;
 
+    /// <summary>
+    /// Gets the objects in chain enumeration order.
+    /// </summary>
     public IEnumerable<TObj> Objects => this.chain.Values;
 
+    /// <summary>
+    /// Gets the key-object pairs in chain enumeration order.
+    /// </summary>
     public IEnumerable<KeyValuePair<TKey, TObj>> KeyObjects => this.chain;
 
     /// <summary>
@@ -269,10 +252,10 @@ public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     public TObj? Last => this.chain.Last == null ? default(TObj) : this.chain.Last.Value;
 
     /// <summary>
-    /// Returns the first object with a key that is equal to or greater than the specified key.<br/>If it returns null, it means that the keys of all objects are less than or equal to the specified value.
+    /// Returns the first object whose key is at least the requested key in the chain's comparison order.
     /// </summary>
     /// <param name="key">The specified key.</param>
-    /// <returns>The first object with a key that is equal to or greater than the specified key.</returns>
+    /// <returns>The first matching bound in comparison order, or default if none exists.</returns>
     public TObj? GetLowerBound(TKey key)
     {
         var node = this.chain.GetLowerBound(key);
@@ -280,10 +263,10 @@ public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     }
 
     /// <summary>
-    /// Returns the last object with a key that is equal to or lower than the specified key.<br/>If it returns null, it means that the keys of all objects are greater than or equal to the specified value.
+    /// Returns the last object whose key is at most the requested key in the chain's comparison order.
     /// </summary>
     /// <param name="key">The specified key.</param>
-    /// <returns>The last object with a key that is equal to or lower than the specified key.</returns>
+    /// <returns>The last matching bound in comparison order, or default if none exists.</returns>
     public TObj? GetUpperBound(TKey key)
     {
         var node = this.chain.GetUpperBound(key);
@@ -291,11 +274,11 @@ public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     }
 
     /// <summary>
-    /// Specify the lower and upper bounds of the key, and return the first and last objects within that range.
+    /// Returns the first and last objects in an inclusive range in the chain's comparison order.
     /// </summary>
     /// <param name="lower">The lower bound key.</param>
     /// <param name="upper">The upper bound key.</param>
-    /// <returns>The first and last objects within that range.</returns>
+    /// <returns>The inclusive endpoints, or a pair of default values if the range is empty.</returns>
     public (TObj? Lower, TObj? Upper) GetRange(TKey lower, TKey upper)
     {
         var range = this.chain.GetRange(lower, upper);
@@ -310,7 +293,6 @@ public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     private IGoshujin goshujin;
     private ObjectToGoshujinDelegete objectToGoshujin;
     private ObjectToLinkDelegete objectToLink;
-    private ObjectToKeyDelegete? objectToKey;
     private OrderedMultiMap<TKey, TObj> chain;
 
     /// <summary>
@@ -323,7 +305,7 @@ public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     public struct Link : ILink<TObj>
     {
         /// <summary>
-        /// Gets a value indicating whether this link is currently associated with a node in the chain.
+        /// Gets a value indicating whether the object is currently linked to this chain.
         /// </summary>
         public bool IsLinked => this.Node != null;
 
@@ -353,25 +335,21 @@ public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     public bool IsReadOnly => false;
 
     /// <summary>
-    /// Removes all objects from the collection.
+    /// Unlinks all objects from this chain while preserving their owner references.
     /// </summary>
     public void Clear()
     {
-        while (true)
+        var node = this.chain.First;
+        while (node is not null)
         {
-            var node = this.chain.Last;
-            if (node == null)
-            {
-                break;
-            }
-
-            ref Link link = ref this.objectToLink(node.Value);
-            this.chain.RemoveNode(link.Node!);
-            link.Node = null;
+            this.objectToLink(node.Value) = default;
+            node = node.Next;
         }
+
+        this.chain.Clear();
     }
 
-    void ICollection.CopyTo(Array array, int index) => ((ICollection)this.chain).CopyTo(array, index);
+    void ICollection.CopyTo(Array array, int index) => Internal.ChainHelper.CopyTo(this, array, index);
 
     bool ICollection.IsSynchronized => false;
 
@@ -379,9 +357,21 @@ public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
 
     #endregion
 
+    /// <summary>
+    /// Returns an enumerator over the objects in this chain.
+    /// </summary>
+    /// <returns>An enumerator over linked objects in chain order.</returns>
     public OrderedMultiMap<TKey, TObj>.ValueEnumerable.Enumerator GetEnumerator() => this.chain.Values.GetEnumerator();
 
+    /// <summary>
+    /// Returns an enumerator over the objects in this chain.
+    /// </summary>
+    /// <returns>An enumerator over linked objects in chain order.</returns>
     IEnumerator<TObj> IEnumerable<TObj>.GetEnumerator() => this.chain.Values.GetEnumerator();
 
+    /// <summary>
+    /// Returns an enumerator over the objects in this chain.
+    /// </summary>
+    /// <returns>An enumerator over linked objects in chain order.</returns>
     IEnumerator IEnumerable.GetEnumerator() => this.chain.Values.GetEnumerator();
 }

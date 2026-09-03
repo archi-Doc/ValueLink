@@ -7,6 +7,9 @@ using Xunit;
 
 namespace xUnitTest.CrystalDataTest;
 
+/// <summary>
+/// Provides a fixture for tests of structural credit and borrower models.
+/// </summary>
 [TinyhandObject(Structural = true)]
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 public partial record CreditData
@@ -23,6 +26,9 @@ public partial record CreditData
     // private StorageData<Borrower.GoshujinClass> borrowers = new();
 }
 
+/// <summary>
+/// Provides a fixture for tests of structural credit and borrower models.
+/// </summary>
 [TinyhandObject(Structural = true)]
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 public sealed partial record Borrower // : ITinyhandCustomJournal

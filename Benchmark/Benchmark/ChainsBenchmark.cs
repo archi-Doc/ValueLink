@@ -6,6 +6,9 @@ using ValueLink;
 
 namespace Benchmark;
 
+/// <summary>
+/// Provides a comparison model for chain traversal.
+/// </summary>
 [ValueLinkObject]
 public partial record LinkedListTestClass
 {
@@ -19,6 +22,9 @@ public partial record LinkedListTestClass
     public string Name { get; private set; } = string.Empty;
 }
 
+/// <summary>
+/// Measures chain traversal.
+/// </summary>
 [Config(typeof(BenchmarkConfig))]
 public class ChainsBenchmark
 {

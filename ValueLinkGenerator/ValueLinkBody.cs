@@ -17,6 +17,9 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace ValueLink.Generator;
 
+/// <summary>
+/// Provides Tinyhand interface names used by generated source.
+/// </summary>
 public static class TinyhandBody
 {
     public static readonly string IStructuralRoot = "IStructuralRoot";
@@ -24,6 +27,9 @@ public static class TinyhandBody
     public static readonly string ITinyhandCustomJournal = "Tinyhand.ITinyhandCustomJournal";
 }
 
+/// <summary>
+/// Validates type models and emits owners, chains, and initialization code.
+/// </summary>
 public class ValueLinkBody : VisceralBody<ValueLinkObject>
 {
     public const int StackallocThreshold = 4096;
@@ -184,7 +190,7 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
         category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor Error_IntegralityLink = new DiagnosticDescriptor(
-        id: "CLG031", title: "Integrality link", messageFormat: "The integrality object must have a unique link, and its type must be a struct",
+        id: "CLG031", title: "Integrality link", messageFormat: "The integrality object must have a unique link whose key is an unmanaged struct",
         category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor Error_IntegralityIsolation = new DiagnosticDescriptor(
@@ -203,6 +209,12 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
         id: "CLG035", title: "No primary link", messageFormat: "If Structural is enabled, set a primary link to maintain the correct hierarchy",
         category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
+    internal static readonly DiagnosticDescriptor Error_InaccessibleOwnerRegistration = new(
+        "CLG036", "Cannot register owner", "The containing types of '{0}' must be partial to register its owner formatter", "ValueLinkGenerator", DiagnosticSeverity.Error, true);
+
+    internal static readonly DiagnosticDescriptor Error_UnboundedOwnerRegistration = new(
+        "CLG037", "Owner registration graph is too large", "Type '{0}' exceeds the static registration limit; check recursively expanding generic models or helpers", "ValueLinkGenerator", DiagnosticSeverity.Error, true);
+
     public ValueLinkBody(GeneratorExecutionContext context)
         : base(context)
     {
@@ -214,6 +226,8 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
     }
 
     internal Dictionary<string, List<ValueLinkObject>> Namespaces = new();
+
+    internal (string Calls, string Bridges) OwnerRegistration { get; set; } = (string.Empty, string.Empty);
 
     public void Prepare()
     {
@@ -253,7 +267,6 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
     {
         ScopingStringBuilder ssb = new();
         GeneratorInformation info = new();
-        List<ValueLinkObject> rootObjects = new();
 
         // Namespace
         foreach (var x in this.Namespaces)
@@ -262,8 +275,6 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
             var tinyhandFlag = x.Value.Any(a => a.ContainTinyhandObjectAttribute()); // has TinyhandObjectAttribute
             this.GenerateHeader(ssb, tinyhandFlag);
             ssb.AppendNamespace(x.Key);
-
-            rootObjects.AddRange(x.Value); // For loader generation
 
             var firstFlag = true;
             foreach (var y in x.Value)
@@ -297,9 +308,10 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
         }
 
         cancellationToken.ThrowIfCancellationRequested();
-        if (info.UseTinyhand)
+        var registration = this.OwnerRegistration;
+        if (info.UseTinyhand || registration.Calls.Length > 0)
         {
-            this.GenerateLoader(generator, info, rootObjects, this.Namespaces);
+            this.GenerateLoader(generator, info, registration);
         }
 
         this.FlushDiagnostic();
@@ -313,7 +325,12 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
         {
             if (x.ObjectFlag.HasFlag(ValueLinkObjectFlag.DerivedFromStoragePoint))
             {
-                scope ??= ssb.ScopeBrace("public static partial class StoragePointHelper");
+                if (scope is null)
+                {
+                    ssb.AppendLine("/// <summary>Provides generated acquisition helpers for storage-backed linked objects.</summary>");
+                    scope = ssb.ScopeBrace("public static partial class StoragePointHelper");
+                }
+
                 x.GenerateStoragePointHelper(ssb);
             }
         }
@@ -352,7 +369,7 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
         ssb.AppendLine();
     }
 
-    private void GenerateLoader(IGeneratorInformation generator, GeneratorInformation info, List<ValueLinkObject> rootObjects, Dictionary<string, List<ValueLinkObject>> namespaces)
+    private void GenerateLoader(IGeneratorInformation generator, GeneratorInformation info, (string Calls, string Bridges) registration)
     {
         var ssb = new ScopingStringBuilder();
         this.GenerateHeader(ssb, true);
@@ -366,17 +383,12 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
                 // FlatLoader
                 using (var m = ssb.ScopeBrace("internal static void __gen__cl()"))
                 {
-                    foreach (var x in namespaces.Values)
-                    {
-                        foreach (var y in x)
-                        {
-                            y.GenerateFlatLoader(ssb, info);
-                        }
-                    }
+                    ssb.AppendLine(registration.Calls);
                 }
             }
         }
 
+        ssb.AppendLine(registration.Bridges);
         this.GenerateInitializer(generator, ssb, info);
 
         var result = ssb.Finalize();
@@ -416,8 +428,9 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
 
         ssb.AppendLine();
         using (var scopeValueLink = ssb.ScopeNamespace(ns!))
-        using (var scopeClass = ssb.ScopeBrace("public static class ValueLinkModule" + assemblyId))
         {
+            ssb.AppendLine("/// <summary>Registers generated ValueLink serialization support for this assembly.</summary>");
+            using var scopeClass = ssb.ScopeBrace("public static class ValueLinkModule" + assemblyId);
             ssb.AppendLine("private static bool Initialized;");
             ssb.AppendLine();
             ssb.AppendLine("[ModuleInitializer]");

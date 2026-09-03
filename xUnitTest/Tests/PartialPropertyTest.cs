@@ -4,6 +4,9 @@ using Xunit;
 
 namespace xUnitTest.Tests;
 
+/// <summary>
+/// Provides a fixture for tests of generated partial property accessors.
+/// </summary>
 [ValueLinkObject]
 public partial class PartialPropertyTestClass
 {
@@ -14,6 +17,9 @@ public partial class PartialPropertyTestClass
     public required partial int Id2 { get; init; }
 }
 
+/// <summary>
+/// Tests generated partial property accessors.
+/// </summary>
 public class PartialPropertyTest
 {
     [Fact]
@@ -24,10 +30,10 @@ public class PartialPropertyTest
         g.Add(new() { Id = 2, Id2 = 0,});
         g.Add(new() { Id = 0, Id2 = 10, });
         var array = g.IdChain.Select(x => x.Id).ToArray();
-        array.SequenceEqual([0, 1, 2]);
+        array.SequenceEqual([0, 1, 2]).IsTrue();
         array = g.Select(x => x.Id2).ToArray();
-        array.SequenceEqual([10, 1, 0]);
+        array.SequenceEqual([10, 1, 0]).IsTrue();
         array = g.Id2Chain.Select(x => x.Id2).ToArray();
-        array.SequenceEqual([0, 1, 10]);
+        array.SequenceEqual([0, 1, 10]).IsTrue();
     }
 }

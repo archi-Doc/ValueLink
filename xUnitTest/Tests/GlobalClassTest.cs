@@ -1,6 +1,9 @@
 ﻿using Tinyhand;
 using ValueLink;
 
+/// <summary>
+/// Provides a fixture for tests of generation for a type in the global namespace.
+/// </summary>
 [ValueLinkObject]
 [TinyhandObject]
 public partial class GlobalClassTest

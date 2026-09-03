@@ -9,26 +9,37 @@ using Arc.Collections;
 namespace ValueLink;
 
 /// <summary>
-/// Represents a list of objects that can be accessed by index.<br/>
-/// Bote that the object order is not guaranteed (the order may change on insert and remove operations).<br/>
-/// Structure: Array.
+/// Stores owned objects in an indexed array with constant-time removal.
 /// </summary>
 /// <typeparam name="T">The type of elements in the list.</typeparam>
+/// <remarks>
+/// Insertion and removal can reorder other objects. Adding an existing object moves it to the end. The chain does not provide synchronization.
+/// </remarks>
 public class ListChain<T> : IList<T>, IReadOnlyList<T>
 {
     private const int InitialCapacity = 4;
     private const int MaxCapacity = 0X7FFFFFFF;
 
+    /// <summary>
+    /// Returns the owner of an object.
+    /// </summary>
+    /// <param name="obj">The object whose link or owner is requested.</param>
+    /// <returns>The object's owner, or null when unowned.</returns>
     public delegate IGoshujin? ObjectToGoshujinDelegete(T obj);
 
+    /// <summary>
+    /// Returns a reference to an object's link for this chain.
+    /// </summary>
+    /// <param name="obj">The object whose link or owner is requested.</param>
+    /// <returns>A reference to the object's link for this chain.</returns>
     public delegate ref Link ObjectToLinkDelegete(T obj);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ListChain{T}"/> class (List).
     /// </summary>
     /// <param name="goshujin">The instance of Goshujin.</param>
-    /// <param name="objectToGoshujin">ObjectToGoshujinDelegete.</param>
-    /// <param name="objectToLink">ObjectToLinkDelegete.</param>
+    /// <param name="objectToGoshujin">A delegate that returns an object's owner.</param>
+    /// <param name="objectToLink">A delegate that returns a reference to this chain's link.</param>
     public ListChain(IGoshujin goshujin, ObjectToGoshujinDelegete objectToGoshujin, ObjectToLinkDelegete objectToLink)
     {
         this.goshujin = goshujin;
@@ -36,6 +47,9 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
         this.objectToLink = objectToLink;
     }
 
+    /// <summary>
+    /// Gets the number of objects currently linked to this chain.
+    /// </summary>
     public int Count { get; private set; }
 
     /// <summary>
@@ -59,7 +73,7 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
         internal int RawIndex;
 
         /// <summary>
-        /// Gets a value indicating whether this link is currently associated with an object in the chain.
+        /// Gets a value indicating whether the object is currently linked to this chain.
         /// </summary>
         /// <value><c>true</c> if the object is linked to the chain; otherwise, <c>false</c>.</value>
         public bool IsLinked => this.RawIndex > 0;
@@ -83,8 +97,7 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
     public bool IsReadOnly => false;
 
     /// <summary>
-    /// Adds an object to the end of the list.
-    /// <br/>O(1) operation.
+    /// Adds or moves an object to the end of the list in amortized O(1) time.
     /// </summary>
     /// <param name="obj">The object to be added to the end of the list.</param>
     public void Add(T obj)
@@ -110,8 +123,7 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
     }
 
     /// <summary>
-    /// Adds an object to the end of the list.
-    /// <br/>O(1) operation.
+    /// Adds or moves an object to the end of the list in amortized O(1) time.
     /// </summary>
     /// <param name="obj">The object to be added to the end of the list.</param>
     /// <param name="link">The reference to a link that holds node information in the chain.</param>
@@ -137,7 +149,7 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
     }
 
     /// <summary>
-    /// Removes all objects from the collection.
+    /// Unlinks all objects from this chain while preserving their owner references.
     /// </summary>
     public void Clear()
     {
@@ -160,23 +172,22 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
     public bool Contains(T value) => this.IndexOf(value) >= 0;
 
     /// <summary>
-    /// Copies the list or a portion of it to an array.
+    /// Copies all linked objects to the destination array in enumeration order.
     /// </summary>
     /// <param name="array">The one-dimensional Array that is the destination of the elements copied from list.</param>
     /// <param name="arrayIndex">The zero-based index in array at which copying begins.</param>
     public void CopyTo(T[] array, int arrayIndex) => Array.Copy(this.array, 0, array, arrayIndex, this.Count);
 
     /// <summary>
-    /// Copies the list or a portion of it to an array.
+    /// Copies all linked objects to the destination array in enumeration order.
     /// </summary>
     /// <param name="array">The one-dimensional Array that is the destination of the elements copied from list.</param>
     public void CopyTo(T[] array) => this.CopyTo(array, 0);
 
     /// <summary>
-    /// Removes the object from the <see cref="UnorderedList{T}"/>.<br/>
-    /// O(1) operation.
+    /// Unlinks the object in O(1) time, moving the last object into the vacated slot.
     /// </summary>
-    /// <param name="obj">The object to remove from the <see cref="UnorderedList{T}"/>. </param>
+    /// <param name="obj">The object to unlink. </param>
     /// <returns>true if item is successfully removed.</returns>
     public bool Remove(T obj)
     {
@@ -197,10 +208,9 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
     }
 
     /// <summary>
-    /// Removes the first occurrence of a specific object from the <see cref="UnorderedList{T}"/>.
-    /// <br/>O(1) operation.
+    /// Unlinks the object in O(1) time, moving the last object into the vacated slot.
     /// </summary>
-    /// <param name="obj">The object to remove from the <see cref="UnorderedList{T}"/>. </param>
+    /// <param name="obj">The object to unlink. </param>
     /// <param name="link">The reference to a link that holds node information in the chain.</param>
     /// <returns>true if item is successfully removed.</returns>
     public bool Remove(T obj, ref Link link)
@@ -220,6 +230,14 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
         return false;
     }
 
+    /// <summary>
+    /// Replaces the instance stored in an existing link without changing ownership.
+    /// </summary>
+    /// <remarks>
+    /// For generated copy-on-write updates. The replacement must have the correct owner; this method transfers only this chain's link.
+    /// </remarks>
+    /// <param name="previousInstance">The instance currently stored in the chain.</param>
+    /// <param name="newInstance">The replacement instance with the required owner and link state.</param>
     public void UnsafeReplaceInstance(T previousInstance, T newInstance)
     {
         if (this.objectToGoshujin(previousInstance) != this.goshujin)
@@ -242,38 +260,85 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
     #region IList
 
     /// <summary>
-    /// Gets or sets the element at the specified index.
+    /// Gets or sets the element at the specified index.<br/>
+    /// Setting replaces the element currently at <paramref name="index"/>: the replaced object is
+    /// unlinked from the chain, and the new object takes its place.<br/>
+    /// If the new object is already linked elsewhere in this chain it is moved, and the list shrinks by one.
     /// </summary>
-    /// <param name="index">The zero-based index of the element to get or set.</param>
+    /// <param name="index">The zero-based index to look up.</param>
     /// <returns>The element at the specified index.</returns>
     public T this[int index]
     {
-        get => this.array[index];
+        get
+        {
+            if ((uint)index >= (uint)this.Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(index));
+            }
+
+            return this.array[index];
+        }
 
         set
         {
-            this.Insert(index, value);
+            if (this.objectToGoshujin(value) != this.goshujin)
+            {// Check Goshujin
+                throw new UnmatchedGoshujinException();
+            }
+
+            if ((uint)index >= (uint)this.Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(index));
+            }
+
+            var previous = this.array[index];
+            ref Link newLink = ref this.objectToLink(value);
+            if (newLink.IsLinked)
+            {
+                if (newLink.Index == index)
+                {// Already at this position.
+                    return;
+                }
+
+                // Vacate the slot the new object currently occupies. This may relocate
+                // the replaced object, so its position is read from its link afterwards.
+                this.RemoveInternal(newLink.Index);
+                newLink.RawIndex = 0;
+            }
+
+            ref Link previousLink = ref this.objectToLink(previous);
+            var target = previousLink.Index;
+            previousLink.RawIndex = 0;
+
+            this.array[target] = value;
+            newLink.Index = target;
         }
     }
 
     /// <summary>
-    /// Returns the zero-based index of the first occurrence of a value in the list.
-    /// <br/>O(1) operation.
+    /// Returns the object's link index, or -1 if it is absent or belongs to another owner.
     /// </summary>
     /// <param name="obj">The object to locate in the list.</param>
-    /// <returns>The zero-based index of the first occurrence of item.</returns>
+    /// <returns>The object's zero-based index, or -1 if absent.</returns>
     public int IndexOf(T obj)
     {
+        if (obj is null || this.objectToGoshujin(obj) != this.goshujin)
+        {
+            return -1;
+        }
+
         ref Link link = ref this.objectToLink(obj);
         return link.Index;
     }
 
     /// <summary>
-    /// Inserts an element into the <see cref="UnorderedList{T}"/> at the specified index.
-    /// <br/>O(1) operation.
+    /// Inserts or moves an object to the specified index in amortized O(1) time.
     /// </summary>
     /// <param name="index">The zero-based index at which item should be inserted.</param>
     /// <param name="obj">The object to insert.</param>
+    /// <remarks>
+    /// The displaced object moves to the end. Inserting an existing object at Count moves it to the final index.
+    /// </remarks>
     public void Insert(int index, T obj)
     {
         if (this.objectToGoshujin(obj) != this.goshujin)
@@ -290,6 +355,10 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
         if (link.IsLinked)
         {
             this.RemoveInternal(link.Index);
+            if (index > this.Count)
+            {// Unlinking the object shrank the list; append instead.
+                index = this.Count;
+            }
         }
 
         if (this.Count >= this.Capacity)
@@ -328,12 +397,27 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
 
     #region Enumerator
 
+    /// <summary>
+    /// Returns an enumerator over the objects in this chain.
+    /// </summary>
+    /// <returns>An enumerator over linked objects in chain order.</returns>
     public Enumerator GetEnumerator() => new Enumerator(this.array, this.Count);
 
+    /// <summary>
+    /// Returns an enumerator over the objects in this chain.
+    /// </summary>
+    /// <returns>An enumerator over linked objects in chain order.</returns>
     IEnumerator<T> IEnumerable<T>.GetEnumerator() => new Enumerator(this.array, this.Count);
 
+    /// <summary>
+    /// Returns an enumerator over the objects in this chain.
+    /// </summary>
+    /// <returns>An enumerator over linked objects in chain order.</returns>
     IEnumerator IEnumerable.GetEnumerator() => new Enumerator(this.array, this.Count);
 
+    /// <summary>
+    /// Enumerates the objects in a list chain by index.
+    /// </summary>
     public struct Enumerator : IEnumerator<T>
     {
         private readonly T[] array;

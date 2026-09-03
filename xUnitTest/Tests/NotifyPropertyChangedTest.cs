@@ -7,6 +7,9 @@ using Xunit;
 
 namespace xUnitTest;
 
+/// <summary>
+/// Provides a fixture for tests of generated property-change notifications.
+/// </summary>
 [ValueLinkObject]
 public partial class TestNotifyPropertyChanged : INotifyPropertyChanged
 {
@@ -16,6 +19,9 @@ public partial class TestNotifyPropertyChanged : INotifyPropertyChanged
     public event PropertyChangedEventHandler? PropertyChanged;
 }
 
+/// <summary>
+/// Provides a fixture for tests of generated property-change notifications.
+/// </summary>
 [ValueLinkObject(ExplicitPropertyChanged = "propertyChanged")]
 public partial class TestNotifyPropertyChanged2 : INotifyPropertyChanged
 {
@@ -38,6 +44,9 @@ public partial class TestNotifyPropertyChanged2 : INotifyPropertyChanged
     }
 }
 
+/// <summary>
+/// Provides a fixture for tests of generated property-change notifications.
+/// </summary>
 [ValueLinkObject]
 public partial class TestNotifyPropertyChanged3
 {
@@ -65,6 +74,9 @@ public partial class TestNotifyPropertyChanged3
     }
 }
 
+/// <summary>
+/// Tests generated property-change notifications.
+/// </summary>
 public class NotifyPropertyChangedTest
 {
     [Fact]

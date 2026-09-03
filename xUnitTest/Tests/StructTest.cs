@@ -10,6 +10,9 @@ using Xunit;
 
 namespace xUnitTest;
 
+/// <summary>
+/// Provides a fixture for tests of linked record ownership and equality.
+/// </summary>
 [ValueLinkObject]
 [TinyhandObject]
 public partial record TestStruct : IEquatable<TestStruct>
@@ -47,6 +50,9 @@ public partial record TestStruct : IEquatable<TestStruct>
     public override int GetHashCode() => HashCode.Combine(this.Id, this, Name, this.Age);
 }
 
+/// <summary>
+/// Tests linked record ownership and equality.
+/// </summary>
 public class StructTest
 {
     [Fact]

@@ -10,6 +10,9 @@ using Xunit;
 
 namespace xUnitTest;
 
+/// <summary>
+/// Provides a fixture for tests of lock acquisition and isolation.
+/// </summary>
 [ValueLinkObject(Isolation = IsolationLevel.Serializable)]
 public partial record LockTestClass
 {
@@ -21,6 +24,9 @@ public partial record LockTestClass
     }
 }
 
+/// <summary>
+/// Provides a fixture for tests of lock acquisition and isolation.
+/// </summary>
 [TinyhandObject]
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 public partial record IsolationTestClass
@@ -154,6 +160,9 @@ public partial record IsolationTestClass
     private string name3 = string.Empty;
 }
 
+/// <summary>
+/// Tests lock acquisition and isolation.
+/// </summary>
 public class LockTest
 {
     [Fact]

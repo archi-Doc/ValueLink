@@ -17,6 +17,9 @@ public enum PropertyAccessibility
     GetterOnly,
 }
 
+/// <summary>
+/// Stores Tinyhand union metadata without referencing the runtime attribute.
+/// </summary>
 public sealed class TinyhandUnionAttributeMock
 {
     public static readonly string SimpleName = "TinyhandUnion";
@@ -24,6 +27,9 @@ public sealed class TinyhandUnionAttributeMock
     public static readonly string FullName = "Tinyhand." + Name;
 }
 
+/// <summary>
+/// Parses Tinyhand object options for source generation.
+/// </summary>
 public sealed class TinyhandObjectAttributeMock
 {
     public static readonly string SimpleName = "TinyhandObject";
@@ -147,6 +153,9 @@ public sealed class TinyhandObjectAttributeMock
     public bool LockObjectIsLockable { get; set; }
 }
 
+/// <summary>
+/// Parses serialization keys and generated-property options.
+/// </summary>
 public class KeyAttributeMock
 {
     public static readonly string SimpleName = "Key";
@@ -223,6 +232,9 @@ public class KeyAttributeMock
     }
 }
 
+/// <summary>
+/// Represents an instruction to use member names as serialization keys.
+/// </summary>
 public class MemberNameAsKeyAttributeMock
 {
     public static readonly string SimpleName = "MemberNameAsKey";
@@ -237,6 +249,9 @@ public class MemberNameAsKeyAttributeMock
     }
 }
 
+/// <summary>
+/// Parses length limits applied to generated setters.
+/// </summary>
 public class MaxLengthAttributeMock
 {
     public static readonly string SimpleName = "MaxLength";

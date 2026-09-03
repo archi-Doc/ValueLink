@@ -14,6 +14,9 @@ using ValueLink;
 
 namespace ConsoleApp1;
 
+/// <summary>
+/// Demonstrates a minimal linked type.
+/// </summary>
 [ValueLinkObject]
 public partial class TinyClass
 {// Tiny class to demonstrate how ValueLink works.
@@ -27,6 +30,9 @@ public partial class TinyClass
     }
 }
 
+/// <summary>
+/// Demonstrates Tinyhand serialization of linked objects.
+/// </summary>
 [ValueLinkObject]
 [TinyhandObject] // Add a TinyhandObject attribute to use TinyhandSerializer.
 public partial class SerializeClass
@@ -72,6 +78,9 @@ public partial class SerializeClass
     }
 }
 
+/// <summary>
+/// Demonstrates generated property-change notifications.
+/// </summary>
 [ValueLinkObject]
 public partial class AutoNotifyClass
 {
@@ -93,6 +102,9 @@ public partial class AutoNotifyClass
     }
 }
 
+/// <summary>
+/// Demonstrates manually maintained chain membership.
+/// </summary>
 [ValueLinkObject]
 public partial class ManualLinkClass
 {
@@ -117,6 +129,9 @@ public partial class ManualLinkClass
     }
 }
 
+/// <summary>
+/// Demonstrates observable collection and value-change notifications.
+/// </summary>
 [ValueLinkObject]
 public partial class ObservableClass
 {
@@ -130,6 +145,9 @@ public partial class ObservableClass
     }
 }
 
+/// <summary>
+/// Provides inherited fields for constructor-targeted link examples.
+/// </summary>
 public class BaseClass
 {// Base class is not ValueLinkObject.
     protected int id;
@@ -137,6 +155,9 @@ public class BaseClass
     protected string name = string.Empty;
 }
 
+/// <summary>
+/// Demonstrates ordered links to inherited fields.
+/// </summary>
 [ValueLinkObject]
 public partial class DerivedClass : BaseClass
 {
@@ -148,6 +169,9 @@ public partial class DerivedClass : BaseClass
     }
 }
 
+/// <summary>
+/// Demonstrates alternate indexes over inherited fields.
+/// </summary>
 [ValueLinkObject]
 public partial class DerivedClass2 : BaseClass
 {
@@ -166,6 +190,9 @@ public partial class DerivedClass3 : DerivedClass
     protected string name2 = string.Empty;
 }*/
 
+/// <summary>
+/// Demonstrates link predicates and membership callbacks.
+/// </summary>
 [ValueLinkObject]
 public partial class AdditionalMethodClass
 {
@@ -191,6 +218,9 @@ public partial class AdditionalMethodClass
 }
 
 // An example of an object with the IsolationLevel set to RepeatableRead.
+/// <summary>
+/// Demonstrates record updates through repeatable-read writers.
+/// </summary>
 [TinyhandObject]
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 public partial record RepeatableClass

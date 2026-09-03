@@ -4,6 +4,9 @@ using Xunit;
 
 namespace xUnitTest;
 
+/// <summary>
+/// Tests test scaffolding.
+/// </summary>
 public class TemplateTest
 {
     [Fact]

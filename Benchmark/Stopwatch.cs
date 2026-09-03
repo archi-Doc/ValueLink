@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace Benchmark;
 
+/// <summary>
+/// Records elapsed times and formats benchmark timing summaries.
+/// </summary>
 public class Stopwatch
 {
     private readonly double frequencyR;
@@ -83,6 +86,9 @@ public class Stopwatch
 
     public double GetElapsed() => (double)(this.stopwatch.ElapsedTicks - this.restartTicks) * this.frequencyR;
 
+    /// <summary>
+    /// Stores an elapsed duration and its optional description.
+    /// </summary>
     public class Record
     {
         public double Elapsed { get; set; }

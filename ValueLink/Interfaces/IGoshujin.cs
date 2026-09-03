@@ -5,22 +5,22 @@ using System.Collections;
 namespace ValueLink;
 
 /// <summary>
-/// A base interface for Goshujin (Owner class).
+/// Defines ownership and chain-management operations for linked objects.
 /// </summary>
 public interface IGoshujin
 {
     /// <summary>
-    /// Clears the objects registered in Goshujin's Chains.<br/>
-    /// Note that references to the Goshujin instance are preserved,<br/>
-    /// and if exclusive control is enabled, call this method within a lock statement.
+    /// Clears all chain memberships while preserving owner references. Acquire the owner lock when synchronization is required.
     /// </summary>
     void ClearChains();
 
     /// <summary>
-    /// Clears the objects registered in Goshujin's Primary Chain<br/>
-    /// and resets their references to the Goshujin instance.<br/>
-    /// If exclusive control is enabled, call this method within a lock statement.
+    /// Removes primary-chain objects from every chain and resets their owner references. Acquire the owner lock when required.
     /// </summary>
+    /// <remarks>
+    /// Generated owners support this only with a primary chain and None or Serializable isolation;
+    /// other configurations throw NotImplementedException.
+    /// </remarks>
     void ClearAll();
 
     /// <summary>
@@ -31,7 +31,7 @@ public interface IGoshujin
 }
 
 /// <summary>
-/// A base interface for Goshujin (Owner class).
+/// Defines ownership and chain-management operations for linked objects.
 /// </summary>
 /// <typeparam name="TObject">The type of the object to be managed by the Goshujin.</typeparam>
 public interface IGoshujin<TObject> : IGoshujin

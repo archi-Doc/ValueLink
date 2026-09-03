@@ -12,6 +12,9 @@ using Arc.Collections;
 
 namespace Benchmark;
 
+/// <summary>
+/// Creates and shuffles input data for collection benchmarks.
+/// </summary>
 public static class BenchmarkHelper
 {
     public static void Shuffle<T>(Random r, T[] array)

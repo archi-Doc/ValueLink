@@ -5,7 +5,7 @@
 namespace ValueLink.Integrality;
 
 /// <summary>
-/// A structure representing the result of the integration and various counts.
+/// Records the synchronization result and reported iteration, integration, and trimming counts.
 /// </summary>
 public readonly record struct IntegralityResultAndCount
 {
@@ -35,8 +35,11 @@ public readonly record struct IntegralityResultAndCount
     public bool IsSuccess => this.Result == IntegralityResult.Success;
 
     /// <summary>
-    /// Gets a value indicating whether any items were modified during the integration.
+    /// Gets a value indicating whether the reported integration or trimming count is positive.
     /// </summary>
+    /// <remarks>
+    /// Removals performed while comparing keys are not included in these counters.
+    /// </remarks>
     public bool IsModified => this.IntegratedCount > 0 || this.TrimmedCount > 0;
 
     /// <summary>

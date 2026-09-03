@@ -12,6 +12,9 @@ using Xunit;
 
 namespace xUnitTest;
 
+/// <summary>
+/// Provides a fixture for tests of concurrent repeatable-read transactions.
+/// </summary>
 [TinyhandObject(ExplicitKeysOnly = true, Structural = true)]
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 public partial record RepeatableItem
@@ -43,6 +46,9 @@ public partial record RepeatableItem
     public partial string Name { get; private set; } = string.Empty;
 }
 
+/// <summary>
+/// Simulates concurrent purchases through repeatable-read writers.
+/// </summary>
 public class RepeatableCustomer
 {
     public RepeatableCustomer(int id)
@@ -87,6 +93,9 @@ public class RepeatableCustomer
     }
 }
 
+/// <summary>
+/// Tests concurrent repeatable-read transactions.
+/// </summary>
 public class IsolationTest2
 {
     [Fact]

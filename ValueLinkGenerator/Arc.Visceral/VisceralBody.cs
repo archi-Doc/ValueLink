@@ -14,6 +14,10 @@ using Microsoft.CodeAnalysis;
 
 namespace Arc.Visceral;
 
+/// <summary>
+/// Caches type models and diagnostics for a source-generation pass.
+/// </summary>
+/// <typeparam name="T">The concrete compiler-symbol model type.</typeparam>
 public class VisceralBody<T>
     where T : VisceralObjectBase<T>, new()
 {

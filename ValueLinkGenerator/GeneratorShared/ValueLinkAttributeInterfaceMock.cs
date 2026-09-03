@@ -41,6 +41,9 @@ public enum ValueLinkAccessibility
     Inherit,
 }
 
+/// <summary>
+/// Converts compiler attribute arguments into generator option values.
+/// </summary>
 public static class AttributeHelper
 {
     public static bool IsLocatable(this ChainType chainType) => chainType switch
@@ -74,6 +77,9 @@ public static class AttributeHelper
     }
 }
 
+/// <summary>
+/// Parses owner, isolation, and synchronization options for generation.
+/// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = true)]
 public sealed class ValueLinkObjectAttributeMock : Attribute
 {
@@ -151,6 +157,9 @@ public sealed class ValueLinkObjectAttributeMock : Attribute
     }
 }
 
+/// <summary>
+/// Parses chain and link options for generation.
+/// </summary>
 [AttributeUsage(AttributeTargets.Constructor | AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = true, Inherited = true)]
 public sealed class LinkAttributeMock : Attribute
 {
@@ -256,6 +265,9 @@ public sealed class LinkAttributeMock : Attribute
     }
 }
 
+/// <summary>
+/// Parses generator output and initialization options.
+/// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = true)]
 public sealed class ValueLinkGeneratorOptionAttributeMock : Attribute
 {

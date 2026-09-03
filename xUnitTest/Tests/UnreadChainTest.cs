@@ -8,6 +8,9 @@ using Xunit;
 
 namespace xUnitTest;
 
+/// <summary>
+/// Provides a fixture for tests of manual unread-chain membership.
+/// </summary>
 [TinyhandObject]
 [ValueLinkObject]
 public partial class UnreadChainTestClass
@@ -36,6 +39,9 @@ public partial class UnreadChainTestClass
     }
 }
 
+/// <summary>
+/// Provides a fixture for tests of manual unread-chain membership.
+/// </summary>
 [TinyhandObject]
 [ValueLinkObject]
 public partial class UnreadChainTestClass2
@@ -64,6 +70,9 @@ public partial class UnreadChainTestClass2
     }
 }
 
+/// <summary>
+/// Tests manual unread-chain membership.
+/// </summary>
 public class UnreadChainTest
 {
     [Fact]

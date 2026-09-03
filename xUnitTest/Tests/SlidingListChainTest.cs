@@ -6,6 +6,9 @@ using Xunit;
 
 namespace xUnitTest;
 
+/// <summary>
+/// Provides a fixture for tests of sliding-window positions and capacity.
+/// </summary>
 [ValueLinkObject]
 public partial class SlidingListChainClass
 {
@@ -21,6 +24,9 @@ public partial class SlidingListChainClass
     public override string ToString() => this.Id.ToString();
 }
 
+/// <summary>
+/// Tests sliding-window positions and capacity.
+/// </summary>
 public class SlidingListChainTest
 {
     [Fact]
@@ -36,7 +42,7 @@ public class SlidingListChainTest
         new SlidingListChainClass(4).Goshujin = g;
 
         var array = g.SlidingListChain.Select(x => x.Id).ToArray();
-        array.SequenceEqual([]);
+        array.SequenceEqual([]).IsTrue();
 
         g.SlidingListChain.Resize(4);
 
@@ -47,10 +53,10 @@ public class SlidingListChainTest
         g.SlidingListChain.Set(4, g.IdChain.FindFirst(4)!);
 
         array = g.SlidingListChain.Select(x => x.Id).ToArray();
-        array.SequenceEqual([0, 1, 2, 3]);
+        array.SequenceEqual([0, 1, 2, 3]).IsTrue();
 
         var c = g.IdChain.FindFirst(0)!;
-       c.Goshujin = null;
+        c.Goshujin = null;
         g.SlidingListChain.Get(0).IsNull();
         g.SlidingListChain.StartPosition.Is(1);
         c.SlidingListLink.IsLinked.IsFalse();

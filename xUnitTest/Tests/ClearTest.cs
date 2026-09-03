@@ -6,9 +6,15 @@ using Xunit;
 
 namespace xUnitTest;
 
+/// <summary>
+/// Provides a fixture for tests of chain clearing and ownership cleanup.
+/// </summary>
 [ValueLinkObject]
 public partial class ClearTestClass
 {
+    /// <summary>
+    /// Extends the generated owner for tests of chain clearing and ownership cleanup.
+    /// </summary>
     public partial class GoshujinClass
     {
         public int[] GetArray()
@@ -24,6 +30,9 @@ public partial class ClearTestClass
     }
 }
 
+/// <summary>
+/// Tests chain clearing and ownership cleanup.
+/// </summary>
 public class ClearTest
 {
     [Fact]
@@ -37,9 +46,9 @@ public class ClearTest
         var tc3 = new ClearTestClass(3);
         tc3.Goshujin = g;
 
-        g.GetArray().SequenceEqual([1, 2, 3,]);
+        g.GetArray().SequenceEqual([1, 2, 3,]).IsTrue();
         g.ClearChains();
-        g.GetArray().SequenceEqual([]);
+        g.GetArray().SequenceEqual([]).IsTrue();
         tc1.Goshujin.Is(g);
         tc2.Goshujin.Is(g);
         tc3.Goshujin.Is(g);
@@ -56,9 +65,9 @@ public class ClearTest
         var tc3 = new ClearTestClass(3);
         tc3.Goshujin = g;
 
-        g.GetArray().SequenceEqual([1, 2, 3,]);
+        g.GetArray().SequenceEqual([1, 2, 3,]).IsTrue();
         g.ClearAll();
-        g.GetArray().SequenceEqual([]);
+        g.GetArray().SequenceEqual([]).IsTrue();
         tc1.Goshujin.Is(null);
         tc2.Goshujin.Is(null);
         tc3.Goshujin.Is(null);

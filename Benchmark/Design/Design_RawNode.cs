@@ -7,6 +7,9 @@ using ValueLink;
 
 namespace Benchmark.Draft;
 
+/// <summary>
+/// Provides a comparison model for raw-node linked-list designs.
+/// </summary>
 public class LinkedListChain5<T>
 {
     public LinkedListChain5(Func<T, LinkedListNode<T>?> getter, Action<T, LinkedListNode<T>?> setter)
@@ -45,6 +48,9 @@ public class LinkedListChain5<T>
     private LinkedList<T> chain = new();
 }
 
+/// <summary>
+/// Owns objects in a hand-written collection benchmark.
+/// </summary>
 public sealed class TestGoshujin5
 {
     public TestGoshujin5()
@@ -64,6 +70,9 @@ public sealed class TestGoshujin5
     public LinkedListChain5<TestClass5> IdChain = new(static x => x.IdNode, static (x, y) => { x.IdNode = y; });
 }
 
+/// <summary>
+/// Provides a comparison model for raw-node linked-list designs.
+/// </summary>
 public class TestClass5
 {
     public TestClass5(int id)

@@ -1,4 +1,4 @@
-﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
+// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
 using System.Collections;
@@ -14,35 +14,51 @@ using Arc.Collections;
 namespace ValueLink;
 
 /// <summary>
-/// Represents an observable collection of objects that can be accessed by index.<br/>
-/// Structure: ObservableCollection (Array).
+/// Stores owned objects in an indexed collection with change notifications.
 /// </summary>
 /// <typeparam name="T">The type of elements in the list.</typeparam>
+/// <remarks>
+/// Reference-type objects are matched by identity. This chain does not marshal notifications to a UI thread or provide synchronization.
+/// </remarks>
 public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCollectionChanged, INotifyPropertyChanged
 {
+    /// <summary>
+    /// Returns the owner of an object.
+    /// </summary>
+    /// <param name="obj">The object whose link or owner is requested.</param>
+    /// <returns>The object's owner, or null when unowned.</returns>
     public delegate IGoshujin? ObjectToGoshujinDelegete(T obj);
 
+    /// <summary>
+    /// Returns a reference to an object's link for this chain.
+    /// </summary>
+    /// <param name="obj">The object whose link or owner is requested.</param>
+    /// <returns>A reference to the object's link for this chain.</returns>
     public delegate ref Link ObjectToLinkDelegete(T obj);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ObservableChain{T}"/> class (List).
     /// </summary>
     /// <param name="goshujin">The instance of Goshujin.</param>
-    /// <param name="objectToGoshujin">ObjectToGoshujinDelegete.</param>
-    /// <param name="objectToLink">ObjectToLinkDelegete.</param>
+    /// <param name="objectToGoshujin">A delegate that returns an object's owner.</param>
+    /// <param name="objectToLink">A delegate that returns a reference to this chain's link.</param>
     public ObservableChain(IGoshujin goshujin, ObjectToGoshujinDelegete objectToGoshujin, ObjectToLinkDelegete objectToLink)
     {
         this.goshujin = goshujin;
         this.objectToGoshujin = objectToGoshujin;
         this.objectToLink = objectToLink;
+        this.chain = new(objectToLink);
     }
 
+    /// <summary>
+    /// Gets the number of objects currently linked to this chain.
+    /// </summary>
     public int Count => this.chain.Count;
 
-    private IGoshujin goshujin;
-    private ObjectToGoshujinDelegete objectToGoshujin;
-    private ObjectToLinkDelegete objectToLink;
-    private ObservableCollection<T> chain = new();
+    private readonly IGoshujin goshujin;
+    private readonly ObjectToGoshujinDelegete objectToGoshujin;
+    private readonly ObjectToLinkDelegete objectToLink;
+    private readonly LinkedObservableCollection chain;
 
     event NotifyCollectionChangedEventHandler? INotifyCollectionChanged.CollectionChanged
     {
@@ -56,8 +72,14 @@ public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCo
         remove => ((INotifyPropertyChanged)this.chain).PropertyChanged -= value;
     }
 
+    /// <summary>
+    /// Tracks an object's membership in an observable chain.
+    /// </summary>
     public struct Link : ILink<T>
     {
+        /// <summary>
+        /// Gets a value indicating whether the object is currently linked to this chain.
+        /// </summary>
         public bool IsLinked { get; internal set; }
     }
 
@@ -68,15 +90,24 @@ public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCo
     /// </summary>
     public bool IsReadOnly => false;
 
+    /// <summary>
+    /// Copies all linked objects to the destination array in enumeration order.
+    /// </summary>
+    /// <param name="array">The destination array.</param>
+    /// <param name="index">The zero-based destination index.</param>
+    void ICollection.CopyTo(Array array, int index) => ((ICollection)this.chain).CopyTo(array, index);
+
     bool ICollection.IsSynchronized => false;
 
     object ICollection.SyncRoot => this;
 
     /// <summary>
-    /// Adds an object to the end of the collection.
-    /// <br/>O(1) operation.
+    /// Appends an object or moves an existing object to the end.
     /// </summary>
     /// <param name="obj">The object to be added to the end of the list.</param>
+    /// <remarks>
+    /// Appending an unlinked object is amortized O(1); moving an existing object is O(n).
+    /// </remarks>
     public void Add(T obj)
     {
         if (this.objectToGoshujin(obj) != this.goshujin)
@@ -87,19 +118,20 @@ public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCo
         ref Link link = ref this.objectToLink(obj);
         if (link.IsLinked)
         {
-            this.chain.Remove(obj);
+            this.chain.RemoveAt(this.IndexOf(obj));
         }
 
         this.chain.Add(obj);
-        link.IsLinked = true;
     }
 
     /// <summary>
-    /// Adds an object to the end of the collection.
-    /// <br/>O(1) operation.
+    /// Appends an object or moves an existing object to the end.
     /// </summary>
     /// <param name="obj">The object to be added to the end of the list.</param>
     /// <param name="link">The reference to a link that holds node information in the chain.</param>
+    /// <remarks>
+    /// Appending an unlinked object is amortized O(1); moving an existing object is O(n).
+    /// </remarks>
     public void Add(T obj, ref Link link)
     {
         if (this.objectToGoshujin(obj) != this.goshujin)
@@ -109,53 +141,43 @@ public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCo
 
         if (link.IsLinked)
         {
-            this.chain.Remove(obj);
+            this.chain.RemoveAt(this.IndexOfInstance(obj), ref link);
         }
 
-        this.chain.Add(obj);
-        link.IsLinked = true;
+        this.chain.Add(obj, ref link);
     }
 
     /// <summary>
-    /// Removes all objects from the collection.
+    /// Unlinks all objects from this chain while preserving their owner references.
     /// </summary>
-    public void Clear()
-    {
-        foreach (var x in this)
-        {
-            ref Link link = ref this.objectToLink(x);
-            link.IsLinked = false;
-        }
-
-        this.chain.Clear();
-    }
+    public void Clear() => this.chain.Clear();
 
     /// <summary>
     /// Determines whether an element is in the list.
-    /// <br/>O(n) operation.
+    /// <br/>O(1) operation.
     /// </summary>
     /// <param name="value">The value to locate in the list.</param>
     /// <returns>true if value is found in the list.</returns>
-    public bool Contains(T value) => this.IndexOf(value) >= 0;
+    public bool Contains(T value)
+        => value is not null && this.objectToGoshujin(value) == this.goshujin && this.objectToLink(value).IsLinked;
 
     /// <summary>
-    /// Copies the list or a portion of it to an array.
+    /// Copies all linked objects to the destination array in enumeration order.
     /// </summary>
     /// <param name="array">The one-dimensional Array that is the destination of the elements copied from list.</param>
     /// <param name="arrayIndex">The zero-based index in array at which copying begins.</param>
     public void CopyTo(T[] array, int arrayIndex) => this.chain.CopyTo(array, arrayIndex);
 
     /// <summary>
-    /// Copies the list or a portion of it to an array.
+    /// Copies all linked objects to the destination array in enumeration order.
     /// </summary>
     /// <param name="array">The one-dimensional Array that is the destination of the elements copied from list.</param>
     public void CopyTo(T[] array) => this.CopyTo(array, 0);
 
     /// <summary>
-    /// Removes the first occurrence of a specific object from the <see cref="UnorderedList{T}"/>.
-    /// <br/>O(n) operation.
+    /// Unlinks the object and raises a removal notification in O(n) time.
     /// </summary>
-    /// <param name="obj">The object to remove from the <see cref="UnorderedList{T}"/>. </param>
+    /// <param name="obj">The object to unlink. </param>
     /// <returns>true if item is successfully removed.</returns>
     public bool Remove(T obj)
     {
@@ -175,10 +197,9 @@ public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCo
     }
 
     /// <summary>
-    /// Removes the first occurrence of a specific object from the <see cref="UnorderedList{T}"/>.
-    /// <br/>O(n) operation.
+    /// Unlinks the object and raises a removal notification in O(n) time.
     /// </summary>
-    /// <param name="obj">The object to remove from the <see cref="UnorderedList{T}"/>. </param>
+    /// <param name="obj">The object to unlink. </param>
     /// <param name="link">The reference to a link that holds node information in the chain.</param>
     /// <returns>true if item is successfully removed.</returns>
     public bool Remove(T obj, ref Link link)
@@ -188,10 +209,15 @@ public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCo
             throw new UnmatchedGoshujinException();
         }
 
-        var index = this.IndexOf(obj);
+        if (!link.IsLinked)
+        {
+            return false;
+        }
+
+        var index = this.IndexOfInstance(obj);
         if (index >= 0)
         {
-            this.RemoveAt(index);
+            this.chain.RemoveAt(index, ref link);
             return true;
         }
 
@@ -203,9 +229,12 @@ public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCo
     #region IList
 
     /// <summary>
-    /// Gets or sets the element at the specified index.
+    /// Gets or sets the element at the specified index.<br/>
+    /// Setting replaces the element currently at <paramref name="index"/>: the replaced object is
+    /// unlinked from the chain, and the new object takes its place (raising a Replace notification).<br/>
+    /// If the new object is already linked elsewhere in this chain it is moved, and the collection shrinks by one.
     /// </summary>
-    /// <param name="index">The zero-based index of the element to get or set.</param>
+    /// <param name="index">The zero-based index to look up.</param>
     /// <returns>The element at the specified index.</returns>
     public T this[int index]
     {
@@ -213,22 +242,56 @@ public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCo
 
         set
         {
-            this.Insert(index, value);
-            // throw new InvalidOperationException();
+            if (this.objectToGoshujin(value) != this.goshujin)
+            {// Check Goshujin
+                throw new UnmatchedGoshujinException();
+            }
+
+            if ((uint)index >= (uint)this.chain.Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(index));
+            }
+
+            ref Link newLink = ref this.objectToLink(value);
+            if (newLink.IsLinked)
+            {
+                var current = this.IndexOf(value);
+                if (current == index)
+                {// Already at this position.
+                    return;
+                }
+
+                if (current >= 0)
+                {// Vacate the slot the new object currently occupies.
+                    this.chain.RemoveAt(current);
+                    if (current < index)
+                    {// The removal shifted every later element down by one.
+                        index--;
+                    }
+                }
+            }
+
+            this.chain[index] = value;
         }
     }
 
     /// <summary>
-    /// Returns the zero-based index of the first occurrence of a value in the list.
-    /// <br/>O(n) operation.
+    /// Returns the object's index, or -1 if it is absent or belongs to another owner.
     /// </summary>
     /// <param name="obj">The object to locate in the list.</param>
-    /// <returns>The zero-based index of the first occurrence of item.</returns>
-    public int IndexOf(T obj) => this.chain.IndexOf(obj);
+    /// <returns>The object's zero-based index, or -1 if absent.</returns>
+    public int IndexOf(T obj)
+    {
+        if (!this.Contains(obj))
+        {
+            return -1;
+        }
+
+        return this.IndexOfInstance(obj);
+    }
 
     /// <summary>
-    /// Inserts an element into the <see cref="UnorderedList{T}"/> at the specified index.
-    /// <br/>O(n) operation.
+    /// Inserts or moves an object to the specified index in O(n) time.
     /// </summary>
     /// <param name="index">The zero-based index at which item should be inserted.</param>
     /// <param name="obj">The object to insert.</param>
@@ -239,14 +302,22 @@ public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCo
             throw new UnmatchedGoshujinException();
         }
 
+        if ((uint)index > (uint)this.chain.Count)
+        {
+            throw new ArgumentOutOfRangeException(nameof(index));
+        }
+
         ref Link link = ref this.objectToLink(obj);
         if (link.IsLinked)
         {
-            this.chain.Remove(obj);
+            this.chain.RemoveAt(this.IndexOf(obj));
+            if (index > this.chain.Count)
+            {
+                index = this.chain.Count;
+            }
         }
 
         this.chain.Insert(index, obj);
-        link.IsLinked = true;
     }
 
     /// <summary>
@@ -254,36 +325,130 @@ public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCo
     /// <br/>O(n) operation.
     /// </summary>
     /// <param name="index">The zero-based index of the element to remove.</param>
-    public void RemoveAt(int index)
-    {
-        var obj = this[index];
-        ref Link link = ref this.objectToLink(obj);
-
-        this.chain.RemoveAt(index);
-        link.IsLinked = false;
-    }
+    public void RemoveAt(int index) => this.chain.RemoveAt(index);
 
     /// <summary>
     /// Moves the object at the specified index to a new location in the collection.
     /// </summary>
     /// <param name="oldIndex">The zero-based index specifying the location of the object to be moved.</param>
     /// <param name="newIndex">The zero-based index specifying the new location of the object.</param>
-    public void Move(int oldIndex, int newIndex) => this.chain.Move(oldIndex, newIndex);
+    public void Move(int oldIndex, int newIndex)
+    {
+        if ((uint)oldIndex >= (uint)this.Count)
+        {
+            throw new ArgumentOutOfRangeException(nameof(oldIndex));
+        }
+
+        if ((uint)newIndex >= (uint)this.Count)
+        {
+            throw new ArgumentOutOfRangeException(nameof(newIndex));
+        }
+
+        this.chain.Move(oldIndex, newIndex);
+    }
 
     #endregion
 
     #region Enumerator
 
+    /// <summary>
+    /// Returns an enumerator over the objects in this chain.
+    /// </summary>
+    /// <returns>An enumerator over linked objects in chain order.</returns>
     public IEnumerator<T> GetEnumerator() => this.chain.GetEnumerator();
 
+    /// <summary>
+    /// Returns an enumerator over the objects in this chain.
+    /// </summary>
+    /// <returns>An enumerator over linked objects in chain order.</returns>
     IEnumerator<T> IEnumerable<T>.GetEnumerator() => this.chain.GetEnumerator();
 
+    /// <summary>
+    /// Returns an enumerator over the objects in this chain.
+    /// </summary>
+    /// <returns>An enumerator over linked objects in chain order.</returns>
     System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => this.chain.GetEnumerator();
 
-    void ICollection.CopyTo(Array array, int index)
+    #endregion
+
+    private int IndexOfInstance(T obj)
     {
-        throw new NotImplementedException();
+        if (typeof(T).IsValueType)
+        {
+            return this.chain.IndexOf(obj);
+        }
+
+        for (var i = 0; i < this.chain.Count; i++)
+        {
+            if (ReferenceEquals(this.chain[i], obj))
+            {
+                return i;
+            }
+        }
+
+        return -1;
     }
 
-    #endregion
+    // Update links after the storage mutation and before either notification. A subscriber
+    // may inspect the links or throw; neither case may leave the chain inconsistent.
+    private sealed class LinkedObservableCollection(ObjectToLinkDelegete objectToLink) : ObservableCollection<T>
+    {
+        private static readonly PropertyChangedEventArgs CountChanged = new(nameof(Count));
+        private static readonly PropertyChangedEventArgs IndexerChanged = new("Item[]");
+        private static readonly NotifyCollectionChangedEventArgs ResetChanged = new(NotifyCollectionChangedAction.Reset);
+
+        public void Add(T item, ref Link link) => this.InsertItem(this.Count, item, ref link);
+
+        public void RemoveAt(int index, ref Link link) => this.RemoveItem(index, ref link);
+
+        protected override void InsertItem(int index, T item) => this.InsertItem(index, item, ref objectToLink(item));
+
+        protected override void RemoveItem(int index) => this.RemoveItem(index, ref objectToLink(this.Items[index]));
+
+        protected override void SetItem(int index, T item)
+        {
+            this.CheckReentrancy();
+            var previous = this.Items[index];
+            this.Items[index] = item;
+            objectToLink(previous).IsLinked = false;
+            objectToLink(item).IsLinked = true;
+            this.OnPropertyChanged(IndexerChanged);
+            this.OnCollectionChanged(new(NotifyCollectionChangedAction.Replace, item, previous, index));
+        }
+
+        protected override void ClearItems()
+        {
+            this.CheckReentrancy();
+            for (var i = 0; i < this.Items.Count; i++)
+            {
+                objectToLink(this.Items[i]).IsLinked = false;
+            }
+
+            this.Items.Clear();
+            this.OnPropertyChanged(CountChanged);
+            this.OnPropertyChanged(IndexerChanged);
+            this.OnCollectionChanged(ResetChanged);
+        }
+
+        private void InsertItem(int index, T item, ref Link link)
+        {
+            this.CheckReentrancy();
+            this.Items.Insert(index, item);
+            link.IsLinked = true;
+            this.OnPropertyChanged(CountChanged);
+            this.OnPropertyChanged(IndexerChanged);
+            this.OnCollectionChanged(new(NotifyCollectionChangedAction.Add, item, index));
+        }
+
+        private void RemoveItem(int index, ref Link link)
+        {
+            this.CheckReentrancy();
+            var item = this.Items[index];
+            this.Items.RemoveAt(index);
+            link.IsLinked = false;
+            this.OnPropertyChanged(CountChanged);
+            this.OnPropertyChanged(IndexerChanged);
+            this.OnCollectionChanged(new(NotifyCollectionChangedAction.Remove, item, index));
+        }
+    }
 }

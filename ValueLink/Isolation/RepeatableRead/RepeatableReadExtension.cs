@@ -2,6 +2,9 @@
 
 namespace ValueLink;
 
+/// <summary>
+/// Tests whether a repeatable-read object is a committed, current instance.
+/// </summary>
 public static class RepeatableReadExtension
 {
     public static bool IsValid(this RepeatableReadObjectState state)

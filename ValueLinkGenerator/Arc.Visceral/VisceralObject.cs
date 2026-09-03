@@ -57,6 +57,9 @@ public enum InterfaceImplementation
     NotImplemented,
 }
 
+/// <summary>
+/// Represents an attribute and its arguments for generator inspection.
+/// </summary>
 public class VisceralAttribute : IComparable<VisceralAttribute>
 {
     public VisceralAttribute(string fullName, AttributeData attributeData)
@@ -254,6 +257,10 @@ public enum NullableAnnotation : byte
     Annotated = 2,
 }
 
+/// <summary>
+/// Pairs a type model with its nullable type information.
+/// </summary>
+/// <typeparam name="T">The concrete compiler-symbol model type.</typeparam>
 public class WithNullable<T>
     where T : VisceralObjectBase<T>, new()
 {// Not a smart way, but I think this is the best way to handle nullable type.
@@ -405,6 +412,10 @@ public class WithNullable<T>
     }
 }
 
+/// <summary>
+/// Provides a common model for compiler symbols and reflection metadata.
+/// </summary>
+/// <typeparam name="T">The concrete compiler-symbol model type.</typeparam>
 public abstract class VisceralObjectBase<T> : IComparable<T>
     where T : VisceralObjectBase<T>, new()
 { // Converts ISymbol/Type to VisceralObject.

@@ -3,7 +3,7 @@
 namespace ValueLink.Integrality;
 
 /// <summary>
-/// Represents the internal interface for integrality.
+/// Exposes synchronization limits and validation to generated protocol handlers.
 /// </summary>
 public interface IIntegralityInternal
 {
@@ -18,7 +18,7 @@ public interface IIntegralityInternal
     bool RemoveIfItemNotFound { get; }
 
     /// <summary>
-    /// Gets the maximum length of the memory.
+    /// Gets the maximum byte length of an object-response packet.
     /// </summary>
     int MaxMemoryLength { get; }
 

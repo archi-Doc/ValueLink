@@ -8,6 +8,9 @@ using Microsoft.CodeAnalysis;
 
 namespace Arc.Visceral;
 
+/// <summary>
+/// Describes the getter and setter accessibility of a property.
+/// </summary>
 public struct VisceralProperty
 {
     public Accessibility Getter;

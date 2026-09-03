@@ -287,3 +287,37 @@ internal class Automata<TObj, TMember>
         }
     }
 }
+
+internal sealed class ByteArrayComparer : EqualityComparer<byte[]>
+{
+    public override bool Equals(byte[] first, byte[] second)
+    {
+        if (first is null || second is null)
+        {
+            return ReferenceEquals(first, second);
+        }
+        else if (ReferenceEquals(first, second))
+        {
+            return true;
+        }
+
+        return first.AsSpan().SequenceEqual(second);
+    }
+
+    public override int GetHashCode(byte[] obj)
+    {
+        if (obj is null)
+        {
+            throw new ArgumentNullException(nameof(obj));
+        }
+
+        // FNV-1a (32bit).
+        var hash = 2166136261u;
+        foreach (var x in obj)
+        {
+            hash = (hash ^ x) * 16777619u;
+        }
+
+        return unchecked((int)hash);
+    }
+}

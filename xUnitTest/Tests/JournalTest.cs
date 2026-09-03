@@ -8,6 +8,9 @@ using System;
 
 namespace xUnitTest;
 
+/// <summary>
+/// Provides an ordered composite identifier for journal tests.
+/// </summary>
 [TinyhandObject]
 public readonly partial struct JournalIdentifier : IComparable<JournalIdentifier>, IEquatable<JournalIdentifier>
 {
@@ -50,6 +53,9 @@ public readonly partial struct JournalIdentifier : IComparable<JournalIdentifier
         => this.Id0 == other.Id0 && this.Id1 == other.Id1;
 }
 
+/// <summary>
+/// Provides a fixture for tests of structural journals and replay.
+/// </summary>
 [ValueLinkObject(Isolation = IsolationLevel.Serializable)]
 [TinyhandObject(Structural = true)]
 public partial record JournalTestClass : IEquatableObject
@@ -86,6 +92,9 @@ public partial record JournalTestClass : IEquatableObject
     }
 }
 
+/// <summary>
+/// Provides a fixture for tests of structural journals and replay.
+/// </summary>
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 [TinyhandObject(Structural = true)]
 public partial record JournalTestClass2 : IEquatableObject
@@ -173,6 +182,9 @@ public partial record JournalTestClass2 : IEquatableObject
     }
 }
 
+/// <summary>
+/// Provides a fixture for tests of structural journals and replay.
+/// </summary>
 [TinyhandObject(Structural = true, ExplicitKeysOnly = true)]
 public partial record JournalTestBase
 {
@@ -199,6 +211,9 @@ public partial record JournalTestBase
     private string name = string.Empty;
 }
 
+/// <summary>
+/// Provides a fixture for tests of structural journals and replay.
+/// </summary>
 [TinyhandObject(Structural = true, ExplicitKeysOnly = true)]
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 public partial record JournalTestBase2 : JournalTestBase
@@ -228,6 +243,9 @@ public partial record JournalTestBase3 : JournalTestBase2
     public int Id3 { get; set; }
 }*/
 
+/// <summary>
+/// Provides a fixture for tests of structural journals and replay.
+/// </summary>
 [TinyhandObject(Structural = true)]
 public partial record JournalChildClass : IEquatableObject
 {
@@ -270,6 +288,9 @@ internal partial record StandardData
     private string name = string.Empty;
 }
 
+/// <summary>
+/// Tests structural journals and replay.
+/// </summary>
 public class JournalTest
 {
     [Fact]

@@ -7,7 +7,16 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rid: linux-x64
+            executable: NativeAotTest
+          - os: windows-latest
+            rid: win-x64
+            executable: NativeAotTest.exe
+    runs-on: ${{ matrix.os }}
 
     steps:
     - uses: actions/checkout@v7
@@ -15,9 +24,19 @@ jobs:
       uses: actions/setup-dotnet@v6
       with:
         dotnet-version: 10.0.x
+    - name: Prepare Tinyhand registration fix
+      shell: pwsh
+      run: ./eng/Prepare-Tinyhand.ps1
     - name: Install dependencies
       run: dotnet restore
     - name: Build
       run: dotnet build --configuration Release --no-restore
     - name: Test
-      run: dotnet test --no-restore --verbosity normal
+      run: dotnet test --solution ValueLink.slnx --configuration Release --no-build --no-restore
+    - name: Publish NativeAOT smoke test
+      run: dotnet publish NativeAotTest/NativeAotTest.csproj -c Release -r ${{ matrix.rid }} -o artifacts/native-aot/publish
+    - name: Run NativeAOT smoke test
+      shell: pwsh
+      run: |
+        & ./artifacts/native-aot/publish/${{ matrix.executable }}
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

@@ -7,6 +7,9 @@ using ValueLink;
 
 namespace Benchmark.Draft;
 
+/// <summary>
+/// Provides a comparison model for struct-based link designs.
+/// </summary>
 public class LinkedListChain6<T>
 {
 
@@ -73,6 +76,9 @@ public class LinkedListChain6<T>
     private ObjectToLinkDelegete objectToLink;
     private LinkedList<T> chain = new();
 
+    /// <summary>
+    /// Stores per-object membership for this experimental chain.
+    /// </summary>
     public struct Link : ILink<T>
     {
         public bool IsLinked => this.Node != null;
@@ -83,6 +89,9 @@ public class LinkedListChain6<T>
     }
 }
 
+/// <summary>
+/// Owns objects in a hand-written collection benchmark.
+/// </summary>
 public sealed class TestGoshujin6
 {
     public TestGoshujin6()
@@ -103,6 +112,9 @@ public sealed class TestGoshujin6
     public LinkedListChain6<TestClass6> IdChain = new(static x => ref x.IdLink);
 }
 
+/// <summary>
+/// Provides a comparison model for struct-based link designs.
+/// </summary>
 public class TestClass6
 {
     public TestClass6(int id)

@@ -2,6 +2,11 @@
 
 namespace ValueLink;
 
+/// <summary>
+/// Dispatches generated ownership operations through static interface members.
+/// </summary>
+/// <typeparam name="TGoshujin">The generated owner type.</typeparam>
+/// <typeparam name="TObject">The owned object type.</typeparam>
 public static class ValueLinkInternalHelper<TGoshujin, TObject>
     where TGoshujin : class, IGoshujin
     where TObject : class, IValueLinkObjectInternal<TGoshujin, TObject>
@@ -17,7 +22,7 @@ public static class ValueLinkInternalHelper<TGoshujin, TObject>
 }
 
 /// <summary>
-/// An internal interface for value link object.
+/// Defines static ownership operations implemented by generated linked types.
 /// </summary>
 /// <typeparam name="TGoshujin">The type of the goshujin.</typeparam>
 /// <typeparam name="TObject">The type of the object.</typeparam>

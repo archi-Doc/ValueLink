@@ -6,7 +6,7 @@ using System.Collections.Generic;
 namespace ValueLink;
 
 /// <summary>
-/// Represents a queue that allows deferred adding and removing objects of type <typeparamref name="TObject"/> to/from a <typeparamref name="TGoshujin"/>.
+/// Buffers objects for deferred owner additions or removals.
 /// </summary>
 /// <typeparam name="TGoshujin">The type of the goshujin.</typeparam>
 /// <typeparam name="TObject">The type of the objects managed by the goshujin.</typeparam>

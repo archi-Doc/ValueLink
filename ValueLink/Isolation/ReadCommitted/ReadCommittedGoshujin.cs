@@ -12,8 +12,7 @@ using Tinyhand;
 namespace ValueLink;
 
 /// <summary>
-/// Provides a base class for managing objects with read-committed isolation and mutual exclusion.
-/// Supports object retrieval, creation, locking, deletion, and enumeration with thread safety.
+/// Manages keyed storage adapters with read-committed acquisition and deletion.
 /// </summary>
 /// <typeparam name="TKey">The type of the key used to identify objects.</typeparam>
 /// <typeparam name="TData">The type of the data managed by the objects. Must be non-null.</typeparam>
@@ -23,6 +22,9 @@ namespace ValueLink;
 /// <typeparam name="TGoshujin">
 /// The type of the goshujin (owner class). Must inherit from <see cref="ReadCommittedGoshujin{TKey, TData, TObject, TGoshujin}"/> and implement <see cref="IGoshujin"/>.
 /// </typeparam>
+/// <remarks>
+/// Owner access is synchronized; data retrieval and locking are delegated to each adapter. Direct chain access still requires the owner lock.
+/// </remarks>
 public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : IReadCommittedSemaphore
     where TData : notnull
     where TObject : class, IValueLinkObjectInternal<TGoshujin, TObject>, IDataLocker<TData>
@@ -68,7 +70,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
     public bool IsValid => this.State == GoshujinState.Valid;
 
     /// <summary>
-    /// Sets the state of the goshujin to obsolete.
+    /// Marks the owner as obsolete. The caller must hold LockObject.
     /// </summary>
     public void SetObsolete()
         => this.State = GoshujinState.Obsolete;
@@ -98,7 +100,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
     }
 
     /// <summary>
-    /// Finds the first object matching the specified key.
+    /// Retrieves or creates a storage adapter according to the acquisition mode, returning null when unavailable.
     /// </summary>
     /// <param name="key">The key of the object to find.</param>
     /// <param name="acquisitionMode">The data acquisition mode specifying get, create, or get-or-create behavior.</param>
@@ -147,24 +149,24 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
     }
 
     /// <summary>
-    /// Attempts to retrieve the data for the object matching the specified key, without acquiring a lock.
+    /// Retrieves data through the matching adapter without retaining a data lock.
     /// </summary>
     /// <param name="key">The key of the object to retrieve.</param>
     /// <param name="cancellationToken">A token to observe while waiting for the operation to complete.</param>
     /// <returns>
-    /// A <see cref="ValueTask{TData}"/> containing the data if available; otherwise, <c>null</c>.
+    /// A <see cref="ValueTask{TData}"/> containing the data if available; otherwise, its default value.
     /// </returns>
     public ValueTask<TData?> TryGet(TKey key, CancellationToken cancellationToken = default)
         => this.TryGet(key, ValueLinkGlobal.LockTimeout, cancellationToken);
 
     /// <summary>
-    /// Attempts to retrieve the data for the object matching the specified key, without acquiring a lock.
+    /// Retrieves data through the matching adapter without retaining a data lock.
     /// </summary>
     /// <param name="key">The key of the object to retrieve.</param>
     /// <param name="timeout">The maximum time to wait for the lock. If <see cref="TimeSpan.Zero"/>, the method returns immediately.</param>
     /// <param name="cancellationToken">A token to observe while waiting for the operation to complete.</param>
     /// <returns>
-    /// A <see cref="ValueTask{TData}"/> containing the data if available; otherwise, <c>null</c>.
+    /// A <see cref="ValueTask{TData}"/> containing the data if available; otherwise, its default value.
     /// </returns>
     public ValueTask<TData?> TryGet(TKey key, TimeSpan timeout, CancellationToken cancellationToken = default)
     {
@@ -194,7 +196,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
     /// <param name="acquisitionMode">The data acquisition mode specifying get, create, or get-or-create behavior.</param>
     /// <param name="cancellationToken">A token to observe while waiting for the operation to complete.</param>
     /// <returns>
-    /// A <see cref="ValueTask{DataScope}"/> containing the result and the locked data if successful.
+    /// An asynchronous <see cref="DataScope{TData}"/> acquisition containing the result and the locked data if successful.
     /// </returns>
     public ValueTask<DataScope<TData>> TryLock(TKey key, AcquisitionMode acquisitionMode, CancellationToken cancellationToken = default)
         => this.TryLock(key, acquisitionMode, ValueLinkGlobal.LockTimeout, cancellationToken);
@@ -208,7 +210,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
     /// <param name="cancellationToken">A token to observe while waiting for the operation to complete.</param>
     /// <param name="factory">An optional factory function to create the data instance if it does not exist.</param>
     /// <returns>
-    /// A <see cref="ValueTask{DataScope}"/> containing the result and the locked data if successful.
+    /// An asynchronous <see cref="DataScope{TData}"/> acquisition containing the result and the locked data if successful.
     /// </returns>
     public ValueTask<DataScope<TData>> TryLock(TKey key, AcquisitionMode acquisitionMode, TimeSpan timeout, CancellationToken cancellationToken = default, Func<IStructuralObject, TData>? factory = default)
     {
@@ -305,7 +307,7 @@ Retry:
 
             if (deleted)
             {
-                TObject.RemoveFromGoshujin(obj, (TGoshujin)this, true);
+                TObject.RemoveFromGoshujin(obj, (TGoshujin)this, writeJournal);
             }
         }
 

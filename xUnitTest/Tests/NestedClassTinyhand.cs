@@ -5,6 +5,9 @@ using ValueLink;
 
 namespace Playground.NestedClass;
 
+/// <summary>
+/// Provides a fixture for tests of serialization of nested linked types.
+/// </summary>
 public sealed partial class NestedClassA
 {
     [TinyhandObject(LockObject = "lockObject")]

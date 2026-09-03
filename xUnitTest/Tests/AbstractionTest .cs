@@ -6,6 +6,9 @@ using Xunit;
 
 namespace xUnitTest;
 
+/// <summary>
+/// Provides a fixture for tests of abstract and inherited linked types.
+/// </summary>
 [TinyhandUnion(0, typeof(NonAbstractTestClass))]
 [TinyhandUnion(1, typeof(NonAbstractTestClass2))]
 [ValueLinkObject]
@@ -25,6 +28,9 @@ public abstract partial class AbstractTestClass
     }
 }
 
+/// <summary>
+/// Provides a fixture for tests of abstract and inherited linked types.
+/// </summary>
 [TinyhandObject]
 public partial class NonAbstractTestClass : AbstractTestClass
 {
@@ -43,6 +49,9 @@ public partial class NonAbstractTestClass : AbstractTestClass
     }
 }
 
+/// <summary>
+/// Provides a fixture for tests of abstract and inherited linked types.
+/// </summary>
 [TinyhandObject]
 public partial class NonAbstractTestClass2 : AbstractTestClass
 {
@@ -83,6 +92,9 @@ public sealed partial class GenericTestClass3<TClass>
     public int Id => this.Target.Id;
 }*/
 
+/// <summary>
+/// Tests abstract and inherited linked types.
+/// </summary>
 public class AbstractionTest
 {
     [Fact]

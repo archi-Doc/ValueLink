@@ -12,11 +12,19 @@ jobs:
       with:
         dotnet-version: 10.0.x
     - name: Install dependencies
-      run: dotnet restore
+      shell: pwsh
+      run: |
+        [xml]$project = Get-Content ValueLink/ValueLink.csproj
+        $tinyhand = $project.Project.ItemGroup.PackageReference | Where-Object Include -eq 'Tinyhand'
+        if ($tinyhand.Version -like '*-aotfix.*') {
+          throw 'Publish the Tinyhand fix and update its dependency version before publishing ValueLink. See doc/NativeAOT.md.'
+        }
+        dotnet restore
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     - name: Build
       run: dotnet build --configuration Release --no-restore
     - name: Test
-      run: dotnet test --no-restore --verbosity normal
+      run: dotnet test --solution ValueLink.slnx --configuration Release --no-build --no-restore
 
     - name: Package
       run: dotnet pack -c Release -o bin ValueLink/ValueLink.csproj

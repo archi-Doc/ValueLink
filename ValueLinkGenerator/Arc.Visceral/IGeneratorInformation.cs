@@ -4,6 +4,9 @@ using Microsoft.CodeAnalysis;
 
 namespace Arc.Visceral;
 
+/// <summary>
+/// Exposes compilation settings and output options to generation helpers.
+/// </summary>
 public interface IGeneratorInformation
 {
     public bool AttachDebugger { get; }

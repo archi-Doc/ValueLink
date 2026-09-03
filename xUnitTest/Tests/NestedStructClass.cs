@@ -10,6 +10,9 @@ using Xunit;
 
 namespace xUnitTest;
 
+/// <summary>
+/// Provides a fixture for tests of generation inside nested generic types.
+/// </summary>
 public partial class NestedStructClass<T, U>
     where T : struct
     where U : class

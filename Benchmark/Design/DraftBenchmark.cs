@@ -12,6 +12,9 @@ using ValueLink.Obsolete;
 
 namespace Benchmark.Draft;
 
+/// <summary>
+/// Owns objects in a hand-written collection benchmark.
+/// </summary>
 public sealed class TestGoshujinObsolete
 {
     public TestGoshujinObsolete()
@@ -31,6 +34,9 @@ public sealed class TestGoshujinObsolete
     public ListChainObsolete<TestClassObsolete> IdChain = new();
 }
 
+/// <summary>
+/// Provides a comparison model for experimental collection designs.
+/// </summary>
 public class TestClassObsolete
 {
     public TestClassObsolete(int id)
@@ -67,6 +73,9 @@ public class TestClassObsolete
     public string Name { get; set; } = string.Empty;
 }
 
+/// <summary>
+/// Owns objects in a hand-written collection benchmark.
+/// </summary>
 public sealed class TestGoshujin : IGoshujin
 {
     public TestGoshujin()
@@ -100,6 +109,9 @@ public sealed class TestGoshujin : IGoshujin
     public ListChain<TestClass> IdChain { get; }
 }
 
+/// <summary>
+/// Provides a comparison model for experimental collection designs.
+/// </summary>
 public class TestClass
 {
     public TestClass(int id)
@@ -132,6 +144,9 @@ public class TestClass
     public string Name { get; set; } = string.Empty;
 }
 
+/// <summary>
+/// Provides a comparison model for experimental collection designs.
+/// </summary>
 public class TestClass0
 {
     public TestClass0(int id)
@@ -144,6 +159,9 @@ public class TestClass0
     public string Name { get; set; } = string.Empty;
 }
 
+/// <summary>
+/// Owns objects in a hand-written collection benchmark.
+/// </summary>
 public sealed class TestGoshujin2
 {
     public TestGoshujin2()
@@ -163,6 +181,9 @@ public sealed class TestGoshujin2
     public ListChain2<TestClass2> IdChain = new(static x => x.IdLink);
 }
 
+/// <summary>
+/// Provides a comparison model for experimental collection designs.
+/// </summary>
 public class TestClass2
 {
     public TestClass2(int id)
@@ -199,6 +220,9 @@ public class TestClass2
     public string Name { get; set; } = string.Empty;
 }
 
+/// <summary>
+/// Measures experimental collection designs.
+/// </summary>
 [Config(typeof(BenchmarkConfig))]
 public class DraftBenchmark
 {

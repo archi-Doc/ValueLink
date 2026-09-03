@@ -3,7 +3,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using Arc.Collections;
 
 #pragma warning disable SA1124 // Do not use regions
@@ -11,22 +10,34 @@ using Arc.Collections;
 namespace ValueLink;
 
 /// <summary>
-/// Represents a doubly linked list of objects.<br/>
-/// Structure: Doubly linked list.
+/// Stores owned objects in a doubly linked list.
 /// </summary>
 /// <typeparam name="T">The type of objects in the list.</typeparam>
+/// <remarks>
+/// Links support direct removal and navigation. The chain does not provide synchronization.
+/// </remarks>
 public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
 {
+    /// <summary>
+    /// Returns the owner of an object.
+    /// </summary>
+    /// <param name="obj">The object whose link or owner is requested.</param>
+    /// <returns>The object's owner, or null when unowned.</returns>
     public delegate IGoshujin? ObjectToGoshujinDelegete(T obj);
 
+    /// <summary>
+    /// Returns a reference to an object's link for this chain.
+    /// </summary>
+    /// <param name="obj">The object whose link or owner is requested.</param>
+    /// <returns>A reference to the object's link for this chain.</returns>
     public delegate ref Link ObjectToLinkDelegete(T obj);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="LinkedListChain{T}"/> class (Doubly linked list).
     /// </summary>
     /// <param name="goshujin">The instance of Goshujin.</param>
-    /// <param name="objectToGoshujin">ObjectToGoshujinDelegete.</param>
-    /// <param name="objectToLink">ObjectToLinkDelegete.</param>
+    /// <param name="objectToGoshujin">A delegate that returns an object's owner.</param>
+    /// <param name="objectToLink">A delegate that returns a reference to this chain's link.</param>
     public LinkedListChain(IGoshujin goshujin, ObjectToGoshujinDelegete objectToGoshujin, ObjectToLinkDelegete objectToLink)
     {
         this.goshujin = goshujin;
@@ -47,20 +58,13 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
         }
 
         ref Link link = ref this.objectToLink(obj);
-        /*if (link.Node != null)
-        {
-            this.chain.Remove(link.Node);
-        }
-
-        link.Node = this.chain.AddFirst(obj);*/
-
         if (link.Node != null)
         {
             this.chain.MoveToFirst(link.Node);
         }
         else
         {
-            link.Node = this.chain.AddLast(obj);
+            link.Node = this.chain.AddFirst(obj);
         }
     }
 
@@ -77,13 +81,6 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
         }
 
         ref Link link = ref this.objectToLink(obj);
-        /*if (link.Node != null)
-        {
-            this.chain.Remove(link.Node);
-        }
-
-        link.Node = this.chain.AddLast(obj);*/
-
         if (link.Node != null)
         {
             this.chain.MoveToLast(link.Node);
@@ -132,7 +129,7 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
         ref Link link = ref this.objectToLink(obj);
         if (link.Node is null)
         {
-            link.Node = this.chain.AddLast(obj);
+            link.Node = this.chain.AddFirst(obj);
         }
     }
 
@@ -207,6 +204,14 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
         }
     }
 
+    /// <summary>
+    /// Replaces the instance stored in an existing link without changing ownership.
+    /// </summary>
+    /// <remarks>
+    /// For generated copy-on-write updates. The replacement must already carry the correct owner and copied link state.
+    /// </remarks>
+    /// <param name="previousInstance">The instance currently stored in the chain.</param>
+    /// <param name="newInstance">The replacement instance with the required owner and link state.</param>
     public void UnsafeReplaceInstance(T previousInstance, T newInstance)
     {
         if (this.objectToGoshujin(previousInstance) != this.goshujin)
@@ -221,6 +226,9 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
         }
     }
 
+    /// <summary>
+    /// Gets the number of objects currently linked to this chain.
+    /// </summary>
     public int Count => this.chain.Count;
 
     /// <summary>
@@ -241,15 +249,16 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
     /// <returns>The first object that contains the specified value, if found; otherwise, null.</returns>
     public T? Find(T value)
     {
-        if (value != null)
+        var comparer = EqualityComparer<T>.Default;
+        foreach (var x in this.chain)
         {
-            var c = EqualityComparer<T>.Default;
-            return this.chain.FirstOrDefault(x => c.Equals(x, value));
+            if (comparer.Equals(x, value))
+            {
+                return x;
+            }
         }
-        else
-        {
-            return this.chain.FirstOrDefault(x => x == null);
-        }
+
+        return default;
     }
 
     private IGoshujin goshujin;
@@ -263,7 +272,7 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
     public struct Link : ILink<T>
     {
         /// <summary>
-        /// Gets a value indicating whether this link is currently part of a linked list.
+        /// Gets a value indicating whether the object is currently linked to this chain.
         /// </summary>
         public bool IsLinked => this.Node != null;
 
@@ -291,21 +300,14 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
     public bool IsReadOnly => false;
 
     /// <summary>
-    /// Removes all objects from the collection.
+    /// Unlinks all objects from this chain while preserving their owner references.
     /// </summary>
     public void Clear()
     {
-        UnorderedLinkedList<T>.Node? node;
-        while (true)
+        while (this.chain.Last is { } node)
         {
-            node = this.chain.Last;
-            if (node == null)
-            {
-                break;
-            }
-
             ref Link link = ref this.objectToLink(node.Value);
-            this.chain.Remove(node.Value);
+            this.chain.Remove(node);
             link.Node = null;
         }
     }
@@ -318,9 +320,21 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
 
     #endregion
 
+    /// <summary>
+    /// Returns an enumerator over the objects in this chain.
+    /// </summary>
+    /// <returns>An enumerator over linked objects in chain order.</returns>
     public UnorderedLinkedList<T>.Enumerator GetEnumerator() => this.chain.GetEnumerator();
 
+    /// <summary>
+    /// Returns an enumerator over the objects in this chain.
+    /// </summary>
+    /// <returns>An enumerator over linked objects in chain order.</returns>
     IEnumerator<T> IEnumerable<T>.GetEnumerator() => this.chain.GetEnumerator();
 
+    /// <summary>
+    /// Returns an enumerator over the objects in this chain.
+    /// </summary>
+    /// <returns>An enumerator over linked objects in chain order.</returns>
     System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => this.chain.GetEnumerator();
 }

@@ -6,6 +6,9 @@ using ValueLink;
 
 namespace Benchmark;
 
+/// <summary>
+/// Provides a comparison model for record copying and construction.
+/// </summary>
 [TinyhandObject]
 public partial record CloneClass
 {
@@ -67,6 +70,9 @@ public partial record CloneClass
     public int[] IntArray { get; set; } = Array.Empty<int>();
 }
 
+/// <summary>
+/// Measures record copying and construction.
+/// </summary>
 [Config(typeof(BenchmarkConfig))]
 public class CloneClassBenchmark
 {

@@ -6,6 +6,9 @@ using ValueLink;
 
 namespace Benchmark;
 
+/// <summary>
+/// Provides a comparison model for record isolation and writer operations.
+/// </summary>
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 public partial record IsolationClass
 {
@@ -19,6 +22,9 @@ public partial record IsolationClass
     public string Name { get; private set; } = string.Empty;
 }
 
+/// <summary>
+/// Measures record isolation and writer operations.
+/// </summary>
 [Config(typeof(BenchmarkConfig))]
 public class IsolationBenchmark
 {

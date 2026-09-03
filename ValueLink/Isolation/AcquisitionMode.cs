@@ -3,35 +3,28 @@
 namespace ValueLink;
 
 /// <summary>
-/// Specify the data acquisition mode specifying get, create, or get-or-create behavior.
+/// Selects whether acquisition retrieves existing data or creates new data.
 /// </summary>
 public enum AcquisitionMode
 {
     /// <summary>
-    /// Retrieve the existing data. If an identifier is specified, obtain the data that matches the identifier.<br/>
-    /// If it does not exist, it returns null.<br/>
-    /// TryLock() -> <see cref="DataScopeResult.Retrieved"/> or <see cref="DataScopeResult.NotFound"/>.
+    /// Retrieves existing data and fails when it is absent.
     /// </summary>
     GetOnly,
 
     /// <summary>
-    /// Retrieve the existing data. If an identifier is specified, obtain the data that matches the identifier.<br/>
-    /// If the data does not exist, it is created.<br/>
-    /// TryLock() -> <see cref="DataScopeResult.Retrieved"/> or <see cref="DataScopeResult.Created"/>.
+    /// Retrieves existing data or creates it when absent.
     /// </summary>
     GetOrCreate,
 
     /// <summary>
-    /// Create the data. If an identifier is specified, create the data that matches the identifier.<br/>
-    /// If it already exists, it returns null.<br/>
-    /// TryLock() -> <see cref="DataScopeResult.Created"/> or <see cref="DataScopeResult.AlreadyExists"/>.
+    /// Creates new data and fails when it already exists.
     /// </summary>
     CreateOnly,
 
     /// <summary>
-    /// Retrieve the existing data regardless of the object's state.
-    /// If it does not exist, it returns null.<br/>
-    /// TryLock() -> <see cref="DataScopeResult.Retrieved"/> or <see cref="DataScopeResult.NotFound"/>.
+    /// Requests existing data while allowing adapter-specific state checks to be skipped.
+    /// Does not bypass missing data or an invalid owner.
     /// </summary>
     GetOnlyIgnoreState,
 }
