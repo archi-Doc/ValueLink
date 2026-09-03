@@ -4,7 +4,7 @@ The suite uses xUnit v3 and Microsoft.Testing.Platform on .NET 10. Run commands
 from the repository root:
 
 ```powershell
-pwsh -File eng/Prepare-Tinyhand.ps1
+dotnet restore ValueLink.slnx
 dotnet test --project xUnitTest/xUnitTest.csproj -c Release --timeout 60s
 dotnet test --project xUnitTest/xUnitTest.csproj -c Debug --timeout 60s
 dotnet build ValueLink.slnx -c Release
@@ -13,6 +13,10 @@ dotnet build ValueLink.slnx -c Release
 For solution-wide test discovery, use `dotnet test --solution ValueLink.slnx`.
 Use the `--project` / `--solution` switches required by the runner configured in
 `global.json`.
+
+The suite restores the published Tinyhand 0.144.1 package. If an earlier local build
+used the same version, refresh that cached package as described in
+[NativeAOT dependency setup](../doc/NativeAOT.md#dependency-setup).
 
 ## Coverage map
 
@@ -57,4 +61,4 @@ Consumer compilations deliberately exclude the generator and test assemblies.
 
 Each regression is exercised by the suite alongside its production fix.
 
-The NativeAOT additions also cover stale synchronization hashes after generated setter updates, managed integrality keys, external-only generic owner registration, and recursively expanding type graphs. Run the separate published executable to validate native execution; see [NativeAOT validation](../doc/NativeAOT.md).
+The NativeAOT additions also cover stale synchronization hashes after generated setter updates, managed integrality keys, external-only generic owner registration, inferred return types from external factories, and recursively expanding type graphs. The shared native/JIT checks exercise Tinyhand 0.144.1 with anonymous projections and unresolved nested generic owners. Run the separate published executable to validate native execution; see [NativeAOT validation](../doc/NativeAOT.md).

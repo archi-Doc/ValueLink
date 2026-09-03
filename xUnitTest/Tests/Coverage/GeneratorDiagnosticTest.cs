@@ -142,6 +142,25 @@ public class GeneratorDiagnosticTest
         Assert.NotNull(output.GetTypeByMetadataName("ValueLink.ValueLinkModule_GeneratorContract"));
     }
 
+    [Theory]
+    [InlineData("public class Consumer { public object Create() => Factory.Create<int>(); }")]
+    [InlineData("public class Consumer { public object Create() => Helper<int>(); private static object Helper<T>() => Factory.Create<T>(); }")]
+    public void ExternalFactoryReturnTypesRegisterOwners(string declaration)
+    {
+        // The consumer never spells out the closed owner type, and the factory body is unavailable.
+        var factory = Compile("public static class Factory { public static NativeAotTest.GenericItem<T>.GoshujinClass Create<T>() => new(); }")
+            .WithAssemblyName("ExternalFactory");
+        using var assembly = new MemoryStream();
+        var emitted = factory.Emit(assembly, cancellationToken: TestContext.Current.CancellationToken);
+        Assert.True(emitted.Success, string.Join(Environment.NewLine, emitted.Diagnostics));
+        var compilation = Compile(declaration).AddReferences(MetadataReference.CreateFromImage(assembly.ToArray()));
+
+        var driver = Driver().RunGeneratorsAndUpdateCompilation(compilation, out var output, out var diagnostics, TestContext.Current.CancellationToken);
+        AssertNoErrors(output, diagnostics);
+        Assert.All(driver.GetRunResult().Results, x => Assert.Null(x.Exception));
+        Assert.Contains(GeneratedText(driver), x => x.Contains("GeneratedResolver.RegisterObject<global::NativeAotTest.GenericItem<int>.@GoshujinClass>()", StringComparison.Ordinal));
+    }
+
     [Fact]
     public void PrivateGenericArgumentsRequireAPartialContainingType()
     {

@@ -15,6 +15,15 @@ namespace NativeAotTest;
 // Shared by the native executable and xUnit; no test framework is needed at runtime.
 internal static partial class NativeContracts
 {
+    internal static void TinyhandRegistration()
+    {
+        LocalGenericRoundTrip(17);
+        LocalGenericRoundTrip("anonymous projection");
+        var projection = new { Owner = new LocalGenericItem<int>.GoshujinClass { new LocalGenericItem<int> { Value = 23 } } };
+        var copy = TinyhandSerializer.Deserialize<LocalGenericItem<int>.GoshujinClass>(TinyhandSerializer.Serialize(projection.Owner))!;
+        Check(copy.Single().Value == 23 && copy.Single().Goshujin == copy, "Anonymous projection owner restoration");
+    }
+
     internal static void Serialization()
     {
         // Verify registration before creating any owner or model instance.
@@ -148,6 +157,15 @@ internal static partial class NativeContracts
         }
     }
 
+    private static void LocalGenericRoundTrip<T>(T value)
+    {
+        // Tinyhand must skip the anonymous type and the owner that ValueLink has not generated yet.
+        var projection = new { Owner = new LocalGenericItem<T>.GoshujinClass { new LocalGenericItem<T> { Value = value } } };
+        var copy = TinyhandSerializer.Deserialize<LocalGenericItem<T>.GoshujinClass>(TinyhandSerializer.Serialize(projection.Owner))!;
+        Check(EqualityComparer<T>.Default.Equals(copy.Single().Value, value), "Tinyhand registration with anonymous and unresolved generic types");
+        Check(copy.Single().Goshujin == copy, "Local generic owner restoration");
+    }
+
     [TinyhandObject]
     [ValueLinkObject(GoshujinClass = "Owners")]
     private partial class HiddenItem
@@ -156,6 +174,17 @@ internal static partial class NativeContracts
         [Link(Type = ChainType.Unordered, Primary = true)]
         public int Id { get; set; }
     }
+}
+
+/// <summary>Exercises owner types that are unresolved until ValueLink generates them.</summary>
+/// <typeparam name="T">The serialized payload type.</typeparam>
+[TinyhandObject]
+[ValueLinkObject]
+public partial class LocalGenericItem<T>
+{
+    [Key(0)]
+    [Link(Type = ChainType.List, Primary = true)]
+    public T Value { get; set; } = default!;
 }
 
 /// <summary>Exercises every chain type and serialized chain ordering.</summary>

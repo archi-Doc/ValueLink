@@ -19,6 +19,7 @@ internal sealed class StaticOwnerRegistration
     private readonly Queue<ITypeSymbol> pendingTypes = new();
     private readonly HashSet<IMethodSymbol> methods = new(SymbolEqualityComparer.Default);
     private readonly Queue<IMethodSymbol> pendingMethods = new();
+    private readonly Dictionary<IMethodSymbol, (ITypeSymbol?[] Types, IMethodSymbol[] Methods)> methodBodies = new(SymbolEqualityComparer.Default);
     private readonly Dictionary<INamedTypeSymbol, string> owners = new(SymbolEqualityComparer.Default);
     private bool limitReported;
 
@@ -233,6 +234,9 @@ internal sealed class StaticOwnerRegistration
 
     private void ProcessMethod(IMethodSymbol method)
     {
+        // A factory can expose a closed owner only through its return type, even when
+        // its body is in another assembly and the caller uses an inferred type.
+        this.AddType(method.ReturnType);
         foreach (var argument in method.TypeArguments)
         {
             this.AddType(argument);
@@ -257,7 +261,35 @@ internal sealed class StaticOwnerRegistration
             substitutions[method.OriginalDefinition.TypeParameters[i]] = method.TypeArguments[i];
         }
 
-        foreach (var reference in method.DeclaringSyntaxReferences)
+        var body = this.GetMethodBody(method);
+        foreach (var type in body.Types)
+        {
+            this.AddType(this.Substitute(type, substitutions));
+        }
+
+        foreach (var invoked in body.Methods)
+        {
+            var containing = (INamedTypeSymbol)this.Substitute(invoked.ContainingType, substitutions)!;
+            var definition = containing.GetMembers(invoked.Name).OfType<IMethodSymbol>()
+                .FirstOrDefault(x => SymbolEqualityComparer.Default.Equals(x.OriginalDefinition, invoked.OriginalDefinition)) ?? invoked.ConstructedFrom;
+            this.AddMethod(invoked.IsGenericMethod
+                ? definition.Construct(invoked.TypeArguments.Select(x => this.Substitute(x, substitutions)!).ToArray())
+                : definition);
+        }
+    }
+
+    private (ITypeSymbol?[] Types, IMethodSymbol[] Methods) GetMethodBody(IMethodSymbol method)
+    {
+        var definition = method.OriginalDefinition;
+        if (this.methodBodies.TryGetValue(definition, out var body))
+        {
+            return body;
+        }
+
+        // Bind a generic helper once; only type substitution varies between closed calls.
+        var types = new List<ITypeSymbol?>();
+        var methods = new List<IMethodSymbol>();
+        foreach (var reference in definition.DeclaringSyntaxReferences)
         {
             var syntax = reference.GetSyntax(this.context.CancellationToken);
             var model = this.compilation.GetSemanticModel(syntax.SyntaxTree);
@@ -265,20 +297,19 @@ internal sealed class StaticOwnerRegistration
             {
                 if (node is TypeSyntax type)
                 {
-                    this.AddType(this.Substitute(model.GetTypeInfo(type, this.context.CancellationToken).Type, substitutions));
+                    types.Add(model.GetTypeInfo(type, this.context.CancellationToken).Type);
                 }
                 else if (node is InvocationExpressionSyntax invocation &&
                     model.GetSymbolInfo(invocation, this.context.CancellationToken).Symbol is IMethodSymbol invoked)
                 {
-                    var containing = (INamedTypeSymbol)this.Substitute(invoked.ContainingType, substitutions)!;
-                    var definition = containing.GetMembers(invoked.Name).OfType<IMethodSymbol>()
-                        .FirstOrDefault(x => SymbolEqualityComparer.Default.Equals(x.OriginalDefinition, invoked.OriginalDefinition)) ?? invoked.ConstructedFrom;
-                    this.AddMethod(invoked.IsGenericMethod
-                        ? definition.Construct(invoked.TypeArguments.Select(x => this.Substitute(x, substitutions)!).ToArray())
-                        : definition);
+                    methods.Add(invoked);
                 }
             }
         }
+
+        body = (types.ToArray(), methods.ToArray());
+        this.methodBodies.Add(definition, body);
+        return body;
     }
 
     private ITypeSymbol? Substitute(ITypeSymbol? type, Dictionary<ITypeParameterSymbol, ITypeSymbol> substitutions)

@@ -257,7 +257,7 @@ Initialize ordinary properties before adding objects; use generated setters for 
 
 ValueLink generates static Tinyhand formatter registrations for owners, including closed generic models, private nested models, and unions. It does not construct owner formatters through runtime reflection. The library enables .NET trimming and AOT analyzers with `IsAotCompatible`.
 
-This checkout requires a local Tinyhand registration fix. Run `pwsh -File eng/Prepare-Tinyhand.ps1` before restoring or building; see [NativeAOT setup and limitations](doc/NativeAOT.md). The script builds an unpublished package from pinned upstream source plus the included patch. A released Tinyhand dependency is required before publishing ValueLink.
+ValueLink references the published **Tinyhand 0.144.1** package, which includes the static registration fixes for unresolved and anonymous types. Restore and build normally; see [NativeAOT setup and limitations](doc/NativeAOT.md).
 
 On a host with the [NativeAOT prerequisites](https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/), publish and run the smoke test:
 
@@ -405,7 +405,6 @@ Use Release builds and compare both timings and allocations. Results depend on r
 Run from the repository root:
 
 ```shell
-pwsh -File eng/Prepare-Tinyhand.ps1
 dotnet restore ValueLink.slnx
 dotnet build ValueLink.slnx -c Release --no-restore
 dotnet test --project xUnitTest/xUnitTest.csproj -c Release --timeout 60s
