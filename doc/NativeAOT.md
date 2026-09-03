@@ -4,18 +4,15 @@ ValueLink supports NativeAOT through generated, strongly typed owner formatter r
 
 ## Dependency setup
 
-Tinyhand 0.144.0 removed `SetFormatterGenerator`, which ValueLink's previous loader used. Its static registration generator also mistook unresolved and anonymous types for closed types, and attempted to substitute unresolved nested generic types. These errors affect ordinary builds as well as NativeAOT.
-
-This checkout uses **Tinyhand 0.144.1-aotfix.1**, an unpublished local package. Build it before restoring:
+ValueLink references the published **Tinyhand 0.144.1** package. This release fixes static registration of unresolved and anonymous types, including nested generic owner types supplied by ValueLink's generator. Both ordinary builds and NativeAOT use the same package.
 
 ```powershell
-pwsh -File eng/Prepare-Tinyhand.ps1
 dotnet restore ValueLink.slnx
 ```
 
-The script needs PowerShell 7, Git, the .NET 10 SDK, and network access on its first run. It downloads Tinyhand commit `8670bffa8a605d07491db08d5efb5779cb3c40cd`, recorded in the official 0.144.0 package, applies [the two-line generator fix](Tinyhand-0.144.0-registration.patch), and builds the package under `artifacts/native-aot/packages`. `NuGet.Config` adds that local feed. Existing source checkouts and the published 0.144.0 package are unchanged. Repeated preparation reuses the completed package.
+Use the .NET 10 SDK. The temporary local package, patch, preparation script, and local feed have been removed; standard NuGet restore also works for CI and package consumers.
 
-Before releasing ValueLink, release the Tinyhand fix and replace the local dependency version with the published version. Then remove the preparation steps, local feed, and temporary release guard. The publish workflow rejects the local dependency to avoid distributing a package that consumers cannot restore. No package has been published as part of this verification.
+If you previously built a local package using the same `0.144.1` version, NuGet may reuse it from the global package cache. Check that version's `.nupkg.metadata` source and compare its contents with nuget.org. Move only that cached version aside and restore from nuget.org with `--force --no-http-cache`; those switches alone do not replace a package already present in the global cache.
 
 ## Publish and execute
 
@@ -36,15 +33,16 @@ Windows x64 publication and execution have been verified locally. Linux x64 is c
 
 - Public, private, custom-named, union, and closed generic owners, including generic models from a separate assembly.
 - Generic helper substitution, private generic arguments, registration before construction, and collections of owners.
+- Anonymous projections and unresolved nested generic owners in source helpers, covering the Tinyhand 0.144.1 registration fixes.
 - All chain implementations, indexed updates, ownership transfer, cloning, and serialized chain ordering.
 - Serializable owners and RepeatableRead commit, rollback, snapshots, lock release, and serialization.
 - Difference synchronization, generated-setter hash invalidation, Tinyhand partial-property hooks, and malformed responses.
 
-The same checks run through xUnit. Generator tests also cover external-only consumers, inaccessible generic arguments, bounded recursive type expansion, ignored members, and rejection of integrality keys containing managed references. The existing suite covers additional contracts such as ReadCommitted adapters, cancellation, and storage lifecycle behavior; those are not all exercised by the native smoke executable.
+The same checks run through xUnit. Generator tests also cover external-only consumers, inferred owner types returned by external factories, inaccessible generic arguments, bounded recursive type expansion, ignored members, and rejection of integrality keys containing managed references. The existing suite covers additional contracts such as ReadCommitted adapters, cancellation, and storage lifecycle behavior; those are not all exercised by the native smoke executable.
 
 ## Static registration boundaries
 
-NativeAOT requires the concrete generic types to be known at build time. The generator follows closed type usages, source members, and source generic helper calls. It cannot infer runtime-only type names or generic constructions inside unavailable external method bodies. Add an explicit Tinyhand root for each such closed model:
+NativeAOT requires the concrete generic types to be known at build time. The generator follows closed type usages, source members, method return types (including external factories), and source generic helper calls. It cannot infer runtime-only type names or generic constructions hidden inside unavailable external method bodies. Add an explicit Tinyhand root for each such closed model:
 
 ```csharp
 [assembly: Tinyhand.TinyhandRegister(typeof(MyModel<int>))]

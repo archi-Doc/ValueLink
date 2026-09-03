@@ -1,7 +1,7 @@
 ## ValueLink
 ![Nuget](https://img.shields.io/nuget/v/ValueLink) ![Build and Test](https://github.com/archi-Doc/ValueLink/workflows/Build%20and%20Test/badge.svg)
 
-ソースジェネレーターと [Arc.Collection](https://github.com/archi-Doc/Arc.Collection) を使用したC#ライブラリです。
+ソースジェネレーターと [Arc.Collections](https://github.com/archi-Doc/Arc.Collections) を使用したC#ライブラリです。
 
 オブジェクト間に複数のリンクを張って、柔軟に管理したり検索したり出来ます。
 
@@ -34,9 +34,11 @@
 
 ## Requirements
 
-**C# 9.0** 以降：生成コードが使用
+**.NET 10 SDK** が必要です。ライブラリの対象フレームワークは `net10.0` です。
 
-**.NET 5** 世代以降のコンパイラ：ソースジェネレーターが使用
+シリアライズには正式公開された **Tinyhand 0.144.1** を使用します。未解決の型・匿名型・生成前のジェネリック所有コレクション型に関する静的登録の修正を含んでおり、通常の `dotnet restore ValueLink.slnx` で復元できます。
+
+以前のローカルビルド品を同じ `0.144.1` としてキャッシュしている場合は、そのバージョンだけを退避して正式版を復元してください。NativeAOT の検証手順と対応範囲は [NativeAOT validation](NativeAOT.md)、現在の API の詳細は [英語版 README](../README.md) を参照してください。
 
 
 

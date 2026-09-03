@@ -10,6 +10,9 @@ namespace xUnitTest.Coverage;
 public class NativeAotContractTest
 {
     [Fact]
+    public void TinyhandRegistrationSkipsAnonymousAndUnresolvedTypes() => NativeContracts.TinyhandRegistration();
+
+    [Fact]
     public void StaticRegistrationSupportsClosedAndInaccessibleOwners() => NativeContracts.Serialization();
 
     [Fact]

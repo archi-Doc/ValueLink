@@ -15,6 +15,8 @@ internal static class Program
             throw new InvalidOperationException("Publish and run this test as a NativeAOT executable.");
         }
 
+        NativeContracts.TinyhandRegistration();
+        Console.WriteLine("PASS: Tinyhand registration with anonymous and unresolved generic types");
         NativeContracts.Serialization();
         Console.WriteLine("PASS: public, generic, private, union, and nested owner serialization");
         NativeContracts.Chains();
