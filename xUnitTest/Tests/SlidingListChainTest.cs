@@ -36,7 +36,7 @@ public class SlidingListChainTest
         new SlidingListChainClass(4).Goshujin = g;
 
         var array = g.SlidingListChain.Select(x => x.Id).ToArray();
-        array.SequenceEqual([]);
+        array.SequenceEqual([]).IsTrue();
 
         g.SlidingListChain.Resize(4);
 
@@ -47,10 +47,10 @@ public class SlidingListChainTest
         g.SlidingListChain.Set(4, g.IdChain.FindFirst(4)!);
 
         array = g.SlidingListChain.Select(x => x.Id).ToArray();
-        array.SequenceEqual([0, 1, 2, 3]);
+        array.SequenceEqual([0, 1, 2, 3]).IsTrue();
 
         var c = g.IdChain.FindFirst(0)!;
-       c.Goshujin = null;
+        c.Goshujin = null;
         g.SlidingListChain.Get(0).IsNull();
         g.SlidingListChain.StartPosition.Is(1);
         c.SlidingListLink.IsLinked.IsFalse();

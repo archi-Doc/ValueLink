@@ -10,8 +10,8 @@ using Arc.Collections;
 namespace ValueLink;
 
 /// <summary>
-/// Represents a doubly linked list of objects.<br/>
-/// Structure: Doubly linked list.
+/// Represents a sliding window of objects with stable positions.<br/>
+/// Structure: Circular array.
 /// </summary>
 /// <typeparam name="T">The type of objects in the list.</typeparam>
 public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
@@ -197,11 +197,7 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     /// <summary>
     /// Gets the number of elements contained in the <see cref="SlidingListChain{T}"/>.
     /// </summary>
-    public int Count => this.chain.Consumed;
-
-    // int ICollection.Count => this.chain.Consumed;
-
-    // int IReadOnlyCollection<T>.Count => this.chain.Consumed;
+    public int Count => ((IReadOnlyCollection<T>)this.chain).Count;
 
     /// <summary>
     /// Changes the number of elements of the <see cref="SlidingListChain{T}"/> to the specified new size.
@@ -264,7 +260,7 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
 
     public struct Link : ILink<T>
     {
-        public bool IsLinked => this.rawPosition > 0;
+        public bool IsLinked => this.rawPosition != 0;
 
         public int Position
         {
@@ -287,14 +283,12 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     /// </summary>
     public void Clear()
     {
-        var array = this.chain.ToArray();
-        foreach (var x in array)
+        foreach (var x in this.chain)
         {
-            if (x is not null)
-            {
-                this.Remove(x);
-            }
+            this.objectToLink(x) = default;
         }
+
+        this.chain.Clear();
     }
 
     void ICollection.CopyTo(Array array, int index) => ((ICollection)this.chain).CopyTo(array, index);

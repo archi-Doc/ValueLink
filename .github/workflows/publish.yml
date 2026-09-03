@@ -16,7 +16,7 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore
     - name: Test
-      run: dotnet test --no-restore --verbosity normal
+      run: dotnet test --solution ValueLink.slnx --configuration Release --no-build --no-restore
 
     - name: Package
       run: dotnet pack -c Release -o bin ValueLink/ValueLink.csproj

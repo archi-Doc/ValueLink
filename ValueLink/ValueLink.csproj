@@ -11,6 +11,7 @@
     <Product>ValueLink</Product>
     <Description>ValueLink is a C# Library for creating and managing multiple links between objects.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageProjectUrl>https://github.com/archi-Doc/ValueLink</PackageProjectUrl>
     <RepositoryUrl>https://github.com/archi-Doc/ValueLink</RepositoryUrl>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
@@ -22,6 +23,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="/" />
+    <ProjectReference Include="..\ValueLinkGenerator\ValueLinkGenerator.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
     <None Include="..\ValueLinkGenerator\bin\$(Configuration)\netstandard2.0\ValueLinkGenerator.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
   </ItemGroup>
 

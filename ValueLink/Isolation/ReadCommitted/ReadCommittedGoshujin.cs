@@ -305,7 +305,7 @@ Retry:
 
             if (deleted)
             {
-                TObject.RemoveFromGoshujin(obj, (TGoshujin)this, true);
+                TObject.RemoveFromGoshujin(obj, (TGoshujin)this, writeJournal);
             }
         }
 

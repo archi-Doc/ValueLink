@@ -125,10 +125,12 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         var trimmedCount = 0;
         while (resultMemory2.Result == IntegralityResult.Incomplete)
         {
-            if (iterationCount++ >= this.MaxIntegrationCount)
+            if (iterationCount >= this.MaxIntegrationCount)
             {
                 break;
             }
+
+            iterationCount++;
 
             // Get: resultMemory2
             try
@@ -158,6 +160,11 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         }
 
         resultMemory2.RentMemory.Return();
+
+        if (resultMemory2.Result != IntegralityResult.Success && resultMemory2.Result != IntegralityResult.Incomplete)
+        {
+            return new(resultMemory2.Result, iterationCount, integratedCount, trimmedCount);
+        }
 
         // Trim
         if (goshujin is ILockObject g)
@@ -257,6 +264,11 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         {
             writer.WriteRawUInt8((byte)IntegralityState.Get);
             goshujin.Compare(this, ref reader, ref writer);
+            if (goshujin.GetIntegralityHash() == targetHash)
+            {
+                return (IntegralityResult.Success, default);
+            }
+
             return (IntegralityResult.Incomplete, writer.FlushAndGetRentMemory());
         }
         catch

@@ -2,10 +2,8 @@
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 using Arc.Visceral;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 #pragma warning disable SA1306 // Field names should begin with lower-case letter
@@ -33,57 +31,21 @@ public class ValueLinkGeneratorV2 : IIncrementalGenerator, IGeneratorInformation
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var provider = context.CompilationProvider.Combine(
-            context.SyntaxProvider
-            .CreateSyntaxProvider(static (s, _) => IsSyntaxTargetForGeneration(s), static (ctx, _) => GetSemanticTargetForGeneration(ctx))
-            .Collect());
+        var objects = context.SyntaxProvider.ForAttributeWithMetadataName(
+            ValueLinkObjectAttributeMock.FullName,
+            static (node, _) => node is TypeDeclarationSyntax,
+            static (ctx, _) => (INamedTypeSymbol)ctx.TargetSymbol);
+        var options = context.SyntaxProvider.ForAttributeWithMetadataName(
+            ValueLinkGeneratorOptionAttributeMock.FullName,
+            static (node, _) => node is TypeDeclarationSyntax,
+            static (ctx, _) => (INamedTypeSymbol)ctx.TargetSymbol);
+        var provider = context.CompilationProvider.Combine(objects.Collect().Combine(options.Collect()));
 
-        context.RegisterImplementationSourceOutput(provider, this.Emit);
+        // Each emission owns its settings, including when the driver is reused after an edit.
+        context.RegisterImplementationSourceOutput(provider, static (ctx, source) => new ValueLinkGeneratorV2().Emit(ctx, source));
     }
 
-    private static bool IsSyntaxTargetForGeneration(SyntaxNode node)
-    {
-        if (node is TypeDeclarationSyntax m && m.AttributeLists.Count > 0)
-        {
-            return true;
-        }
-        else if (node is GenericNameSyntax { })
-        {
-            return false; // true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-    private static TypeDeclarationSyntax? GetSemanticTargetForGeneration(GeneratorSyntaxContext context)
-    {
-        if (context.Node is TypeDeclarationSyntax typeSyntax)
-        {
-            foreach (var attributeList in typeSyntax.AttributeLists)
-            {
-                foreach (var attribute in attributeList.Attributes)
-                {
-                    var name = attribute.Name.ToString();
-                    if (name.EndsWith(ValueLinkGeneratorOptionAttributeMock.StandardName) ||
-                        name.EndsWith(ValueLinkGeneratorOptionAttributeMock.SimpleName))
-                    {
-                        return typeSyntax;
-                    }
-                    else if (name.EndsWith(ValueLinkObjectAttributeMock.StandardName) ||
-                        name.EndsWith(ValueLinkObjectAttributeMock.SimpleName))
-                    {
-                        return typeSyntax;
-                    }
-                }
-            }
-        }
-
-        return null;
-    }
-
-    private void Emit(SourceProductionContext context, (Compilation Compilation, ImmutableArray<TypeDeclarationSyntax?> Types) source)
+    private void Emit(SourceProductionContext context, (Compilation Compilation, (ImmutableArray<INamedTypeSymbol> Objects, ImmutableArray<INamedTypeSymbol> Options) Types) source)
     {
         var compilation = source.Compilation;
         this.valueLinkObjectAttributeSymbol = compilation.GetTypeByMetadataName(ValueLinkObjectAttributeMock.FullName);
@@ -103,26 +65,19 @@ public class ValueLinkGeneratorV2 : IIncrementalGenerator, IGeneratorInformation
         this.OutputKind = compilation.Options.OutputKind;
 
         var body = new ValueLinkBody(context);
-        // receiver.Generics.Prepare(compilation);
-#pragma warning disable RS1024 // Symbols should be compared for equality
-        var processed = new HashSet<INamedTypeSymbol?>();
-#pragma warning restore RS1024 // Symbols should be compared for equality
+        var processed = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
 
         this.generatorOptionIsSet = false;
-        foreach (var x in source.Types)
+        foreach (var symbol in source.Types.Options)
         {
-            if (x == null)
-            {
-                continue;
-            }
-
             context.CancellationToken.ThrowIfCancellationRequested();
+            this.ProcessSymbol(body, processed, symbol);
+        }
 
-            var model = compilation.GetSemanticModel(x.SyntaxTree);
-            if (model.GetDeclaredSymbol(x) is INamedTypeSymbol symbol)
-            {
-                this.ProcessSymbol(body, processed, x.SyntaxTree, symbol);
-            }
+        foreach (var symbol in source.Types.Objects)
+        {
+            context.CancellationToken.ThrowIfCancellationRequested();
+            this.ProcessSymbol(body, processed, symbol);
         }
 
         context.CancellationToken.ThrowIfCancellationRequested();
@@ -136,20 +91,18 @@ public class ValueLinkGeneratorV2 : IIncrementalGenerator, IGeneratorInformation
         body.Generate(this, context.CancellationToken);
     }
 
-    private void ProcessSymbol(ValueLinkBody body, HashSet<INamedTypeSymbol?> processed, SyntaxTree syntaxTree, INamedTypeSymbol symbol)
+    private void ProcessSymbol(ValueLinkBody body, HashSet<INamedTypeSymbol> processed, INamedTypeSymbol symbol)
     {
-        if (processed.Contains(symbol))
+        if (!processed.Add(symbol))
         {
             return;
         }
 
-        processed.Add(symbol);
         foreach (var y in symbol.GetAttributes())
         {
             if (SymbolEqualityComparer.Default.Equals(y.AttributeClass, this.valueLinkObjectAttributeSymbol))
             { // ValueLinkObject
                 body.Add(symbol);
-                break;
             }
             else if (!this.generatorOptionIsSet &&
                 SymbolEqualityComparer.Default.Equals(y.AttributeClass, this.valueLinkGeneratorOptionAttributeSymbol))
@@ -161,7 +114,8 @@ public class ValueLinkGeneratorV2 : IIncrementalGenerator, IGeneratorInformation
                 this.AttachDebugger = ta.AttachDebugger;
                 this.GenerateToFile = ta.GenerateToFile;
                 this.CustomNamespace = ta.CustomNamespace;
-                this.TargetFolder = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(syntaxTree.FilePath), "Generated");
+                var path = y.ApplicationSyntaxReference?.SyntaxTree.FilePath;
+                this.TargetFolder = string.IsNullOrEmpty(path) ? null : System.IO.Path.Combine(System.IO.Path.GetDirectoryName(path), "Generated");
             }
         }
     }

@@ -6,6 +6,8 @@ using Xunit;
 using ValueLink.Integrality;
 using System.Threading.Tasks;
 using Tinyhand.Formatters;
+using System;
+using Arc.Collections;
 
 namespace xUnitTest;
 
@@ -120,6 +122,114 @@ public static class IntegralityTestHelper
 public class IntegralityTest
 {
     [Fact]
+    public void IntegrationPreservesAlreadyMatchingObjects()
+    {
+        var source = new SimpleIntegralityClass.GoshujinClass();
+        var target = new SimpleIntegralityClass.GoshujinClass();
+        var unchanged = new SimpleIntegralityClass(1, "A");
+        source.Add(unchanged);
+        source.Add(new(2, "Old"));
+        source.Add(new(3, "Removed"));
+        target.Add(new(1, "A"));
+        target.Add(new(2, "Updated"));
+        var result = SimpleIntegralityClass.Integrality.Instance10.IntegrateForTest(source, target);
+        Assert.True(result.IsSuccess);
+        Assert.Same(unchanged, source.IdChain.FindFirst(1));
+        Assert.Null(source.IdChain.FindFirst(3));
+        Assert.True(source.ObjectEquals(target));
+    }
+
+    [Fact]
+    public void ZeroIterationLimitDoesNotReportAnAttempt()
+    {
+        var engine = new SimpleIntegralityClass.Integrality { MaxItems = 10, RemoveIfItemNotFound = false, MaxIntegrationCount = 0 };
+        var target = new SimpleIntegralityClass.GoshujinClass();
+        target.Add(new(1, "A"));
+        var result = engine.IntegrateForTest(new SimpleIntegralityClass.GoshujinClass(), target);
+        Assert.Equal(0, result.IterationCount);
+        Assert.Equal(IntegralityResult.Incomplete, result.Result);
+    }
+
+    [Theory]
+    [InlineData(255)]
+    [InlineData((byte)IntegralityState.GetResponse)]
+    public async Task InvalidGetResponseIsReportedAsInvalidData(byte state)
+    {
+        var engine = SimpleIntegralityClass.Integrality.Instance10;
+        var target = new SimpleIntegralityClass.GoshujinClass();
+        target.Add(new(1, "A"));
+        var calls = 0;
+        var result = await engine.Integrate(new SimpleIntegralityClass.GoshujinClass(), (packet, _) =>
+            Task.FromResult(++calls == 1 ? engine.Differentiate(target, packet) : BytePool.RentArray.CreateFrom(new byte[] { state, 255 }).AsMemory()), TestContext.Current.CancellationToken);
+        Assert.Equal(IntegralityResult.InvalidData, result.Result);
+    }
+
+    [Fact]
+    public void ProbeRespectsMaximumItemCount()
+    {
+        var engine = SimpleIntegralityClass.Integrality.Instance2;
+        var target = new SimpleIntegralityClass.GoshujinClass();
+        for (var i = 0; i < 10; i++)
+        {
+            target.Add(new(i, "A"));
+        }
+
+        byte[] probe = new byte[1 + sizeof(ulong)];
+        probe[0] = (byte)IntegralityState.Probe;
+        var packet = engine.Differentiate(target, probe);
+        try
+        {
+            Assert.Equal(1 + sizeof(ulong) + (2 * (sizeof(int) + sizeof(ulong))), packet.Length);
+        }
+        finally
+        {
+            packet.Return();
+        }
+    }
+
+    [Fact]
+    public void ClearChainsInvalidatesTheCachedHash()
+    {
+        var owner = new SimpleIntegralityClass.GoshujinClass();
+        owner.Add(new(1, "A"));
+        var hashObject = (IIntegralityObject)owner;
+        var previousHash = hashObject.GetIntegralityHash();
+        owner.ClearChains();
+        Assert.NotEqual(previousHash, hashObject.GetIntegralityHash());
+        Assert.Equal(((IIntegralityObject)new SimpleIntegralityClass.GoshujinClass()).GetIntegralityHash(), hashObject.GetIntegralityHash());
+    }
+
+    [Fact]
+    public void IntegrateObjectAcquiresTheSerializableLock()
+    {
+        var engine = new LockCheckingIntegrality { MaxItems = 10, RemoveIfItemNotFound = true };
+        var owner = new SerializableIntegralityClass.GoshujinClass();
+        Assert.Equal(IntegralityResult.Success, engine.IntegrateObject(owner, new(1, "A")));
+    }
+
+    private sealed class LockCheckingIntegrality : Integrality<SerializableIntegralityClass.GoshujinClass, SerializableIntegralityClass>
+    {
+        public override bool Validate(SerializableIntegralityClass.GoshujinClass goshujin, SerializableIntegralityClass newItem, SerializableIntegralityClass? oldItem)
+        {
+            Assert.True(goshujin.LockObject.IsLocked);
+            return true;
+        }
+    }
+
+    [Fact]
+    public async Task SerializableIntegrationDoesNotReenterItsSemaphore()
+    {
+        var engine = new LockCheckingIntegrality { MaxItems = 10, RemoveIfItemNotFound = true };
+        var source = new SerializableIntegralityClass.GoshujinClass();
+        var target = new SerializableIntegralityClass.GoshujinClass();
+        target.Add(new(1, "A"));
+        var result = await Task.Run(() => engine.IntegrateForTest(source, target), TestContext.Current.CancellationToken)
+            .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        Assert.True(result.IsSuccess);
+        Assert.True(source.ObjectEquals(target));
+    }
+
+    [Fact]
     public void Test1()
     {
         SimpleIntegralityClass.GoshujinClass g;
@@ -157,6 +267,7 @@ public class IntegralityTest
         g2.ObjectEquals(g).IsFalse();
 
         resultAndCount = SimpleIntegralityClass.Integrality.Instance10.IntegrateForTest(g, g2);
-        resultAndCount.Result.Is(IntegralityResult.Incomplete);
+        resultAndCount.Result.Is(IntegralityResult.Success);
+        Assert.Empty(g);
     }
 }

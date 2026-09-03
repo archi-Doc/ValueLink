@@ -305,6 +305,11 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
     /// <returns>The zero-based index of the first occurrence of item.</returns>
     public int IndexOf(T obj)
     {
+        if (obj is null || this.objectToGoshujin(obj) != this.goshujin)
+        {
+            return -1;
+        }
+
         ref Link link = ref this.objectToLink(obj);
         return link.Index;
     }

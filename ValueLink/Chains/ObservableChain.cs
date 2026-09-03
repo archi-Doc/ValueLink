@@ -1,4 +1,4 @@
-﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
+// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
 using System.Collections;
@@ -35,14 +35,15 @@ public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCo
         this.goshujin = goshujin;
         this.objectToGoshujin = objectToGoshujin;
         this.objectToLink = objectToLink;
+        this.chain = new(objectToLink);
     }
 
     public int Count => this.chain.Count;
 
-    private IGoshujin goshujin;
-    private ObjectToGoshujinDelegete objectToGoshujin;
-    private ObjectToLinkDelegete objectToLink;
-    private ObservableCollection<T> chain = new();
+    private readonly IGoshujin goshujin;
+    private readonly ObjectToGoshujinDelegete objectToGoshujin;
+    private readonly ObjectToLinkDelegete objectToLink;
+    private readonly LinkedObservableCollection chain;
 
     event NotifyCollectionChangedEventHandler? INotifyCollectionChanged.CollectionChanged
     {
@@ -89,11 +90,10 @@ public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCo
         ref Link link = ref this.objectToLink(obj);
         if (link.IsLinked)
         {
-            this.chain.Remove(obj);
+            this.chain.RemoveAt(this.IndexOf(obj));
         }
 
         this.chain.Add(obj);
-        link.IsLinked = true;
     }
 
     /// <summary>
@@ -111,34 +111,25 @@ public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCo
 
         if (link.IsLinked)
         {
-            this.chain.Remove(obj);
+            this.chain.RemoveAt(this.IndexOfInstance(obj), ref link);
         }
 
-        this.chain.Add(obj);
-        link.IsLinked = true;
+        this.chain.Add(obj, ref link);
     }
 
     /// <summary>
     /// Removes all objects from the collection.
     /// </summary>
-    public void Clear()
-    {
-        foreach (var x in this)
-        {
-            ref Link link = ref this.objectToLink(x);
-            link.IsLinked = false;
-        }
-
-        this.chain.Clear();
-    }
+    public void Clear() => this.chain.Clear();
 
     /// <summary>
     /// Determines whether an element is in the list.
-    /// <br/>O(n) operation.
+    /// <br/>O(1) operation.
     /// </summary>
     /// <param name="value">The value to locate in the list.</param>
     /// <returns>true if value is found in the list.</returns>
-    public bool Contains(T value) => this.IndexOf(value) >= 0;
+    public bool Contains(T value)
+        => value is not null && this.objectToGoshujin(value) == this.goshujin && this.objectToLink(value).IsLinked;
 
     /// <summary>
     /// Copies the list or a portion of it to an array.
@@ -190,10 +181,15 @@ public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCo
             throw new UnmatchedGoshujinException();
         }
 
-        var index = this.IndexOf(obj);
+        if (!link.IsLinked)
+        {
+            return false;
+        }
+
+        var index = this.IndexOfInstance(obj);
         if (index >= 0)
         {
-            this.RemoveAt(index);
+            this.chain.RemoveAt(index, ref link);
             return true;
         }
 
@@ -231,7 +227,7 @@ public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCo
             ref Link newLink = ref this.objectToLink(value);
             if (newLink.IsLinked)
             {
-                var current = this.chain.IndexOf(value);
+                var current = this.IndexOf(value);
                 if (current == index)
                 {// Already at this position.
                     return;
@@ -240,7 +236,6 @@ public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCo
                 if (current >= 0)
                 {// Vacate the slot the new object currently occupies.
                     this.chain.RemoveAt(current);
-                    newLink.IsLinked = false;
                     if (current < index)
                     {// The removal shifted every later element down by one.
                         index--;
@@ -248,10 +243,7 @@ public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCo
                 }
             }
 
-            var previous = this.chain[index];
             this.chain[index] = value;
-            this.objectToLink(previous).IsLinked = false;
-            newLink.IsLinked = true;
         }
     }
 
@@ -261,7 +253,15 @@ public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCo
     /// </summary>
     /// <param name="obj">The object to locate in the list.</param>
     /// <returns>The zero-based index of the first occurrence of item.</returns>
-    public int IndexOf(T obj) => this.chain.IndexOf(obj);
+    public int IndexOf(T obj)
+    {
+        if (!this.Contains(obj))
+        {
+            return -1;
+        }
+
+        return this.IndexOfInstance(obj);
+    }
 
     /// <summary>
     /// Inserts an element into the <see cref="UnorderedList{T}"/> at the specified index.
@@ -276,14 +276,22 @@ public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCo
             throw new UnmatchedGoshujinException();
         }
 
+        if ((uint)index > (uint)this.chain.Count)
+        {
+            throw new ArgumentOutOfRangeException(nameof(index));
+        }
+
         ref Link link = ref this.objectToLink(obj);
         if (link.IsLinked)
         {
-            this.chain.Remove(obj);
+            this.chain.RemoveAt(this.IndexOf(obj));
+            if (index > this.chain.Count)
+            {
+                index = this.chain.Count;
+            }
         }
 
         this.chain.Insert(index, obj);
-        link.IsLinked = true;
     }
 
     /// <summary>
@@ -291,21 +299,27 @@ public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCo
     /// <br/>O(n) operation.
     /// </summary>
     /// <param name="index">The zero-based index of the element to remove.</param>
-    public void RemoveAt(int index)
-    {
-        var obj = this[index];
-        ref Link link = ref this.objectToLink(obj);
-
-        this.chain.RemoveAt(index);
-        link.IsLinked = false;
-    }
+    public void RemoveAt(int index) => this.chain.RemoveAt(index);
 
     /// <summary>
     /// Moves the object at the specified index to a new location in the collection.
     /// </summary>
     /// <param name="oldIndex">The zero-based index specifying the location of the object to be moved.</param>
     /// <param name="newIndex">The zero-based index specifying the new location of the object.</param>
-    public void Move(int oldIndex, int newIndex) => this.chain.Move(oldIndex, newIndex);
+    public void Move(int oldIndex, int newIndex)
+    {
+        if ((uint)oldIndex >= (uint)this.Count)
+        {
+            throw new ArgumentOutOfRangeException(nameof(oldIndex));
+        }
+
+        if ((uint)newIndex >= (uint)this.Count)
+        {
+            throw new ArgumentOutOfRangeException(nameof(newIndex));
+        }
+
+        this.chain.Move(oldIndex, newIndex);
+    }
 
     #endregion
 
@@ -318,4 +332,85 @@ public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCo
     System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => this.chain.GetEnumerator();
 
     #endregion
+
+    private int IndexOfInstance(T obj)
+    {
+        if (typeof(T).IsValueType)
+        {
+            return this.chain.IndexOf(obj);
+        }
+
+        for (var i = 0; i < this.chain.Count; i++)
+        {
+            if (ReferenceEquals(this.chain[i], obj))
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    // Update links after the storage mutation and before either notification. A subscriber
+    // may inspect the links or throw; neither case may leave the chain inconsistent.
+    private sealed class LinkedObservableCollection(ObjectToLinkDelegete objectToLink) : ObservableCollection<T>
+    {
+        private static readonly PropertyChangedEventArgs CountChanged = new(nameof(Count));
+        private static readonly PropertyChangedEventArgs IndexerChanged = new("Item[]");
+        private static readonly NotifyCollectionChangedEventArgs ResetChanged = new(NotifyCollectionChangedAction.Reset);
+
+        public void Add(T item, ref Link link) => this.InsertItem(this.Count, item, ref link);
+
+        public void RemoveAt(int index, ref Link link) => this.RemoveItem(index, ref link);
+
+        protected override void InsertItem(int index, T item) => this.InsertItem(index, item, ref objectToLink(item));
+
+        protected override void RemoveItem(int index) => this.RemoveItem(index, ref objectToLink(this.Items[index]));
+
+        protected override void SetItem(int index, T item)
+        {
+            this.CheckReentrancy();
+            var previous = this.Items[index];
+            this.Items[index] = item;
+            objectToLink(previous).IsLinked = false;
+            objectToLink(item).IsLinked = true;
+            this.OnPropertyChanged(IndexerChanged);
+            this.OnCollectionChanged(new(NotifyCollectionChangedAction.Replace, item, previous, index));
+        }
+
+        protected override void ClearItems()
+        {
+            this.CheckReentrancy();
+            for (var i = 0; i < this.Items.Count; i++)
+            {
+                objectToLink(this.Items[i]).IsLinked = false;
+            }
+
+            this.Items.Clear();
+            this.OnPropertyChanged(CountChanged);
+            this.OnPropertyChanged(IndexerChanged);
+            this.OnCollectionChanged(ResetChanged);
+        }
+
+        private void InsertItem(int index, T item, ref Link link)
+        {
+            this.CheckReentrancy();
+            this.Items.Insert(index, item);
+            link.IsLinked = true;
+            this.OnPropertyChanged(CountChanged);
+            this.OnPropertyChanged(IndexerChanged);
+            this.OnCollectionChanged(new(NotifyCollectionChangedAction.Add, item, index));
+        }
+
+        private void RemoveItem(int index, ref Link link)
+        {
+            this.CheckReentrancy();
+            var item = this.Items[index];
+            this.Items.RemoveAt(index);
+            link.IsLinked = false;
+            this.OnPropertyChanged(CountChanged);
+            this.OnPropertyChanged(IndexerChanged);
+            this.OnCollectionChanged(new(NotifyCollectionChangedAction.Remove, item, index));
+        }
+    }
 }

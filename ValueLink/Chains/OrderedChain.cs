@@ -311,12 +311,14 @@ public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     /// </summary>
     public void Clear()
     {
-        while (this.chain.Last is { } node)
+        var node = this.chain.First;
+        while (node is not null)
         {
-            ref Link link = ref this.objectToLink(node.Value);
-            this.chain.RemoveNode(node);
-            link.Node = null;
+            this.objectToLink(node.Value) = default;
+            node = node.Next;
         }
+
+        this.chain.Clear();
     }
 
     void ICollection.CopyTo(Array array, int index) => ((ICollection)this.chain).CopyTo(array, index);
