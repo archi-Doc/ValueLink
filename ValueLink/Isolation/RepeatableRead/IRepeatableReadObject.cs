@@ -55,7 +55,17 @@ public interface IRepeatableReadObject<TWriter>
             return null;
         }
 
-        var entered = await this.WriterSemaphoreInternal.EnterAsync(TimeSpan.FromMilliseconds(millisecondsTimeout), cancellationToken).ConfigureAwait(false);
+        bool entered;
+        try
+        {
+            entered = await this.WriterSemaphoreInternal.EnterAsync(TimeSpan.FromMilliseconds(millisecondsTimeout), cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            semaphore?.LockAndReleaseOne();
+            throw;
+        }
+
         if (!entered)
         {
             semaphore?.LockAndReleaseOne();

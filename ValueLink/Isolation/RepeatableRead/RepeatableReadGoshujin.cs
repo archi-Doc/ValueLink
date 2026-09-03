@@ -80,9 +80,9 @@ public abstract class RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter> 
         {
             ((IRepeatableReadSemaphore)this).SetObsolete();
 
+            array = (this is IEnumerable<TObject> e) ? e.ToArray() : Array.Empty<TObject>();
             var g = this as IGoshujin;
             g?.ClearChains();
-            array = (this is IEnumerable<TObject> e) ? e.ToArray() : Array.Empty<TObject>();
         }
 
         foreach (var x in array)
@@ -249,7 +249,18 @@ Created:
                 }
             }
 
-            if (await x.WriterSemaphoreInternal.EnterAsync(TimeSpan.FromMilliseconds(millisecondsTimeout), cancellationToken).ConfigureAwait(false))
+            bool entered;
+            try
+            {
+                entered = await x.WriterSemaphoreInternal.EnterAsync(TimeSpan.FromMilliseconds(millisecondsTimeout), cancellationToken).ConfigureAwait(false);
+            }
+            catch
+            {
+                ((IRepeatableReadSemaphore)this).LockAndRelease(ref count);
+                throw;
+            }
+
+            if (entered)
             {
                 if (x.State.IsInvalid())
                 {
@@ -330,7 +341,18 @@ Created:
                 }
             }
 
-            if (await x.WriterSemaphoreInternal.EnterAsync(TimeSpan.FromMilliseconds(millisecondsTimeout), cancellationToken).ConfigureAwait(false))
+            bool entered;
+            try
+            {
+                entered = await x.WriterSemaphoreInternal.EnterAsync(TimeSpan.FromMilliseconds(millisecondsTimeout), cancellationToken).ConfigureAwait(false);
+            }
+            catch
+            {
+                ((IRepeatableReadSemaphore)this).LockAndRelease(ref count);
+                throw;
+            }
+
+            if (entered)
             {
                 if (x.State.IsInvalid())
                 {

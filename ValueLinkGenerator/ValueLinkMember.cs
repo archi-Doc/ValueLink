@@ -12,6 +12,13 @@ public class Member
 {
     public static Member? Create(ValueLinkObject parent, ValueLinkObject obj, Linkage? linkage, bool journaling)
     {
+        obj.GetRawInformation(out var symbol, out _, out _);
+        if (symbol is IPropertySymbol property && !property.ExplicitInterfaceImplementations.IsEmpty)
+        {
+            // Explicit interface properties are not accessible through the record instance.
+            return null;
+        }
+
         if (obj.SimpleName.Length == 0/* || !char.IsLower(obj.SimpleName[0])*/)
         {
             return null;
