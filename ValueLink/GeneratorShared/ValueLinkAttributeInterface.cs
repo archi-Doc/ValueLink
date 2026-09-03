@@ -7,98 +7,85 @@ using Arc.Collections;
 namespace ValueLink;
 
 /// <summary>
-/// Specifies the isolation level of each data.
+/// Selects the generated owner's concurrency model.
 /// </summary>
 public enum IsolationLevel
 {
     /// <summary>
-    /// There is no implementation for isolation.
+    /// Provides no automatic synchronization.
     /// </summary>
     None,
 
     /// <summary>
-    /// Lock-based concurrency control.<br/>
-    /// using (goshujin.LockObject.EnterScope()).
+    /// Provides an owner lock for synchronized access and storage operations.
     /// </summary>
     Serializable,
 
     /// <summary>
-    /// Provides a Read committed isolation level based on StoragePoint.<br/>
-    /// Does not guarantee repeatable reads (values may change between reads) and phantom reads may occur.<br/>
-    /// The object must inherit from <see cref="IDataLocker{TData}"/>.
+    /// Delegates data acquisition to an <see cref="IDataLocker{TData}"/> implementation.
+    /// Repeated reads may observe different data.
     /// </summary>
     ReadCommitted,
 
     /// <summary>
-    /// Same data (primitive types) is guaranteed to be read during the transaction.<br/>
-    /// The class must be a record type to specify this level.
+    /// Publishes record copies through exclusive writers. Requires a record class and a unique key.
+    /// Mutable reference-type members must be copied explicitly.
     /// </summary>
     RepeatableRead,
 }
 
 /// <summary>
-/// Specifies the type of chain that represents the relationship between values.
+/// Selects the collection used to index or order owned objects.
 /// </summary>
 public enum ChainType
 {
     /// <summary>
-    /// No link. In case you want to use AutoNotify only.
+    /// Creates no chain; useful for generated values and notifications alone.
     /// </summary>
     None,
 
     /// <summary>
-    /// Represents a list of objects (<see cref="ListChain{T}"/>).<br/>
-    /// Structure: Array (<see cref="UnorderedList{T}"/>).<br/>
-    /// Array access is supported, but the object order is not guaranteed (the order may change when items are removed).<br/>
-    /// If order matters, use a <see cref="ChainType.LinkedList" />.
+    /// Uses an indexed <see cref="ListChain{T}"/> whose insertion and removal can reorder objects.
     /// </summary>
     List,
 
     /// <summary>
-    /// Represents a doubly linked list of objects (<see cref="LinkedListChain{T}"/>).<br/>
-    /// Structure: Doubly linked list (<see cref="UnorderedLinkedList{T}"/>).
+    /// Uses a doubly linked <see cref="LinkedListChain{T}"/> with direct navigation and removal.
     /// </summary>
     LinkedList,
 
     /// <summary>
-    /// Represents a stack list (<see cref="StackListChain{T}"/>).<br/>
-    /// Structure: Doubly linked list (<see cref="UnorderedLinkedList{T}"/>).
+    /// Uses a last-in, first-out <see cref="StackListChain{T}"/>.
     /// </summary>
     StackList,
 
     /// <summary>
-    /// Represents a queue list (<see cref="QueueListChain{T}"/>).<br/>
-    /// Structure: Doubly linked list (<see cref="UnorderedLinkedList{T}"/>).
+    /// Uses a first-in, first-out <see cref="QueueListChain{T}"/>.
     /// </summary>
     QueueList,
 
     /// <summary>
-    /// Represents a collection of sorted objects (<see cref="OrderedChain{TKey, TValue}"/>).<br/>
-    /// Structure: Red-Black Tree + Linked List (<see cref="OrderedMultiMap{TKey, TValue}"/>).
+    /// Uses an ascending <see cref="OrderedChain{TKey, TValue}"/> that permits duplicate keys.
     /// </summary>
     Ordered,
 
     /// <summary>
-    /// Represents a collection of objects sorted in reverse order (<see cref="OrderedChain{TKey, TValue}"/>).<br/>
-    /// Structure: Red-Black Tree + Linked List (<see cref="OrderedMultiMap{TKey, TValue}"/>).
+    /// Uses an <see cref="OrderedChain{TKey, TValue}"/> with reversed comparison and traversal.
     /// </summary>
     ReverseOrdered,
 
     /// <summary>
-    /// Represents a collection of objects stored in a hash table (<see cref="UnorderedChain{TKey, TValue}"/>).<br/>
-    /// Structure: Hash table (<see cref="UnorderedMap{TKey, TValue}"/>).
+    /// Uses a hash-based <see cref="UnorderedChain{TKey, TValue}"/> that permits duplicate keys.
     /// </summary>
     Unordered,
 
     /// <summary>
-    /// Represents an observable collection of objects. (<see cref="ObservableChain{T}"/>).<br/>
-    /// Structure: Collection(Array) (<see cref="ObservableCollection{T}"/>).
+    /// Uses an indexed <see cref="ObservableChain{T}"/> with collection-change notifications.
     /// </summary>
     Observable,
 
     /// <summary>
-    /// Represents a sliding list of objects (<see cref="SlidingListChain{T}"/>).<br/>
-    /// Structure: Array (<see cref="SlidingList{T}"/>).
+    /// Uses a bounded <see cref="SlidingListChain{T}"/> with manual membership and logical positions.
     /// </summary>
     SlidingList,
 }
@@ -109,63 +96,64 @@ public enum ChainType
 public enum ValueLinkAccessibility
 {
     /// <summary>
-    /// [Default] Value/Link members have public getter, and setter with inherited accessibility.
+    /// Gives value properties a public getter and inherited setter access; links remain publicly accessible.
     /// </summary>
     PublicGetter,
 
     /// <summary>
-    /// Value/Link members have public getter/setter.
+    /// Makes generated value and link members public.
     /// </summary>
     Public,
 
     /// <summary>
-    /// Value/Link members have protected getter/setter.
+    /// Makes generated value and link members protected.
     /// </summary>
     Protected,
 
     /// <summary>
-    /// Value/Link members have private getter/setter.
+    /// Makes generated value and link members private.
     /// </summary>
     Private,
 
     /// <summary>
-    /// The accessibility of Value/Link members is exactly the same as it's target member.
+    /// Uses the target member's accessibility for generated value and link members.
     /// </summary>
     Inherit,
 }
 
+/// <summary>
+/// Enables owner and chain generation for a partial type.
+/// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = true)]
 public sealed class ValueLinkObjectAttribute : Attribute
 {
     /// <summary>
-    /// Gets or sets a string value which represents the class name of Goshujin (Owner class) [the default is "GoshujinClass"].
+    /// Gets or sets the generated owner class name; an empty value uses GoshujinClass.
     /// </summary>
     public string GoshujinClass { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets a string value which represents the instance name of Goshujin (Owner class) [the default is "Goshujin"].
+    /// Gets or sets the generated owner property name; an empty value uses Goshujin.
     /// </summary>
     public string GoshujinInstance { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets a string value which represents the explicit name of INotifyPropertyChanged.PropertyChanged event [the default is "PropertyChanged"].
+    /// Gets or sets the event name used for property notifications; an empty value uses PropertyChanged.
     /// </summary>
     public string ExplicitPropertyChanged { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets a value indicating the isolation level to be implemented in the goshujin class.
+    /// Gets or sets the owner's isolation mode. The default is None.
     /// </summary>
     public IsolationLevel Isolation { get; set; } = IsolationLevel.None;
 
     /// <summary>
-    /// Gets or sets a value indicating whether or not to make the object rectricted <br/>(sets Goshujin's accessibility to 'internal', ensuring all links have 'AddValue' set to false and their accessibility specified as 'Private') [the default is <see langword="false"/>].
+    /// Gets or sets a value indicating whether the owner property is internal and links default to private access without generated value properties.
     /// </summary>
     public bool Restricted { get; set; } = false;
 
     /// <summary>
-    /// Gets or sets a value indicating whether or not to enable the Integrality feature (a function for synchronizing data).<br/>
-    /// The object must have a unique link, and its type must be either a primitive type or a struct.<br/>
-    /// <see cref="IsolationLevel"/> must be either <see cref="IsolationLevel.None"/> or <see cref="IsolationLevel.Serializable"/>.
+    /// Gets or sets a value indicating whether to generate Tinyhand-based difference synchronization. Requires a unique value-type key and None or Serializable isolation.
     /// </summary>
     public bool Integrality { get; set; } = false;
 
@@ -174,61 +162,62 @@ public sealed class ValueLinkObjectAttribute : Attribute
     }
 }
 
+/// <summary>
+/// Configures a chain, its per-object link, and optional value notifications.
+/// </summary>
 [AttributeUsage(AttributeTargets.Constructor | AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = true, Inherited = true)]
 public sealed class LinkAttribute : Attribute
 {
     /// <summary>
-    /// Gets or sets a value indicating the type of object linkage (chain).
+    /// Gets or sets the chain type. The default is None.
     /// </summary>
     public ChainType Type { get; set; } = ChainType.None;
 
     /// <summary>
-    /// Gets or sets a value indicating whether or not the link is a primary link that is guaranteed to holds all objects in the collection [the default is <see langword="false"/>].
+    /// Gets or sets a value indicating whether this chain supplies owner enumeration and serialization order. Keep every owned object in the primary chain.
     /// </summary>
     public bool Primary { get; set; } = false;
 
     /// <summary>
-    /// Gets or sets a value indicating whether or not the link is a unique link, and all objects maintain their unique values.<br/>
-    /// It is mainly used when the IsolationLevel is RepeatableRead. [the default is <see langword="false"/>].
+    /// Gets or sets a value indicating whether this link identifies objects for isolation, journaling, and synchronization. Raw chain operations still allow duplicate keys.
     /// </summary>
     public bool Unique { get; set; } = false;
 
     /// <summary>
-    /// Gets or sets a string value which represents the name to be used for the Chain and Link (e.g., NameChain/NameLink).
+    /// Gets or sets the prefix for generated chain and link members. An empty value uses the target member name.
     /// </summary>
     public string Name { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets a value indicating whether or not to link the object automatically when the goshujin is set or changed [the default is <see langword="true"/>].<br/>
-    /// Even if <see cref="AutoLink" /> is false, the link will be updated when the Value property changes.
+    /// Gets or sets a value indicating whether assigning an owner automatically adds this link. The default is true; sliding chains always require manual insertion.
     /// </summary>
+    /// <remarks>
+    /// Generated value changes can update or add a link even when AutoLink is false.
+    /// </remarks>
     public bool AutoLink { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets a value indicating whether or not to invoke PropertyChanged event when the value has changed [the default is <see langword="false"/>].
+    /// Gets or sets a value indicating whether generated value changes raise PropertyChanged. The default is false.
     /// </summary>
     public bool AutoNotify { get; set; } = false;
 
     /// <summary>
-    /// Gets or sets a string value which represents the target member(property or field) name of the linkage.<br/>
-    /// Only LinkAttribute annotated to constructor is supported.
+    /// Gets or sets the field or property name indexed by a constructor-level attribute.
     /// </summary>
     public string TargetMember { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets a string value which represents the name of the chain used in sharing (e.g. PrimaryIdChain).<br/>
-    /// Instead of creating a member-specific chain, create a link that references another chain.<br/>
-    /// To safely add or remove from the chain, it is necessary to reference the link.
+    /// Gets or sets an existing chain name to share. Pass the correct link by reference when manipulating shared entries.
     /// </summary>
     public string UnsafeTargetChain { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets a value which specifies the accessibility of generated Value/Link members [the default is <see cref="ValueLinkAccessibility.PublicGetter"/>].
+    /// Gets or sets access to generated value and link members. The default is PublicGetter.
     /// </summary>
     public ValueLinkAccessibility Accessibility { get; set; } = ValueLinkAccessibility.PublicGetter;
 
     /// <summary>
-    /// Gets or sets a value indicating whether or not to create a value property from the target member [the default is <see langword="false"/>].
+    /// Gets or sets a value indicating whether to generate a value property that updates links. The default is false; partial properties generate their own accessors.
     /// </summary>
     public bool AddValue { get; set; } = false;
 
@@ -237,13 +226,25 @@ public sealed class LinkAttribute : Attribute
     }
 }
 
+/// <summary>
+/// Configures source output and initialization for the ValueLink generator.
+/// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = true)]
 public sealed class ValueLinkGeneratorOptionAttribute : Attribute
 {
+    /// <summary>
+    /// Gets or sets a value indicating whether debugger attachment is requested. Reserved; the current generator does not attach a debugger.
+    /// </summary>
     public bool AttachDebugger { get; set; } = false;
 
+    /// <summary>
+    /// Gets or sets a value indicating whether to write generated files to an existing Generated folder beside the attributed source file.
+    /// </summary>
     public bool GenerateToFile { get; set; } = false;
 
+    /// <summary>
+    /// Gets or sets the namespace of the generated module initializer. Model namespaces are unchanged.
+    /// </summary>
     public string? CustomNamespace { get; set; }
 
     public ValueLinkGeneratorOptionAttribute()

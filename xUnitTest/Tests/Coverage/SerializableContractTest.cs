@@ -8,6 +8,9 @@ using Xunit;
 
 namespace xUnitTest.Coverage;
 
+/// <summary>
+/// Provides a fixture for tests of serializable storage operations and lock release.
+/// </summary>
 [ValueLinkObject(Isolation = IsolationLevel.Serializable)]
 public partial class SerializableEntry : IStructuralObject
 {
@@ -41,6 +44,9 @@ public partial class SerializableEntry : IStructuralObject
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Exposes storage lifecycle operations for serializable isolation tests.
+    /// </summary>
     public partial class GoshujinClass
     {
         public Task<bool> StoreAll(StoreMode mode) => this.GoshujinStoreData(mode);
@@ -48,6 +54,9 @@ public partial class SerializableEntry : IStructuralObject
     }
 }
 
+/// <summary>
+/// Tests serializable storage operations and lock release.
+/// </summary>
 public class SerializableContractTest
 {
     [Theory]

@@ -6,6 +6,9 @@ using Arc.Collections;
 
 namespace ValueLink.Integrality;
 
+/// <summary>
+/// Encodes shared status responses and distinguishes them from protocol payloads.
+/// </summary>
 public static class IntegralityResultHelper
 {
     static IntegralityResultHelper()

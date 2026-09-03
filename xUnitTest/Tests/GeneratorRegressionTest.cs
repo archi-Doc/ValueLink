@@ -7,6 +7,9 @@ using LinkedObject = ValueLink.ValueLinkObjectAttribute;
 
 namespace xUnitTest;
 
+/// <summary>
+/// Provides a linked fixture whose ValueLink attribute is referenced through an alias.
+/// </summary>
 [LinkedObject]
 public partial class AliasedValueLinkItem : IEquatableObject
 {
@@ -16,6 +19,9 @@ public partial class AliasedValueLinkItem : IEquatableObject
     bool IEquatableObject.ObjectEquals(object? other) => other is AliasedValueLinkItem item && this.Id == item.Id;
 }
 
+/// <summary>
+/// Tests aliased attributes and generated equality.
+/// </summary>
 public class GeneratorRegressionTest
 {
     [Fact]

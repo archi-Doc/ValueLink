@@ -9,6 +9,9 @@ using Xunit;
 
 namespace xUnitTest.Coverage;
 
+/// <summary>
+/// Provides a fixture for tests of the shared contracts of all chain implementations.
+/// </summary>
 [ValueLinkObject]
 public partial class ChainItem
 {
@@ -26,6 +29,9 @@ public partial class ChainItem
     public ChainItem(int id) => this.Id = id;
 }
 
+/// <summary>
+/// Tests the shared contracts of all chain implementations.
+/// </summary>
 public class ChainContractTest
 {
     public static IEnumerable<object[]> Chains => Enum.GetValues<ChainType>()

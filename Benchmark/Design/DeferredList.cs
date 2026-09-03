@@ -8,11 +8,7 @@ namespace ValueLink;
 
 #pragma warning disable SA1629
 /// <summary>
-/// Represents a list that allows deferred adding and removing objects of type <typeparamref name="TObject"/> to/from a <typeparamref name="TGoshujin"/>.<br/><br/>
-/// var list = new DeferredList&lt;Goshujin, Object&gt;(goshujin);<br/>
-/// list.Add(obj1);<br/>
-/// list.Add(obj2);<br/>
-/// list.DeferredRemove();
+/// Buffers objects so owner additions or removals can be applied after enumeration.
 /// </summary>
 /// <typeparam name="TGoshujin">The type of the goshujin.</typeparam>
 /// <typeparam name="TObject">The type of the objects managed by the goshujin.</typeparam>
@@ -217,6 +213,9 @@ public ref struct DeferredList<TGoshujin, TObject>
 
     public Enumerator GetEnumerator() => new Enumerator(this);
 
+    /// <summary>
+    /// Enumerates objects held by this benchmark collection.
+    /// </summary>
     public ref struct Enumerator : IEnumerator<TObject>
     {
         private readonly DeferredList<TGoshujin, TObject> list;

@@ -6,6 +6,9 @@ using System.Collections.Generic;
 
 namespace Arc.Visceral;
 
+/// <summary>
+/// Reserves names and allocates unused generated identifiers.
+/// </summary>
 public class VisceralIdentifier
 {
     public static VisceralIdentifier Default = new VisceralIdentifier();

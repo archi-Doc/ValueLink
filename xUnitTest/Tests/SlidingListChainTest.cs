@@ -6,6 +6,9 @@ using Xunit;
 
 namespace xUnitTest;
 
+/// <summary>
+/// Provides a fixture for tests of sliding-window positions and capacity.
+/// </summary>
 [ValueLinkObject]
 public partial class SlidingListChainClass
 {
@@ -21,6 +24,9 @@ public partial class SlidingListChainClass
     public override string ToString() => this.Id.ToString();
 }
 
+/// <summary>
+/// Tests sliding-window positions and capacity.
+/// </summary>
 public class SlidingListChainTest
 {
     [Fact]

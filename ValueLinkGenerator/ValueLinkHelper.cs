@@ -9,6 +9,9 @@ using ValueLink.Generator;
 
 namespace ValueLink.Generator;
 
+/// <summary>
+/// Provides source-generation utilities for ValueLink models.
+/// </summary>
 public static class GeneratorHelper
 {
     public static string ChainTypeToName(this ChainType type) => type switch

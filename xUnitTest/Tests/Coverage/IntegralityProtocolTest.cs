@@ -12,6 +12,9 @@ using Xunit;
 
 namespace xUnitTest.Coverage;
 
+/// <summary>
+/// Tests synchronization packets, limits, hashes, and failures.
+/// </summary>
 public class IntegralityProtocolTest
 {
     public static IEnumerable<object[]> Results => Enum.GetValues<IntegralityResult>().Select(x => new object[] { x });

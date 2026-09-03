@@ -10,23 +10,35 @@ using Arc.Collections;
 namespace ValueLink;
 
 /// <summary>
-/// Represents a sliding window of objects with stable positions.<br/>
-/// Structure: Circular array.
+/// Stores owned objects in a bounded circular window with stable logical positions.
 /// </summary>
 /// <typeparam name="T">The type of objects in the list.</typeparam>
+/// <remarks>
+/// Call Resize before adding objects. Membership is always manual; Count excludes holes, while Consumed includes them. The chain does not provide synchronization.
+/// </remarks>
 public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     where T : class
 {
+    /// <summary>
+    /// Returns the owner of an object.
+    /// </summary>
+    /// <param name="obj">The object whose link or owner is requested.</param>
+    /// <returns>The object's owner, or null when unowned.</returns>
     public delegate IGoshujin? ObjectToGoshujinDelegete(T obj);
 
+    /// <summary>
+    /// Returns a reference to an object's link for this chain.
+    /// </summary>
+    /// <param name="obj">The object whose link or owner is requested.</param>
+    /// <returns>A reference to the object's link for this chain.</returns>
     public delegate ref Link ObjectToLinkDelegete(T obj);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SlidingListChain{T}"/> class (<see cref="SlidingList{T}"/> (Array)).
     /// </summary>
     /// <param name="goshujin">The instance of Goshujin.</param>
-    /// <param name="objectToGoshujin">ObjectToGoshujinDelegete.</param>
-    /// <param name="objectToLink">ObjectToLinkDelegete.</param>
+    /// <param name="objectToGoshujin">A delegate that returns an object's owner.</param>
+    /// <param name="objectToLink">A delegate that returns a reference to this chain's link.</param>
     public SlidingListChain(IGoshujin goshujin, ObjectToGoshujinDelegete objectToGoshujin, ObjectToLinkDelegete objectToLink)
     {
         this.goshujin = goshujin;
@@ -35,10 +47,10 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     }
 
     /// <summary>
-    /// Inserts an object into an available space in the list. If insertion is not possible, returns -1.
+    /// Appends an unlinked object, returning false if the window is full or the object is already linked.
     /// </summary>
     /// <param name="obj">The new object that will be added to the list.</param>
-    /// <returns><see langword="true"/>; Success.</returns>
+    /// <returns>True if added; false if already linked or the window is full.</returns>
     public bool Add(T obj)
     {
         if (this.objectToGoshujin(obj) != this.goshujin)
@@ -59,11 +71,11 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     }
 
     /// <summary>
-    /// Inserts an object into an available space in the list. If insertion is not possible, returns -1.
+    /// Appends an unlinked object, returning false if the window is full or the object is already linked.
     /// </summary>
     /// <param name="obj">The new object that will be added to the list.</param>
     /// <param name="link">The reference to a link that holds node information in the chain.</param>
-    /// <returns><see langword="true"/>; Success.</returns>
+    /// <returns>True if added; false if already linked or the window is full.</returns>
     public bool Add(T obj, ref Link link)
     {
         if (this.objectToGoshujin(obj) != this.goshujin)
@@ -83,11 +95,11 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     }
 
     /// <summary>
-    /// Inserts an object into the specified position in the list. If insertion is not possible, returns <see langword="false"/>.
+    /// Places an unlinked object at a window position, unlinking any object previously stored there.
     /// </summary>
     /// <param name="position">The position of the object.</param>
     /// <param name="obj">The new object that will be added to the list.</param>
-    /// <returns><see langword="true"/>; Success.</returns>
+    /// <returns>True if placed; false if already linked or outside the capacity window.</returns>
     public bool Set(int position, T obj)
     {
         if (this.objectToGoshujin(obj) != this.goshujin)
@@ -119,8 +131,7 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     }
 
     /// <summary>
-    /// Removes the specified object from the list.
-    /// <br/>O(1) operation.
+    /// Unlinks the object and advances the window past empty positions at its head.
     /// </summary>
     /// <param name="obj">The object that will be removed from the list.</param>
     /// <returns><see langword="true"/>; The object is successfully removed.</returns>
@@ -145,8 +156,7 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     }
 
     /// <summary>
-    /// Removes the specified object from the list.
-    /// <br/>O(1) operation.
+    /// Unlinks the object and advances the window past empty positions at its head.
     /// </summary>
     /// <param name="obj">The object that will be removed from the list.</param>
     /// <param name="link">The reference to a link that holds node information in the chain.</param>
@@ -170,6 +180,14 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
         }
     }
 
+    /// <summary>
+    /// Replaces the instance stored in an existing link without changing ownership.
+    /// </summary>
+    /// <remarks>
+    /// For generated copy-on-write updates. The replacement must already carry the correct owner and copied link state.
+    /// </remarks>
+    /// <param name="previousInstance">The instance currently stored in the chain.</param>
+    /// <param name="newInstance">The replacement instance with the required owner and link state.</param>
     public void UnsafeReplaceInstance(T previousInstance, T newInstance)
     {
         if (this.objectToGoshujin(previousInstance) != this.goshujin)
@@ -190,24 +208,27 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     public int Capacity => this.chain.Capacity;
 
     /// <summary>
-    /// Gets the number of elements contained in the <see cref="SlidingListChain{T}"/>.
+    /// Gets the number of consumed window positions, including holes left by removal.
     /// </summary>
     public int Consumed => this.chain.Consumed;
 
     /// <summary>
-    /// Gets the number of elements contained in the <see cref="SlidingListChain{T}"/>.
+    /// Gets the number of objects currently linked to this chain.
     /// </summary>
     public int Count => ((IReadOnlyCollection<T>)this.chain).Count;
 
     /// <summary>
-    /// Changes the number of elements of the <see cref="SlidingListChain{T}"/> to the specified new size.
+    /// Changes the window capacity while preserving logical positions.
     /// </summary>
     /// <param name="capacity">The new size of the <see cref="SlidingListChain{T}"/>.</param>
-    /// <returns><see langword="true"/>; Success.</returns>
+    /// <returns>True if resized; false if the new capacity is smaller than Consumed.</returns>
+    /// <remarks>
+    /// Returns false if the capacity is smaller than Consumed. A negative capacity throws ArgumentOutOfRangeException.
+    /// </remarks>
     public bool Resize(int capacity) => this.chain.Resize(capacity);
 
     /// <summary>
-    /// Gets the object at the specified position.
+    /// Returns the object at a logical position, or null for a hole or an out-of-window position.
     /// </summary>
     /// <param name="position">The position of the object.</param>
     /// <returns>The object.</returns>
@@ -224,18 +245,17 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     public T? FirstOrDefault => this.chain.FirstOrDefault;
 
     /// <summary>
-    /// Gets the position of the first element contained in the <see cref="SlidingListChain{T}"/>.
+    /// Gets the logical position at the start of the window, even when empty.
     /// </summary>
     public int StartPosition => this.chain.StartPosition;
 
     /// <summary>
-    /// Gets the position of the last element contained in the <see cref="SlidingListChain{T}"/>.
+    /// Gets the exclusive logical end position, where the next object would be appended.
     /// </summary>
     public int EndPosition => this.chain.EndPosition;
 
     /// <summary>
-    /// Finds the first node that contains the specified value.
-    /// <br/>O(n) operation.
+    /// Finds the first equal object by scanning the window's consumed positions.
     /// </summary>
     /// <param name="value">The value to locate in the list.</param>
     /// <returns>The first object that contains the specified value, if found; otherwise, null.</returns>
@@ -258,10 +278,19 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     private ObjectToLinkDelegete objectToLink;
     private SlidingList<T> chain = new(0);
 
+    /// <summary>
+    /// Tracks an object's stable position in a sliding window.
+    /// </summary>
     public struct Link : ILink<T>
     {
+        /// <summary>
+        /// Gets a value indicating whether the object is currently linked to this chain.
+        /// </summary>
         public bool IsLinked => this.rawPosition != 0;
 
+        /// <summary>
+        /// Gets the logical window position, or -1 when the object is unlinked.
+        /// </summary>
         public int Position
         {
             get => this.rawPosition - 1;
@@ -279,7 +308,7 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     public bool IsReadOnly => false;
 
     /// <summary>
-    /// Removes all objects from the list.
+    /// Unlinks all objects from this chain while preserving their owner references.
     /// </summary>
     public void Clear()
     {
@@ -299,9 +328,21 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
 
     #endregion
 
+    /// <summary>
+    /// Returns an enumerator over the objects in this chain.
+    /// </summary>
+    /// <returns>An enumerator over linked objects in chain order.</returns>
     public SlidingList<T>.Enumerator GetEnumerator() => this.chain.GetEnumerator();
 
+    /// <summary>
+    /// Returns an enumerator over the objects in this chain.
+    /// </summary>
+    /// <returns>An enumerator over linked objects in chain order.</returns>
     IEnumerator<T> IEnumerable<T>.GetEnumerator() => this.chain.GetEnumerator();
 
+    /// <summary>
+    /// Returns an enumerator over the objects in this chain.
+    /// </summary>
+    /// <returns>An enumerator over linked objects in chain order.</returns>
     System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => this.chain.GetEnumerator();
 }

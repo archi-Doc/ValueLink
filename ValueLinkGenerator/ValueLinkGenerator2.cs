@@ -12,6 +12,9 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace ValueLink.Generator;
 
+/// <summary>
+/// Generates ValueLink members incrementally from attributed partial types.
+/// </summary>
 [Generator]
 public class ValueLinkGeneratorV2 : IIncrementalGenerator, IGeneratorInformation
 {

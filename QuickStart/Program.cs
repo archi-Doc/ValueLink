@@ -6,6 +6,9 @@ using ValueLink;
 
 namespace ConsoleApp1;
 
+/// <summary>
+/// Demonstrates multiple indexes and ownership changes.
+/// </summary>
 [ValueLinkObject] // Annote a ValueLinkObject attribute.
 public partial class TestClass // Partial class is required for source generator.
 {
@@ -33,6 +36,9 @@ public partial class TestClass // Partial class is required for source generator
     public override string ToString() => $"ID:{this.id,2}, {this.Name,-5}, {this.age,2}";
 }
 
+/// <summary>
+/// Runs the ValueLink quick-start examples.
+/// </summary>
 public class Program
 {
     public static void Main(string[] args)

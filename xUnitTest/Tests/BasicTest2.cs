@@ -9,6 +9,9 @@ using Xunit;
 
 namespace xUnitTest;
 
+/// <summary>
+/// Provides a fixture for tests of private keys and generated value access.
+/// </summary>
 [TinyhandObject]
 public partial class PrivateIntClass
 {
@@ -20,6 +23,9 @@ public partial class PrivateIntClass
     public int Id { get; private set; }
 }
 
+/// <summary>
+/// Provides a fixture for tests of private keys and generated value access.
+/// </summary>
 [TinyhandObject]
 [ValueLinkObject]
 public partial class PrivateIntClass2 : PrivateIntClass
@@ -33,6 +39,9 @@ public partial class PrivateIntClass2 : PrivateIntClass
     // public int Id2 => this.Id;
 }
 
+/// <summary>
+/// Provides a fixture for tests of private keys and generated value access.
+/// </summary>
 [ValueLinkObject]
 [TinyhandObject]
 public partial class TestClass3
@@ -62,6 +71,9 @@ public partial class TestClass3
     }
 }
 
+/// <summary>
+/// Tests private keys and generated value access.
+/// </summary>
 public class BasicTest2
 {
     [Fact]

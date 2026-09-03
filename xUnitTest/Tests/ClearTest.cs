@@ -6,9 +6,15 @@ using Xunit;
 
 namespace xUnitTest;
 
+/// <summary>
+/// Provides a fixture for tests of chain clearing and ownership cleanup.
+/// </summary>
 [ValueLinkObject]
 public partial class ClearTestClass
 {
+    /// <summary>
+    /// Extends the generated owner for tests of chain clearing and ownership cleanup.
+    /// </summary>
     public partial class GoshujinClass
     {
         public int[] GetArray()
@@ -24,6 +30,9 @@ public partial class ClearTestClass
     }
 }
 
+/// <summary>
+/// Tests chain clearing and ownership cleanup.
+/// </summary>
 public class ClearTest
 {
     [Fact]

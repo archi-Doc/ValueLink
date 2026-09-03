@@ -5,6 +5,9 @@ using Xunit;
 
 namespace xUnitTest;
 
+/// <summary>
+/// Provides a fixture for tests of shared chains with explicit links.
+/// </summary>
 [ValueLinkObject]
 public partial class TargetChainTestClass
 {
@@ -25,6 +28,9 @@ public partial class TargetChainTestClass
     }
 }
 
+/// <summary>
+/// Tests shared chains with explicit links.
+/// </summary>
 public class SharedChainTest
 {
     [Fact]

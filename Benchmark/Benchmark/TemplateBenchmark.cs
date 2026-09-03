@@ -5,6 +5,9 @@ using BenchmarkDotNet.Attributes;
 
 namespace Benchmark;
 
+/// <summary>
+/// Measures benchmark scaffolding.
+/// </summary>
 [Config(typeof(BenchmarkConfig))]
 public class TemplateBenchmark
 {

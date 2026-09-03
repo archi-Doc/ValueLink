@@ -11,10 +11,16 @@ using Arc.Collections;
 
 namespace xUnitTest;
 
+/// <summary>
+/// Provides a fixture for tests of incremental synchronization and validation policies.
+/// </summary>
 [TinyhandObject]
 [ValueLinkObject(Integrality = true)]
 public partial class SimpleIntegralityClass : IEquatableObject
 {
+    /// <summary>
+    /// Provides synchronization policies with bounded item counts for tests.
+    /// </summary>
     public class Integrality : Integrality<GoshujinClass, SimpleIntegralityClass>
     {
         public static readonly Integrality Instance10 = new()
@@ -30,6 +36,9 @@ public partial class SimpleIntegralityClass : IEquatableObject
         };
     }
 
+    /// <summary>
+    /// Rejects items named B during synchronization tests.
+    /// </summary>
     public class IntegralityNotB : Integrality<GoshujinClass, SimpleIntegralityClass>
     {
         public static readonly IntegralityNotB Instance = new()
@@ -79,6 +88,9 @@ public partial class SimpleIntegralityClass : IEquatableObject
     }
 }
 
+/// <summary>
+/// Provides a fixture for tests of incremental synchronization and validation policies.
+/// </summary>
 [TinyhandObject]
 [ValueLinkObject(Integrality = true, Isolation = IsolationLevel.Serializable)]
 public partial class SerializableIntegralityClass : IEquatableObject
@@ -111,6 +123,9 @@ public partial class SerializableIntegralityClass : IEquatableObject
     }
 }
 
+/// <summary>
+/// Connects two in-memory owners for synchronization tests.
+/// </summary>
 public static class IntegralityTestHelper
 {
     public static IntegralityResultAndCount IntegrateForTest<TGoshujin, TObject>(this Integrality<TGoshujin, TObject> integrality, TGoshujin goshujin, TGoshujin target)
@@ -119,6 +134,9 @@ public static class IntegralityTestHelper
         => integrality.Integrate(goshujin, (x, y) => Task.FromResult(integrality.Differentiate(target, x))).Result;
 }
 
+/// <summary>
+/// Tests incremental synchronization and validation policies.
+/// </summary>
 public class IntegralityTest
 {
     [Fact]

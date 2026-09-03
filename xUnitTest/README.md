@@ -31,7 +31,7 @@ external storage engines and performance measurements are outside this test suit
 | `SerializableContractTest` | Store modes and lock scope; failed and throwing storage operations; lock release; snapshots; recursive deletion |
 | `IntegralityProtocolTest` | Result packets/counters; truncated and invalid protocol data; hash stack/pool boundaries; exact response size limits; multi-packet convergence; retention policy; broker errors/cancellation; safe reuse of shared responses |
 | `GeneratorDiagnosticTest` | Roslyn driver tests for 13 diagnostic IDs; aliases; qualified attributes; nested generics; split partial declarations; partial properties; explicit interface properties; unrelated attributes; recovery after edits; resetting generator options |
-| Existing suites | Generic/struct/record/nested types, link sharing, callbacks, property accessibility/notifications, journals, object caching, Tinyhand integration and previously fixed regressions |
+| Existing suites | Generic and nested models, record classes, value-type keys, link sharing, callbacks, property accessibility/notifications, journals, object caching, Tinyhand integration and previously fixed regressions |
 
 Randomized list tests use fixed seeds and report the seed and operation number
 when membership diverges. Concurrent tests use explicit synchronization and bounded

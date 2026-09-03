@@ -10,6 +10,9 @@ using Xunit;
 
 namespace xUnitTest;
 
+/// <summary>
+/// Provides a fixture for tests of linked records and equality.
+/// </summary>
 [ValueLinkObject]
 [TinyhandObject]
 public partial record TestRecord
@@ -51,6 +54,9 @@ public partial record TestRecord
     public override int GetHashCode() => HashCode.Combine(this.Id, this, Name, this.Age);
 }
 
+/// <summary>
+/// Tests linked records and equality.
+/// </summary>
 public class RecordTest
 {
     [Fact]

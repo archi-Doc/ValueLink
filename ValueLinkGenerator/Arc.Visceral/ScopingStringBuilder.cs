@@ -7,7 +7,7 @@ using System.Text;
 namespace Arc.Visceral;
 
 /// <summary>
-/// Simple string builder with a scoping function, mainly created for a source generator.
+/// Builds indented source text with disposable namespace and block scopes.
 /// </summary>
 public class ScopingStringBuilder
 {
@@ -205,6 +205,9 @@ public class ScopingStringBuilder
     private SortedSet<string> usingSystem = new();
     private SortedSet<string> usingOther = new();
 
+    /// <summary>
+    /// Closes a generated code scope when disposed.
+    /// </summary>
     public class Scope : IScope
     {
         public Scope(ScopingStringBuilder ssb, bool hasBrace, bool indentFlag)
@@ -327,6 +330,9 @@ public class ScopingStringBuilder
         private ScopingStringBuilder ssb;
     }
 
+    /// <summary>
+    /// Represents a disposable scope in generated source text.
+    /// </summary>
     public interface IScope : IDisposable
     {
         bool IsDisposed { get; }

@@ -131,6 +131,9 @@ namespace Xunit;
 
 #region Extensions
 
+/// <summary>
+/// Provides fluent assertion extensions for xUnit tests.
+/// </summary>
 [System.Diagnostics.DebuggerStepThroughAttribute]
 public static partial class AssertEx
 {
@@ -638,6 +641,9 @@ public static partial class AssertEx
 
 #endregion
 
+/// <summary>
+/// Represents an exception raised by a fluent assertion.
+/// </summary>
 public class AssertException : Exception
 {
     public AssertException(string message)
@@ -646,6 +652,9 @@ public class AssertException : Exception
     }
 }
 
+/// <summary>
+/// Reports a failed fluent assertion.
+/// </summary>
 public class AssertFailedException : Exception
 {
     public AssertFailedException(string message)

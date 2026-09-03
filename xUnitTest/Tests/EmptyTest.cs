@@ -6,12 +6,18 @@ using Xunit;
 
 namespace xUnitTest;
 
+/// <summary>
+/// Provides a fixture for tests of owners without linked members.
+/// </summary>
 [ValueLinkObject]
 [TinyhandObject]
 public partial class EmptyClass
 {
 }
 
+/// <summary>
+/// Provides a fixture for tests of owners without linked members.
+/// </summary>
 [TinyhandObject]
 public partial class EmptyClass2
 {
@@ -19,6 +25,9 @@ public partial class EmptyClass2
     public EmptyClass.GoshujinClass Goshujin { get; set; } = new();
 }
 
+/// <summary>
+/// Tests owners without linked members.
+/// </summary>
 public class EmptyTest
 {
     [Fact]

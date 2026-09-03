@@ -10,6 +10,9 @@ using Xunit;
 
 namespace xUnitTest.Coverage;
 
+/// <summary>
+/// Provides a fixture for tests of repeatable-read snapshots, cancellation, and concurrent writers.
+/// </summary>
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 public partial record TrackedEntry : IStructuralObject
 {
@@ -31,6 +34,9 @@ public partial record TrackedEntry : IStructuralObject
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Exposes storage lifecycle operations for repeatable-read tests.
+    /// </summary>
     public partial class GoshujinClass
     {
         public Task DeleteAll(DateTime deadline, bool journal) => this.GoshujinDeleteData(deadline, journal);
@@ -38,6 +44,9 @@ public partial record TrackedEntry : IStructuralObject
     }
 }
 
+/// <summary>
+/// Tests repeatable-read snapshots, cancellation, and concurrent writers.
+/// </summary>
 public class RepeatableReadContractTest
 {
     [Fact]

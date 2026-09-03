@@ -10,9 +10,15 @@ using System.Collections;
 
 namespace Benchmark.Serializer;
 
+/// <summary>
+/// Provides a comparison model for serialization.
+/// </summary>
 [TinyhandObject(ExplicitKeysOnly = true)]
 public partial class SerializerBaseClass
 {
+    /// <summary>
+    /// Owns objects in a hand-written collection benchmark.
+    /// </summary>
     public sealed partial class GoshujinClass : IGoshujin, ITinyhandSerializable
     {
         public GoshujinClass()

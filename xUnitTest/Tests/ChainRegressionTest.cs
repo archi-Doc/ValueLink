@@ -13,6 +13,9 @@ namespace xUnitTest;
 
 #pragma warning disable xUnit2017 // These tests exercise the chain's Contains implementation.
 
+/// <summary>
+/// Tests chain membership and identity regressions.
+/// </summary>
 public class ChainRegressionTest
 {
     [Fact]
@@ -234,6 +237,9 @@ public class ChainRegressionTest
     }
 }
 
+/// <summary>
+/// Provides equal-valued reference objects for identity-based collection tests.
+/// </summary>
 [ValueLinkObject]
 public partial class EqualObservableItem
 {

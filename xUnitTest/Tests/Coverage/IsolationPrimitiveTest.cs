@@ -11,6 +11,9 @@ using Xunit;
 
 namespace xUnitTest.Coverage;
 
+/// <summary>
+/// Tests protection states, data scopes, and semaphore accounting.
+/// </summary>
 public class IsolationPrimitiveTest
 {
     public static IEnumerable<object[]> ProtectionStates => Enum.GetValues<ObjectProtectionState>().Select(x => new object[] { x });

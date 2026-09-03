@@ -9,6 +9,9 @@ using ValueLink;
 
 namespace CrystalData;
 
+/// <summary>
+/// Provides a minimal storage-point stub for generator experiments.
+/// </summary>
 public class StoragePoint<TData> : IStructuralObject, IDataLocker<TData>
     where TData : notnull
 {

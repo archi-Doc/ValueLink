@@ -8,6 +8,9 @@ using TinyhandGenerator;
 
 namespace ValueLink.Generator;
 
+/// <summary>
+/// Describes and emits a record member exposed through a generated writer.
+/// </summary>
 public class Member
 {
     public static Member? Create(ValueLinkObject parent, ValueLinkObject obj, Linkage? linkage, bool journaling)

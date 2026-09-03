@@ -52,6 +52,9 @@ public enum ValueLinkObjectFlag
     DerivedFromStoragePoint = 1 << 29, // Derived from StoragePoint<TData>
 }
 
+/// <summary>
+/// Models a ValueLink type or member and emits its generated implementation.
+/// </summary>
 public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 {
     public ValueLinkObject()
@@ -1427,6 +1430,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
     internal void Generate_RepeatableRead_WriterClass(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         ssb.AppendLine();
+        ssb.AppendLine("/// <summary>Edits a record copy under an exclusive writer lock and publishes changes on commit.</summary>");
+        ssb.AppendLine("/// <remarks>Acquire through TryLock or TryLockAsync and dispose after use. Copy mutable reference-type members before editing them.</remarks>");
 
         using (var scopeClass = ssb.ScopeBrace($"public partial class {ValueLinkBody.WriterClassName} : IDisposable"))
         {
@@ -1930,7 +1935,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             goshujinInterface += $", {this.RepeatableReadGoshujin}";
         }*/
 
-        // selaed -> partial
+        ssb.AppendLine("/// <summary>Owns linked objects and exposes their generated chains and configured isolation operations.</summary>");
         using (var scopeClass = ssb.ScopeBrace("public partial class " + this.ObjectAttribute!.GoshujinClass + goshujinInterface))
         {
             // Constructor

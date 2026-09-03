@@ -12,6 +12,9 @@ using ValueLink;
 namespace QuickStart.Evolution
 {
 
+    /// <summary>
+    /// Provides serializable data for storage-point experiments.
+    /// </summary>
     [TinyhandObject(LockObject = "syncObject")]
     [ValueLinkObject]
     public partial class Class1
@@ -43,6 +46,9 @@ namespace QuickStart.Evolution
             => this.Id.ToString();
     }
 
+    /// <summary>
+    /// Demonstrates a generated owner for read-committed storage points.
+    /// </summary>
     [TinyhandObject(Structural = true)]
     [ValueLinkObject(Isolation = IsolationLevel.ReadCommitted)]
     public partial class Class1Point : StoragePoint<Class1>
@@ -59,9 +65,15 @@ namespace QuickStart.Evolution
 
 namespace Playground
 {
+    /// <summary>
+    /// Provides linked data for playground experiments.
+    /// </summary>
     [ValueLinkObject]
     public partial class TestClass
     {
+        /// <summary>
+        /// Extends the playground owner with experimental operations.
+        /// </summary>
         public partial class GoshujinClass
         {
             public void Test()

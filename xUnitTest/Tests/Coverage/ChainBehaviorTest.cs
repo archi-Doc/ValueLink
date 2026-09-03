@@ -10,6 +10,9 @@ using Xunit;
 
 namespace xUnitTest.Coverage;
 
+/// <summary>
+/// Tests collection ordering, bounds, notifications, and randomized mutations.
+/// </summary>
 public class ChainBehaviorTest
 {
     [Fact]

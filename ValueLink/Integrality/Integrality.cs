@@ -14,19 +14,13 @@ using Tinyhand.IO;
 namespace ValueLink.Integrality;
 
 /// <summary>
-/// Represents a class for object integration.<br/>
-/// Since this class is immutable, it can be used by multiple threads.<br/>
-/// Set the properties according to the use case, and override <see cref="Validate(TGoshujin, TObject, TObject?)"/> and <see cref="Trim(TGoshujin, int)"/> as needed.<br/><br/>
-/// Situations where Goshujin is modified during the integration process:<br/>
-/// Addition: <br/>
-/// When <see cref="Validate(TGoshujin, TObject, TObject?)"/> returns true, the newItem is added.<br/>
-/// Removal:<br/>
-/// When <see cref="RemoveIfItemNotFound"/> is true and the item does not exist in the comparison Goshujin.<br/>
-/// When <see cref="Validate(TGoshujin, TObject, TObject?)"/> results in updating to newItem and the oldItem is removed.<br/>
-/// When excess items are removed during <see cref="Trim(TGoshujin, int)"/>.<br/>
+/// Synchronizes an owner's objects with a remote owner using hashes and difference packets.
 /// </summary>
 /// <typeparam name="TGoshujin">The type of the Goshujin.</typeparam>
 /// <typeparam name="TObject">The type of the Object.</typeparam>
+/// <remarks>
+/// Configure limits and override Validate or Trim as needed. A run may make partial changes before failing. Serialize integration runs that target the same owner.
+/// </remarks>
 public class Integrality<TGoshujin, TObject> : IIntegralityInternal
     where TGoshujin : class, IGoshujin, IIntegralityGoshujin
     where TObject : class, ITinyhandSerializable<TObject>, IIntegralityObject
@@ -41,22 +35,22 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
     #region FieldAndProperty
 
     /// <summary>
-    /// Gets the maximum number of items.
+    /// Gets the limit on reported keys and accepted new items. Existing excess items are not automatically trimmed.
     /// </summary>
     public required int MaxItems { get; init; }
 
     /// <summary>
-    /// Gets a value indicating whether to remove the item if it is not found.
+    /// Gets a value indicating whether local objects absent from the remote key list are removed during comparison.
     /// </summary>
     public required bool RemoveIfItemNotFound { get; init; }
 
     /// <summary>
-    /// Gets the maximum memory length.
+    /// Gets the maximum byte length of an object-response packet; probe responses use MaxItems instead.
     /// </summary>
     public int MaxMemoryLength { get; init; } = IntegralityConstants.DefaultMaxMemoryLength;
 
     /// <summary>
-    /// Gets the maximum integration count.
+    /// Gets the maximum number of object-request iterations after the initial probe.
     /// </summary>
     public int MaxIntegrationCount { get; init; } = IntegralityConstants.DefaultMaxIntegrationCount;
 
@@ -187,11 +181,14 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
     }
 
     /// <summary>
-    /// Retrieve the difference data between the source and the target of the integration.
+    /// Creates a response to a synchronization request.
     /// </summary>
     /// <param name="target">The target Goshujin.</param>
     /// <param name="integration">The data sent from the source to the target when calculating the difference.</param>
     /// <returns>The data sent from the target to the source for integration.</returns>
+    /// <remarks>
+    /// The caller owns the returned buffer and must return it after use.
+    /// </remarks>
     public BytePool.RentMemory Differentiate(TGoshujin target, ReadOnlyMemory<byte> integration)
         => target.Differentiate(this, integration);
 
@@ -207,9 +204,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         => true;
 
     /// <summary>
-    /// Called in the final stage of <see cref="Integrate(TGoshujin, IntegralityBrokerDelegate, CancellationToken)" />() to remove any objects from Goshujin that exceed the limit or are invalid<br/>
-    /// (The number of items is ensured to be less than or equal to <see cref="MaxItems"/> beforehand).<br/>
-    /// If Goshujin's isolation level is set to <see cref="IsolationLevel.Serializable"/>, this function will be executed within a lock (goshujin.LockObject) statement.
+    /// Optionally removes objects after integration. The default removes none; Serializable owners call this under their lock.
     /// </summary>
     /// <param name="goshujin">The Goshujin.</param>
     /// <param name="integratedCount">The number of successfully integrated objects.</param>

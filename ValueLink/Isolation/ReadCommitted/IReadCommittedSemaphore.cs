@@ -4,6 +4,9 @@ using System.Threading;
 
 namespace ValueLink;
 
+/// <summary>
+/// Exposes the owner lock used by read-committed operations.
+/// </summary>
 public interface IReadCommittedSemaphore
 {
     Lock LockObject { get; }

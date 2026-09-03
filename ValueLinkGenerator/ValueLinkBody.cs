@@ -17,6 +17,9 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace ValueLink.Generator;
 
+/// <summary>
+/// Provides Tinyhand interface names used by generated source.
+/// </summary>
 public static class TinyhandBody
 {
     public static readonly string IStructuralRoot = "IStructuralRoot";
@@ -24,6 +27,9 @@ public static class TinyhandBody
     public static readonly string ITinyhandCustomJournal = "Tinyhand.ITinyhandCustomJournal";
 }
 
+/// <summary>
+/// Validates type models and emits owners, chains, and initialization code.
+/// </summary>
 public class ValueLinkBody : VisceralBody<ValueLinkObject>
 {
     public const int StackallocThreshold = 4096;
@@ -313,7 +319,12 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
         {
             if (x.ObjectFlag.HasFlag(ValueLinkObjectFlag.DerivedFromStoragePoint))
             {
-                scope ??= ssb.ScopeBrace("public static partial class StoragePointHelper");
+                if (scope is null)
+                {
+                    ssb.AppendLine("/// <summary>Provides generated acquisition helpers for storage-backed linked objects.</summary>");
+                    scope = ssb.ScopeBrace("public static partial class StoragePointHelper");
+                }
+
                 x.GenerateStoragePointHelper(ssb);
             }
         }
@@ -416,8 +427,9 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
 
         ssb.AppendLine();
         using (var scopeValueLink = ssb.ScopeNamespace(ns!))
-        using (var scopeClass = ssb.ScopeBrace("public static class ValueLinkModule" + assemblyId))
         {
+            ssb.AppendLine("/// <summary>Registers generated ValueLink serialization support for this assembly.</summary>");
+            using var scopeClass = ssb.ScopeBrace("public static class ValueLinkModule" + assemblyId);
             ssb.AppendLine("private static bool Initialized;");
             ssb.AppendLine();
             ssb.AppendLine("[ModuleInitializer]");

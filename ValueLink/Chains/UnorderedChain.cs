@@ -11,23 +11,35 @@ using Arc.Collections;
 namespace ValueLink;
 
 /// <summary>
-/// Represents a collection of objects stored in a hash table.<br/>
-/// Structure: Hash table.
+/// Indexes owned objects by key in a hash table, allowing duplicate keys.
 /// </summary>
 /// <typeparam name="TKey">The type of keys in the collection.</typeparam>
 /// <typeparam name="TObj">The type of objects in the collection.</typeparam>
+/// <remarks>
+/// Lookup and updates are expected O(1); collisions and resizing can take O(n). The chain does not provide synchronization.
+/// </remarks>
 public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
 {
+    /// <summary>
+    /// Returns the owner of an object.
+    /// </summary>
+    /// <param name="obj">The object whose link or owner is requested.</param>
+    /// <returns>The object's owner, or null when unowned.</returns>
     public delegate IGoshujin? ObjectToGoshujinDelegete(TObj obj);
 
+    /// <summary>
+    /// Returns a reference to an object's link for this chain.
+    /// </summary>
+    /// <param name="obj">The object whose link or owner is requested.</param>
+    /// <returns>A reference to the object's link for this chain.</returns>
     public delegate ref Link ObjectToLinkDelegete(TObj obj);
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="UnorderedChain{TKey, TObj}"/> class (UnorderedMultiMap).
+    /// Initializes a new instance of the <see cref="UnorderedChain{TKey, TObj}"/> class.
     /// </summary>
     /// <param name="goshujin">The instance of Goshujin.</param>
-    /// <param name="objectToGoshujin">ObjectToGoshujinDelegete.</param>
-    /// <param name="objectToLink">ObjectToLinkDelegete.</param>
+    /// <param name="objectToGoshujin">A delegate that returns an object's owner.</param>
+    /// <param name="objectToLink">A delegate that returns a reference to this chain's link.</param>
     public UnorderedChain(IGoshujin goshujin, ObjectToGoshujinDelegete objectToGoshujin, ObjectToLinkDelegete objectToLink)
     {
         this.goshujin = goshujin;
@@ -36,8 +48,7 @@ public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     }
 
     /// <summary>
-    /// Adds a new object to the collection.
-    /// <br/>O(1) operation.
+    /// Adds an object or updates the key of its existing link.
     /// </summary>
     /// <param name="key">The key of the object to add.</param>
     /// <param name="obj">The object to add.</param>
@@ -62,8 +73,7 @@ public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     }
 
     /// <summary>
-    /// Adds a new object to the collection.
-    /// <br/>O(1) operation.
+    /// Adds an object or updates the key of its existing link.
     /// </summary>
     /// <param name="key">The key of the object to add.</param>
     /// <param name="obj">The object to add.</param>
@@ -87,8 +97,7 @@ public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     }
 
     /// <summary>
-    /// Removes the specified object from the chain.
-    /// <br/>O(1) operation.
+    /// Removes the specified object from the chain in expected O(1) time.
     /// </summary>
     /// <param name="obj">The object to remove from the chain. </param>
     /// <returns>true if item is successfully removed.</returns>
@@ -113,8 +122,7 @@ public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     }
 
     /// <summary>
-    /// Removes the specified object from the chain.
-    /// <br/>O(1) operation.
+    /// Removes the specified object from the chain in expected O(1) time.
     /// </summary>
     /// <param name="obj">The object to remove from the chain. </param>
     /// <param name="link">The reference to a link that holds node information in the chain.</param>
@@ -138,6 +146,14 @@ public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
         }
     }
 
+    /// <summary>
+    /// Replaces the instance stored in an existing link without changing ownership.
+    /// </summary>
+    /// <remarks>
+    /// For generated copy-on-write updates. The replacement must already carry the correct owner and copied link state.
+    /// </remarks>
+    /// <param name="previousInstance">The instance currently stored in the chain.</param>
+    /// <param name="newInstance">The replacement instance with the required owner and link state.</param>
     public void UnsafeReplaceInstance(TObj previousInstance, TObj newInstance)
     {
         if (this.objectToGoshujin(previousInstance) != this.goshujin)
@@ -152,17 +168,26 @@ public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
         }
     }
 
+    /// <summary>
+    /// Returns the backing node array and its used index limit.
+    /// </summary>
+    /// <remarks>
+    /// For internal traversal only; the array may contain unused slots and is invalidated by resizing.
+    /// </remarks>
+    /// <returns>The backing array and exclusive upper index for used slots.</returns>
     public (UnorderedMap<TKey, TObj>.Node[] Nodes, int Max) UnsafeGetNodes()
         => this.chain.UnsafeGetNodes();
 
+    /// <summary>
+    /// Gets the number of objects currently linked to this chain.
+    /// </summary>
     public int Count => this.chain.Count;
 
     /// <summary>
-    /// Gets the element with the specified key.
-    /// <br/>O(log n) operation.
+    /// Gets the first object with the specified key, or default if none exists.
     /// </summary>
-    /// <param name="key">The key of the element to get or set.</param>
-    /// <returns>The element with the specified key.</returns>
+    /// <param name="key">The key to look up.</param>
+    /// <returns>The first matching object, or default if none exists.</returns>
     public TObj? this[TKey key]
     {
         get
@@ -173,11 +198,10 @@ public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     }
 
     /// <summary>
-    /// Gets the first element with the specified key.
-    /// <br/>O(1) operation.
+    /// Returns the first object with the specified key, or default if none exists.
     /// </summary>
-    /// <param name="key">The key of the element to get or set.</param>
-    /// <returns>The first element with the specified key.</returns>
+    /// <param name="key">The key to look up.</param>
+    /// <returns>The first matching object, or default if none exists.</returns>
     public TObj? FindFirst(TKey key)
     {
         this.chain.TryGetValue(key, out var value);
@@ -191,15 +215,23 @@ public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     /// <returns>The elements with the specified key.</returns>
     public IEnumerable<TObj> Enumerate(TKey? key) => this.chain.EnumerateValue(key);
 
+    /// <summary>
+    /// Gets the keys in chain enumeration order, including duplicates.
+    /// </summary>
     public IEnumerable<TKey> Keys => this.chain.Keys;
 
+    /// <summary>
+    /// Gets the objects in chain enumeration order.
+    /// </summary>
     public IEnumerable<TObj> Objects => this.chain.Values;
 
+    /// <summary>
+    /// Gets the key-object pairs in chain enumeration order.
+    /// </summary>
     public IEnumerable<KeyValuePair<TKey, TObj>> KeyObjects => this.chain;
 
     /// <summary>
-    /// Determines whether the chain contains an element with the specified key.
-    /// <br/>O(log n) operation.
+    /// Determines whether the chain contains the key in expected O(1) time.
     /// </summary>
     /// <param name="key">The key to locate in the chain.</param>
     /// <returns>true if the chain contains an element with the key; otherwise, false.</returns>
@@ -224,7 +256,7 @@ public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     public struct Link : ILink<TObj>
     {
         /// <summary>
-        /// Gets a value indicating whether the link is currently associated with a node in the chain.
+        /// Gets a value indicating whether the object is currently linked to this chain.
         /// </summary>
         public bool IsLinked => this.RawIndex > 0;
 
@@ -254,7 +286,7 @@ public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     public bool IsReadOnly => false;
 
     /// <summary>
-    /// Removes all objects from the collection.
+    /// Unlinks all objects from this chain while preserving their owner references.
     /// </summary>
     public void Clear()
     {
@@ -275,9 +307,21 @@ public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
 
     #endregion
 
+    /// <summary>
+    /// Returns an enumerator over the objects in this chain.
+    /// </summary>
+    /// <returns>An enumerator over linked objects in chain order.</returns>
     public UnorderedMap<TKey, TObj>.ValueEnumerable.Enumerator GetEnumerator() => this.chain.Values.GetEnumerator();
 
+    /// <summary>
+    /// Returns an enumerator over the objects in this chain.
+    /// </summary>
+    /// <returns>An enumerator over linked objects in chain order.</returns>
     IEnumerator<TObj> IEnumerable<TObj>.GetEnumerator() => this.chain.Values.GetEnumerator();
 
+    /// <summary>
+    /// Returns an enumerator over the objects in this chain.
+    /// </summary>
+    /// <returns>An enumerator over linked objects in chain order.</returns>
     IEnumerator IEnumerable.GetEnumerator() => this.chain.Values.GetEnumerator();
 }

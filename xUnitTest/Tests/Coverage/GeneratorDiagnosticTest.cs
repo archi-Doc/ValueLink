@@ -13,6 +13,9 @@ using Generator = ValueLinkGenerator::ValueLink.Generator.ValueLinkGeneratorV2;
 
 namespace xUnitTest.Coverage;
 
+/// <summary>
+/// Tests generator diagnostics and incremental updates.
+/// </summary>
 public class GeneratorDiagnosticTest
 {
     private static readonly CSharpParseOptions ParseOptions = new(LanguageVersion.Preview);

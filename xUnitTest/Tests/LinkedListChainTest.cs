@@ -6,6 +6,9 @@ using Xunit;
 
 namespace xUnitTest;
 
+/// <summary>
+/// Provides a fixture for tests of linked-list ordering and membership.
+/// </summary>
 [ValueLinkObject]
 public partial class LinkedListChainTestClass
 {
@@ -20,6 +23,9 @@ public partial class LinkedListChainTestClass
     }
 }
 
+/// <summary>
+/// Tests linked-list ordering and membership.
+/// </summary>
 public class LinkedListChainTest
 {
     [Fact]

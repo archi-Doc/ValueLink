@@ -11,6 +11,9 @@ using Tinyhand;
 
 namespace Benchmark.Serializer;
 
+/// <summary>
+/// Provides a comparison model for serialization.
+/// </summary>
 [ValueLinkObject]
 [TinyhandObject]
 public partial class TestClass
@@ -35,6 +38,9 @@ public partial class TestClass
     private string name = default!;
 }
 
+/// <summary>
+/// Measures serialization.
+/// </summary>
 [Config(typeof(BenchmarkConfig))]
 public class SerializerBenchmark
 {

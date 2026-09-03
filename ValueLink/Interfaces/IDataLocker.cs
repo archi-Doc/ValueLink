@@ -8,7 +8,7 @@ using Tinyhand;
 namespace ValueLink;
 
 /// <summary>
-/// Defines an interface for acquiring and releasing a lock on a data resource.
+/// Retrieves, locks, and deletes data through a storage adapter.
 /// </summary>
 /// <typeparam name="TData">
 /// The type of data to be locked. Must be non-null.
@@ -41,12 +41,12 @@ public interface IDataLocker<TData>
     /// A <see cref="CancellationToken"/> to observe while waiting to acquire the lock.
     /// </param>
     /// <returns>
-    /// A <see cref="ValueTask"/> containing the data instance of type <typeparamref name="TData"/> if available; otherwise <c>null</c>.
+    /// A <see cref="ValueTask"/> containing the data instance of type <typeparamref name="TData"/> if available; otherwise its default value.
     /// </returns>
     ValueTask<TData?> TryGet(TimeSpan timeout, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Attempts to acquire a lock on the data resource asynchronously.
+    /// Attempts to acquire data according to the requested mode, timeout, and cancellation token.
     /// </summary>
     /// <param name="acquisitionMode">The data acquisition mode specifying get, create, or get-or-create behavior.</param>
     /// <param name="timeout">The maximum time to wait for the lock. If <see cref="TimeSpan.Zero"/>, the method returns immediately.</param>
@@ -55,8 +55,8 @@ public interface IDataLocker<TData>
     /// </param>
     /// <param name="factory">An optional factory function to create the data instance if it does not exist.</param>
     /// <returns>
-    /// A <see cref="ValueTask"/> containing a tuple with the <see cref="DataScopeResult"/><br/>
-    /// indicating the outcome of the lock attempt, and the locked data if successful.
+    /// A <see cref="DataScope{TData}"/> with the acquisition result and an owned lock to dispose,
+    /// plus the acquired data when successful.
     /// </returns>
     ValueTask<DataScope<TData>> TryLock(AcquisitionMode acquisitionMode, TimeSpan timeout, CancellationToken cancellationToken, Func<IStructuralObject, TData>? factory);
 

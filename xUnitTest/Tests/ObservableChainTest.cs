@@ -8,6 +8,9 @@ using Xunit;
 
 namespace xUnitTest;
 
+/// <summary>
+/// Provides a fixture for tests of observable replacement and movement.
+/// </summary>
 [ValueLinkObject]
 public partial class ObservableChainTestClass
 {
@@ -20,6 +23,9 @@ public partial class ObservableChainTestClass
     }
 }
 
+/// <summary>
+/// Tests observable replacement and movement.
+/// </summary>
 public class ObservableChainTest
 {
     private static ObservableChainTestClass.GoshujinClass CreateGoshujin(int count)

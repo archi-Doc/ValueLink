@@ -8,6 +8,9 @@ using Xunit;
 
 namespace xUnitTest.Coverage;
 
+/// <summary>
+/// Provides a fixture for tests of multi-chain serialization, cloning, and ownership restoration.
+/// </summary>
 [TinyhandObject]
 [ValueLinkObject]
 public partial class PersistedItem
@@ -31,6 +34,9 @@ public partial class PersistedItem
     }
 }
 
+/// <summary>
+/// Tests multi-chain serialization, cloning, and ownership restoration.
+/// </summary>
 public class SerializationContractTest
 {
     [Theory]

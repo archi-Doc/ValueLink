@@ -9,6 +9,9 @@ using ValueLink;
 
 namespace QuickStart;
 
+/// <summary>
+/// Demonstrates accessibility options for generated value properties.
+/// </summary>
 [ValueLinkObject]
 public partial class AccessibilityTestClass
 {

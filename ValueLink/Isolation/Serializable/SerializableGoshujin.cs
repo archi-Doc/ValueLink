@@ -12,7 +12,7 @@ using Tinyhand;
 namespace ValueLink;
 
 /// <summary>
-/// A base interface for serializable.
+/// Provides snapshots and storage lifecycle operations for a semaphore-protected owner.
 /// </summary>
 /// <typeparam name="TObject">The type of object class.</typeparam>
 /// <typeparam name="TGoshujin">The type of goshujin class.</typeparam>

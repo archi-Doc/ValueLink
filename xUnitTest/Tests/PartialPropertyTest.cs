@@ -4,6 +4,9 @@ using Xunit;
 
 namespace xUnitTest.Tests;
 
+/// <summary>
+/// Provides a fixture for tests of generated partial property accessors.
+/// </summary>
 [ValueLinkObject]
 public partial class PartialPropertyTestClass
 {
@@ -14,6 +17,9 @@ public partial class PartialPropertyTestClass
     public required partial int Id2 { get; init; }
 }
 
+/// <summary>
+/// Tests generated partial property accessors.
+/// </summary>
 public class PartialPropertyTest
 {
     [Fact]

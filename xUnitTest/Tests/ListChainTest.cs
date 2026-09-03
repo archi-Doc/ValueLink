@@ -9,9 +9,15 @@ using Xunit;
 
 namespace xUnitTest;
 
+/// <summary>
+/// Provides a fixture for tests of unordered list insertion, replacement, and link indexes.
+/// </summary>
 [ValueLinkObject]
 public partial class ListChainTestClass
 {
+    /// <summary>
+    /// Extends the generated owner for tests of unordered list insertion, replacement, and link indexes.
+    /// </summary>
     public partial class GoshujinClass
     {
         public int[] GetArray()
@@ -35,9 +41,15 @@ public partial class ListChainTestClass
     public override string ToString() => this.Id.ToString();
 }
 
+/// <summary>
+/// Provides a fixture for tests of unordered list insertion, replacement, and link indexes.
+/// </summary>
 [ValueLinkObject]
 public partial class ListChainTestClass2
 {
+    /// <summary>
+    /// Extends the generated owner for tests of unordered list insertion, replacement, and link indexes.
+    /// </summary>
     public partial class GoshujinClass
     {
         public int[] GetArray()
@@ -59,6 +71,9 @@ public partial class ListChainTestClass2
     public override string ToString() => this.Id.ToString();
 }
 
+/// <summary>
+/// Tests unordered list insertion, replacement, and link indexes.
+/// </summary>
 public class ListChainTest
 {
     [Fact]
@@ -129,6 +144,9 @@ public class ListChainTest
 
 }
 
+/// <summary>
+/// Tests unordered list insertion, replacement, and link indexes.
+/// </summary>
 public class ListChainInsertTest
 {
     [Fact]
@@ -174,6 +192,9 @@ public class ListChainInsertTest
     }
 }
 
+/// <summary>
+/// Tests unordered list insertion, replacement, and link indexes.
+/// </summary>
 public class ListChainIndexerTest
 {
     private static ListChainTestClass.GoshujinClass CreateGoshujin(int count)

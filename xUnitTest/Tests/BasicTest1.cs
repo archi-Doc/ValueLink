@@ -12,6 +12,9 @@ namespace xUnitTest;
 
 // [TinyhandObject]
 // [ValueLinkObject] // Error!
+/// <summary>
+/// Provides a fixture for tests of basic ownership, generic types, and linked indexes.
+/// </summary>
 public partial class TestClass1Derived : TestClass1
 {
     public void Test()
@@ -20,6 +23,9 @@ public partial class TestClass1Derived : TestClass1
     }
 }
 
+/// <summary>
+/// Provides a fixture for tests of basic ownership, generic types, and linked indexes.
+/// </summary>
 [ValueLinkObject]
 [TinyhandObject]
 public partial class TestClass1 : IComparable<TestClass1>
@@ -88,6 +94,9 @@ public partial class TestClass1 : IComparable<TestClass1>
     }
 }
 
+/// <summary>
+/// Provides a fixture for tests of basic ownership, generic types, and linked indexes.
+/// </summary>
 [TinyhandObject(ImplicitMemberNameAsKey = true)]
 public partial class TestClass2
 {
@@ -97,6 +106,9 @@ public partial class TestClass2
     public TestClass1.GoshujinClass G { get; set; } = default!;
 }
 
+/// <summary>
+/// Provides a fixture for tests of basic ownership, generic types, and linked indexes.
+/// </summary>
 [ValueLinkObject]
 [TinyhandObject]
 public partial class GenericTestClass<T>
@@ -136,6 +148,9 @@ public partial class GenericTestClass<T>
     }
 }
 
+/// <summary>
+/// Provides a fixture for tests of basic ownership, generic types, and linked indexes.
+/// </summary>
 [ValueLinkObject]
 [TinyhandObject]
 public partial class GenericTestClass2<T>
@@ -179,6 +194,9 @@ public partial class GenericTestClass2<T>
         return HashCode.Combine(this.Id, this.Value);
     }
 
+    /// <summary>
+    /// Provides a fixture for tests of basic ownership, generic types, and linked indexes.
+    /// </summary>
     [ValueLinkObject]
     [TinyhandObject]
     public partial class NestedClass<X, Y> : IComparable<NestedClass<X, Y>>
@@ -216,6 +234,9 @@ public partial class GenericTestClass2<T>
         }
     }
 
+    /// <summary>
+    /// Provides a fixture for tests of basic ownership, generic types, and linked indexes.
+    /// </summary>
     [ValueLinkObject]
     [TinyhandObject]
     public partial class NestedClass2
@@ -235,6 +256,9 @@ public partial class GenericTestClass2<T>
     }
 }
 
+/// <summary>
+/// Tests basic ownership, generic types, and linked indexes.
+/// </summary>
 public class BasicTest1
 {
     [Fact]

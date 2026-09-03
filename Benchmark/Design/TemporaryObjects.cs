@@ -7,11 +7,12 @@ using ValueLink;
 namespace Arc.Collections;
 
 /// <summary>
-/// A queue of temporary objects created using a ref struct.<br/>
-/// If the count is 4 or fewer, it avoids creating a <see cref="List{T}"/> and keeps the objects on the stack.<br/>
-/// It is primarily used when you need to manipulate a collection after exiting a for or foreach loop.
+/// Buffers up to four object references inline before allocating an overflow list.
 /// </summary>
 /// <typeparam name="TObject">The type of the objects.</typeparam>
+/// <remarks>
+/// Used by collection experiments to defer mutations until enumeration ends.
+/// </remarks>
 public ref struct TemporaryObjects<TObject>
     where TObject : class
 {
@@ -181,6 +182,9 @@ public ref struct TemporaryObjects<TObject>
 
     public Enumerator GetEnumerator() => new Enumerator(this);
 
+    /// <summary>
+    /// Enumerates objects held by this benchmark collection.
+    /// </summary>
     public ref struct Enumerator : IEnumerator<TObject>
     {
         private readonly TemporaryObjects<TObject> queue;

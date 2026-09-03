@@ -10,6 +10,9 @@ using System.Collections.Generic;
 
 namespace ValueLink.Obsolete;
 
+/// <summary>
+/// Provides a comparison model for legacy array-backed chains.
+/// </summary>
 public sealed class ListChainObsolete<T> : IEnumerable<T>
 {
     private const int MaxArrayLength = 0X7FEFFFFF;
@@ -166,6 +169,9 @@ public sealed class ListChainObsolete<T> : IEnumerable<T>
         return new Enumerator(this);
     }
 
+    /// <summary>
+    /// Stores per-object membership for this experimental chain.
+    /// </summary>
     public sealed class Link : ILink<T>
     {
         internal T obj;
@@ -212,6 +218,9 @@ public sealed class ListChainObsolete<T> : IEnumerable<T>
         public bool IsLinked => this.rawIndex > 0;
     }*/
 
+    /// <summary>
+    /// Enumerates objects held by this benchmark collection.
+    /// </summary>
     public struct Enumerator : IEnumerator<T>, IEnumerator
     {
         private ListChainObsolete<T> list;

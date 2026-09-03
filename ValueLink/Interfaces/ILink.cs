@@ -3,7 +3,7 @@
 namespace ValueLink;
 
 /// <summary>
-/// Link interface.
+/// Exposes whether an object belongs to a chain.
 /// </summary>
 /// <typeparam name="T">The type of the object to be linked.</typeparam>
 public interface ILink<T>

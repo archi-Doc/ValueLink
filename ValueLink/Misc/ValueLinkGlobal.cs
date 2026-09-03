@@ -5,7 +5,7 @@ using System;
 namespace ValueLink;
 
 /// <summary>
-/// ValueLink Global variables.
+/// Configures the default timeout for asynchronous lock acquisition.
 /// </summary>
 public static class ValueLinkGlobal
 {

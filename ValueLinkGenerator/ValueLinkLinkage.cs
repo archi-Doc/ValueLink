@@ -7,6 +7,9 @@ using Microsoft.CodeAnalysis;
 
 namespace ValueLink.Generator;
 
+/// <summary>
+/// Describes a member's chain, link, accessors, and generation options.
+/// </summary>
 public class Linkage
 {
     public static Linkage? Create(ValueLinkObject obj, VisceralAttribute attribute)

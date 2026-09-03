@@ -7,6 +7,9 @@ using System.Linq;
 
 namespace xUnitTest;
 
+/// <summary>
+/// Provides a fixture for tests of link predicates and callbacks.
+/// </summary>
 [ValueLinkObject]
 [TinyhandObject]
 public partial class AdditionalMethodClass
@@ -63,6 +66,9 @@ public partial class AdditionalMethodClass
         => x.Age >= 20;*/
 }
 
+/// <summary>
+/// Tests link predicates and callbacks.
+/// </summary>
 public class AdditionalMethodTest
 {
     [Fact]

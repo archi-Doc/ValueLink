@@ -11,6 +11,9 @@ using Xunit;
 
 namespace xUnitTest.Coverage;
 
+/// <summary>
+/// Tests read-committed acquisition and storage lifecycle contracts.
+/// </summary>
 public class ReadCommittedContractTest
 {
     [Theory]

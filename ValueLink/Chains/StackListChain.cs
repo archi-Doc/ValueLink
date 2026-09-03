@@ -11,22 +11,34 @@ using Arc.Collections;
 namespace ValueLink;
 
 /// <summary>
-/// Represents a variable size last-in-first-out (LIFO) collection of objects of the same specified type.<br/>
-/// Structure: Doubly linked list.
+/// Stores owned objects in a linked last-in, first-out (LIFO) stack.
 /// </summary>
 /// <typeparam name="T">Specifies the type of objects in the stack.</typeparam>
+/// <remarks>
+/// Enumeration follows insertion order, from the bottom to the top. The chain does not provide synchronization.
+/// </remarks>
 public class StackListChain<T> : IReadOnlyCollection<T>, ICollection
 {
+    /// <summary>
+    /// Returns the owner of an object.
+    /// </summary>
+    /// <param name="obj">The object whose link or owner is requested.</param>
+    /// <returns>The object's owner, or null when unowned.</returns>
     public delegate IGoshujin? ObjectToGoshujinDelegete(T obj);
 
+    /// <summary>
+    /// Returns a reference to an object's link for this chain.
+    /// </summary>
+    /// <param name="obj">The object whose link or owner is requested.</param>
+    /// <returns>A reference to the object's link for this chain.</returns>
     public delegate ref Link ObjectToLinkDelegete(T obj);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="StackListChain{T}"/> class (Doubly linked list).
     /// </summary>
     /// <param name="goshujin">The instance of Goshujin.</param>
-    /// <param name="objectToGoshujin">ObjectToGoshujinDelegete.</param>
-    /// <param name="objectToLink">ObjectToLinkDelegete.</param>
+    /// <param name="objectToGoshujin">A delegate that returns an object's owner.</param>
+    /// <param name="objectToLink">A delegate that returns a reference to this chain's link.</param>
     public StackListChain(IGoshujin goshujin, ObjectToGoshujinDelegete objectToGoshujin, ObjectToLinkDelegete objectToLink)
     {
         this.goshujin = goshujin;
@@ -34,6 +46,9 @@ public class StackListChain<T> : IReadOnlyCollection<T>, ICollection
         this.objectToLink = objectToLink;
     }
 
+    /// <summary>
+    /// Gets the number of objects currently linked to this chain.
+    /// </summary>
     public int Count => this.chain.Count;
 
     /// <summary>
@@ -117,7 +132,7 @@ public class StackListChain<T> : IReadOnlyCollection<T>, ICollection
     /// Inserts an object at the top of the <see cref="StackListChain{T}"/>.<br/>
     /// If already present in the stack, move it to the top.
     /// </summary>
-    /// <param name="obj">The object to push onto the <see cref="StackListChain{T}"/>. The value can be null for reference types.</param>
+    /// <param name="obj">The non-null owned object to push onto the stack.</param>
     public void Push(T obj)
     {
         if (this.objectToGoshujin(obj) != this.goshujin)
@@ -140,7 +155,7 @@ public class StackListChain<T> : IReadOnlyCollection<T>, ICollection
     /// Inserts an object at the top of the <see cref="StackListChain{T}"/>.<br/>
     /// If already present in the stack, move it to the top.
     /// </summary>
-    /// <param name="obj">The object to push onto the <see cref="StackListChain{T}"/>. The value can be null for reference types.</param>
+    /// <param name="obj">The non-null owned object to push onto the stack.</param>
     /// <param name="link">The reference to a link that holds node information in the chain.</param>
     public void Push(T obj, ref Link link)
     {
@@ -163,7 +178,7 @@ public class StackListChain<T> : IReadOnlyCollection<T>, ICollection
     /// Inserts an object at the top of the <see cref="StackListChain{T}"/>.<br/>
     /// If already present in the stack, do not change its position.
     /// </summary>
-    /// <param name="obj">The object to push onto the <see cref="StackListChain{T}"/>. The value can be null for reference types.</param>
+    /// <param name="obj">The non-null owned object to push onto the stack.</param>
     public void TryPush(T obj)
     {
         if (this.objectToGoshujin(obj) != this.goshujin)
@@ -228,6 +243,14 @@ public class StackListChain<T> : IReadOnlyCollection<T>, ICollection
         }
     }
 
+    /// <summary>
+    /// Replaces the instance stored in an existing link without changing ownership.
+    /// </summary>
+    /// <remarks>
+    /// For generated copy-on-write updates. The replacement must already carry the correct owner and copied link state.
+    /// </remarks>
+    /// <param name="previousInstance">The instance currently stored in the chain.</param>
+    /// <param name="newInstance">The replacement instance with the required owner and link state.</param>
     public void UnsafeReplaceInstance(T previousInstance, T newInstance)
     {
         if (this.objectToGoshujin(previousInstance) != this.goshujin)
@@ -247,8 +270,14 @@ public class StackListChain<T> : IReadOnlyCollection<T>, ICollection
     private ObjectToLinkDelegete objectToLink;
     private UnorderedLinkedList<T> chain = new();
 
+    /// <summary>
+    /// Tracks an object's stack membership and neighboring objects.
+    /// </summary>
     public struct Link : ILink<T>
     {
+        /// <summary>
+        /// Gets a value indicating whether the object is currently linked to this chain.
+        /// </summary>
         public bool IsLinked => this.Node != null;
 
         /// <summary>
@@ -269,7 +298,7 @@ public class StackListChain<T> : IReadOnlyCollection<T>, ICollection
     public bool IsReadOnly => false;
 
     /// <summary>
-    /// Removes all objects from the collection.
+    /// Unlinks all objects from this chain while preserving their owner references.
     /// </summary>
     public void Clear()
     {
@@ -289,9 +318,21 @@ public class StackListChain<T> : IReadOnlyCollection<T>, ICollection
 
     #endregion
 
+    /// <summary>
+    /// Returns an enumerator over the objects in this chain.
+    /// </summary>
+    /// <returns>An enumerator over linked objects in chain order.</returns>
     public UnorderedLinkedList<T>.Enumerator GetEnumerator() => this.chain.GetEnumerator();
 
+    /// <summary>
+    /// Returns an enumerator over the objects in this chain.
+    /// </summary>
+    /// <returns>An enumerator over linked objects in chain order.</returns>
     IEnumerator<T> IEnumerable<T>.GetEnumerator() => this.chain.GetEnumerator();
 
+    /// <summary>
+    /// Returns an enumerator over the objects in this chain.
+    /// </summary>
+    /// <returns>An enumerator over linked objects in chain order.</returns>
     System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => this.chain.GetEnumerator();
 }

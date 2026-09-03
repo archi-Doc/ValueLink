@@ -12,6 +12,9 @@ using Tinyhand.Resolvers;
 
 namespace Sandbox;
 
+/// <summary>
+/// Registers the hand-written formatters used by serialization benchmarks.
+/// </summary>
 public static class ValueLinkModule
 {
     private static bool Initialized;

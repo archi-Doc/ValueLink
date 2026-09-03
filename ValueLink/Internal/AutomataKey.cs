@@ -5,6 +5,9 @@ using System.Runtime.InteropServices;
 
 namespace Arc.Visceral;
 
+/// <summary>
+/// Reads fixed-size byte keys used by generated name dispatch code.
+/// </summary>
 public static class AutomataKey
 {
     public static ulong GetKey(ref ReadOnlySpan<byte> span)

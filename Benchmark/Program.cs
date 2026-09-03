@@ -4,6 +4,9 @@ using BenchmarkDotNet.Running;
 
 namespace Benchmark;
 
+/// <summary>
+/// Runs the selected BenchmarkDotNet benchmarks.
+/// </summary>
 public class Program
 {
     public static void Main(string[] args)
@@ -12,6 +15,9 @@ public class Program
     }
 }
 
+/// <summary>
+/// Configures the benchmark runtime and result exporters.
+/// </summary>
 public class BenchmarkConfig : BenchmarkDotNet.Configs.ManualConfig
 {
     public BenchmarkConfig()

@@ -5,6 +5,9 @@ using ValueLink;
 
 namespace Benchmark;
 
+/// <summary>
+/// Measures chain removal and value updates.
+/// </summary>
 [MemoryDiagnoser]
 [ShortRunJob]
 public class ChainMaintenanceBenchmark
@@ -51,6 +54,9 @@ public class ChainMaintenanceBenchmark
     public bool ObservableContains() => this.owner.ObservableChain.Contains(this.items[^1]);
 }
 
+/// <summary>
+/// Provides a comparison model for chain removal and value updates.
+/// </summary>
 [ValueLinkObject]
 public partial class MaintenanceItem
 {
