@@ -162,6 +162,34 @@ public class GeneratorDiagnosticTest
         Assert.NotNull(output.GetTypeByMetadataName("Item")?.GetTypeMembers("GoshujinClass").SingleOrDefault());
     }
 
+    [Fact]
+    public void GeneratedHelperDoesNotConflictWithFriendAssemblyType()
+    {
+        var provider = Compile("""
+            [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("GeneratorContract")]
+            namespace ValueLink.Generator
+            {
+                internal static class Generated
+                {
+                    internal static void __gen__cl() {}
+                }
+            }
+            """).WithAssemblyName("Provider");
+        using var assembly = new MemoryStream();
+        var emitted = provider.Emit(assembly, cancellationToken: TestContext.Current.CancellationToken);
+        Assert.True(emitted.Success, string.Join(Environment.NewLine, emitted.Diagnostics));
+
+        var compilation = Compile("[Tinyhand.TinyhandObject, Linked] public partial class Item {}").AddReferences(MetadataReference.CreateFromImage(assembly.ToArray()));
+        compilation = compilation.WithOptions(compilation.Options.WithSpecificDiagnosticOptions(
+            new Dictionary<string, ReportDiagnostic> { ["CS0436"] = ReportDiagnostic.Error }));
+        var driver = Driver().RunGeneratorsAndUpdateCompilation(compilation, out var output, out var diagnostics, TestContext.Current.CancellationToken);
+        AssertNoErrors(output, diagnostics);
+        Assert.All(driver.GetRunResult().Results, x => Assert.Null(x.Exception));
+        Assert.DoesNotContain(output.GetDiagnostics(TestContext.Current.CancellationToken).Concat(diagnostics), x => x.Id == "CS0436");
+        Assert.Contains(GeneratedText(driver), x => x.Contains("file static class Generated", StringComparison.Ordinal));
+        Assert.NotNull(output.GetTypeByMetadataName("ValueLink.ValueLinkModule_GeneratorContract"));
+    }
+
     [Theory]
     [InlineData("public class Consumer { public object Create() => Factory.Create<int>(); }")]
     [InlineData("public class Consumer { public object Create() => Helper<int>(); private static object Helper<T>() => Factory.Create<T>(); }")]
