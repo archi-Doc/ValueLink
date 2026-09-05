@@ -136,7 +136,7 @@ internal sealed class StaticOwnerRegistration
             {
                 ITypeParameterSymbol => false,
                 IArrayTypeSymbol array => Check(array.ElementType, depth - 1),
-                INamedTypeSymbol named => named.TypeKind != TypeKind.Error && !named.IsAnonymousType && !named.IsUnboundGenericType &&
+                INamedTypeSymbol named => named.TypeKind != TypeKind.Error && !named.IsExtension && !named.IsAnonymousType && !named.IsUnboundGenericType &&
                     (named.ContainingType is null || Check(named.ContainingType, depth - 1)) && named.TypeArguments.All(x => Check(x, depth - 1)),
                 _ => false,
             };

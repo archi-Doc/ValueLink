@@ -142,6 +142,26 @@ public class GeneratorDiagnosticTest
         Assert.NotNull(output.GetTypeByMetadataName("ValueLink.ValueLinkModule_GeneratorContract"));
     }
 
+    [Fact]
+    public void ExtensionDeclarationDoesNotStopGeneration()
+    {
+        var compilation = Compile("""
+            [Tinyhand.TinyhandObject, Linked] public partial class Item {}
+            public enum Result { Success }
+            public static class ResultExtensions
+            {
+                extension(Result result)
+                {
+                    public bool IsSuccess => result == Result.Success;
+                }
+            }
+            """);
+        var driver = Driver().RunGeneratorsAndUpdateCompilation(compilation, out var output, out var diagnostics, TestContext.Current.CancellationToken);
+        AssertNoErrors(output, diagnostics);
+        Assert.All(driver.GetRunResult().Results, x => Assert.Null(x.Exception));
+        Assert.NotNull(output.GetTypeByMetadataName("Item")?.GetTypeMembers("GoshujinClass").SingleOrDefault());
+    }
+
     [Theory]
     [InlineData("public class Consumer { public object Create() => Factory.Create<int>(); }")]
     [InlineData("public class Consumer { public object Create() => Helper<int>(); private static object Helper<T>() => Factory.Create<T>(); }")]
