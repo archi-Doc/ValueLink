@@ -376,7 +376,7 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
 
         using (var scopeFormatter = ssb.ScopeNamespace("ValueLink.Generator"))
         {
-            using (var methods = ssb.ScopeBrace("static class Generated"))
+            using (var methods = ssb.ScopeBrace("file static class Generated"))
             {
                 info.FinalizeBlock(ssb);
 
