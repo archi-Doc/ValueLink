@@ -1,4 +1,4 @@
-﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
+// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
 using System.Collections.Generic;
@@ -702,9 +702,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 {
                     this.Members ??= new();
                     this.Members.Add(member);
-                    if (member.Linkage is not null)
+                    foreach (var linkage in this.Links.Where(y => y.Target == x))
                     {
-                        member.Linkage.Member = member;
+                        linkage.Member = member;
                     }
                 }
             }
@@ -1351,9 +1351,10 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void Generate_RepeatableRead_WriterClass(ScopingStringBuilder ssb, GeneratorInformation info)
     {
+        var disposedIdentifier = this.Identifier.GetIdentifier();
         ssb.AppendLine();
         ssb.AppendLine("/// <summary>Edits a record copy under an exclusive writer lock and publishes changes on commit.</summary>");
-        ssb.AppendLine("/// <remarks>Acquire through TryLock or TryLockAsync and dispose after use. Copy mutable reference-type members before editing them.</remarks>");
+        ssb.AppendLine("/// <remarks>Acquire through TryLock or TryLockAsync. Field and auto-property reads and unchanged assignments avoid record copies. Dispose is idempotent; other operations throw after disposal. Copy mutable reference-type members before editing them.</remarks>");
 
         using (var scopeClass = ssb.ScopeBrace($"public partial class {ValueLinkBody.WriterClassName} : IDisposable"))
         {
@@ -1365,18 +1366,23 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
             ssb.AppendLine();
 
-            ssb.AppendLine($"public {this.LocalName} Instance => this.instance ??= this.original with {{ }};");
+            ssb.AppendLine("/// <summary>Gets the editable record copy, creating it on first access.</summary>");
+            ssb.AppendLine($"public {this.LocalName} Instance {{ get {{ ObjectDisposedException.ThrowIf(this.{disposedIdentifier}, this); return this.instance ??= this.original with {{ }}; }} }}");
             ssb.AppendLine($"private {this.LocalName} original;");
             ssb.AppendLine($"private {this.LocalName}? instance;");
             ssb.AppendLine($"private bool __erase_flag__;");
+            ssb.AppendLine($"private bool {disposedIdentifier};");
 
             ssb.AppendLine();
 
-            this.Generate_RepeatableRead_WriterClass_Commit(ssb);
+            this.Generate_RepeatableRead_WriterClass_Commit(ssb, disposedIdentifier);
 
-            ssb.AppendLine($"public void Delete() => this.__erase_flag__ = true;");
+            ssb.AppendLine("/// <summary>Marks the record for deletion on the next commit.</summary>");
+            ssb.AppendLine($"public void Delete() {{ ObjectDisposedException.ThrowIf(this.{disposedIdentifier}, this); this.__erase_flag__ = true; }}");
+            ssb.AppendLine("/// <summary>Discards unpublished edits while retaining the writer lock.</summary>");
             using (var scopeRollback = ssb.ScopeBrace($"public void Rollback()"))
             {
+                ssb.AppendLine($"ObjectDisposedException.ThrowIf(this.{disposedIdentifier}, this);");
                 ssb.AppendLine("this.instance = null;");
                 ssb.AppendLine("this.__erase_flag__ = false;");
                 if (this.Members is not null)
@@ -1391,16 +1397,26 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 }
             }
 
+            ssb.AppendLine("/// <summary>Discards unpublished edits and releases the writer once, even when called repeatedly.</summary>");
             using (var scopeDispose = ssb.ScopeBrace($"public void Dispose()"))
             {
-                ssb.AppendLine($"var goshujin = this.original.{this.GoshujinInstanceIdentifier};");
-                ssb.AppendLine($"if (goshujin is not null) {{ using (goshujin.LockObject.EnterScope()) {{ if (this.original.State == RepeatableReadObjectState.Created) {this.ValueLinkInternalHelper}.{ValueLinkBody.RemoveFromGoshujinName}(this.original, null, false); (({ValueLinkBody.IRepeatableReadSemaphore})goshujin).ReleaseOne(); }} }}");
+                ssb.AppendLine($"if (this.{disposedIdentifier}) return;");
+                ssb.AppendLine($"this.{disposedIdentifier} = true;");
+                using (var scopeTry = ssb.ScopeBrace("try"))
+                {
+                    ssb.AppendLine($"var goshujin = this.original.{this.GoshujinInstanceIdentifier};");
+                    ssb.AppendLine($"if (goshujin is not null) {{ using (goshujin.LockObject.EnterScope()) {{ try {{ if (this.original.State == RepeatableReadObjectState.Created) {this.ValueLinkInternalHelper}.{ValueLinkBody.RemoveFromGoshujinName}(this.original, null, false); }} finally {{ (({ValueLinkBody.IRepeatableReadSemaphore})goshujin).ReleaseOne(); }} }} }}");
+                }
 
-                ssb.AppendLine($"this.original.{ValueLinkBody.WriterSemaphoreName}.Exit();");
+                using (var scopeFinally = ssb.ScopeBrace("finally"))
+                {
+                    ssb.AppendLine("this.instance = null;");
+                    ssb.AppendLine($"this.original.{ValueLinkBody.WriterSemaphoreName}.Exit();");
+                }
             }
 
             // ssb.AppendLine($"public {this.ObjectAttribute!.GoshujinClass}? {this.ObjectAttribute!.GoshujinInstance} {{ get; set; }}");
-            ssb.AppendLine($"public {this.ObjectAttribute!.GoshujinClass}? {this.ObjectAttribute!.GoshujinInstance} {{ get => this.Instance.{this.GoshujinInstanceIdentifier} ; set => this.Instance.{this.GoshujinInstanceIdentifier} = value; }}");
+            ssb.AppendLine($"public {this.ObjectAttribute!.GoshujinClass}? {this.ObjectAttribute!.GoshujinInstance} {{ get {{ ObjectDisposedException.ThrowIf(this.{disposedIdentifier}, this); return (this.instance ?? this.original).{this.GoshujinInstanceIdentifier}; }} set {{ ObjectDisposedException.ThrowIf(this.{disposedIdentifier}, this); if (!ReferenceEquals((this.instance ?? this.original).{this.GoshujinInstanceIdentifier}, value)) this.Instance.{this.GoshujinInstanceIdentifier} = value; }} }}");
 
             if (this.Members is not null)
             {
@@ -1408,11 +1424,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 {
                     if (x.Object.KeyAttribute?.PropertyAccessibility == PropertyAccessibility.GetterOnly)
                     {// getter-only
-                        x.GenerateReaderProperty(ssb);
+                        x.GenerateReaderProperty(ssb, disposedIdentifier);
                     }
                     else
                     {
-                        x.GenerateWriterProperty(ssb);
+                        x.GenerateWriterProperty(ssb, disposedIdentifier);
                         if (x.ChangedName is not null)
                         {
                             ssb.AppendLine($"private bool {x.ChangedName};");
@@ -1423,10 +1439,13 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
     }
 
-    internal void Generate_RepeatableRead_WriterClass_Commit(ScopingStringBuilder ssb)
+    internal void Generate_RepeatableRead_WriterClass_Commit(ScopingStringBuilder ssb, string disposedIdentifier)
     {
+        ssb.AppendLine("/// <summary>Publishes pending edits while retaining the writer lock.</summary>");
+        ssb.AppendLine("/// <returns>The published record, or null if a key conflict or owner state prevents publication.</returns>");
         using (var scopeRollback = ssb.ScopeBrace($"public {this.LocalName}? Commit()"))
         {
+            ssb.AppendLine($"ObjectDisposedException.ThrowIf(this.{disposedIdentifier}, this);");
             using (var scopeEmptyCommit = ssb.ScopeBrace("if (this.instance is null)"))
             {
                 using (var scopeEraseFlag = ssb.ScopeBrace("if (this.__erase_flag__)"))
@@ -1454,7 +1473,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                         link.Member is { } member &&
                         member.ChangedName is not null)
                     {
-                        ssb.AppendLine($"if (this.{member.ChangedName} && goshujin.{this.UniqueLink.ChainName}.ContainsKey(this.instance.{member.Object.SimpleName})) return default;");
+                        ssb.AppendLine($"if (this.{member.ChangedName} && goshujin.{this.UniqueLink.ChainName}.FindFirst(this.instance.{member.Object.SimpleName}) is {{ }} conflictingObject && !ReferenceEquals(conflictingObject, this.original)) return default;");
                     }
 
                     // Replace instance
@@ -1462,6 +1481,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     {
                         foreach (var x in this.Links)
                         {
+                            if (!x.IsValidLink)
+                            {
+                                continue;
+                            }
+
                             ssb.AppendLine($"goshujin.{x.ChainName}.UnsafeReplaceInstance(this.original, this.instance);");
                         }
                     }
@@ -1473,9 +1497,12 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                         {
                             if (x.ChangedName is not null)
                             {
-                                if (x.Linkage is not null)
+                                if (this.Links is not null)
                                 {
-                                    ssb.AppendLine($"if (this.{x.ChangedName}) goshujin.{x.Linkage.ChainName}.Add(this.instance.{x.Object.SimpleName}, this.instance);");
+                                    foreach (var linkage in this.Links.Where(y => y.Member == x && y.RequiresTarget))
+                                    {
+                                        ssb.AppendLine($"if (this.{x.ChangedName}) goshujin.{linkage.ChainName}.Add(this.instance.{x.Object.SimpleName}, this.instance, ref this.instance.{linkage.LinkName});");
+                                    }
                                 }
 
                                 // ssb.AppendLine($"this.{x.ChangedName} = false;");
@@ -1664,20 +1691,19 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             property = new(main.GetterAccessibility, main.SetterAccessibility, false);
         }
 
+        string? notificationArgs = null;
+        if (main.AutoNotify && this.PropertyChangedDeclaration != DeclarationCondition.NotDeclared)
+        {
+            notificationArgs = this.Identifier.GetIdentifier();
+            ssb.AppendLine($"private static readonly System.ComponentModel.PropertyChangedEventArgs {notificationArgs} = new(\"{main.ValueName}\");");
+        }
+
         using (var scopeProperty = ssb.ScopeBrace($"{property.DeclarationAccessibility.AccessibilityToStringPlusSpace()}{requiredString}{partialString}{target.TypeObjectWithNullable.FullNameWithNullable} {main.ValueName}"))
         {
             ssb.AppendLine($"{property.GetterName} => {targetString};");
             using (var scopeSet = ssb.ScopeBrace($"{property.SetterName}"))
             {
-                string compare;
-                if (target.TypeObject.IsPrimitive)
-                {
-                    compare = $"if (value != {targetString})";
-                }
-                else
-                {
-                    compare = $"if (!EqualityComparer<{target.TypeObject.FullName}>.Default.Equals(value, {targetString}))";
-                }
+                var compare = $"if (!EqualityComparer<{target.TypeObjectWithNullable.FullNameWithNullable}>.Default.Equals(value, {targetString}))";
 
                 using (var scopeCompare = ssb.ScopeBrace(compare))
                 {
@@ -1704,9 +1730,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
                             this.GenerateObject_Add_ClearIntegralityHash(ssb);
 
-                            if (main.AutoNotify)
+                            if (notificationArgs is not null)
                             {
-                                this.Generate_Notify(ssb, info, main);
+                                this.Generate_Notify(ssb, info, notificationArgs);
                             }
                         }
                     }
@@ -1738,15 +1764,15 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         ssb.AppendLine();
     }
 
-    internal void Generate_Notify(ScopingStringBuilder ssb, GeneratorInformation info, Linkage link)
+    internal void Generate_Notify(ScopingStringBuilder ssb, GeneratorInformation info, string notificationArgs)
     {
         if (this.PropertyChangedDeclaration == DeclarationCondition.ImplicitlyDeclared)
         {
-            ssb.AppendLine($"this.PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(\"{link.ValueName}\"));");
+            ssb.AppendLine($"this.PropertyChanged?.Invoke(this, {notificationArgs});");
         }
         else if (this.PropertyChangedDeclaration == DeclarationCondition.ExplicitlyDeclared)
         {
-            ssb.AppendLine($"this.{this.ObjectAttribute!.ExplicitPropertyChanged}?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(\"{link.ValueName}\"));");
+            ssb.AppendLine($"this.{this.ObjectAttribute!.ExplicitPropertyChanged}?.Invoke(this, {notificationArgs});");
         }
     }
 
@@ -2954,6 +2980,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             return;
         }
 
+        ssb.AppendLine("/// <summary>Clears all chain memberships while preserving object owner references.</summary>");
         using (var scopeMethod = ssb.ScopeBrace($"public void ClearChains()"))
         {
             if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.IntegralityEnabled))
@@ -2985,13 +3012,27 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         }
         else
         {
+            ssb.AppendLine("/// <summary>Removes a snapshot of the primary chain's objects from this owner and all chains.</summary>");
+            ssb.AppendLine("/// <remarks>Uses a pooled snapshot and preserves removal callbacks. Acquire the owner lock when synchronization is required.</remarks>");
             using (var scopeMethod = ssb.ScopeBrace($"public void ClearAll()"))
             {
-                ssb.AppendLine("var array = this.ToArray();");
-                using (var scopeForeach = ssb.ScopeBrace($"foreach (var x in array)"))
-                {// RemoveFromGoshujin
-                    // ssb.AppendLine($"x.{this.ObjectAttribute.GoshujinInstance} = default;");
-                    ssb.AppendLine($"{this.ValueLinkInternalHelper}.{ValueLinkBody.RemoveFromGoshujinName}(x, this);");
+                ssb.AppendLine("var count = this.Count;");
+                ssb.AppendLine("if (count == 0) return;");
+                ssb.AppendLine($"var array = System.Buffers.ArrayPool<{this.LocalName}>.Shared.Rent(count);");
+                using (var scopeTry = ssb.ScopeBrace("try"))
+                {
+                    ssb.AppendLine("var index = 0;");
+                    ssb.AppendLine($"foreach (var x in this.{this.PrimaryLink.ChainName}) array[index++] = x;");
+                    using (var scopeForeach = ssb.ScopeBrace($"foreach (var x in array.AsSpan(0, count))"))
+                    {// RemoveFromGoshujin
+                        // ssb.AppendLine($"x.{this.ObjectAttribute.GoshujinInstance} = default;");
+                        ssb.AppendLine($"{this.ValueLinkInternalHelper}.{ValueLinkBody.RemoveFromGoshujinName}(x, this);");
+                    }
+                }
+
+                using (var scopeFinally = ssb.ScopeBrace("finally"))
+                {
+                    ssb.AppendLine($"System.Buffers.ArrayPool<{this.LocalName}>.Shared.Return(array, clearArray: true);");
                 }
             }
         }

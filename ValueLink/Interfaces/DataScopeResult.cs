@@ -54,7 +54,7 @@ public enum DataScopeResult
     Obsolete,
 
     /// <summary>
-    /// The lock attempt failed because the object is in an unlockable state.
+    /// The object's control state does not permit lock acquisition.
     /// </summary>
     NotLockable,
 

@@ -4,6 +4,7 @@ extern alias ValueLinkGenerator;
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -87,6 +88,55 @@ public class GeneratorDiagnosticTest
         var result = Driver().RunGenerators(compilation, TestContext.Current.CancellationToken).GetRunResult();
         Assert.Empty(result.GeneratedTrees);
         Assert.Empty(result.Diagnostics);
+    }
+
+    [Theory]
+    [InlineData("en-US")]
+    [InlineData("tr-TR")]
+    public void WriterMemberNamesAreIndependentOfBuildCulture(string culture)
+    {
+        var previous = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(culture);
+            var source = Compile("[ValueLinkObject(Isolation=IsolationLevel.RepeatableRead)] public partial record Item { [Link(Type=ChainType.Ordered, Unique=true, Primary=true)] private int id; }");
+            Driver().RunGeneratorsAndUpdateCompilation(source, out var output, out var diagnostics, TestContext.Current.CancellationToken);
+            AssertNoErrors(output, diagnostics);
+            var writer = Assert.Single(output.GetTypeByMetadataName("Item")!.GetTypeMembers("WriterClass"));
+            Assert.Single(writer.GetMembers("Id"));
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previous;
+        }
+    }
+
+    [Fact]
+    public void AttributeLookupAvoidsClosuresAndBoxing()
+    {
+        object expected = 42;
+        object?[] constructor = [expected];
+        KeyValuePair<string, object?>[] named = [new("Name", expected), new("Null", null)];
+        Assert.Same(expected, Lookup(0, "Missing"));
+        Assert.Same(expected, Lookup(-1, "Name"));
+        Assert.Null(Lookup(-1, "Null"));
+        Assert.Null(Lookup(-1, "Missing"));
+        Assert.Null(Lookup(1, null));
+        for (var i = 0; i < 1_000; i++)
+        {
+            Lookup(-1, "Name");
+        }
+
+        var before = GC.GetAllocatedBytesForCurrentThread();
+        for (var i = 0; i < 1_000; i++)
+        {
+            Lookup(-1, "Name");
+            Lookup(-1, "Missing");
+        }
+
+        Assert.Equal(0, GC.GetAllocatedBytesForCurrentThread() - before);
+
+        object? Lookup(int index, string? name) => ValueLinkGenerator::ValueLink.AttributeHelper.GetValue(index, name, constructor, named);
     }
 
     [Fact]

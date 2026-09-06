@@ -97,7 +97,7 @@ Set `Primary = true` on a chain that contains every owned object. It supplies th
 | `owner.ClearChains()` | Clears all chains; preserves object owner references |
 | `owner.ClearAll()` | Removes objects found in the primary chain from all chains and clears their owner references |
 
-`ClearAll` is generated as a public operation only for `None` or `Serializable` owners with a primary chain. Other configurations throw `NotImplementedException` through `IGoshujin.ClearAll`. Acquire the owner lock when clearing synchronized owners. Materialize a snapshot before mutating a chain during enumeration.
+`ClearAll` is generated as a public operation only for `None` or `Serializable` owners with a primary chain. It uses a pooled snapshot, invokes removal callbacks, and clears the buffer before returning it to the pool. Objects added by callbacks are outside that snapshot. Other configurations throw `NotImplementedException` through `IGoshujin.ClearAll`. Acquire the owner lock when clearing synchronized owners. Materialize a snapshot before mutating a chain during enumeration.
 
 Use generated value properties or partial properties to change indexed values. Writing a backing field or an ordinary property directly bypasses index maintenance and notifications.
 
@@ -206,7 +206,7 @@ Apply `[ValueLinkGeneratorOption]` to a class to set `GenerateToFile` or `Custom
 
 ## Notifications and callbacks
 
-Use `AutoNotify = true` with `AddValue = true` to generate `INotifyPropertyChanged` support. If the model already provides the event, the generator uses it. `ExplicitPropertyChanged` selects a custom event name. Value equality suppresses redundant setter updates and notifications.
+Use `AutoNotify = true` with `AddValue = true` to generate `INotifyPropertyChanged` support. If the model already provides the event, the generator uses it. `ExplicitPropertyChanged` selects a custom event name. `EqualityComparer<T>.Default` suppresses redundant setter updates and notifications, including repeated floating-point NaN assignments. Generated linked setters cache one immutable `PropertyChangedEventArgs` per property and closed model type. The general-purpose `SetProperty` helper accepts dynamic names and creates arguments when it raises an event.
 
 `ObservableChain<T>` separately implements `INotifyCollectionChanged` and `INotifyPropertyChanged` for collection changes. Its notifications run on the calling thread; UI applications must perform mutations on the appropriate thread. It identifies reference-type objects by identity, so distinct equal-valued records can coexist.
 
@@ -296,13 +296,15 @@ using (owner.LockObject.EnterScope())
 
 Configure a unique key and implement `IDataLocker<TData>` on the linked adapter. The generated owner supplies `Find`, `TryGet`, `TryLock`, `TryDelete`, `ForEach`, and `GetArray`. Timeouts, cancellation tokens, and optional factories are forwarded to the adapter, which implements data storage and locking.
 
-`TryLock` returns `ValueTask<DataScope<TData>>`. Inspect `Result` for `Retrieved`, `Created`, or a failure, and dispose the scope to release its lock. Do not dispose multiple copies of this mutable struct. For value-type data, `IsValid` is only a non-null check and does not prove acquisition succeeded; use `Result`. `UnlockAndDelete` releases the lock and requests deletion through the associated storage object.
+`TryLock` returns `ValueTask<DataScope<TData>>`. Inspect `Result` for `Retrieved`, `Created`, or a failure, and dispose the scope to release its lock. `IsValid` requires a live lock and non-null data, including for value-type data; it becomes false after release. `Result` remains available after disposal. Repeated disposal of the same variable is safe, but do not dispose multiple copies of this mutable struct. `UnlockAndDelete` releases the lock and requests deletion through the associated storage object. Both release operations invalidate the scope before calling adapters, including when an adapter throws.
 
 Protected objects delay deletion unless forced. Store/release and delete operations propagate through Tinyhand structural objects. See [ReadCommittedContractTest](xUnitTest/Tests/Coverage/ReadCommittedContractTest.cs) for an in-memory adapter and lifecycle examples.
 
 ### RepeatableRead
 
 Use a partial record class with a unique keyed link. Acquire a writer, change its properties, call `Commit`, and dispose it. `Commit` returns the published record, or `null` if it cannot publish, such as on a unique-key conflict. Disposing without a commit discards unpublished edits.
+
+Writer reads and unchanged assignments for fields and auto-properties avoid copying the record. Custom accessors still run on the editable copy, preserving their side effects. The first changed assignment or explicit access to `Instance` creates the editable copy. `Rollback` discards pending edits while retaining the writer lock. A commit updates every keyed index attached to a changed member; reverting to the original unique key does not conflict with the record itself. Repeated `Dispose` calls are safe; other writer operations throw `ObjectDisposedException` after disposal. A writer is for one caller and must not be used concurrently.
 
 ```csharp
 using System;
@@ -386,7 +388,7 @@ public partial class SyncItem
 
 The broker transfers ownership of its returned `BytePool.RentMemory` to the engine. When calling `Differentiate` outside a broker, return that buffer after use. Request bytes are valid only until the broker task completes.
 
-Integration may make partial changes before returning an incomplete/error result. Broker exceptions and cancellation propagate. Serialize concurrent runs targeting the same owner. Reported counts cover integration and trimming, but exclude removals during key comparison; `IsModified` is not a complete change log. Generated link setters, including Tinyhand partial-property update hooks, invalidate both object and owner hashes. After directly changing serialized fields, ordinary properties, or nested mutable content, call `((IIntegralityObject)item).ClearIntegralityHash()` yourself.
+Integration may make partial changes before returning an incomplete/error result. Error responses retain the iteration and integration counts completed so far. Broker exceptions and cancellation propagate. Serialize concurrent runs targeting the same owner. Reported counts cover integration and trimming, but exclude removals during key comparison; `IsModified` is not a complete change log. Generated link setters, including Tinyhand partial-property update hooks, invalidate both object and owner hashes. After directly changing serialized fields, ordinary properties, or nested mutable content, call `((IIntegralityObject)item).ClearIntegralityHash()` yourself.
 
 ## Performance
 
@@ -396,9 +398,12 @@ Measure against representative workloads using the benchmarks in this repository
 
 ```shell
 dotnet run --project Benchmark/Benchmark.csproj -c Release -- --filter "*ChainMaintenanceBenchmark*"
+dotnet run --project Benchmark/Benchmark.csproj -c Release -- --filter "*AllocationBenchmark*"
 ```
 
 Use Release builds and compare both timings and allocations. Results depend on runtime, hardware, collection size, key distribution, and enabled features.
+
+Ordered, unordered, and sliding `ICollection.CopyTo` operations use struct enumerators without boxing. Concrete chain enumeration also avoids boxing where the chain exposes a struct enumerator; enumerating through an interface may allocate. Pooled `ClearAll` snapshots and notification caches remove repeated temporary allocations after warm-up. Pool misses, collection growth, ordered/linked nodes, observable collection events, and record edits can still allocate. These optimizations do not make every operation allocation-free. See the [measured comparison](doc/Performance.md) for the benchmark conditions and results.
 
 ## Build and tests
 

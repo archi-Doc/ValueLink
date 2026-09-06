@@ -37,6 +37,8 @@ external storage engines and performance measurements are outside this test suit
 | `SerializableContractTest` | Store modes and lock scope; failed and throwing storage operations; lock release; snapshots; recursive deletion |
 | `IntegralityProtocolTest` | Result packets/counters; truncated and invalid protocol data; hash stack/pool boundaries; exact response size limits; multi-packet convergence; retention policy; broker errors/cancellation; safe reuse of shared responses |
 | `GeneratorDiagnosticTest` | Roslyn driver tests for 13 diagnostic IDs; aliases; qualified attributes; nested generics; split partial declarations; partial properties; explicit interface properties; unrelated attributes; recovery after edits; resetting generator options |
+| `AllocationRegressionTest` | Struct-enumerator copying and covariance; cached notifications; NaN equality; pooled clearing; callback additions; writer reads and unchanged assignments |
+| `RepeatableWriterRegressionTest` | Multiple indexes on one member; secondary unique-key conflicts; reverted keys; repeated disposal; use after disposal; constructor failures; custom accessor side effects |
 | Existing suites | Generic and nested models, record classes, value-type keys, link sharing, callbacks, property accessibility/notifications, journals, object caching, Tinyhand integration and previously fixed regressions |
 
 Randomized list tests use fixed seeds and report the seed and operation number
@@ -61,4 +63,45 @@ Consumer compilations deliberately exclude the generator and test assemblies.
 
 Each regression is exercised by the suite alongside its production fix.
 
+The allocation and writer tests additionally cover stale secondary indexes,
+self-conflicting unique-key commits, double writer release, lost synchronization
+progress on error packets, throwing scope release adapters, invalid value-type
+scopes, and culture-dependent writer member names. Repeatable-read tests exercise
+query and acquisition overloads for missing, current, and obsolete records.
+
 The NativeAOT additions also cover stale synchronization hashes after generated setter updates, managed integrality keys, external-only generic owner registration, inferred return types from external factories, and recursively expanding type graphs. The shared native/JIT checks exercise Tinyhand 0.144.1 with anonymous projections and unresolved nested generic owners. Run the separate published executable to validate native execution; see [NativeAOT validation](../doc/NativeAOT.md).
+
+## Measured coverage
+
+Measured on 2026-09-07 with `dotnet-coverage` 18.11.0 against the Debug test
+assembly on Windows x64. The suite grew from **229 to 268 passing tests**.
+Release tests and the published Windows NativeAOT smoke tests also passed.
+
+| Assembly | Lines before | Lines after | Branches before | Branches after |
+| --- | ---: | ---: | ---: | ---: |
+| `ValueLink` | 85.56% | 89.05% | 79.04% | 82.15% |
+| `ValueLinkGenerator` | 42.07% | 42.87% | 31.68% | 32.26% |
+
+These are assembly-level rates from the Cobertura report. The generator includes
+shared compiler helpers and alternate emission paths, so its remaining coverage
+gap is substantial. Generated owners execute inside consumer assemblies such as
+`xUnitTest`; the generator assembly's rate does not measure their runtime coverage.
+Adding generated fixtures can also increase the consumer's uncovered code even
+when more behavior is tested. NativeAOT execution is validated separately and is
+not included in these JIT coverage percentages.
+
+Remaining gaps include some concurrent invalidation retries, exceptional storage
+paths, optional generator configurations, and shared compiler helpers. These
+figures do not establish complete correctness or 100% coverage.
+
+To reproduce the coverage measurement:
+
+```powershell
+dotnet tool install dotnet-coverage --version 18.11.0 --tool-path artifacts/tools
+dotnet build xUnitTest/xUnitTest.csproj -c Debug
+./artifacts/tools/dotnet-coverage collect "dotnet xUnitTest/bin/Debug/net10.0/xUnitTest.dll" -f cobertura -o artifacts/coverage/coverage.cobertura.xml
+```
+
+Skip installation if that tool version is already installed. Coverage output and
+local tool binaries stay in the ignored `artifacts` directory. Performance results
+are documented separately in [Performance measurements](../doc/Performance.md).

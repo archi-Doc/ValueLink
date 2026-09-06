@@ -161,17 +161,72 @@ public class IsolationPrimitiveTest
         Assert.Equal(0, semaphore.SemaphoreCount);
     }
 
+    [Fact]
+    public void ThrowingUnlockCannotReleaseTheSameScopeTwice()
+    {
+        var backing = new ScopeBacking { ThrowOnUnlock = true };
+        var scope = new DataScope<string>(DataScopeResult.Retrieved, "data", backing, backing);
+        Assert.Throws<InvalidOperationException>(() => scope.Dispose());
+        Assert.False(scope.IsValid);
+        scope.Dispose();
+        Assert.Equal(new[] { "Unlock" }, backing.Calls);
+    }
+
+    [Theory]
+    [MemberData(nameof(ScopeResults))]
+    public void ValueTypeScopesRequireAnAcquiredLock(DataScopeResult result)
+    {
+        var scope = new DataScope<int>(result);
+        Assert.False(scope.IsValid);
+        Assert.False(scope.IsCreated);
+        Assert.False(scope.IsRetrieved);
+        scope.Dispose();
+        Assert.False(scope.IsValid);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task AcquiredValueTypeScopesBecomeInvalidAfterRelease(bool delete)
+    {
+        var backing = new ScopeBacking();
+        var scope = new DataScope<int>(DataScopeResult.Created, 0, backing, backing);
+        Assert.True(scope.IsValid);
+        Assert.True(scope.IsCreated);
+        if (delete)
+        {
+            await scope.UnlockAndDelete();
+        }
+        else
+        {
+            scope.Dispose();
+        }
+
+        Assert.False(scope.IsValid);
+        Assert.False(scope.IsCreated);
+        Assert.False(scope.IsRetrieved);
+        Assert.Equal(DataScopeResult.Created, scope.Result);
+    }
+
     internal sealed class ScopeBacking : IDataUnlocker, IStructuralObject
     {
         public List<string> Calls { get; } = new();
         public bool CanDelete { get; init; } = true;
+        public bool ThrowOnUnlock { get; init; }
         public DataControlState ControlState { get; set; }
         public DateTime Deadline { get; private set; }
         public bool WriteJournal { get; private set; }
         public IStructuralRoot? StructuralRoot { get; set; }
         public IStructuralObject? StructuralParent { get; set; }
         public int StructuralKey { get; set; }
-        public void Unlock() => this.Calls.Add("Unlock");
+        public void Unlock()
+        {
+            this.Calls.Add("Unlock");
+            if (this.ThrowOnUnlock)
+            {
+                throw new InvalidOperationException("Unlock failed after releasing the lock.");
+            }
+        }
         public bool UnlockAndDelete()
         {
             this.Calls.Add("UnlockAndDelete");
