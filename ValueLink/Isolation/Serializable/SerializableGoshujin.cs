@@ -20,6 +20,9 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : ISerializableSe
     where TObject : class, IValueLinkObjectInternal<TGoshujin, TObject>
     where TGoshujin : SerializableGoshujin<TObject, TGoshujin>, IGoshujin<TObject>
 {
+    /// <summary>
+    /// Gets the non-reentrant semaphore protecting the owner.
+    /// </summary>
     public abstract SemaphoreLock LockObject { get; }
 
     protected async Task<bool> GoshujinStoreData(StoreMode storeMode)
@@ -88,6 +91,11 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : ISerializableSe
         }
     }
 
+    /// <summary>
+    /// Copies primary-chain object references while holding the owner lock.
+    /// </summary>
+    /// <returns>A snapshot, or an empty array when no enumerable primary chain exists.</returns>
+    /// <remarks>Call outside an already-held owner lock; the semaphore is not reentrant.</remarks>
     public TObject[] GetArray()
     {
         TObject[] array;

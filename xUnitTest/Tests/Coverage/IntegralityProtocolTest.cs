@@ -223,6 +223,28 @@ public class IntegralityProtocolTest
         Assert.Equal(3, owner.Count);
     }
 
+    [Fact]
+    public async Task ErrorPacketsPreserveProgressFromEarlierResponses()
+    {
+        var engine = Engine(64);
+        var source = Create(0);
+        var target = Create(25);
+        var calls = 0;
+        var result = await engine.Integrate(source, (request, _) =>
+        {
+            calls++;
+            return Task.FromResult(calls == 3
+                ? IntegralityResultHelper.InvalidData
+                : engine.Differentiate(target, request));
+        }, TestContext.Current.CancellationToken);
+
+        Assert.Equal(IntegralityResult.InvalidData, result.Result);
+        Assert.InRange(source.Count, 1, 24);
+        Assert.Equal(source.Count, result.IntegratedCount);
+        Assert.Equal(2, result.IterationCount);
+        Assert.True(result.IsModified);
+    }
+
     private static SimpleIntegralityClass.Integrality Engine(int maxMemory = 4096, bool removeMissing = true) => new()
     {
         MaxItems = 500,

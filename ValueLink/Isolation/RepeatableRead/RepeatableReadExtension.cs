@@ -7,9 +7,19 @@ namespace ValueLink;
 /// </summary>
 public static class RepeatableReadExtension
 {
+    /// <summary>
+    /// Determines whether the record is a committed, current instance.
+    /// </summary>
+    /// <param name="state">The record state.</param>
+    /// <returns>True only for Valid.</returns>
     public static bool IsValid(this RepeatableReadObjectState state)
         => state == RepeatableReadObjectState.Valid;
 
+    /// <summary>
+    /// Determines whether the record is uncommitted or obsolete.
+    /// </summary>
+    /// <param name="state">The record state.</param>
+    /// <returns>True for every state other than Valid.</returns>
     public static bool IsInvalid(this RepeatableReadObjectState state)
         => state != RepeatableReadObjectState.Valid;
 }

@@ -320,7 +320,8 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
         this.chain.Clear();
     }
 
-    void ICollection.CopyTo(Array array, int index) => Internal.ChainHelper.CopyTo(this, array, index);
+    void ICollection.CopyTo(Array array, int index)
+        => Internal.ChainHelper.CopyTo<T, SlidingList<T>.Enumerator>(this.Count, this.GetEnumerator(), array, index);
 
     bool ICollection.IsSynchronized => false;
 

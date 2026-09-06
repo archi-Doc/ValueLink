@@ -50,6 +50,66 @@ public partial record TrackedEntry : IStructuralObject
 public class RepeatableReadContractTest
 {
     [Fact]
+    public async Task QueriesAndAcquisitionOverloadsRespectMissingAndObsoleteOwners()
+    {
+#pragma warning disable xUnit1051 // Exercise tokenless overloads on uncontended locks.
+        var owner = new TrackedEntry.GoshujinClass();
+        Assert.False(owner.Contains(7));
+        Assert.False(owner.Contains(g => g.TryGet(7) is not null));
+        Assert.Null(owner.TryGet(g => g.TryGet(7)));
+        Assert.Null(owner.TryLock(g => g.TryGet(7)));
+        Assert.Null(await owner.TryLockAsync(7));
+        Assert.Null(await owner.TryLockAsync(g => g.TryGet(7)));
+        using (var writer = await owner.TryLockAsync(7, AcquisitionMode.CreateOnly))
+        {
+            Assert.NotNull(writer);
+            writer.Commit();
+        }
+
+        var record = owner.TryGet(7)!;
+        Assert.True(owner.Contains(7));
+        Assert.True(owner.Contains(g => g.TryGet(7) is not null));
+        Assert.Same(record, owner.TryGet(g => g.TryGet(7)));
+        Assert.Null(await owner.TryLockAsync(7, 0, AcquisitionMode.CreateOnly));
+        using (var writer = owner.TryLock(g => g.TryGet(7)))
+        {
+            Assert.NotNull(writer);
+        }
+
+        using (var writer = await owner.TryLockAsync(g => g.TryGet(7), 0))
+        {
+            Assert.NotNull(writer);
+        }
+
+        using (var writer = await owner.TryLockAsync(g => g.TryGet(7)))
+        {
+            Assert.NotNull(writer);
+        }
+
+        using (var writer = await record.TryLockAsync())
+        {
+            Assert.NotNull(writer);
+            writer.Value = 1;
+            writer.Commit();
+        }
+
+        Assert.Null(await record.TryLockAsync(0));
+        Assert.Equal(0, owner.SemaphoreCount);
+        record = owner.TryGet(7)!;
+        owner.State = GoshujinState.Obsolete;
+        Assert.Null(owner.TryLock(7));
+        Assert.Null(owner.TryLock(8, AcquisitionMode.CreateOnly));
+        Assert.Null(owner.TryLock(g => g.TryGet(7)));
+        Assert.Null(await owner.TryLockAsync(7, 0));
+        Assert.Null(await owner.TryLockAsync(8, 0, AcquisitionMode.CreateOnly));
+        Assert.Null(await owner.TryLockAsync(g => g.TryGet(7), 0));
+        Assert.Null(record.TryLock());
+        Assert.Null(await record.TryLockAsync());
+        Assert.Equal(0, owner.SemaphoreCount);
+#pragma warning restore xUnit1051
+    }
+
+    [Fact]
     public void CommitPublishesANewSnapshotAndDisposalRollsBack()
     {
         var owner = new TrackedEntry.GoshujinClass();

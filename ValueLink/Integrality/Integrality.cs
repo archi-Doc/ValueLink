@@ -75,7 +75,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
     /// <param name="goshujin">The Goshujin.</param>
     /// <param name="brokerDelegate">The broker delegate.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>The integration result.</returns>
+    /// <returns>The result and completed operation counts, including progress before an error response.</returns>
     public async Task<IntegralityResultAndCount> Integrate(TGoshujin goshujin, IntegralityBrokerDelegate brokerDelegate, CancellationToken cancellationToken = default)
     {
         // Probe
@@ -134,7 +134,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
                 if (result != IntegralityResult.Success)
                 {
                     resultMemory.Return();
-                    return new(result);
+                    return new(result, iterationCount, integratedCount, trimmedCount);
                 }
             }
             finally

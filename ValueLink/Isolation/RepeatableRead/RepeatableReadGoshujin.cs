@@ -214,8 +214,7 @@ public abstract class RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter> 
                             return default;
                         }
 
-                        x = this.NewObject(key);
-                        TObject.AddToGoshujin(x, (TGoshujin)this, true);
+                        x = this.CreateObject(key, ref count);
                         goto Created; // Exit using (this.LockObject.EnterScope())
                     }
                 }
@@ -298,8 +297,7 @@ Created:
                             return default;
                         }
 
-                        x = this.NewObject(key);
-                        TObject.AddToGoshujin(x, (TGoshujin)this, true);
+                        x = this.CreateObject(key, ref count);
                         goto Created; // Exit using (this.LockObject.EnterScope())
                     }
                 }
@@ -355,6 +353,21 @@ Created:
 Created:
         x.WriterSemaphoreInternal.Enter();
         return x.NewWriterInternal(); // Success (Create)
+    }
+
+    private TObject CreateObject(TKey key, ref int count)
+    {
+        try
+        {
+            var obj = this.NewObject(key);
+            TObject.AddToGoshujin(obj, (TGoshujin)this, true);
+            return obj;
+        }
+        catch
+        {
+            ((IRepeatableReadSemaphore)this).Release(ref count);
+            throw;
+        }
     }
 
     /// <summary>

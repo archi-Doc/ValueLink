@@ -3,6 +3,7 @@
 using System.Linq;
 using Arc.Visceral;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Tinyhand.Generator;
 using TinyhandGenerator;
 
@@ -36,7 +37,7 @@ public class Member
         }
         else if (char.IsLower(name[0]))
         {
-            generatedName = name[0].ToString().ToUpper() + name.Substring(1);
+            generatedName = char.ToUpperInvariant(name[0]) + name.Substring(1);
             if (parent.AllMembers.Any(x => x.SimpleName == generatedName))
             {
                 return null;
@@ -47,8 +48,40 @@ public class Member
             generatedName = name;
         }
 
-        var member = new Member(obj, linkage, journaling, generatedName);
+        var member = new Member(obj, linkage, journaling, generatedName)
+        {
+            CanAccessOriginal = HasPlainStorage(symbol),
+        };
         return member;
+    }
+
+    private static bool HasPlainStorage(ISymbol? symbol)
+    {
+        if (symbol is IFieldSymbol)
+        {
+            return true;
+        }
+
+        if (symbol is IPropertySymbol { IsPartialDefinition: false, IsVirtual: false, IsAbstract: false, IsOverride: false } property)
+        {
+            foreach (var reference in property.DeclaringSyntaxReferences)
+            {
+                if (reference.GetSyntax() is PropertyDeclarationSyntax { AccessorList: { } list })
+                {
+                    foreach (var accessor in list.Accessors)
+                    {
+                        if (accessor.Body is not null || accessor.ExpressionBody is not null)
+                        {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     public Member(ValueLinkObject obj, Linkage? linkage, bool journaling, string generatedName)
@@ -92,18 +125,23 @@ public class Member
 
     public MaxLengthAttributeMock? MaxLengthAttribute { get; private set; }
 
-    public void GenerateReaderProperty(ScopingStringBuilder ssb)
+    private bool CanAccessOriginal { get; set; }
+
+    private string ReadInstance => this.CanAccessOriginal ? "(this.instance ?? this.original)" : "this.Instance";
+
+    public void GenerateReaderProperty(ScopingStringBuilder ssb, string disposedIdentifier)
     {
-        ssb.AppendLine($"public {this.Object.TypeObject?.FullName} {this.GeneratedName} => this.Instance.{this.Object.SimpleName};");
+        ssb.AppendLine($"public {this.Object.TypeObjectWithNullable?.FullNameWithNullable} {this.GeneratedName} {{ get {{ ObjectDisposedException.ThrowIf(this.{disposedIdentifier}, this); return {this.ReadInstance}.{this.Object.SimpleName}; }} }}");
     }
 
-    public void GenerateWriterProperty(ScopingStringBuilder ssb)
+    public void GenerateWriterProperty(ScopingStringBuilder ssb, string disposedIdentifier)
     {
         using (var scopeProperty = ssb.ScopeBrace($"public {this.Object.TypeObjectWithNullable?.FullNameWithNullable} {this.GeneratedName}"))
         {
-            ssb.AppendLine($"get => this.Instance.{this.Object.SimpleName};");
+            ssb.AppendLine($"get {{ ObjectDisposedException.ThrowIf(this.{disposedIdentifier}, this); return {this.ReadInstance}.{this.Object.SimpleName}; }}");
             using (var scopeSetter = ssb.ScopeBrace($"set"))
             {
+                ssb.AppendLine($"ObjectDisposedException.ThrowIf(this.{disposedIdentifier}, this);");
                 if (this.MaxLengthAttribute is not null)
                 {
                     JournalShared.GenerateValue_MaxLength(ssb, this.Object, this.MaxLengthAttribute);
@@ -119,6 +157,18 @@ public class Member
                         ssb.AppendLine($"if (value is {TinyhandBody.IStructuralObject} obj) obj.SetupStructure(this.Instance);");
                     }
                 }*/
+
+                if (this.CanAccessOriginal)
+                {
+                    var type = this.Object.TypeObject!.FullName;
+                    this.Object.TypeObject.GetRawInformation(out var typeSymbol, out _, out _);
+                    var valueEquals = $"EqualityComparer<{this.Object.TypeObjectWithNullable?.FullNameWithNullable}>.Default.Equals((this.instance ?? this.original).{this.Object.SimpleName}, value)";
+                    var referenceEquals = $"ReferenceEquals((this.instance ?? this.original).{this.Object.SimpleName}, value)";
+                    var comparison = typeSymbol is ITypeSymbol { IsValueType: true } ? valueEquals
+                        : typeSymbol is ITypeSymbol { IsReferenceType: true } ? referenceEquals
+                        : $"typeof({type}).IsValueType ? {valueEquals} : {referenceEquals}";
+                    ssb.AppendLine($"if ({comparison}) return;");
+                }
 
                 ssb.AppendLine($"this.Instance.{this.Object.SimpleName} = value;");
                 if (this.ChangedName is not null)

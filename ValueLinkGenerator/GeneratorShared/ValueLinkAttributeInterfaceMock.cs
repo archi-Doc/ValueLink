@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 #pragma warning disable SA1602 // Enumeration items should be documented
 
@@ -62,18 +61,16 @@ public static class AttributeHelper
         }
         else if (name != null)
         {// Named Argument.
-            var pair = namedArguments.FirstOrDefault(x => x.Key == name);
-            if (pair.Equals(default(KeyValuePair<string, object?>)))
+            foreach (var pair in namedArguments)
             {
-                return null;
+                if (pair.Key == name)
+                {
+                    return pair.Value;
+                }
             }
+        }
 
-            return pair.Value;
-        }
-        else
-        {
-            return null;
-        }
+        return null;
     }
 }
 

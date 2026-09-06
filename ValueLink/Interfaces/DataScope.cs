@@ -12,7 +12,7 @@ namespace ValueLink;
 /// </summary>
 /// <typeparam name="TData">Type of the data instance managed by this scope. Must be a non-nullable type.</typeparam>
 /// <remarks>
-/// Dispose only one copy of this mutable struct. For value-type data, inspect Result: the non-null data checks do not indicate lock success or disposal.
+/// Dispose only one copy of this mutable struct. Result remains available after the scope releases its lock.
 /// </remarks>
 public record struct DataScope<TData> : IDisposable
     where TData : notnull
@@ -29,25 +29,25 @@ public record struct DataScope<TData> : IDisposable
     /// <summary>
     /// Gets the scoped data, or default after disposal or an unsuccessful acquisition.
     /// </summary>
-    public TData? Data => this.data;
+    public readonly TData? Data => this.data;
 
     /// <summary>
-    /// Gets a value indicating whether the scoped data is non-null.
+    /// Gets a value indicating whether this scope still owns a lock and contains non-null data.
     /// </summary>
     [MemberNotNullWhen(true, nameof(Data))]
-    public bool IsValid => this.data is not null;
+    public readonly bool IsValid => this.dataUnlocker is not null && this.data is not null;
 
     /// <summary>
-    /// Gets a value indicating whether the result is Retrieved and the scoped data is non-null.
+    /// Gets a value indicating whether this is a valid scope for retrieved data.
     /// </summary>
     [MemberNotNullWhen(true, nameof(Data))]
-    public bool IsRetrieved => this.Result == DataScopeResult.Retrieved && this.data is not null;
+    public readonly bool IsRetrieved => this.Result == DataScopeResult.Retrieved && this.IsValid;
 
     /// <summary>
-    /// Gets a value indicating whether the result is Created and the scoped data is non-null.
+    /// Gets a value indicating whether this is a valid scope for newly created data.
     /// </summary>
     [MemberNotNullWhen(true, nameof(Data))]
-    public bool IsCreated => this.Result == DataScopeResult.Created && this.data is not null;
+    public readonly bool IsCreated => this.Result == DataScopeResult.Created && this.IsValid;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DataScope{TData}"/> struct with acquired data and its lock-release adapter.
@@ -82,7 +82,7 @@ public record struct DataScope<TData> : IDisposable
     /// The current <see cref="DataControlState"/> when the scope is still linked to an unlocker;
     /// otherwise <see langword="default"/> if the scope is no longer valid.
     /// </returns>
-    public DataControlState GetControlState()
+    public readonly DataControlState GetControlState()
     {
         if (this.dataUnlocker is { } dataUnlocker)
         {
@@ -99,13 +99,13 @@ public record struct DataScope<TData> : IDisposable
     /// <remarks>
     /// If the scope has already been disposed or does not contain an unlocker, this call has no effect.
     /// </remarks>
-    public void SetControlState(DataControlState state)
+    public readonly void SetControlState(DataControlState state)
     {
         this.dataUnlocker?.SetControlState(state);
     }
 
     /// <summary>
-    /// Releases the lock and requests structural deletion if the unlocker accepts deletion.
+    /// Invalidates this scope, releases its lock, and requests structural deletion if the unlocker accepts deletion.
     /// </summary>
     /// <param name="forceDeleteAfter">
     /// The time after which the deletion will be forced even if the object is protected.<br/>
@@ -114,35 +114,28 @@ public record struct DataScope<TData> : IDisposable
     /// <returns>A <see cref="Task"/> representing the asynchronous delete operation.</returns>
     public Task UnlockAndDelete(DateTime forceDeleteAfter = default)
     {
+        var dataUnlocker = this.dataUnlocker;
+        var structuralObject = this.structuralObject;
         this.data = default;
-        if (this.dataUnlocker is { } dataUnlocker)
-        {
-            this.dataUnlocker = default;
-            if (dataUnlocker.UnlockAndDelete())
-            {// Deleted
-                if (this.structuralObject is { } structuralObject)
-                {
-                    this.structuralObject = default;
-                    return structuralObject.DeleteData(forceDeleteAfter, true);
-                }
-            }
+        this.dataUnlocker = default;
+        this.structuralObject = default;
+        if (dataUnlocker?.UnlockAndDelete() == true && structuralObject is not null)
+        {// Deleted
+            return structuralObject.DeleteData(forceDeleteAfter, true);
         }
 
         return Task.CompletedTask;
     }
 
     /// <summary>
-    /// Releases the associated lock and resets the data to its default value.
+    /// Invalidates this scope and releases its lock. The scope stays invalid if release throws.
     /// </summary>
     public void Dispose()
     {
-        if (this.dataUnlocker is not null)
-        {
-            this.dataUnlocker.Unlock();
-        }
-
+        var dataUnlocker = this.dataUnlocker;
         this.data = default;
         this.dataUnlocker = default;
         this.structuralObject = default;
+        dataUnlocker?.Unlock();
     }
 }
