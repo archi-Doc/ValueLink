@@ -196,7 +196,7 @@ public class ChainRegressionTest
         Assert.Equal(3, chain.Count);
         Assert.Equal(3, ((System.Collections.ICollection)chain).Count);
         Assert.Equal(3, ((IReadOnlyCollection<SlidingListChainClass>)chain).Count);
-        Assert.Equal(4, chain.Consumed);
+        Assert.Equal(4, chain.UsedSlotCount);
         Assert.Equal(3, chain.ToArray().Length);
         var end = chain.EndPosition;
         chain.Clear();

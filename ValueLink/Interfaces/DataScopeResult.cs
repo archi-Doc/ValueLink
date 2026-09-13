@@ -61,5 +61,5 @@ public enum DataScopeResult
     /// <summary>
     /// Failed to acquire lock due to the storage engine being shut down.
     /// </summary>
-    Rip,
+    Shutdown,
 }

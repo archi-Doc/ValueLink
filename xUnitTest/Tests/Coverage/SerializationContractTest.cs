@@ -16,7 +16,7 @@ namespace xUnitTest.Coverage;
 public partial class PersistedItem
 {
     [Key(0)]
-    [Link(Type = ChainType.Ordered, Name = "Ordered", AddValue = true)]
+    [Link(Type = ChainType.Ordered, Name = "Ordered", GenerateValue = true)]
     [Link(Type = ChainType.ReverseOrdered, Name = "Reverse")]
     [Link(Type = ChainType.Unordered, Name = "Hash")]
     public int Id { get; set; }

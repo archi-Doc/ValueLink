@@ -7,7 +7,7 @@ namespace ValueLink;
 /// <summary>
 /// Configures the default timeout for asynchronous lock acquisition.
 /// </summary>
-public static class ValueLinkGlobal
+public static class ValueLinkSettings
 {
     private static TimeSpan lockTimeout = TimeSpan.FromSeconds(1);
 

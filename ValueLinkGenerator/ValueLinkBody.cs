@@ -59,10 +59,10 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
     public static readonly string ValueLinkInternalHelper = "ValueLinkInternalHelper";
     public static readonly string IRepeatableReadSemaphore = "ValueLink.IRepeatableReadSemaphore";
     public static readonly string ISerializableSemaphore = "ValueLink.ISerializableSemaphore";
-    public static readonly string IReadCommittedSemaphore = "ValueLink.IReadCommittedSemaphore";
+    public static readonly string IReadCommittedLockProvider = "ValueLink.IReadCommittedLockProvider";
     public static readonly string IIntegralityObject = "IIntegralityObject";
     public static readonly string IIntegralityGoshujin = "IIntegralityGoshujin";
-    public static readonly string Integrality = "ValueLink.Integrality.IIntegralityInternal";
+    public static readonly string Integrality = "ValueLink.Integrality.IIntegralityEngine";
     public static readonly string KeyHashDictionaryName = "__keyhash_dictionary__";
     public static readonly string UnsafeConstructorName = "UnsafeConstructor";
     public static readonly string IDataLocker = "ValueLink.IDataLocker<TData>";
@@ -86,7 +86,7 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
         category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor Error_ReadonlyMember = new DiagnosticDescriptor(
-        id: "CLG005", title: "Readonly", messageFormat: "The the link target '{0}' cannot be set to read-only or getter-only unless AddValue is set to false",
+        id: "CLG005", title: "Readonly", messageFormat: "The the link target '{0}' cannot be set to read-only or getter-only unless GenerateValue is set to false",
         category: "ValueLinkGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor Error_LinkTargetNameError = new DiagnosticDescriptor(

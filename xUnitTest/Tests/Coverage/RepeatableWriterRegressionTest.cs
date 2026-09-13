@@ -66,7 +66,7 @@ public class RepeatableWriterRegressionTest
         using var second = owner.TryLock(1);
         Assert.NotNull(second);
         first.Dispose();
-        Assert.Equal(1, owner.SemaphoreCount);
+        Assert.Equal(1, owner.AcquisitionCount);
     }
 
     [Fact]
@@ -124,7 +124,7 @@ public class RepeatableWriterRegressionTest
             Assert.Throws<InvalidOperationException>(() => owner.TryLock(1, AcquisitionMode.CreateOnly));
         }
 
-        Assert.Equal(0, owner.SemaphoreCount);
+        Assert.Equal(0, owner.AcquisitionCount);
         Assert.Empty(owner.GetArray());
     }
 

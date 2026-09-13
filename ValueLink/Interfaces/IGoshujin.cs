@@ -27,7 +27,7 @@ public interface IGoshujin
     /// Gets an <see cref="IEnumerable"/> that iterates through the objects managed by the Goshujin.
     /// </summary>
     /// <returns>An <see cref="IEnumerable"/> for the objects in the Goshujin.</returns>
-    IEnumerable GetEnumerableInternal();
+    IEnumerable EnumerateObjects();
 }
 
 /// <summary>

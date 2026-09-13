@@ -94,7 +94,7 @@ public class RepeatableReadContractTest
         }
 
         Assert.Null(await record.TryLockAsync(0));
-        Assert.Equal(0, owner.SemaphoreCount);
+        Assert.Equal(0, owner.AcquisitionCount);
         record = owner.TryGet(7)!;
         owner.State = GoshujinState.Obsolete;
         Assert.Null(owner.TryLock(7));
@@ -105,7 +105,7 @@ public class RepeatableReadContractTest
         Assert.Null(await owner.TryLockAsync(g => g.TryGet(7), 0));
         Assert.Null(record.TryLock());
         Assert.Null(await record.TryLockAsync());
-        Assert.Equal(0, owner.SemaphoreCount);
+        Assert.Equal(0, owner.AcquisitionCount);
 #pragma warning restore xUnit1051
     }
 
@@ -139,7 +139,7 @@ public class RepeatableReadContractTest
         Assert.Equal(10, snapshot.Value);
         Assert.Equal(30, owner.TryGet(1)!.Value);
         Assert.Equal(RepeatableReadObjectState.Obsolete, snapshot.State);
-        Assert.Equal(0, owner.SemaphoreCount);
+        Assert.Equal(0, owner.AcquisitionCount);
     }
 
     [Theory]
@@ -163,7 +163,7 @@ public class RepeatableReadContractTest
             Assert.NotNull(held);
             using var timeout = await Acquire(0, TestContext.Current.CancellationToken);
             Assert.Null(timeout);
-            Assert.Equal(1, owner.SemaphoreCount);
+            Assert.Equal(1, owner.AcquisitionCount);
             using var cancellation = new CancellationTokenSource();
             if (!cancelWhileWaiting)
             {
@@ -184,16 +184,16 @@ public class RepeatableReadContractTest
             Assert.Equal(cancellation.Token, exception.CancellationToken);
             using var stillLocked = await Acquire(0, TestContext.Current.CancellationToken);
             Assert.Null(stillLocked);
-            Assert.Equal(1, owner.SemaphoreCount);
+            Assert.Equal(1, owner.AcquisitionCount);
         }
 
-        Assert.Equal(0, owner.SemaphoreCount);
+        Assert.Equal(0, owner.AcquisitionCount);
         using (var retry = await owner.TryLockAsync(1, 1000, TestContext.Current.CancellationToken))
         {
             Assert.NotNull(retry);
         }
 
-        Assert.Equal(0, owner.SemaphoreCount);
+        Assert.Equal(0, owner.AcquisitionCount);
 
         ValueTask<TrackedEntry.WriterClass?> Acquire(int milliseconds, CancellationToken token) => entryPoint switch
         {
@@ -225,7 +225,7 @@ public class RepeatableReadContractTest
         start.SetResult();
         await Task.WhenAll(tasks).WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
         Assert.Equal(32, owner.TryGet(1)!.Value);
-        Assert.Equal(0, owner.SemaphoreCount);
+        Assert.Equal(0, owner.AcquisitionCount);
         Assert.Single(owner);
     }
 
@@ -243,7 +243,7 @@ public class RepeatableReadContractTest
             Assert.Null(rejected);
         }
 
-        Assert.Equal(0, owner.SemaphoreCount);
+        Assert.Equal(0, owner.AcquisitionCount);
         Assert.True(await owner.StoreAll(StoreMode.TryRelease));
         Assert.Equal(GoshujinState.Obsolete, owner.State);
     }

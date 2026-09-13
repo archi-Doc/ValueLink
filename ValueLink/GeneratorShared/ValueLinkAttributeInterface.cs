@@ -130,17 +130,17 @@ public sealed class ValueLinkObjectAttribute : Attribute
     /// <summary>
     /// Gets or sets the generated owner class name; an empty value uses GoshujinClass.
     /// </summary>
-    public string GoshujinClass { get; set; } = string.Empty;
+    public string GoshujinClassName { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the generated owner property name; an empty value uses Goshujin.
     /// </summary>
-    public string GoshujinInstance { get; set; } = string.Empty;
+    public string GoshujinPropertyName { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the event name used for property notifications; an empty value uses PropertyChanged.
     /// </summary>
-    public string ExplicitPropertyChanged { get; set; } = string.Empty;
+    public string PropertyChangedEventName { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the owner's isolation mode. The default is None.
@@ -219,7 +219,7 @@ public sealed class LinkAttribute : Attribute
     /// <summary>
     /// Gets or sets a value indicating whether to generate a value property that updates links. The default is false; partial properties generate their own accessors.
     /// </summary>
-    public bool AddValue { get; set; } = false;
+    public bool GenerateValue { get; set; } = false;
 
     public LinkAttribute()
     {

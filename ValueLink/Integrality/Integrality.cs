@@ -21,7 +21,7 @@ namespace ValueLink.Integrality;
 /// <remarks>
 /// Configure limits and override Validate or Trim as needed. A run may make partial changes before failing. Serialize integration runs that target the same owner.
 /// </remarks>
-public class Integrality<TGoshujin, TObject> : IIntegralityInternal
+public class Integrality<TGoshujin, TObject> : IIntegralityEngine
     where TGoshujin : class, IGoshujin, IIntegralityGoshujin
     where TObject : class, ITinyhandSerializable<TObject>, IIntegralityObject
 {
@@ -47,17 +47,17 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
     /// <summary>
     /// Gets the maximum byte length of an object-response packet; probe responses use MaxItems instead.
     /// </summary>
-    public int MaxMemoryLength { get; init; } = IntegralityConstants.DefaultMaxMemoryLength;
+    public int MaxResponseLength { get; init; } = IntegralityConstants.DefaultMaxResponseLength;
 
     /// <summary>
     /// Gets the maximum number of object-request iterations after the initial probe.
     /// </summary>
-    public int MaxIntegrationCount { get; init; } = IntegralityConstants.DefaultMaxIntegrationCount;
+    public int MaxIterationCount { get; init; } = IntegralityConstants.DefaultMaxIterationCount;
 
     #endregion
 
     /// <inheritdoc/>
-    bool IIntegralityInternal.Validate(object goshujin, object newItem, object? oldItem)
+    bool IIntegralityEngine.Validate(object goshujin, object newItem, object? oldItem)
         => this.Validate((TGoshujin)goshujin, (TObject)newItem, oldItem as TObject);
 
     /// <summary>
@@ -73,18 +73,18 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
     /// Integrates the Goshujin using the specified broker delegate.
     /// </summary>
     /// <param name="goshujin">The Goshujin.</param>
-    /// <param name="brokerDelegate">The broker delegate.</param>
+    /// <param name="broker">The broker delegate.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The result and completed operation counts, including progress before an error response.</returns>
-    public async Task<IntegralityResultAndCount> Integrate(TGoshujin goshujin, IntegralityBrokerDelegate brokerDelegate, CancellationToken cancellationToken = default)
+    public async Task<IntegralityResultAndCount> Integrate(TGoshujin goshujin, IntegralityBrokerDelegate broker, CancellationToken cancellationToken = default)
     {
         // Probe
         var rentMemory = this.CreateProbePacket(goshujin);
         BytePool.RentedMemory resultMemory;
         try
         {
-            resultMemory = await brokerDelegate(rentMemory.Memory, cancellationToken).ConfigureAwait(false);
-            IntegralityResultHelper.ParseMemoryAndResult(resultMemory, out var result);
+            resultMemory = await broker(rentMemory.Memory, cancellationToken).ConfigureAwait(false);
+            IntegralityResultHelper.ParseResult(resultMemory, out var result);
             if (result != IntegralityResult.Success)
             {
                 resultMemory.Return();
@@ -119,7 +119,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         var trimmedCount = 0;
         while (resultMemory2.Result == IntegralityResult.Incomplete)
         {
-            if (iterationCount >= this.MaxIntegrationCount)
+            if (iterationCount >= this.MaxIterationCount)
             {
                 break;
             }
@@ -129,8 +129,8 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
             // Get: resultMemory2
             try
             {
-                resultMemory = await brokerDelegate(resultMemory2.RentedMemory.Memory, cancellationToken).ConfigureAwait(false);
-                IntegralityResultHelper.ParseMemoryAndResult(resultMemory, out var result);
+                resultMemory = await broker(resultMemory2.RentedMemory.Memory, cancellationToken).ConfigureAwait(false);
+                IntegralityResultHelper.ParseResult(resultMemory, out var result);
                 if (result != IntegralityResult.Success)
                 {
                     resultMemory.Return();
@@ -184,13 +184,13 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
     /// Creates a response to a synchronization request.
     /// </summary>
     /// <param name="target">The target Goshujin.</param>
-    /// <param name="integration">The data sent from the source to the target when calculating the difference.</param>
+    /// <param name="request">The data sent from the source to the target when calculating the difference.</param>
     /// <returns>The data sent from the target to the source for integration.</returns>
     /// <remarks>
     /// The caller owns the returned buffer and must return it after use.
     /// </remarks>
-    public BytePool.RentedMemory Differentiate(TGoshujin target, ReadOnlyMemory<byte> integration)
-        => target.Differentiate(this, integration);
+    public BytePool.RentedMemory Differentiate(TGoshujin target, ReadOnlyMemory<byte> request)
+        => target.Differentiate(this, request);
 
     /// <summary>
     /// Validates the specified new item in the Goshujin.<br/>
@@ -219,7 +219,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         var writer = TinyhandWriter.CreateFromBytePool();
         try
         {
-            writer.WriteRawUInt8((byte)IntegralityState.Probe);
+            writer.WriteRawUInt8((byte)IntegralityPacketType.Probe);
             writer.WriteRawUInt64(goshujin.GetIntegralityHash());
             return writer.FlushAndGetRentMemory();
         }
@@ -234,8 +234,8 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         var reader = new TinyhandReader(memory.Span);
         try
         {
-            var state = (IntegralityState)reader.ReadUnsafe<byte>();
-            if (state != IntegralityState.ProbeResponse)
+            var state = (IntegralityPacketType)reader.ReadUnsafe<byte>();
+            if (state != IntegralityPacketType.ProbeResponse)
             {
                 targetHash = 0;
                 return (IntegralityResult.InvalidData, default);
@@ -257,7 +257,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         var writer = TinyhandWriter.CreateFromBytePool();
         try
         {
-            writer.WriteRawUInt8((byte)IntegralityState.Get);
+            writer.WriteRawUInt8((byte)IntegralityPacketType.Get);
             goshujin.Compare(this, ref reader, ref writer);
             if (goshujin.GetIntegralityHash() == targetHash)
             {
@@ -281,8 +281,8 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         var reader = new TinyhandReader(memory.Span);
         try
         {
-            var state = (IntegralityState)reader.ReadUnsafe<byte>();
-            if (state != IntegralityState.GetResponse)
+            var state = (IntegralityPacketType)reader.ReadUnsafe<byte>();
+            if (state != IntegralityPacketType.GetResponse)
             {
                 return (IntegralityResult.InvalidData, default);
             }
@@ -295,7 +295,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         var writer = TinyhandWriter.CreateFromBytePool();
         try
         {
-            writer.WriteRawUInt8((byte)IntegralityState.Get);
+            writer.WriteRawUInt8((byte)IntegralityPacketType.Get);
             obj.Integrate(this, ref reader, ref writer, ref integratedObjects);
             if (writer.Written <= 1)
             {

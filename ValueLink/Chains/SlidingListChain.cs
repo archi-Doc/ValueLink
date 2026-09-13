@@ -14,7 +14,7 @@ namespace ValueLink;
 /// </summary>
 /// <typeparam name="T">The type of objects in the list.</typeparam>
 /// <remarks>
-/// Call Resize before adding objects. Membership is always manual; Count excludes holes, while Consumed includes them. The chain does not provide synchronization.
+/// Call Resize before adding objects. Membership is always manual; Count excludes holes, while UsedSlotCount includes them. The chain does not provide synchronization.
 /// </remarks>
 public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     where T : class
@@ -24,14 +24,14 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     /// </summary>
     /// <param name="obj">The object whose link or owner is requested.</param>
     /// <returns>The object's owner, or null when unowned.</returns>
-    public delegate IGoshujin? ObjectToGoshujinDelegete(T obj);
+    public delegate IGoshujin? ObjectToGoshujinDelegate(T obj);
 
     /// <summary>
     /// Returns a reference to an object's link for this chain.
     /// </summary>
     /// <param name="obj">The object whose link or owner is requested.</param>
     /// <returns>A reference to the object's link for this chain.</returns>
-    public delegate ref Link ObjectToLinkDelegete(T obj);
+    public delegate ref Link ObjectToLinkDelegate(T obj);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SlidingListChain{T}"/> class (<see cref="SlidingList{T}"/> (Array)).
@@ -39,7 +39,7 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     /// <param name="goshujin">The instance of Goshujin.</param>
     /// <param name="objectToGoshujin">A delegate that returns an object's owner.</param>
     /// <param name="objectToLink">A delegate that returns a reference to this chain's link.</param>
-    public SlidingListChain(IGoshujin goshujin, ObjectToGoshujinDelegete objectToGoshujin, ObjectToLinkDelegete objectToLink)
+    public SlidingListChain(IGoshujin goshujin, ObjectToGoshujinDelegate objectToGoshujin, ObjectToLinkDelegate objectToLink)
     {
         this.goshujin = goshujin;
         this.objectToGoshujin = objectToGoshujin;
@@ -95,12 +95,12 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     }
 
     /// <summary>
-    /// Places an unlinked object at a window position, unlinking any object previously stored there.
+    /// Tries to place an unlinked object at a window position, unlinking any object previously stored there.
     /// </summary>
     /// <param name="position">The position of the object.</param>
     /// <param name="obj">The new object that will be added to the list.</param>
     /// <returns>True if placed; false if already linked or outside the capacity window.</returns>
-    public bool Set(int position, T obj)
+    public bool TrySet(int position, T obj)
     {
         if (this.objectToGoshujin(obj) != this.goshujin)
         {// Check Goshujin
@@ -210,7 +210,7 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     /// <summary>
     /// Gets the number of consumed window positions, including holes left by removal.
     /// </summary>
-    public int Consumed => this.chain.UsedSlotCount;
+    public int UsedSlotCount => this.chain.UsedSlotCount;
 
     /// <summary>
     /// Gets the number of objects currently linked to this chain.
@@ -221,9 +221,9 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     /// Changes the window capacity while preserving logical positions.
     /// </summary>
     /// <param name="capacity">The new size of the <see cref="SlidingListChain{T}"/>.</param>
-    /// <returns>True if resized; false if the new capacity is smaller than Consumed.</returns>
+    /// <returns>True if resized; false if the new capacity is smaller than UsedSlotCount.</returns>
     /// <remarks>
-    /// Returns false if the capacity is smaller than Consumed. A negative capacity throws ArgumentOutOfRangeException.
+    /// Returns false if the capacity is smaller than UsedSlotCount. A negative capacity throws ArgumentOutOfRangeException.
     /// </remarks>
     public bool Resize(int capacity) => this.chain.Resize(capacity);
 
@@ -232,7 +232,7 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     /// </summary>
     /// <param name="position">The position of the object.</param>
     /// <returns>The object.</returns>
-    public T? Get(int position) => this.chain.GetOrDefault(position);
+    public T? GetOrDefault(int position) => this.chain.GetOrDefault(position);
 
     /// <summary>
     /// Gets a value indicating whether there is space in the <see cref="SlidingListChain{T}"/> and if a new element can be added.
@@ -242,7 +242,7 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     /// <summary>
     /// Gets the first element of the <see cref="SlidingListChain{T}"/>, or a default value if the <see cref="SlidingListChain{T}"/> contains no elements.
     /// </summary>
-    public T? FirstOrDefault => this.chain.GetFirstOrDefault();
+    public T? First => this.chain.GetFirstOrDefault();
 
     /// <summary>
     /// Gets the logical position at the start of the window, even when empty.
@@ -257,14 +257,14 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     /// <summary>
     /// Finds the first equal object by scanning the window's consumed positions.
     /// </summary>
-    /// <param name="value">The value to locate in the list.</param>
-    /// <returns>The first object that contains the specified value, if found; otherwise, null.</returns>
-    public T? Find(T value)
+    /// <param name="obj">The object to locate in the list.</param>
+    /// <returns>The first object equal to <paramref name="obj"/>, if found; otherwise, null.</returns>
+    public T? Find(T obj)
     {
         var comparer = EqualityComparer<T>.Default;
         foreach (var x in this.chain)
         {
-            if (comparer.Equals(x, value))
+            if (comparer.Equals(x, obj))
             {
                 return x;
             }
@@ -274,8 +274,8 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     }
 
     private IGoshujin goshujin;
-    private ObjectToGoshujinDelegete objectToGoshujin;
-    private ObjectToLinkDelegete objectToLink;
+    private ObjectToGoshujinDelegate objectToGoshujin;
+    private ObjectToLinkDelegate objectToLink;
     private SlidingList<T> chain = new(0);
 
     /// <summary>

@@ -35,7 +35,7 @@ Declare linked models as `partial` classes or record classes and annotate them w
 
 ## Quick start
 
-This complete console example indexes the same people by ID and age. `AddValue = true` requests a generated setter; it is **false by default**.
+This complete console example indexes the same people by ID and age. `GenerateValue = true` requests a generated setter; it is **false by default**.
 
 ```csharp
 using System;
@@ -68,7 +68,7 @@ public partial class Person
 
     public string Name { get; private set; }
 
-    [Link(Type = ChainType.Ordered, AddValue = true,
+    [Link(Type = ChainType.Ordered, GenerateValue = true,
         Accessibility = ValueLinkAccessibility.Public)]
     private int age;
 
@@ -136,7 +136,7 @@ public partial class IndexedItem
 
 Enumeration takes O(n) for ordinary lists and trees. Hash chains may scan unused backing slots; sliding chains may scan empty window positions. Constructing an enumerator is not the same cost as traversing the collection.
 
-Ordered and unordered chains provide `FindFirst`, `ContainsKey`, `TryGetValue`, `Keys`, `Objects`, and `KeyObjects`. Use ordered `FindAll(key)` or unordered `Enumerate(key)` to enumerate duplicate keys. A missing `FindFirst` result is `null` for class models. Ordered chains also expose `GetLowerBound`, `GetUpperBound`, and inclusive `GetRange`; bounds follow the configured comparison order. Links on linked and ordered chains allow neighbor navigation.
+Ordered and unordered chains provide `FindFirst`, `ContainsKey`, `TryGetValue`, `Keys`, `Objects`, and `KeyObjectPairs`. Use ordered `Enumerate(key)` or unordered `Enumerate(key)` to enumerate duplicate keys. A missing `FindFirst` result is `null` for class models. Ordered chains also expose `GetLowerBound`, `GetUpperBound`, and inclusive `GetRange`; bounds follow the configured comparison order. Links on linked and ordered chains allow neighbor navigation.
 
 ### Sliding windows
 
@@ -151,7 +151,7 @@ owner.WindowChain.Resize(4);
 var item = new WindowItem { Goshujin = owner };
 Console.WriteLine(owner.WindowChain.Add(item)); // True
 int position = item.WindowLink.Position;
-Console.WriteLine(owner.WindowChain.Get(position) == item); // True
+Console.WriteLine(owner.WindowChain.GetOrDefault(position) == item); // True
 
 /// <summary>Represents an object placed manually in a bounded window.</summary>
 [ValueLinkObject]
@@ -162,7 +162,7 @@ public partial class WindowItem
 }
 ```
 
-`Count` counts live objects; `Consumed` also counts holes left by removal. `StartPosition` is the logical window start, and `EndPosition` is exclusive. Positions wrap within the underlying integer range. `Add` returns `false` when full or already linked. `Set(position, obj)` can replace an entry within the capacity window and unlinks the displaced object. `Resize` preserves logical positions and returns `false` if the new capacity is smaller than `Consumed`.
+`Count` counts live objects; `UsedSlotCount` also counts holes left by removal. `StartPosition` is the logical window start, and `EndPosition` is exclusive. Positions wrap within the underlying integer range. `Add` returns `false` when full or already linked. `TrySet(position, obj)` can replace an entry within the capacity window and unlinks the displaced object. `GetOrDefault(position)` returns `null` for a hole or an out-of-window position, and `First` returns the first live object. `Resize` preserves logical positions and returns `false` if the new capacity is smaller than `UsedSlotCount`.
 
 ## Attribute options
 
@@ -170,11 +170,11 @@ public partial class WindowItem
 
 | Option | Default | Purpose |
 | --- | --- | --- |
-| `GoshujinClass` | `"GoshujinClass"` | Generated owner type name |
-| `GoshujinInstance` | `"Goshujin"` | Generated owner property name |
-| `ExplicitPropertyChanged` | `"PropertyChanged"` | Event name used for generated notifications |
+| `GoshujinClassName` | `"GoshujinClass"` | Generated owner type name |
+| `GoshujinPropertyName` | `"Goshujin"` | Generated owner property name |
+| `PropertyChangedEventName` | `"PropertyChanged"` | Event name used for generated notifications |
 | `Isolation` | `None` | Concurrency model described below |
-| `Restricted` | `false` | Makes the owner property internal and defaults links to private access with `AddValue = false`; explicit link options can override those defaults |
+| `Restricted` | `false` | Makes the owner property internal and defaults links to private access with `GenerateValue = false`; explicit link options can override those defaults |
 | `Integrality` | `false` | Enables hash-based difference synchronization |
 
 Empty name options select the defaults above.
@@ -187,7 +187,7 @@ Empty name options select the defaults above.
 | `Name` | Target member name, initial letter capitalized | Prefix for chain, link, and generated value names; specify distinct names for multiple indexes on one member |
 | `Primary` | `false` | Selects the chain used for owner enumeration and serialization |
 | `Unique` | `false` | Identifies the key used by isolation, journaling, and synchronization |
-| `AddValue` | `false` | Generates a property that updates links when the value changes |
+| `GenerateValue` | `false` | Generates a property that updates links when the value changes |
 | `AutoLink` | `true` | Adds the link when ownership is assigned; ignored for sliding insertion |
 | `AutoNotify` | `false` | Raises `PropertyChanged` from generated value changes |
 | `Accessibility` | `PublicGetter` | Controls generated value/link access |
@@ -206,7 +206,7 @@ Apply `[ValueLinkGeneratorOption]` to a class to set `GenerateToFile` or `Custom
 
 ## Notifications and callbacks
 
-Use `AutoNotify = true` with `AddValue = true` to generate `INotifyPropertyChanged` support. If the model already provides the event, the generator uses it. `ExplicitPropertyChanged` selects a custom event name. `EqualityComparer<T>.Default` suppresses redundant setter updates and notifications, including repeated floating-point NaN assignments. Generated linked setters cache one immutable `PropertyChangedEventArgs` per property and closed model type. The general-purpose `SetProperty` helper accepts dynamic names and creates arguments when it raises an event.
+Use `AutoNotify = true` with `GenerateValue = true` to generate `INotifyPropertyChanged` support. If the model already provides the event, the generator uses it. `PropertyChangedEventName` selects a custom event name. `EqualityComparer<T>.Default` suppresses redundant setter updates and notifications, including repeated floating-point NaN assignments. Generated linked setters cache one immutable `PropertyChangedEventArgs` per property and closed model type. The general-purpose `SetProperty` helper accepts dynamic names and creates arguments when it raises an event.
 
 `ObservableChain<T>` separately implements `INotifyCollectionChanged` and `INotifyPropertyChanged` for collection changes. Its notifications run on the calling thread; UI applications must perform mutations on the appropriate thread. It identifies reference-type objects by identity, so distinct equal-valued records can coexist.
 
@@ -294,7 +294,7 @@ using (owner.LockObject.EnterScope())
 
 ### ReadCommitted
 
-Configure a unique key and implement `IDataLocker<TData>` on the linked adapter. The generated owner supplies `Find`, `TryGet`, `TryLock`, `TryDelete`, `ForEach`, and `GetArray`. Timeouts, cancellation tokens, and optional factories are forwarded to the adapter, which implements data storage and locking.
+Configure a unique key and implement `IDataLocker<TData>` on the linked adapter. The generated owner supplies `GetObject`, `TryGet`, `TryLock`, `TryDelete`, `ForEach`, and `GetArray`. Timeouts, cancellation tokens, and optional factories are forwarded to the adapter, which implements data storage and locking.
 
 `TryLock` returns `ValueTask<DataScope<TData>>`. Inspect `Result` for `Retrieved`, `Created`, or a failure, and dispose the scope to release its lock. `IsValid` requires a live lock and non-null data, including for value-type data; it becomes false after release. `Result` remains available after disposal. Repeated disposal of the same variable is safe, but do not dispose multiple copies of this mutable struct. `UnlockAndDelete` releases the lock and requests deletion through the associated storage object. Both release operations invalidate the scope before calling adapters, including when an adapter throws.
 
@@ -337,7 +337,7 @@ public partial record Account
 
 Readers retain the record version they acquired. Record copies are shallow: clone a mutable list, array, or nested object before changing it through the writer. Do not mutate a published record or a shared reference directly.
 
-`TryGet` retrieves a record. `TryLock` waits synchronously for a writer; `TryLockAsync` supports a timeout and cancellation token. A timeout returns `null`; cancellation while waiting propagates as `OperationCanceledException`. Overloads without a timeout use `ValueLinkGlobal.LockTimeout`. Direct chain reads still require the owner lock or a snapshot.
+`TryGet` retrieves a record. `TryLock` waits synchronously for a writer; `TryLockAsync` supports a timeout and cancellation token. A timeout returns `null`; cancellation while waiting propagates as `OperationCanceledException`. Overloads without a timeout use `ValueLinkSettings.LockTimeout`. Direct chain reads still require the owner lock or a snapshot.
 
 Both keyed isolation modes use `AcquisitionMode.GetOnly`, `GetOrCreate`, and `CreateOnly`. `GetOnlyIgnoreState` requests adapter-specific state handling; it does not bypass an invalid owner or create missing data.
 
@@ -384,7 +384,7 @@ public partial class SyncItem
 }
 ```
 
-`MaxItems` limits reported keys and new items; `RemoveIfItemNotFound` removes local entries absent from the remote key list. `MaxMemoryLength` limits object-response packets, not probe responses. `MaxIntegrationCount` limits object-request iterations after probing. Override `Validate` to accept/reject incoming objects and `Trim` for application-specific removal; the default `Trim` removes nothing.
+`MaxItems` limits reported keys and new items; `RemoveIfItemNotFound` removes local entries absent from the remote key list. `MaxResponseLength` limits object-response packets, not probe responses. `MaxIterationCount` limits object-request iterations after probing. Override `Validate` to accept/reject incoming objects and `Trim` for application-specific removal; the default `Trim` removes nothing.
 
 The broker transfers ownership of its returned `BytePool.RentedMemory` to the engine. When calling `Differentiate` outside a broker, return that buffer after use. Request bytes are valid only until the broker task completes.
 

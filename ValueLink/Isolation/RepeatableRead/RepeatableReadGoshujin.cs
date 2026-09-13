@@ -39,7 +39,7 @@ public abstract class RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter> 
     /// <summary>
     /// Gets or sets the active acquisition count while holding LockObject.
     /// </summary>
-    public int SemaphoreCount { get; set; }
+    public int AcquisitionCount { get; set; }
 
     /// <summary>
     /// Finds a record by its unique key while the caller holds LockObject.
@@ -67,7 +67,7 @@ public abstract class RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter> 
             else if (storeMode != StoreMode.StoreOnly)
             {// Release
                 ((IRepeatableReadSemaphore)this).SetReleasing();
-                if (storeMode == StoreMode.TryRelease && this.SemaphoreCount > 0)
+                if (storeMode == StoreMode.TryRelease && this.AcquisitionCount > 0)
                 {// Acquired.
                     return false;
                 }
@@ -174,13 +174,13 @@ public abstract class RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter> 
     /// <summary>
     /// Returns a matching record under the owner lock, or null if none exists.
     /// </summary>
-    /// <param name="predicate">A selector evaluated under the owner lock; return only an object owned by this owner.</param>
+    /// <param name="selector">A selector evaluated under the owner lock; return only an object owned by this owner.</param>
     /// <returns>The selected record, or null if no record matches.</returns>
-    public TObject? TryGet(Func<RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter>, TObject?> predicate)
+    public TObject? TryGet(Func<RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter>, TObject?> selector)
     {
         using (this.LockObject.EnterScope())
         {
-            return predicate(this);
+            return selector(this);
         }
     }
 
@@ -188,9 +188,9 @@ public abstract class RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter> 
     /// Waits for a writer for a selected record, returning null when acquisition is unavailable.
     /// </summary>
     /// <param name="key">The unique key of the record.</param>
-    /// <param name="mode">Whether to retrieve an existing record, create one, or allow either operation.</param>
+    /// <param name="acquisitionMode">Whether to retrieve an existing record, create one, or allow either operation.</param>
     /// <returns>A writer to dispose after use, or null if acquisition is unavailable.</returns>
-    public TWriter? TryLock(TKey key, AcquisitionMode mode = AcquisitionMode.GetOnly)
+    public TWriter? TryLock(TKey key, AcquisitionMode acquisitionMode = AcquisitionMode.GetOnly)
     {
         TObject? x = default;
         int count = 0;
@@ -201,8 +201,8 @@ public abstract class RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter> 
                 x = this.FindObject(key);
                 if (x is null)
                 {// No object
-                    if (mode == AcquisitionMode.GetOnly ||
-                        mode == AcquisitionMode.GetOnlyIgnoreState)
+                    if (acquisitionMode == AcquisitionMode.GetOnly ||
+                        acquisitionMode == AcquisitionMode.GetOnlyIgnoreState)
                     {// Get
                         ((IRepeatableReadSemaphore)this).Release(ref count);
                         return default;
@@ -220,7 +220,7 @@ public abstract class RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter> 
                 }
                 else
                 {// Exists
-                    if (mode == AcquisitionMode.CreateOnly)
+                    if (acquisitionMode == AcquisitionMode.CreateOnly)
                     {// Create
                         ((IRepeatableReadSemaphore)this).Release(ref count);
                         return default;
@@ -252,18 +252,18 @@ Created:
     /// Asynchronously acquires a writer, returning null on timeout or unavailable acquisition. Cancellation while waiting propagates to the caller.
     /// </summary>
     /// <param name="key">The unique key of the record.</param>
-    /// <param name="mode">Whether to retrieve an existing record, create one, or allow either operation.</param>
+    /// <param name="acquisitionMode">Whether to retrieve an existing record, create one, or allow either operation.</param>
     /// <returns>A task yielding a disposable writer, or null on timeout or unavailable acquisition.</returns>
-    public ValueTask<TWriter?> TryLockAsync(TKey key, AcquisitionMode mode = AcquisitionMode.GetOnly) => this.TryLockAsync(key, ValueLinkGlobal.LockTimeoutInMilliseconds, default, mode);
+    public ValueTask<TWriter?> TryLockAsync(TKey key, AcquisitionMode acquisitionMode = AcquisitionMode.GetOnly) => this.TryLockAsync(key, ValueLinkSettings.LockTimeoutInMilliseconds, default, acquisitionMode);
 
     /// <summary>
     /// Asynchronously acquires a writer, returning null on timeout or unavailable acquisition. Cancellation while waiting propagates to the caller.
     /// </summary>
     /// <param name="key">The unique key of the record.</param>
     /// <param name="millisecondsTimeout">The writer-wait timeout in milliseconds, or -1 to wait indefinitely.</param>
-    /// <param name="mode">Whether to retrieve an existing record, create one, or allow either operation.</param>
+    /// <param name="acquisitionMode">Whether to retrieve an existing record, create one, or allow either operation.</param>
     /// <returns>A task yielding a disposable writer, or null on timeout or unavailable acquisition.</returns>
-    public ValueTask<TWriter?> TryLockAsync(TKey key, int millisecondsTimeout, AcquisitionMode mode = AcquisitionMode.GetOnly) => this.TryLockAsync(key, millisecondsTimeout, default, mode);
+    public ValueTask<TWriter?> TryLockAsync(TKey key, int millisecondsTimeout, AcquisitionMode acquisitionMode = AcquisitionMode.GetOnly) => this.TryLockAsync(key, millisecondsTimeout, default, acquisitionMode);
 
     /// <summary>
     /// Asynchronously acquires a writer, returning null on timeout or unavailable acquisition. Cancellation while waiting propagates to the caller.
@@ -271,9 +271,9 @@ Created:
     /// <param name="key">The unique key of the record.</param>
     /// <param name="millisecondsTimeout">The writer-wait timeout in milliseconds, or -1 to wait indefinitely.</param>
     /// <param name="cancellationToken">The cancellation token to observe while waiting.</param>
-    /// <param name="mode">Whether to retrieve an existing record, create one, or allow either operation.</param>
+    /// <param name="acquisitionMode">Whether to retrieve an existing record, create one, or allow either operation.</param>
     /// <returns>A task yielding a disposable writer, or null on timeout or unavailable acquisition.</returns>
-    public async ValueTask<TWriter?> TryLockAsync(TKey key, int millisecondsTimeout, CancellationToken cancellationToken, AcquisitionMode mode = AcquisitionMode.GetOnly)
+    public async ValueTask<TWriter?> TryLockAsync(TKey key, int millisecondsTimeout, CancellationToken cancellationToken, AcquisitionMode acquisitionMode = AcquisitionMode.GetOnly)
     {
         TObject? x = default;
         int count = 0;
@@ -284,8 +284,8 @@ Created:
                 x = this.FindObject(key);
                 if (x is null)
                 {// No object
-                    if (mode == AcquisitionMode.GetOnly ||
-                        mode == AcquisitionMode.GetOnlyIgnoreState)
+                    if (acquisitionMode == AcquisitionMode.GetOnly ||
+                        acquisitionMode == AcquisitionMode.GetOnlyIgnoreState)
                     {// Get
                         ((IRepeatableReadSemaphore)this).Release(ref count);
                         return default;
@@ -303,7 +303,7 @@ Created:
                 }
                 else
                 {// Exists
-                    if (mode == AcquisitionMode.CreateOnly)
+                    if (acquisitionMode == AcquisitionMode.CreateOnly)
                     {// Create
                         ((IRepeatableReadSemaphore)this).Release(ref count);
                         return default;
@@ -375,9 +375,9 @@ Created:
     /// <summary>
     /// Waits for a writer for a selected record, returning null when acquisition is unavailable.
     /// </summary>
-    /// <param name="predicate">A selector evaluated under the owner lock; return only an object owned by this owner.</param>
+    /// <param name="selector">A selector evaluated under the owner lock; return only an object owned by this owner.</param>
     /// <returns>A writer to dispose after use, or null if acquisition is unavailable.</returns>
-    public TWriter? TryLock(Func<RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter>, TObject?> predicate)
+    public TWriter? TryLock(Func<RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter>, TObject?> selector)
     {
         TObject? x = default;
         int count = 0;
@@ -385,7 +385,7 @@ Created:
         {
             using (this.LockObject.EnterScope())
             {
-                x = predicate(this);
+                x = selector(this);
                 if (x is null)
                 {// No object
                     ((IRepeatableReadSemaphore)this).Release(ref count);
@@ -410,26 +410,26 @@ Created:
     /// <summary>
     /// Asynchronously acquires a writer, returning null on timeout or unavailable acquisition. Cancellation while waiting propagates to the caller.
     /// </summary>
-    /// <param name="predicate">A selector evaluated under the owner lock; return only an object owned by this owner.</param>
+    /// <param name="selector">A selector evaluated under the owner lock; return only an object owned by this owner.</param>
     /// <returns>A task yielding a disposable writer, or null on timeout or unavailable acquisition.</returns>
-    public ValueTask<TWriter?> TryLockAsync(Func<RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter>, TObject?> predicate) => this.TryLockAsync(predicate, ValueLinkGlobal.LockTimeoutInMilliseconds, default);
+    public ValueTask<TWriter?> TryLockAsync(Func<RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter>, TObject?> selector) => this.TryLockAsync(selector, ValueLinkSettings.LockTimeoutInMilliseconds, default);
 
     /// <summary>
     /// Asynchronously acquires a writer, returning null on timeout or unavailable acquisition. Cancellation while waiting propagates to the caller.
     /// </summary>
-    /// <param name="predicate">A selector evaluated under the owner lock; return only an object owned by this owner.</param>
+    /// <param name="selector">A selector evaluated under the owner lock; return only an object owned by this owner.</param>
     /// <param name="millisecondsTimeout">The writer-wait timeout in milliseconds, or -1 to wait indefinitely.</param>
     /// <returns>A task yielding a disposable writer, or null on timeout or unavailable acquisition.</returns>
-    public ValueTask<TWriter?> TryLockAsync(Func<RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter>, TObject?> predicate, int millisecondsTimeout) => this.TryLockAsync(predicate, millisecondsTimeout, default);
+    public ValueTask<TWriter?> TryLockAsync(Func<RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter>, TObject?> selector, int millisecondsTimeout) => this.TryLockAsync(selector, millisecondsTimeout, default);
 
     /// <summary>
     /// Asynchronously acquires a writer, returning null on timeout or unavailable acquisition. Cancellation while waiting propagates to the caller.
     /// </summary>
-    /// <param name="predicate">A selector evaluated under the owner lock; return only an object owned by this owner.</param>
+    /// <param name="selector">A selector evaluated under the owner lock; return only an object owned by this owner.</param>
     /// <param name="millisecondsTimeout">The writer-wait timeout in milliseconds, or -1 to wait indefinitely.</param>
     /// <param name="cancellationToken">The cancellation token to observe while waiting.</param>
     /// <returns>A task yielding a disposable writer, or null on timeout or unavailable acquisition.</returns>
-    public async ValueTask<TWriter?> TryLockAsync(Func<RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter>, TObject?> predicate, int millisecondsTimeout, CancellationToken cancellationToken)
+    public async ValueTask<TWriter?> TryLockAsync(Func<RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter>, TObject?> selector, int millisecondsTimeout, CancellationToken cancellationToken)
     {
         TObject? x = default;
         int count = 0;
@@ -437,7 +437,7 @@ Created:
         {
             using (this.LockObject.EnterScope())
             {
-                x = predicate(this);
+                x = selector(this);
                 if (x is null)
                 {// No object
                     ((IRepeatableReadSemaphore)this).Release(ref count);

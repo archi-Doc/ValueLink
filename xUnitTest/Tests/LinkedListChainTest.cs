@@ -13,8 +13,8 @@ namespace xUnitTest;
 public partial class LinkedListChainTestClass
 {
     [Link(Primary = true, Type = ChainType.LinkedList, Name = "List")]
-    [Link(Type = ChainType.QueueList, Name = "Queue", AddValue = false)]
-    [Link(Type = ChainType.StackList, Name = "Stack", AddValue = false)]
+    [Link(Type = ChainType.QueueList, Name = "Queue", GenerateValue = false)]
+    [Link(Type = ChainType.StackList, Name = "Stack", GenerateValue = false)]
     public int Id { get; set; }
 
     public LinkedListChainTestClass(int id)

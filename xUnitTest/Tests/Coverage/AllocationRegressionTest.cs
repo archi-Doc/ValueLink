@@ -159,13 +159,13 @@ public class AllocationRegressionTest
 [ValueLinkObject]
 public partial class NotificationItem
 {
-    [Link(AddValue = true, AutoNotify = true)]
+    [Link(GenerateValue = true, AutoNotify = true)]
     public partial int Value { get; set; }
 
-    [Link(AddValue = true, AutoNotify = true)]
+    [Link(GenerateValue = true, AutoNotify = true)]
     public partial double Floating { get; set; }
 
-    [Link(AddValue = true, AutoNotify = true)]
+    [Link(GenerateValue = true, AutoNotify = true)]
     public partial float Single { get; set; }
 }
 

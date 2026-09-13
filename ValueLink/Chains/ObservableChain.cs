@@ -27,14 +27,14 @@ public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCo
     /// </summary>
     /// <param name="obj">The object whose link or owner is requested.</param>
     /// <returns>The object's owner, or null when unowned.</returns>
-    public delegate IGoshujin? ObjectToGoshujinDelegete(T obj);
+    public delegate IGoshujin? ObjectToGoshujinDelegate(T obj);
 
     /// <summary>
     /// Returns a reference to an object's link for this chain.
     /// </summary>
     /// <param name="obj">The object whose link or owner is requested.</param>
     /// <returns>A reference to the object's link for this chain.</returns>
-    public delegate ref Link ObjectToLinkDelegete(T obj);
+    public delegate ref Link ObjectToLinkDelegate(T obj);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ObservableChain{T}"/> class (List).
@@ -42,7 +42,7 @@ public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCo
     /// <param name="goshujin">The instance of Goshujin.</param>
     /// <param name="objectToGoshujin">A delegate that returns an object's owner.</param>
     /// <param name="objectToLink">A delegate that returns a reference to this chain's link.</param>
-    public ObservableChain(IGoshujin goshujin, ObjectToGoshujinDelegete objectToGoshujin, ObjectToLinkDelegete objectToLink)
+    public ObservableChain(IGoshujin goshujin, ObjectToGoshujinDelegate objectToGoshujin, ObjectToLinkDelegate objectToLink)
     {
         this.goshujin = goshujin;
         this.objectToGoshujin = objectToGoshujin;
@@ -56,8 +56,8 @@ public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCo
     public int Count => this.chain.Count;
 
     private readonly IGoshujin goshujin;
-    private readonly ObjectToGoshujinDelegete objectToGoshujin;
-    private readonly ObjectToLinkDelegete objectToLink;
+    private readonly ObjectToGoshujinDelegate objectToGoshujin;
+    private readonly ObjectToLinkDelegate objectToLink;
     private readonly LinkedObservableCollection chain;
 
     event NotifyCollectionChangedEventHandler? INotifyCollectionChanged.CollectionChanged
@@ -156,10 +156,10 @@ public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCo
     /// Determines whether an element is in the list.
     /// <br/>O(1) operation.
     /// </summary>
-    /// <param name="value">The value to locate in the list.</param>
-    /// <returns>true if value is found in the list.</returns>
-    public bool Contains(T value)
-        => value is not null && this.objectToGoshujin(value) == this.goshujin && this.objectToLink(value).IsLinked;
+    /// <param name="obj">The object to locate in the list.</param>
+    /// <returns>true if <paramref name="obj"/> is found in the list.</returns>
+    public bool Contains(T obj)
+        => obj is not null && this.objectToGoshujin(obj) == this.goshujin && this.objectToLink(obj).IsLinked;
 
     /// <summary>
     /// Copies all linked objects to the destination array in enumeration order.
@@ -391,7 +391,7 @@ public class ObservableChain<T> : IReadOnlyCollection<T>, ICollection, INotifyCo
 
     // Update links after the storage mutation and before either notification. A subscriber
     // may inspect the links or throw; neither case may leave the chain inconsistent.
-    private sealed class LinkedObservableCollection(ObjectToLinkDelegete objectToLink) : ObservableCollection<T>
+    private sealed class LinkedObservableCollection(ObjectToLinkDelegate objectToLink) : ObservableCollection<T>
     {
         private static readonly PropertyChangedEventArgs CountChanged = new(nameof(Count));
         private static readonly PropertyChangedEventArgs IndexerChanged = new("Item[]");

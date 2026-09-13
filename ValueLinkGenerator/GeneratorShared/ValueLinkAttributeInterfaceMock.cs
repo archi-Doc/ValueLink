@@ -87,17 +87,17 @@ public sealed class ValueLinkObjectAttributeMock : Attribute
     /// <summary>
     /// Gets or sets a string value which represents the class name of Goshujin (Owner class) [the default is "GoshujinClass"].
     /// </summary>
-    public string GoshujinClass { get; set; } = string.Empty;
+    public string GoshujinClassName { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets a string value which represents the instance name of Goshujin (Owner class) [the default is "Goshujin"].
     /// </summary>
-    public string GoshujinInstance { get; set; } = string.Empty;
+    public string GoshujinPropertyName { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets a string value which represents the explicit name of INotifyPropertyChanged.PropertyChanged event [the default is "PropertyChanged"].
     /// </summary>
-    public string ExplicitPropertyChanged { get; set; } = string.Empty;
+    public string PropertyChangedEventName { get; set; } = string.Empty;
 
     public IsolationLevel Isolation { get; set; } = IsolationLevel.None;
 
@@ -114,22 +114,22 @@ public sealed class ValueLinkObjectAttributeMock : Attribute
         var attribute = new ValueLinkObjectAttributeMock();
         object? val;
 
-        val = AttributeHelper.GetValue(-1, nameof(GoshujinClass), constructorArguments, namedArguments);
+        val = AttributeHelper.GetValue(-1, nameof(GoshujinClassName), constructorArguments, namedArguments);
         if (val != null)
         {
-            attribute.GoshujinClass = (string)val;
+            attribute.GoshujinClassName = (string)val;
         }
 
-        val = AttributeHelper.GetValue(-1, nameof(GoshujinInstance), constructorArguments, namedArguments);
+        val = AttributeHelper.GetValue(-1, nameof(GoshujinPropertyName), constructorArguments, namedArguments);
         if (val != null)
         {
-            attribute.GoshujinInstance = (string)val;
+            attribute.GoshujinPropertyName = (string)val;
         }
 
-        val = AttributeHelper.GetValue(-1, nameof(ExplicitPropertyChanged), constructorArguments, namedArguments);
+        val = AttributeHelper.GetValue(-1, nameof(PropertyChangedEventName), constructorArguments, namedArguments);
         if (val != null)
         {
-            attribute.ExplicitPropertyChanged = (string)val;
+            attribute.PropertyChangedEventName = (string)val;
         }
 
         val = AttributeHelper.GetValue(-1, nameof(Isolation), constructorArguments, namedArguments);
@@ -182,14 +182,14 @@ public sealed class LinkAttributeMock : Attribute
 
     public ValueLinkAccessibility Accessibility { get; set; } = ValueLinkAccessibility.PublicGetter;
 
-    public bool AddValue { get; set; } = false;
+    public bool GenerateValue { get; set; } = false;
 
     public LinkAttributeMock(bool rectricted)
     {
         if (rectricted)
         {
             this.Accessibility = ValueLinkAccessibility.Private;
-            this.AddValue = false;
+            this.GenerateValue = false;
         }
     }
 
@@ -252,10 +252,10 @@ public sealed class LinkAttributeMock : Attribute
             attribute.UnsafeTargetChain = (string)val;
         }
 
-        val = AttributeHelper.GetValue(-1, nameof(AddValue), constructorArguments, namedArguments);
+        val = AttributeHelper.GetValue(-1, nameof(GenerateValue), constructorArguments, namedArguments);
         if (val != null)
         {
-            attribute.AddValue = (bool)val;
+            attribute.GenerateValue = (bool)val;
         }
 
         return attribute;

@@ -5,7 +5,7 @@ namespace ValueLink;
 /// <summary>
 /// Tests whether a repeatable-read object is a committed, current instance.
 /// </summary>
-public static class RepeatableReadExtension
+public static class RepeatableReadObjectStateExtensions
 {
     /// <summary>
     /// Determines whether the record is a committed, current instance.

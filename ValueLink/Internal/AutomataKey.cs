@@ -3,7 +3,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace Arc.Visceral;
+namespace ValueLink.Internal;
 
 /// <summary>
 /// Reads fixed-size byte keys used by generated name dispatch code.

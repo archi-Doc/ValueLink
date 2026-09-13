@@ -86,7 +86,7 @@ internal class Automata<TObj, TMember>
             ssb.AppendLine("goto SkipLabel;");
         }
 
-        ssb.AppendLine("key = global::Arc.Visceral.AutomataKey.GetKey(ref utf8);");
+        ssb.AppendLine("key = global::ValueLink.Internal.AutomataKey.GetKey(ref utf8);");
 
         this.GenerateCore(ssb, info);
 
@@ -117,7 +117,7 @@ internal class Automata<TObj, TMember>
         {
             var x = childrenNexts[0];
             ssb.AppendLine($"if (key != 0x{x.Key:X}) goto SkipLabel;");
-            ssb.AppendLine("key = global::Arc.Visceral.AutomataKey.GetKey(ref utf8);");
+            ssb.AppendLine("key = global::ValueLink.Internal.AutomataKey.GetKey(ref utf8);");
             this.GenerateCore(ssb, info, x);
             return;
         }
@@ -129,7 +129,7 @@ internal class Automata<TObj, TMember>
             firstFlag = false;
             using (var c = ssb.ScopeBrace(condition))
             {
-                ssb.AppendLine("key = global::Arc.Visceral.AutomataKey.GetKey(ref utf8);");
+                ssb.AppendLine("key = global::ValueLink.Internal.AutomataKey.GetKey(ref utf8);");
                 this.GenerateCore(ssb, info, x);
             }
         }

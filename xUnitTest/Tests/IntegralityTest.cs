@@ -160,7 +160,7 @@ public class IntegralityTest
     [Fact]
     public void ZeroIterationLimitDoesNotReportAnAttempt()
     {
-        var engine = new SimpleIntegralityClass.Integrality { MaxItems = 10, RemoveIfItemNotFound = false, MaxIntegrationCount = 0 };
+        var engine = new SimpleIntegralityClass.Integrality { MaxItems = 10, RemoveIfItemNotFound = false, MaxIterationCount = 0 };
         var target = new SimpleIntegralityClass.GoshujinClass();
         target.Add(new(1, "A"));
         var result = engine.IntegrateForTest(new SimpleIntegralityClass.GoshujinClass(), target);
@@ -170,7 +170,7 @@ public class IntegralityTest
 
     [Theory]
     [InlineData(255)]
-    [InlineData((byte)IntegralityState.GetResponse)]
+    [InlineData((byte)IntegralityPacketType.GetResponse)]
     public async Task InvalidGetResponseIsReportedAsInvalidData(byte state)
     {
         var engine = SimpleIntegralityClass.Integrality.Instance10;
@@ -193,7 +193,7 @@ public class IntegralityTest
         }
 
         byte[] probe = new byte[1 + sizeof(ulong)];
-        probe[0] = (byte)IntegralityState.Probe;
+        probe[0] = (byte)IntegralityPacketType.Probe;
         var packet = engine.Differentiate(target, probe);
         try
         {

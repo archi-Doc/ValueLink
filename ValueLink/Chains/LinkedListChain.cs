@@ -23,14 +23,14 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
     /// </summary>
     /// <param name="obj">The object whose link or owner is requested.</param>
     /// <returns>The object's owner, or null when unowned.</returns>
-    public delegate IGoshujin? ObjectToGoshujinDelegete(T obj);
+    public delegate IGoshujin? ObjectToGoshujinDelegate(T obj);
 
     /// <summary>
     /// Returns a reference to an object's link for this chain.
     /// </summary>
     /// <param name="obj">The object whose link or owner is requested.</param>
     /// <returns>A reference to the object's link for this chain.</returns>
-    public delegate ref Link ObjectToLinkDelegete(T obj);
+    public delegate ref Link ObjectToLinkDelegate(T obj);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="LinkedListChain{T}"/> class (Doubly linked list).
@@ -38,7 +38,7 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
     /// <param name="goshujin">The instance of Goshujin.</param>
     /// <param name="objectToGoshujin">A delegate that returns an object's owner.</param>
     /// <param name="objectToLink">A delegate that returns a reference to this chain's link.</param>
-    public LinkedListChain(IGoshujin goshujin, ObjectToGoshujinDelegete objectToGoshujin, ObjectToLinkDelegete objectToLink)
+    public LinkedListChain(IGoshujin goshujin, ObjectToGoshujinDelegate objectToGoshujin, ObjectToLinkDelegate objectToLink)
     {
         this.goshujin = goshujin;
         this.objectToGoshujin = objectToGoshujin;
@@ -119,7 +119,8 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
     /// If already present in the list, do not change its position.
     /// </summary>
     /// <param name="obj">The new object to add at the start of the list.</param>
-    public void TryAddFirst(T obj)
+    /// <returns><see langword="true"/> if the object was added; <see langword="false"/> if it was already linked.</returns>
+    public bool TryAddFirst(T obj)
     {
         if (this.objectToGoshujin(obj) != this.goshujin)
         {// Check Goshujin
@@ -127,10 +128,13 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
         }
 
         ref Link link = ref this.objectToLink(obj);
-        if (link.Node is null)
+        if (link.Node is not null)
         {
-            link.Node = this.chain.AddFirst(obj);
+            return false;
         }
+
+        link.Node = this.chain.AddFirst(obj);
+        return true;
     }
 
     /// <summary>
@@ -138,7 +142,8 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
     /// If already present in the list, do not change its position.
     /// </summary>
     /// <param name="obj">The new object that will be added to the end of the list.</param>
-    public void TryAddLast(T obj)
+    /// <returns><see langword="true"/> if the object was added; <see langword="false"/> if it was already linked.</returns>
+    public bool TryAddLast(T obj)
     {
         if (this.objectToGoshujin(obj) != this.goshujin)
         {// Check Goshujin
@@ -146,10 +151,13 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
         }
 
         ref Link link = ref this.objectToLink(obj);
-        if (link.Node is null)
+        if (link.Node is not null)
         {
-            link.Node = this.chain.AddLast(obj);
+            return false;
         }
+
+        link.Node = this.chain.AddLast(obj);
+        return true;
     }
 
     /// <summary>
@@ -242,17 +250,17 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
     public T? Last => this.chain.Last == null ? default(T) : this.chain.Last.Value;
 
     /// <summary>
-    /// Finds the first node that contains the specified value.
+    /// Finds the first object equal to the specified object.
     /// <br/>O(n) operation.
     /// </summary>
-    /// <param name="value">The value to locate in the list.</param>
-    /// <returns>The first object that contains the specified value, if found; otherwise, null.</returns>
-    public T? Find(T value)
+    /// <param name="obj">The object to locate in the list.</param>
+    /// <returns>The first object equal to <paramref name="obj"/>, if found; otherwise, null.</returns>
+    public T? Find(T obj)
     {
         var comparer = EqualityComparer<T>.Default;
         foreach (var x in this.chain)
         {
-            if (comparer.Equals(x, value))
+            if (comparer.Equals(x, obj))
             {
                 return x;
             }
@@ -262,8 +270,8 @@ public class LinkedListChain<T> : IReadOnlyCollection<T>, ICollection
     }
 
     private IGoshujin goshujin;
-    private ObjectToGoshujinDelegete objectToGoshujin;
-    private ObjectToLinkDelegete objectToLink;
+    private ObjectToGoshujinDelegate objectToGoshujin;
+    private ObjectToLinkDelegate objectToLink;
     private UnorderedLinkedList<T> chain = new();
 
     /// <summary>

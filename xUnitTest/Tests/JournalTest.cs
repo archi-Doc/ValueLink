@@ -514,7 +514,7 @@ public class JournalTest
         g2.ObjectEquals(g3).IsTrue();
 
         ((IRepeatableReadSemaphore)g2).State.Is(GoshujinState.Valid);
-        ((IRepeatableReadSemaphore)g2).SemaphoreCount.Is(0);
+        ((IRepeatableReadSemaphore)g2).AcquisitionCount.Is(0);
 
         var bin = TinyhandSerializer.Serialize(g2);
         ((IRepeatableReadSemaphore)g2).State.Is(GoshujinState.Valid);

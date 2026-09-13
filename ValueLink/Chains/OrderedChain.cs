@@ -25,14 +25,14 @@ public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     /// </summary>
     /// <param name="obj">The object whose link or owner is requested.</param>
     /// <returns>The object's owner, or null when unowned.</returns>
-    public delegate IGoshujin? ObjectToGoshujinDelegete(TObj obj);
+    public delegate IGoshujin? ObjectToGoshujinDelegate(TObj obj);
 
     /// <summary>
     /// Returns a reference to an object's link for this chain.
     /// </summary>
     /// <param name="obj">The object whose link or owner is requested.</param>
     /// <returns>A reference to the object's link for this chain.</returns>
-    public delegate ref Link ObjectToLinkDelegete(TObj obj);
+    public delegate ref Link ObjectToLinkDelegate(TObj obj);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="OrderedChain{TKey, TObj}"/> class (OrderedMultiMap).
@@ -41,13 +41,13 @@ public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     /// <param name="objectToGoshujin">A delegate that returns an object's owner.</param>
     /// <param name="objectToLink">A delegate that returns a reference to this chain's link.</param>
     /// <param name="reverse">true to reverses the order.</param>
-    public OrderedChain(IGoshujin goshujin, ObjectToGoshujinDelegete objectToGoshujin, ObjectToLinkDelegete objectToLink, bool reverse = false)
+    public OrderedChain(IGoshujin goshujin, ObjectToGoshujinDelegate objectToGoshujin, ObjectToLinkDelegate objectToLink, bool reverse = false)
     {
         this.chain = new(reverse);
         this.goshujin = goshujin;
         this.objectToGoshujin = objectToGoshujin;
         this.objectToLink = objectToLink;
-        this.Reverse = reverse;
+        this.IsReversed = reverse;
     }
 
     /// <summary>
@@ -223,7 +223,7 @@ public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     /// <summary>
     /// Gets the key-object pairs in chain enumeration order.
     /// </summary>
-    public IEnumerable<KeyValuePair<TKey, TObj>> KeyObjects => this.chain;
+    public IEnumerable<KeyValuePair<TKey, TObj>> KeyObjectPairs => this.chain;
 
     /// <summary>
     /// Determines whether the chain contains an element with the specified key.
@@ -288,11 +288,11 @@ public class OrderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     /// <summary>
     /// Gets a value indicating whether or not the collection is in reverse order.
     /// </summary>
-    public bool Reverse { get; }
+    public bool IsReversed { get; }
 
     private IGoshujin goshujin;
-    private ObjectToGoshujinDelegete objectToGoshujin;
-    private ObjectToLinkDelegete objectToLink;
+    private ObjectToGoshujinDelegate objectToGoshujin;
+    private ObjectToLinkDelegate objectToLink;
     private OrderedMultiMap<TKey, TObj> chain;
 
     /// <summary>

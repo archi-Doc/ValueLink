@@ -61,7 +61,7 @@ public class AllocationBenchmark
 [ValueLinkObject]
 public partial class AllocationItem
 {
-    [Link(Type = ChainType.Ordered, AddValue = true, AutoNotify = true, AutoLink = false)]
+    [Link(Type = ChainType.Ordered, GenerateValue = true, AutoNotify = true, AutoLink = false)]
     public int Value { get; set; }
 
     [Link(Type = ChainType.List, Name = "Items", Primary = true)]
