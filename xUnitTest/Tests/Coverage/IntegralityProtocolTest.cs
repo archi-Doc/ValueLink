@@ -26,10 +26,10 @@ public class IntegralityProtocolTest
     {
         Parallel.For(0, 100, _ =>
         {
-            var packet = expected == IntegralityResult.Incomplete ? IntegralityResultHelper.Incomplete : IntegralityResultHelper.InvalidData;
+            var packet = expected == IntegralityResult.Incomplete ? IntegralityResultHelper.IncompleteMemory : IntegralityResultHelper.InvalidDataMemory;
             try
             {
-                IntegralityResultHelper.ParseMemoryAndResult(packet, out var result);
+                IntegralityResultHelper.ParseResult(packet, out var result);
                 Assert.Equal(expected, result);
             }
             finally
@@ -46,7 +46,7 @@ public class IntegralityProtocolTest
         var memory = BytePool.RentedArray.CreateFrom(new[] { (byte)expected }).AsMemory();
         try
         {
-            IntegralityResultHelper.ParseMemoryAndResult(memory, out var result);
+            IntegralityResultHelper.ParseResult(memory, out var result);
             Assert.Equal(expected, result);
         }
         finally
@@ -60,7 +60,7 @@ public class IntegralityProtocolTest
         Assert.Equal(0, empty.IterationCount);
         Assert.True(new IntegralityResultAndCount(expected, 1, 1, 0).IsModified);
         Assert.True(new IntegralityResultAndCount(expected, 1, 0, 1).IsModified);
-        IntegralityResultHelper.ParseMemoryAndResult(default, out var invalid);
+        IntegralityResultHelper.ParseResult(default, out var invalid);
         Assert.Equal(IntegralityResult.InvalidData, invalid);
     }
 
@@ -74,7 +74,7 @@ public class IntegralityProtocolTest
         var response = Engine().Differentiate(owner, new byte[length]);
         try
         {
-            IntegralityResultHelper.ParseMemoryAndResult(response, out var result);
+            IntegralityResultHelper.ParseResult(response, out var result);
             Assert.Equal(IntegralityResult.InvalidData, result);
             Assert.Single(owner);
         }
@@ -86,8 +86,8 @@ public class IntegralityProtocolTest
 
     [Theory]
     [InlineData(255, 2)]
-    [InlineData((byte)IntegralityState.ProbeResponse, 2)]
-    [InlineData((byte)IntegralityState.ProbeResponse, 8)]
+    [InlineData((byte)IntegralityPacketType.ProbeResponse, 2)]
+    [InlineData((byte)IntegralityPacketType.ProbeResponse, 8)]
     public async Task MalformedProbeResponsesDoNotChangeOwnedObjects(byte state, int length)
     {
         var owner = Create(1);
@@ -128,7 +128,7 @@ public class IntegralityProtocolTest
     public void GetResponseHonorsTheExactPacketSizeBoundary()
     {
         var target = Create(1);
-        byte[] request = [(byte)IntegralityState.Get, 0, 0, 0, 0];
+        byte[] request = [(byte)IntegralityPacketType.Get, 0, 0, 0, 0];
         var full = Engine().Differentiate(target, request);
         try
         {
@@ -145,7 +145,7 @@ public class IntegralityProtocolTest
             var shortPacket = Engine(full.Length - 1).Differentiate(target, request);
             try
             {
-                IntegralityResultHelper.ParseMemoryAndResult(shortPacket, out var result);
+                IntegralityResultHelper.ParseResult(shortPacket, out var result);
                 Assert.Equal(IntegralityResult.Incomplete, result);
             }
             finally
@@ -171,9 +171,9 @@ public class IntegralityProtocolTest
             Assert.Equal(TestContext.Current.CancellationToken, token);
             calls++;
             var response = engine.Differentiate(target, request);
-            if (request.Span[0] == (byte)IntegralityState.Get)
+            if (request.Span[0] == (byte)IntegralityPacketType.Get)
             {
-                Assert.InRange(response.Length, 2, engine.MaxMemoryLength);
+                Assert.InRange(response.Length, 2, engine.MaxResponseLength);
             }
 
             return Task.FromResult(response);
@@ -234,7 +234,7 @@ public class IntegralityProtocolTest
         {
             calls++;
             return Task.FromResult(calls == 3
-                ? IntegralityResultHelper.InvalidData
+                ? IntegralityResultHelper.InvalidDataMemory
                 : engine.Differentiate(target, request));
         }, TestContext.Current.CancellationToken);
 
@@ -249,8 +249,8 @@ public class IntegralityProtocolTest
     {
         MaxItems = 500,
         RemoveIfItemNotFound = removeMissing,
-        MaxMemoryLength = maxMemory,
-        MaxIntegrationCount = 100,
+        MaxResponseLength = maxMemory,
+        MaxIterationCount = 100,
     };
 
     private static SimpleIntegralityClass.GoshujinClass Create(int count)

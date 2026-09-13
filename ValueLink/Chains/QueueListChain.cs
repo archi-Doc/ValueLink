@@ -24,14 +24,14 @@ public class QueueListChain<T> : IReadOnlyCollection<T>, ICollection
     /// </summary>
     /// <param name="obj">The object whose link or owner is requested.</param>
     /// <returns>The object's owner, or null when unowned.</returns>
-    public delegate IGoshujin? ObjectToGoshujinDelegete(T obj);
+    public delegate IGoshujin? ObjectToGoshujinDelegate(T obj);
 
     /// <summary>
     /// Returns a reference to an object's link for this chain.
     /// </summary>
     /// <param name="obj">The object whose link or owner is requested.</param>
     /// <returns>A reference to the object's link for this chain.</returns>
-    public delegate ref Link ObjectToLinkDelegete(T obj);
+    public delegate ref Link ObjectToLinkDelegate(T obj);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="QueueListChain{T}"/> class (Doubly linked list).
@@ -39,7 +39,7 @@ public class QueueListChain<T> : IReadOnlyCollection<T>, ICollection
     /// <param name="goshujin">The instance of Goshujin.</param>
     /// <param name="objectToGoshujin">A delegate that returns an object's owner.</param>
     /// <param name="objectToLink">A delegate that returns a reference to this chain's link.</param>
-    public QueueListChain(IGoshujin goshujin, ObjectToGoshujinDelegete objectToGoshujin, ObjectToLinkDelegete objectToLink)
+    public QueueListChain(IGoshujin goshujin, ObjectToGoshujinDelegate objectToGoshujin, ObjectToLinkDelegate objectToLink)
     {
         this.goshujin = goshujin;
         this.objectToGoshujin = objectToGoshujin;
@@ -179,7 +179,8 @@ public class QueueListChain<T> : IReadOnlyCollection<T>, ICollection
     /// If already present in the queue, do not change its position.
     /// </summary>
     /// <param name="obj">The object to add to the <see cref="QueueListChain{T}"/>. </param>
-    public void TryEnqueue(T obj)
+    /// <returns><see langword="true"/> if the object was added; <see langword="false"/> if it was already linked.</returns>
+    public bool TryEnqueue(T obj)
     {
         if (this.objectToGoshujin(obj) != this.goshujin)
         {// Check Goshujin
@@ -187,10 +188,13 @@ public class QueueListChain<T> : IReadOnlyCollection<T>, ICollection
         }
 
         ref Link link = ref this.objectToLink(obj);
-        if (link.Node is null)
+        if (link.Node is not null)
         {
-            link.Node = this.chain.AddLast(obj);
+            return false;
         }
+
+        link.Node = this.chain.AddLast(obj);
+        return true;
     }
 
     /// <summary>
@@ -266,8 +270,8 @@ public class QueueListChain<T> : IReadOnlyCollection<T>, ICollection
     }
 
     private IGoshujin goshujin;
-    private ObjectToGoshujinDelegete objectToGoshujin;
-    private ObjectToLinkDelegete objectToLink;
+    private ObjectToGoshujinDelegate objectToGoshujin;
+    private ObjectToLinkDelegate objectToLink;
     private UnorderedLinkedList<T> chain = new();
 
     /// <summary>

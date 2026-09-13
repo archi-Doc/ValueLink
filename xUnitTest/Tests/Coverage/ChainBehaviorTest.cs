@@ -22,8 +22,8 @@ public class ChainBehaviorTest
         var items = Enumerable.Range(0, 4).Select(x => new ChainItem(x) { Goshujin = owner }).ToArray();
         var queue = owner.QueueChain;
         var stack = owner.StackChain;
-        queue.TryEnqueue(items[0]);
-        stack.TryPush(items[0]);
+        Assert.False(queue.TryEnqueue(items[0]));
+        Assert.False(stack.TryPush(items[0]));
         Assert.Same(items[0], queue.Peek());
         Assert.Same(items[3], stack.Peek());
         queue.Enqueue(items[0], ref items[0].QueueLink);
@@ -45,10 +45,10 @@ public class ChainBehaviorTest
             Assert.False(removed.StackLink.IsLinked);
         }
 
-        queue.TryEnqueue(items[0]);
+        Assert.True(queue.TryEnqueue(items[0]));
         Assert.True(queue.TryDequeue(out var last));
         Assert.Same(items[0], last);
-        stack.TryPush(items[0]);
+        Assert.True(stack.TryPush(items[0]));
         Assert.Same(items[0], stack.Pop());
         Assert.False(queue.TryPeek(out var q));
         Assert.Null(q);
@@ -70,8 +70,8 @@ public class ChainBehaviorTest
         var owner = ChainContractTest.NewOwner();
         var items = Enumerable.Range(0, 4).Select(x => new ChainItem(x) { Goshujin = owner }).ToArray();
         var chain = owner.LinkedChain;
-        chain.TryAddFirst(items[2]);
-        chain.TryAddLast(items[0]);
+        Assert.False(chain.TryAddFirst(items[2]));
+        Assert.False(chain.TryAddLast(items[0]));
         Assert.Equal(items, chain);
         chain.AddFirst(items[3]);
         chain.AddLast(items[0], ref items[0].LinkedLink);
@@ -93,8 +93,8 @@ public class ChainBehaviorTest
         Assert.Same(items[2], items[3].LinkedLink.Next);
         Assert.Same(items[3], items[2].LinkedLink.Previous);
         chain.Clear();
-        chain.TryAddFirst(items[0]);
-        chain.TryAddLast(items[1]);
+        Assert.True(chain.TryAddFirst(items[0]));
+        Assert.True(chain.TryAddLast(items[1]));
         Assert.Equal(items.Take(2), chain);
     }
 
@@ -105,8 +105,8 @@ public class ChainBehaviorTest
         var items = new[] { 5, 1, 3, 3, 9 }.Select(x => new ChainItem(x) { Goshujin = owner }).ToArray();
         Assert.Equal(new[] { 1, 3, 3, 5, 9 }, owner.OrderedChain.Keys);
         Assert.Equal(new[] { 9, 5, 3, 3, 1 }, owner.ReverseChain.Keys);
-        Assert.False(owner.OrderedChain.Reverse);
-        Assert.True(owner.ReverseChain.Reverse);
+        Assert.False(owner.OrderedChain.IsReversed);
+        Assert.True(owner.ReverseChain.IsReversed);
         Assert.Equal(2, owner.OrderedChain.Enumerate(3).Count());
         Assert.Equal(2, owner.HashChain.Enumerate(3).Count());
         Assert.Equal(5, owner.OrderedChain.GetLowerBound(4)!.Id);
@@ -118,9 +118,9 @@ public class ChainBehaviorTest
         Assert.Equal(5, range.Upper!.Id);
         Assert.Equal((null, null), owner.OrderedChain.GetRange(6, 8));
         Assert.Equal(owner.OrderedChain, owner.OrderedChain.Objects);
-        Assert.Equal(owner.OrderedChain.Keys, owner.OrderedChain.KeyObjects.Select(x => x.Key));
+        Assert.Equal(owner.OrderedChain.Keys, owner.OrderedChain.KeyObjectPairs.Select(x => x.Key));
         Assert.Equal(owner.HashChain, owner.HashChain.Objects);
-        Assert.Equal(owner.HashChain.Keys, owner.HashChain.KeyObjects.Select(x => x.Key));
+        Assert.Equal(owner.HashChain.Keys, owner.HashChain.KeyObjectPairs.Select(x => x.Key));
         Assert.True(owner.HashChain.TryGetValue(5, out var found));
         Assert.Same(items[0], found);
         Assert.False(owner.OrderedChain.TryGetValue(0, out found));
@@ -213,20 +213,20 @@ public class ChainBehaviorTest
         Assert.False(chain.Add(items[0]));
         Assert.True(chain.Remove(items[1]));
         Assert.Equal(3, chain.Count);
-        Assert.Equal(4, chain.Consumed);
+        Assert.Equal(4, chain.UsedSlotCount);
         Assert.False(chain.Resize(2));
         Assert.Equal(4, chain.Capacity);
-        Assert.True(chain.Set(start + 1, items[4]));
-        Assert.True(chain.Set(start + 2, items[5]));
+        Assert.True(chain.TrySet(start + 1, items[4]));
+        Assert.True(chain.TrySet(start + 2, items[5]));
         Assert.False(items[2].SlidingLink.IsLinked);
-        Assert.False(chain.Set(start - 1, items[2]));
+        Assert.False(chain.TrySet(start - 1, items[2]));
         Assert.True(chain.Resize(8));
-        Assert.Same(items[4], chain.Get(start + 1));
+        Assert.Same(items[4], chain.GetOrDefault(start + 1));
         Assert.Equal(start + 1, items[4].SlidingLink.Position);
-        Assert.Same(items[5], chain.Get(start + 2));
+        Assert.Same(items[5], chain.GetOrDefault(start + 2));
         Assert.True(chain.Remove(items[0]));
         Assert.Equal(start + 1, chain.StartPosition);
-        Assert.Same(items[4], chain.FirstOrDefault);
+        Assert.Same(items[4], chain.First);
         Assert.True(chain.Add(items[2], ref items[2].SlidingLink));
         Assert.Equal(4, chain.Count);
     }

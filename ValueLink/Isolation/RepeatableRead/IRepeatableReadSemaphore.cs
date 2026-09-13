@@ -8,7 +8,7 @@ namespace ValueLink;
 /// Tracks active writers and the release state of a repeatable-read owner.
 /// </summary>
 /// <remarks>
-/// Hold LockObject when calling methods without a LockAnd prefix or changing State or SemaphoreCount directly.
+/// Hold LockObject when calling methods without a LockAnd prefix or changing State or AcquisitionCount directly.
 /// </remarks>
 public interface IRepeatableReadSemaphore
 {
@@ -25,7 +25,7 @@ public interface IRepeatableReadSemaphore
     /// <summary>
     /// Gets or sets the active acquisition count while holding LockObject.
     /// </summary>
-    public int SemaphoreCount { get; set; } // Lock:LockObject
+    public int AcquisitionCount { get; set; } // Lock:LockObject
 
     /// <summary>
     /// Gets a value indicating whether the owner still accepts acquisitions.
@@ -37,7 +37,7 @@ public interface IRepeatableReadSemaphore
     /// Gets a value indicating whether the owner is valid and has no active acquisitions.
     /// </summary>
     public bool CanRelease
-        => this.State == GoshujinState.Valid && this.SemaphoreCount == 0;
+        => this.State == GoshujinState.Valid && this.AcquisitionCount == 0;
 
     /// <summary>
     /// Acquires at most one reference for this counter, or releases it if the owner is invalid.
@@ -48,7 +48,7 @@ public interface IRepeatableReadSemaphore
     {
         if (!this.IsValid)
         {// Invalid (Releasing/Obsolete)
-            this.SemaphoreCount -= count;
+            this.AcquisitionCount -= count;
             count = 0;
             return false;
         }
@@ -58,7 +58,7 @@ public interface IRepeatableReadSemaphore
         }
         else
         {// Acquire 1
-            this.SemaphoreCount++;
+            this.AcquisitionCount++;
             count = 1;
             return true;
         }
@@ -76,7 +76,7 @@ public interface IRepeatableReadSemaphore
         }
         else
         {// Acquire 1
-            this.SemaphoreCount++;
+            this.AcquisitionCount++;
             return true;
         }
     }
@@ -98,7 +98,7 @@ public interface IRepeatableReadSemaphore
     /// </summary>
     public void ReleaseOne()
     {
-        this.SemaphoreCount--;
+        this.AcquisitionCount--;
     }
 
     /// <summary>
@@ -118,7 +118,7 @@ public interface IRepeatableReadSemaphore
     /// <param name="count">The count of resources acquired.</param>
     public void Release(ref int count)
     {
-        this.SemaphoreCount -= count;
+        this.AcquisitionCount -= count;
         count = 0;
     }
 
@@ -155,7 +155,7 @@ public interface IRepeatableReadSemaphore
             else
             {// Valid
                 this.State = GoshujinState.Releasing;
-                if (this.SemaphoreCount > 0)
+                if (this.AcquisitionCount > 0)
                 {// Acquired
                 }
                 else
@@ -185,7 +185,7 @@ public interface IRepeatableReadSemaphore
     /// <summary>
     /// Locks the owner and marks it as releasing without waiting for acquisitions to finish.
     /// </summary>
-    public void LockAndForceRelease()
+    public void LockAndSetReleasing()
     {
         using (this.LockObject.EnterScope())
         {

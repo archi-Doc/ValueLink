@@ -5,7 +5,7 @@ namespace ValueLink.Integrality;
 /// <summary>
 /// Exposes synchronization limits and validation to generated protocol handlers.
 /// </summary>
-public interface IIntegralityInternal
+public interface IIntegralityEngine
 {
     /// <summary>
     /// Gets the maximum number of items.
@@ -20,12 +20,12 @@ public interface IIntegralityInternal
     /// <summary>
     /// Gets the maximum byte length of an object-response packet.
     /// </summary>
-    int MaxMemoryLength { get; }
+    int MaxResponseLength { get; }
 
     /// <summary>
-    /// Gets the maximum integration count.
+    /// Gets the maximum number of object-request iterations after the initial probe.
     /// </summary>
-    int MaxIntegrationCount { get; }
+    int MaxIterationCount { get; }
 
     /// <summary>
     /// Validate the new item. If the method returns <see langword="true"/>, the item is added to the collection.<br/>

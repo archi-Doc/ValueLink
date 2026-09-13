@@ -17,7 +17,7 @@ namespace xUnitTest;
 [TinyhandObject]
 public partial record TestStruct : IEquatable<TestStruct>
 {
-    [Link(Type = ChainType.Ordered, AddValue = true)]
+    [Link(Type = ChainType.Ordered, GenerateValue = true)]
     [MemberNameAsKey]
     private int Id;
 

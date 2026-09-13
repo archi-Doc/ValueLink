@@ -25,7 +25,7 @@ namespace ValueLink;
 /// <remarks>
 /// Owner access is synchronized; data retrieval and locking are delegated to each adapter. Direct chain access still requires the owner lock.
 /// </remarks>
-public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : IReadCommittedSemaphore
+public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : IReadCommittedLockProvider
     where TData : notnull
     where TObject : class, IValueLinkObjectInternal<TGoshujin, TObject>, IDataLocker<TData>
     where TGoshujin : ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin>, IGoshujin
@@ -89,7 +89,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
                 return;
             }
 
-            if (((IGoshujin)this).GetEnumerableInternal() is IEnumerable<TObject> enumerable)
+            if (((IGoshujin)this).EnumerateObjects() is IEnumerable<TObject> enumerable)
             {
                 foreach (var x in enumerable)
                 {
@@ -104,8 +104,8 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
     /// </summary>
     /// <param name="key">The key of the object to find.</param>
     /// <param name="acquisitionMode">The data acquisition mode specifying get, create, or get-or-create behavior.</param>
-    /// <returns>The object if found; otherwise, <c>null</c>.</returns>
-    public TObject? Find(TKey key, AcquisitionMode acquisitionMode = AcquisitionMode.GetOnly)
+    /// <returns>The existing or newly created object; <c>null</c> if the acquisition mode does not permit it or the goshujin is invalid.</returns>
+    public TObject? GetObject(TKey key, AcquisitionMode acquisitionMode = AcquisitionMode.GetOnly)
     {
         using (this.LockObject.EnterScope())
         {
@@ -157,7 +157,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
     /// A <see cref="ValueTask{TData}"/> containing the data if available; otherwise, its default value.
     /// </returns>
     public ValueTask<TData?> TryGet(TKey key, CancellationToken cancellationToken = default)
-        => this.TryGet(key, ValueLinkGlobal.LockTimeout, cancellationToken);
+        => this.TryGet(key, ValueLinkSettings.LockTimeout, cancellationToken);
 
     /// <summary>
     /// Retrieves data through the matching adapter without retaining a data lock.
@@ -199,7 +199,7 @@ public abstract class ReadCommittedGoshujin<TKey, TData, TObject, TGoshujin> : I
     /// An asynchronous <see cref="DataScope{TData}"/> acquisition containing the result and the locked data if successful.
     /// </returns>
     public ValueTask<DataScope<TData>> TryLock(TKey key, AcquisitionMode acquisitionMode, CancellationToken cancellationToken = default)
-        => this.TryLock(key, acquisitionMode, ValueLinkGlobal.LockTimeout, cancellationToken);
+        => this.TryLock(key, acquisitionMode, ValueLinkSettings.LockTimeout, cancellationToken);
 
     /// <summary>
     /// Attempts to acquire a lock on the object matching the specified key, with the specified lock mode.
@@ -339,7 +339,7 @@ Retry:
                 return [];
             }
 
-            if (((IGoshujin)this).GetEnumerableInternal() is IEnumerable<TObject> enumerable)
+            if (((IGoshujin)this).EnumerateObjects() is IEnumerable<TObject> enumerable)
             {
                 return enumerable.ToArray();
             }
@@ -389,7 +389,7 @@ Retry:
 
             if (this is IGoshujin goshujin)
             {
-                if (goshujin.GetEnumerableInternal() is IEnumerable<TObject> enumerable)
+                if (goshujin.EnumerateObjects() is IEnumerable<TObject> enumerable)
                 {
                     array = enumerable.ToArray();
                 }

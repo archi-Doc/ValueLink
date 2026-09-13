@@ -65,8 +65,8 @@ public interface IRepeatableReadObject<TWriter>
     /// </summary>
     /// <param name="semaphore">The owner acquisition counter, or null when the caller already owns the required reference.</param>
     /// <returns>A task yielding a disposable writer, or null on timeout or unavailable acquisition.</returns>
-    ValueTask<TWriter?> TryLockAsyncInternal(IRepeatableReadSemaphore? semaphore)
-        => this.TryLockAsyncInternal(semaphore, ValueLinkGlobal.LockTimeoutInMilliseconds, default);
+    ValueTask<TWriter?> TryLockInternalAsync(IRepeatableReadSemaphore? semaphore)
+        => this.TryLockInternalAsync(semaphore, ValueLinkSettings.LockTimeoutInMilliseconds, default);
 
     /// <summary>
     /// Asynchronously acquires a writer, returning null on timeout or invalid state. Cancellation while waiting propagates to the caller.
@@ -74,8 +74,8 @@ public interface IRepeatableReadObject<TWriter>
     /// <param name="semaphore">The owner acquisition counter, or null when the caller already owns the required reference.</param>
     /// <param name="millisecondsTimeout">The writer-wait timeout in milliseconds, or -1 to wait indefinitely.</param>
     /// <returns>A task yielding a disposable writer, or null on timeout or unavailable acquisition.</returns>
-    ValueTask<TWriter?> TryLockAsyncInternal(IRepeatableReadSemaphore? semaphore, int millisecondsTimeout)
-        => this.TryLockAsyncInternal(semaphore, millisecondsTimeout, default);
+    ValueTask<TWriter?> TryLockInternalAsync(IRepeatableReadSemaphore? semaphore, int millisecondsTimeout)
+        => this.TryLockInternalAsync(semaphore, millisecondsTimeout, default);
 
     /// <summary>
     /// Asynchronously acquires a writer, returning null on timeout or invalid state. Cancellation while waiting propagates to the caller.
@@ -84,7 +84,7 @@ public interface IRepeatableReadObject<TWriter>
     /// <param name="millisecondsTimeout">The writer-wait timeout in milliseconds, or -1 to wait indefinitely.</param>
     /// <param name="cancellationToken">The cancellation token to observe while waiting.</param>
     /// <returns>A task yielding a disposable writer, or null on timeout or unavailable acquisition.</returns>
-    public async ValueTask<TWriter?> TryLockAsyncInternal(IRepeatableReadSemaphore? semaphore, int millisecondsTimeout, CancellationToken cancellationToken)
+    public async ValueTask<TWriter?> TryLockInternalAsync(IRepeatableReadSemaphore? semaphore, int millisecondsTimeout, CancellationToken cancellationToken)
     {
         if (semaphore?.LockAndTryAcquireOne() == false)
         {

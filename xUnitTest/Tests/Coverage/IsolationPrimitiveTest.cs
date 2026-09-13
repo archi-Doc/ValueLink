@@ -28,7 +28,7 @@ public class IsolationPrimitiveTest
         Assert.Equal(initial == ObjectProtectionState.Unprotected, ObjectProtectionStateHelper.TryProtect(ref state));
         Assert.Equal(initial == ObjectProtectionState.Unprotected ? ObjectProtectionState.Protected : initial, (ObjectProtectionState)state);
         state = (byte)initial;
-        ObjectProtectionStateHelper.TryUnprotect(ref state);
+        ObjectProtectionStateHelper.Unprotect(ref state);
         Assert.Equal(initial == ObjectProtectionState.Protected ? ObjectProtectionState.Unprotected : initial, (ObjectProtectionState)state);
         state = (byte)initial;
         Assert.Equal(initial == ObjectProtectionState.Protected, ObjectProtectionStateHelper.TryMarkPendingDeletion(ref state));
@@ -71,7 +71,7 @@ public class IsolationPrimitiveTest
         Assert.False(scope.IsCreated);
         Assert.False(scope.IsRetrieved);
         scope.SetControlState(DataControlState.Pinned);
-        Assert.Equal(DataControlState.Default, scope.GetControlState());
+        Assert.Equal(DataControlState.None, scope.GetControlState());
         scope.Dispose();
         scope.Dispose();
         await scope.UnlockAndDelete();
@@ -92,9 +92,9 @@ public class IsolationPrimitiveTest
         Assert.Equal(DataControlState.Pinned | DataControlState.NotLockable, scope.GetControlState());
         scope.Dispose();
         scope.Dispose();
-        scope.SetControlState(DataControlState.Default);
+        scope.SetControlState(DataControlState.None);
         Assert.Equal(DataControlState.Pinned | DataControlState.NotLockable, backing.ControlState);
-        Assert.Equal(DataControlState.Default, scope.GetControlState());
+        Assert.Equal(DataControlState.None, scope.GetControlState());
         Assert.False(scope.IsValid);
         Assert.False(scope.IsCreated);
         Assert.False(scope.IsRetrieved);
@@ -130,13 +130,13 @@ public class IsolationPrimitiveTest
         Assert.True(semaphore.TryAcquire(ref acquired));
         Assert.True(semaphore.TryAcquire(ref acquired));
         Assert.Equal(1, acquired);
-        Assert.Equal(1, semaphore.SemaphoreCount);
+        Assert.Equal(1, semaphore.AcquisitionCount);
         Assert.False(semaphore.CanRelease);
         Assert.False(semaphore.LockAndTryRelease(out var state));
         Assert.Equal(GoshujinState.Releasing, state);
         Assert.False(semaphore.TryAcquire(ref acquired));
         Assert.Equal(0, acquired);
-        Assert.Equal(0, semaphore.SemaphoreCount);
+        Assert.Equal(0, semaphore.AcquisitionCount);
         Assert.False(semaphore.LockAndTryAcquireOne());
         semaphore.LockAndRelease(ref acquired);
         semaphore.SetObsolete();
@@ -154,11 +154,11 @@ public class IsolationPrimitiveTest
             Assert.True(semaphore.LockAndTryAcquireOne());
             semaphore.LockAndReleaseOne();
         });
-        Assert.Equal(0, semaphore.SemaphoreCount);
+        Assert.Equal(0, semaphore.AcquisitionCount);
         Assert.True(semaphore.LockAndTryRelease(out var state));
         Assert.Equal(GoshujinState.Releasing, state);
         Assert.False(semaphore.LockAndTryAcquireOne());
-        Assert.Equal(0, semaphore.SemaphoreCount);
+        Assert.Equal(0, semaphore.AcquisitionCount);
     }
 
     [Fact]
@@ -248,6 +248,6 @@ public class IsolationPrimitiveTest
     {
         public Lock LockObject { get; } = new();
         public GoshujinState State { get; set; }
-        public int SemaphoreCount { get; set; }
+        public int AcquisitionCount { get; set; }
     }
 }

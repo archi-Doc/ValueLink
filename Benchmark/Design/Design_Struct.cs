@@ -13,10 +13,10 @@ namespace Benchmark.Draft;
 public class LinkedListChain6<T>
 {
 
-    public delegate ref Link ObjectToLinkDelegete(T obj);
+    public delegate ref Link ObjectToLinkDelegate(T obj);
 
     // public LinkedListChain6(Func<T, Link> getter, Action<T, Link> setter)
-    public LinkedListChain6(ObjectToLinkDelegete objectToLink)
+    public LinkedListChain6(ObjectToLinkDelegate objectToLink)
     {
         this.objectToLink = objectToLink;
     }
@@ -73,7 +73,7 @@ public class LinkedListChain6<T>
 
     // private Func<T, Link> getter;
     // private Action<T, Link> setter;
-    private ObjectToLinkDelegete objectToLink;
+    private ObjectToLinkDelegate objectToLink;
     private LinkedList<T> chain = new();
 
     /// <summary>

@@ -34,7 +34,7 @@ public partial record class NoDefaultConstructorClass
 [ValueLinkObject(Isolation = IsolationLevel.Serializable)]
 public partial record SerializableRoom
 {
-    [Link(Primary = true, Type = ChainType.Ordered, AddValue = false)]
+    [Link(Primary = true, Type = ChainType.Ordered, GenerateValue = false)]
     public int RoomId { get; set; }
 
     public SerializableRoom(int roomId)
@@ -48,7 +48,7 @@ public partial record SerializableRoom
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 public partial record RepeatableRoom
 {
-    [Link(Primary = true, Unique = true, Type = ChainType.Ordered, AddValue = false)]
+    [Link(Primary = true, Unique = true, Type = ChainType.Ordered, GenerateValue = false)]
     public int RoomId { get; private set; }
 
     public Booking.GoshujinClass Bookings { get; private set; } = new();
@@ -111,12 +111,12 @@ public class IsolationTest
         var g = new RepeatableRoom.GoshujinClass();
         var room1 = g.Add(new RepeatableRoom(1));
         ((IRepeatableReadSemaphore)g).State.Is(GoshujinState.Valid);
-        ((IRepeatableReadSemaphore)g).SemaphoreCount.Is(0);
+        ((IRepeatableReadSemaphore)g).AcquisitionCount.Is(0);
 
         using (var a = g.TryLock(0))
         {
             ((IRepeatableReadSemaphore)g).State.Is(GoshujinState.Valid);
-            ((IRepeatableReadSemaphore)g).SemaphoreCount.Is(0);
+            ((IRepeatableReadSemaphore)g).AcquisitionCount.Is(0);
         }
 
         var b = g.TryGet(1);
@@ -125,16 +125,16 @@ public class IsolationTest
             if (a is not null)
             {
                 ((IRepeatableReadSemaphore)g).State.Is(GoshujinState.Valid);
-                ((IRepeatableReadSemaphore)g).SemaphoreCount.Is(1);
+                ((IRepeatableReadSemaphore)g).AcquisitionCount.Is(1);
 
                 a.RoomId = 100;
                 a.Commit();
 
-                ((IRepeatableReadSemaphore)g).SemaphoreCount.Is(1);
+                ((IRepeatableReadSemaphore)g).AcquisitionCount.Is(1);
             }
         }
 
-        ((IRepeatableReadSemaphore)g).SemaphoreCount.Is(0);
+        ((IRepeatableReadSemaphore)g).AcquisitionCount.Is(0);
 
         var r = new RepeatableRoom(2);
         var room2 = g.Add(r);

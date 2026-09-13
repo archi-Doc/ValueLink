@@ -16,7 +16,7 @@ public partial class GlobalClassTest
     [Key(1)]
     private string name = default!;
 
-    [Link(Type = ChainType.Ordered, AddValue = false)]
+    [Link(Type = ChainType.Ordered, GenerateValue = false)]
     public int Length => this.name.Length;
 
     public GlobalClassTest()

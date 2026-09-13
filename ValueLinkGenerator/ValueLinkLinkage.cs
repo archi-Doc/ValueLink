@@ -100,7 +100,7 @@ public class Linkage
                     }
                     else if (target.Property_IsPrivateSetter)
                     {
-                        linkAttribute.AddValue = false; // inaccessible = true;
+                        linkAttribute.GenerateValue = false; // inaccessible = true;
                     }
                 }
             }
@@ -207,7 +207,7 @@ public class Linkage
         }
 
         // No value
-        linkage.AddValue = linkAttribute.AddValue;
+        linkage.AddValue = linkAttribute.GenerateValue;
         if (linkage.AutoNotify && !linkage.AddValue)
         {
             linkage.AddValue = true;

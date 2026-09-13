@@ -46,18 +46,18 @@ public class SlidingListChainTest
 
         g.SlidingListChain.Resize(4);
 
-        g.SlidingListChain.Set(0, g.IdChain.FindFirst(0)!);
-        g.SlidingListChain.Set(1, g.IdChain.FindFirst(1)!);
-        g.SlidingListChain.Set(2, g.IdChain.FindFirst(2)!);
-        g.SlidingListChain.Set(3, g.IdChain.FindFirst(3)!);
-        g.SlidingListChain.Set(4, g.IdChain.FindFirst(4)!);
+        g.SlidingListChain.TrySet(0, g.IdChain.FindFirst(0)!);
+        g.SlidingListChain.TrySet(1, g.IdChain.FindFirst(1)!);
+        g.SlidingListChain.TrySet(2, g.IdChain.FindFirst(2)!);
+        g.SlidingListChain.TrySet(3, g.IdChain.FindFirst(3)!);
+        g.SlidingListChain.TrySet(4, g.IdChain.FindFirst(4)!);
 
         array = g.SlidingListChain.Select(x => x.Id).ToArray();
         array.SequenceEqual([0, 1, 2, 3]).IsTrue();
 
         var c = g.IdChain.FindFirst(0)!;
         c.Goshujin = null;
-        g.SlidingListChain.Get(0).IsNull();
+        g.SlidingListChain.GetOrDefault(0).IsNull();
         g.SlidingListChain.StartPosition.Is(1);
         c.SlidingListLink.IsLinked.IsFalse();
     }

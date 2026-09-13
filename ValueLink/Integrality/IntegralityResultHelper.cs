@@ -1,4 +1,4 @@
-﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
+// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
 using System.Runtime.CompilerServices;
@@ -17,25 +17,30 @@ public static class IntegralityResultHelper
 
         bytes = [(byte)IntegralityResult.Incomplete,];
         // The memory overload wraps ordinary storage without a shared reference counter.
-        Incomplete = BytePool.RentedMemory.CreateFrom(bytes.AsMemory());
+        IncompleteMemory = BytePool.RentedMemory.CreateFrom(bytes.AsMemory());
 
         bytes = [(byte)IntegralityResult.InvalidData,];
-        InvalidData = BytePool.RentedMemory.CreateFrom(bytes.AsMemory());
+        InvalidDataMemory = BytePool.RentedMemory.CreateFrom(bytes.AsMemory());
 
         // bytes = new byte[] { (byte)IntegralityResult.NotImplemented, };
         // NotImplemented = BytePool.RentArray.CreateFrom(bytes).AsMemory();
     }
 
+    /// <summary>
+    /// Parses the result encoded in a response buffer.
+    /// </summary>
+    /// <param name="rentedMemory">The response buffer: empty is invalid, a single byte is a status response, and anything longer is a protocol payload.</param>
+    /// <param name="result">Receives <see cref="IntegralityResult.Success"/> for a payload, the encoded status for a single byte, or <see cref="IntegralityResult.InvalidData"/> for an empty buffer.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void ParseMemoryAndResult(BytePool.RentedMemory rentMemory, out IntegralityResult result)
+    public static void ParseResult(BytePool.RentedMemory rentedMemory, out IntegralityResult result)
     {
-        if (rentMemory.Length == 0)
+        if (rentedMemory.Length == 0)
         {
             result = IntegralityResult.InvalidData;
         }
-        else if (rentMemory.Length == 1)
+        else if (rentedMemory.Length == 1)
         {
-            result = (IntegralityResult)rentMemory.Span[0];
+            result = (IntegralityResult)rentedMemory.Span[0];
         }
         else
         {
@@ -43,9 +48,15 @@ public static class IntegralityResultHelper
         }
     }
 
-    public static readonly BytePool.RentedMemory Incomplete;
+    /// <summary>
+    /// A shared single-byte response that encodes <see cref="IntegralityResult.Incomplete"/>.
+    /// </summary>
+    public static readonly BytePool.RentedMemory IncompleteMemory;
 
-    public static readonly BytePool.RentedMemory InvalidData;
+    /// <summary>
+    /// A shared single-byte response that encodes <see cref="IntegralityResult.InvalidData"/>.
+    /// </summary>
+    public static readonly BytePool.RentedMemory InvalidDataMemory;
 
     // public static readonly BytePool.RentedMemory NotImplemented;
 }

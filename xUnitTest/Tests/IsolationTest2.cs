@@ -128,7 +128,7 @@ public class IsolationTest2
         {
             g.Count.Is(numberOfItems);
             ((IRepeatableReadSemaphore)g).State.Is(GoshujinState.Valid);
-            ((IRepeatableReadSemaphore)g).SemaphoreCount.Is(0);
+            ((IRepeatableReadSemaphore)g).AcquisitionCount.Is(0);
         }
 
         // Task

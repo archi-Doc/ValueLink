@@ -103,7 +103,7 @@ public sealed class TestGoshujin : IGoshujin
         throw new NotImplementedException();
     }
 
-    IEnumerable IGoshujin.GetEnumerableInternal()
+    IEnumerable IGoshujin.EnumerateObjects()
             => System.Array.Empty<object>();
 
     public ListChain<TestClass> IdChain { get; }

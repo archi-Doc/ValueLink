@@ -197,7 +197,7 @@ internal sealed class StaticOwnerRegistration
         var serializable = attributes.Any(x => x.AttributeClass?.ToDisplayString() is "Tinyhand.TinyhandObjectAttribute" or "Tinyhand.TinyhandUnionAttribute");
         if (link is not null && serializable)
         {
-            var name = link.NamedArguments.FirstOrDefault(x => x.Key == "GoshujinClass").Value.Value as string;
+            var name = link.NamedArguments.FirstOrDefault(x => x.Key == "GoshujinClassName").Value.Value as string;
             this.owners[named] = string.IsNullOrEmpty(name) ? "GoshujinClass" : name!;
         }
 

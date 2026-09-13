@@ -32,7 +32,7 @@ public class GeneratorDiagnosticTest
         ["CLG001", "[ValueLinkObject] public class Item {}"],
         ["CLG002", "public class Outer { [ValueLinkObject] public partial class Item {} }"],
         ["CLG004", "[ValueLinkObject] public partial class Item { public int Goshujin; }"],
-        ["CLG005", "[ValueLinkObject] public partial class Item { [Link(Type=ChainType.Ordered, AddValue=true)] public readonly int Id; }"],
+        ["CLG005", "[ValueLinkObject] public partial class Item { [Link(Type=ChainType.Ordered, GenerateValue=true)] public readonly int Id; }"],
         ["CLG008", "[ValueLinkObject] public partial class Item { [Link(Type=ChainType.Ordered, Name=\"Id\")] public Item() {} }"],
         ["CLG010", "[ValueLinkObject] public partial class Item { [Link(Type=ChainType.List)] public Item() {} }"],
         ["CLG019", "[ValueLinkObject] public partial class Item { [Link(Type=ChainType.Ordered, TargetMember=\"Missing\")] public Item() {} }"],

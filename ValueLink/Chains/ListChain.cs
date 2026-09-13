@@ -25,14 +25,14 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
     /// </summary>
     /// <param name="obj">The object whose link or owner is requested.</param>
     /// <returns>The object's owner, or null when unowned.</returns>
-    public delegate IGoshujin? ObjectToGoshujinDelegete(T obj);
+    public delegate IGoshujin? ObjectToGoshujinDelegate(T obj);
 
     /// <summary>
     /// Returns a reference to an object's link for this chain.
     /// </summary>
     /// <param name="obj">The object whose link or owner is requested.</param>
     /// <returns>A reference to the object's link for this chain.</returns>
-    public delegate ref Link ObjectToLinkDelegete(T obj);
+    public delegate ref Link ObjectToLinkDelegate(T obj);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ListChain{T}"/> class (List).
@@ -40,7 +40,7 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
     /// <param name="goshujin">The instance of Goshujin.</param>
     /// <param name="objectToGoshujin">A delegate that returns an object's owner.</param>
     /// <param name="objectToLink">A delegate that returns a reference to this chain's link.</param>
-    public ListChain(IGoshujin goshujin, ObjectToGoshujinDelegete objectToGoshujin, ObjectToLinkDelegete objectToLink)
+    public ListChain(IGoshujin goshujin, ObjectToGoshujinDelegate objectToGoshujin, ObjectToLinkDelegate objectToLink)
     {
         this.goshujin = goshujin;
         this.objectToGoshujin = objectToGoshujin;
@@ -58,8 +58,8 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
     public int Capacity => this.array.Length;
 
     private IGoshujin goshujin;
-    private ObjectToGoshujinDelegete objectToGoshujin;
-    private ObjectToLinkDelegete objectToLink;
+    private ObjectToGoshujinDelegate objectToGoshujin;
+    private ObjectToLinkDelegate objectToLink;
     private T[] array = new T[InitialCapacity];
 
     /// <summary>
@@ -167,9 +167,9 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
     /// Determines whether an element is in the list.
     /// <br/>O(1) operation.
     /// </summary>
-    /// <param name="value">The value to locate in the list.</param>
-    /// <returns>true if value is found in the list.</returns>
-    public bool Contains(T value) => this.IndexOf(value) >= 0;
+    /// <param name="obj">The object to locate in the list.</param>
+    /// <returns>true if <paramref name="obj"/> is found in the list.</returns>
+    public bool Contains(T obj) => this.IndexOf(obj) >= 0;
 
     /// <summary>
     /// Copies all linked objects to the destination array in enumeration order.

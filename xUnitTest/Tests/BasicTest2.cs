@@ -46,7 +46,7 @@ public partial class PrivateIntClass2 : PrivateIntClass
 [TinyhandObject]
 public partial class TestClass3
 {
-    [Link(Primary = true, Type = ChainType.Ordered, AddValue = false, Accessibility = ValueLinkAccessibility.Public)]
+    [Link(Primary = true, Type = ChainType.Ordered, GenerateValue = false, Accessibility = ValueLinkAccessibility.Public)]
     [Link(Name = "Id2", Type = ChainType.Unordered)]
     [MemberNameAsKey]
     private int Id;

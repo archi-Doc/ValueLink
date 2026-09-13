@@ -223,7 +223,7 @@ public partial class SerializerBaseClass
             throw new NotImplementedException();
         }
 
-        IEnumerable IGoshujin.GetEnumerableInternal()
+        IEnumerable IGoshujin.EnumerateObjects()
             => System.Array.Empty<object>();
     }
 

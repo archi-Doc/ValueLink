@@ -25,14 +25,14 @@ public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     /// </summary>
     /// <param name="obj">The object whose link or owner is requested.</param>
     /// <returns>The object's owner, or null when unowned.</returns>
-    public delegate IGoshujin? ObjectToGoshujinDelegete(TObj obj);
+    public delegate IGoshujin? ObjectToGoshujinDelegate(TObj obj);
 
     /// <summary>
     /// Returns a reference to an object's link for this chain.
     /// </summary>
     /// <param name="obj">The object whose link or owner is requested.</param>
     /// <returns>A reference to the object's link for this chain.</returns>
-    public delegate ref Link ObjectToLinkDelegete(TObj obj);
+    public delegate ref Link ObjectToLinkDelegate(TObj obj);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UnorderedChain{TKey, TObj}"/> class.
@@ -40,7 +40,7 @@ public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     /// <param name="goshujin">The instance of Goshujin.</param>
     /// <param name="objectToGoshujin">A delegate that returns an object's owner.</param>
     /// <param name="objectToLink">A delegate that returns a reference to this chain's link.</param>
-    public UnorderedChain(IGoshujin goshujin, ObjectToGoshujinDelegete objectToGoshujin, ObjectToLinkDelegete objectToLink)
+    public UnorderedChain(IGoshujin goshujin, ObjectToGoshujinDelegate objectToGoshujin, ObjectToLinkDelegate objectToLink)
     {
         this.goshujin = goshujin;
         this.objectToGoshujin = objectToGoshujin;
@@ -175,7 +175,7 @@ public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     /// For internal traversal only; the array may contain unused slots and is invalidated by resizing.
     /// </remarks>
     /// <returns>The backing array and exclusive upper index for used slots.</returns>
-    public (UnorderedMap<TKey, TObj>.Node[] Nodes, int Max) UnsafeGetNodes()
+    public (UnorderedMap<TKey, TObj>.Node[] Nodes, int EndIndex) UnsafeGetNodes()
         => this.chain.UnsafeGetNodes();
 
     /// <summary>
@@ -228,7 +228,7 @@ public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     /// <summary>
     /// Gets the key-object pairs in chain enumeration order.
     /// </summary>
-    public IEnumerable<KeyValuePair<TKey, TObj>> KeyObjects => this.chain;
+    public IEnumerable<KeyValuePair<TKey, TObj>> KeyObjectPairs => this.chain;
 
     /// <summary>
     /// Determines whether the chain contains the key in expected O(1) time.
@@ -246,8 +246,8 @@ public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     public bool TryGetValue(TKey key, [MaybeNullWhen(false)] out TObj obj) => this.chain.TryGetValue(key, out obj);
 
     private IGoshujin goshujin;
-    private ObjectToGoshujinDelegete objectToGoshujin;
-    private ObjectToLinkDelegete objectToLink;
+    private ObjectToGoshujinDelegate objectToGoshujin;
+    private ObjectToLinkDelegate objectToLink;
     private UnorderedMap<TKey, TObj> chain = new(true);
 
     /// <summary>

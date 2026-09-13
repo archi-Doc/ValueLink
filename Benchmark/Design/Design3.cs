@@ -156,7 +156,7 @@ public sealed class TestGoshujin4 : IGoshujin
         throw new NotImplementedException();
     }
 
-    IEnumerable IGoshujin.GetEnumerableInternal()
+    IEnumerable IGoshujin.EnumerateObjects()
         => System.Array.Empty<object>();
 
     public LinkedListChain<TestClass4> IdChain { get; }

@@ -21,14 +21,14 @@ public class ReadCommittedContractTest
     [InlineData(AcquisitionMode.GetOnlyIgnoreState, false)]
     [InlineData(AcquisitionMode.CreateOnly, true)]
     [InlineData(AcquisitionMode.GetOrCreate, true)]
-    public void FindHonorsAcquisitionModeForMissingAndExistingObjects(AcquisitionMode mode, bool creates)
+    public void GetObjectHonorsAcquisitionModeForMissingAndExistingObjects(AcquisitionMode mode, bool creates)
     {
         var owner = new Owner();
-        var found = owner.Find(3, mode);
+        var found = owner.GetObject(3, mode);
         Assert.Equal(creates, found is not null);
         Assert.Equal(creates ? 1 : 0, owner.NewCalls);
-        var existing = owner.Find(3, AcquisitionMode.GetOrCreate)!;
-        Assert.Equal(mode == AcquisitionMode.CreateOnly ? null : existing, owner.Find(3, mode));
+        var existing = owner.GetObject(3, AcquisitionMode.GetOrCreate)!;
+        Assert.Equal(mode == AcquisitionMode.CreateOnly ? null : existing, owner.GetObject(3, mode));
         Assert.Equal(1, owner.NewCalls);
         Assert.True(existing.AddJournal);
     }
@@ -43,7 +43,7 @@ public class ReadCommittedContractTest
         var owner = new Owner();
         using var scope = await owner.TryLock(1, mode, TestContext.Current.CancellationToken);
         Assert.Equal(expected, scope.Result);
-        var existing = owner.Find(1, AcquisitionMode.GetOrCreate)!;
+        var existing = owner.GetObject(1, AcquisitionMode.GetOrCreate)!;
         var previousCalls = existing.LockCalls;
         using var duplicate = await owner.TryLock(1, AcquisitionMode.CreateOnly, TestContext.Current.CancellationToken);
         Assert.Equal(DataScopeResult.AlreadyExists, duplicate.Result);
@@ -54,7 +54,7 @@ public class ReadCommittedContractTest
     public async Task TimeoutsTokensAndFactoriesReachTheDataLocker()
     {
         var owner = new Owner();
-        var point = owner.Find(1, AcquisitionMode.CreateOnly)!;
+        var point = owner.GetObject(1, AcquisitionMode.CreateOnly)!;
         var timeout = TimeSpan.FromMilliseconds(123);
         using var cancellation = new CancellationTokenSource();
         Assert.Equal("data", await owner.TryGet(1, timeout, cancellation.Token));
@@ -73,9 +73,9 @@ public class ReadCommittedContractTest
     public async Task ObsoleteOwnerRejectsReadsAndCreationAndSnapshotsStayIndependent()
     {
         var owner = new Owner();
-        var point = owner.Find(1, AcquisitionMode.CreateOnly)!;
+        var point = owner.GetObject(1, AcquisitionMode.CreateOnly)!;
         var snapshot = owner.GetArray();
-        owner.Find(2, AcquisitionMode.CreateOnly);
+        owner.GetObject(2, AcquisitionMode.CreateOnly);
         Assert.Same(point, Assert.Single(snapshot));
         var visited = new List<int>();
         owner.ForEach(x =>
@@ -86,7 +86,7 @@ public class ReadCommittedContractTest
         Assert.Equal(new[] { 1, 2 }, visited);
         owner.SetObsolete();
         Assert.False(owner.IsValid);
-        Assert.Null(owner.Find(3, AcquisitionMode.CreateOnly));
+        Assert.Null(owner.GetObject(3, AcquisitionMode.CreateOnly));
         Assert.Null(await owner.TryGet(1, TestContext.Current.CancellationToken));
         using var scope = await owner.TryLock(1, AcquisitionMode.GetOnly, TestContext.Current.CancellationToken);
         Assert.Equal(DataScopeResult.Obsolete, scope.Result);
@@ -104,7 +104,7 @@ public class ReadCommittedContractTest
     public async Task DeleteUnlinksOnceAndForwardsJournalPolicy(bool force, bool writeJournal)
     {
         var owner = new Owner();
-        var point = owner.Find(1, AcquisitionMode.CreateOnly)!;
+        var point = owner.GetObject(1, AcquisitionMode.CreateOnly)!;
         if (force)
         {
             Assert.True(ObjectProtectionStateHelper.TryProtect(ref point.GetProtectionStateRef()));
@@ -126,18 +126,18 @@ public class ReadCommittedContractTest
     public async Task ProtectedDeletionCompletesAfterProtectionIsReleased()
     {
         var owner = new Owner();
-        var point = owner.Find(1, AcquisitionMode.CreateOnly)!;
+        var point = owner.GetObject(1, AcquisitionMode.CreateOnly)!;
         Assert.True(ObjectProtectionStateHelper.TryProtect(ref point.GetProtectionStateRef()));
         var deletion = owner.Delete(1);
         try
         {
             Assert.False(deletion.IsCompleted);
-            Assert.Same(point, owner.Find(1));
+            Assert.Same(point, owner.GetObject(1));
             Assert.Equal(0, point.DeleteCalls);
         }
         finally
         {
-            ObjectProtectionStateHelper.TryUnprotect(ref point.GetProtectionStateRef());
+            ObjectProtectionStateHelper.Unprotect(ref point.GetProtectionStateRef());
         }
 
         Assert.Equal(DataScopeResult.Deleted, await deletion.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
@@ -148,8 +148,8 @@ public class ReadCommittedContractTest
     public async Task OwnerStoreAndDeleteVisitEveryDataPoint()
     {
         var owner = new Owner();
-        var first = owner.Find(1, AcquisitionMode.CreateOnly)!;
-        var second = owner.Find(2, AcquisitionMode.CreateOnly)!;
+        var first = owner.GetObject(1, AcquisitionMode.CreateOnly)!;
+        var second = owner.GetObject(2, AcquisitionMode.CreateOnly)!;
         second.StoreSucceeds = false;
         Assert.False(await owner.StoreAll(StoreMode.StoreOnly));
         Assert.Equal(1, first.StoreCalls);
@@ -173,7 +173,7 @@ public class ReadCommittedContractTest
         public int NewCalls { get; private set; }
         public void ClearChains() => this.Points.Clear();
         public void ClearAll() => this.Points.Clear();
-        public IEnumerable GetEnumerableInternal() => this.Points.Values;
+        public IEnumerable EnumerateObjects() => this.Points.Values;
         public Task<bool> StoreAll(StoreMode mode) => this.GoshujinStoreData(mode);
         public Task DeleteAll(DateTime deadline, bool journal) => this.GoshujinDeleteData(deadline, journal);
         protected override Point? FindObject(int key) => this.Points.GetValueOrDefault(key);

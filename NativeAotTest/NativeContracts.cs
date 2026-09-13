@@ -115,7 +115,7 @@ internal static partial class NativeContracts
             Check(writer.Commit() is not null, "Update transaction");
         }
 
-        Check(snapshot.Value == 10 && owner.TryGet(1)!.Value == 30 && owner.SemaphoreCount == 0, "Snapshot isolation and lock release");
+        Check(snapshot.Value == 10 && owner.TryGet(1)!.Value == 30 && owner.AcquisitionCount == 0, "Snapshot isolation and lock release");
         var repeatableCopy = TinyhandSerializer.Deserialize<RepeatableItem.GoshujinClass>(TinyhandSerializer.Serialize(owner))!;
         Check(repeatableCopy.TryGet(1)?.Value == 30, "Repeatable-read owner round trip");
     }
@@ -167,7 +167,7 @@ internal static partial class NativeContracts
     }
 
     [TinyhandObject]
-    [ValueLinkObject(GoshujinClass = "Owners")]
+    [ValueLinkObject(GoshujinClassName = "Owners")]
     private partial class HiddenItem
     {
         [Key(0)]
@@ -193,7 +193,7 @@ public partial class LocalGenericItem<T>
 public partial class MultiItem
 {
     [Key(0)]
-    [Link(Type = ChainType.Ordered, Name = "Ordered", AddValue = true)]
+    [Link(Type = ChainType.Ordered, Name = "Ordered", GenerateValue = true)]
     [Link(Type = ChainType.ReverseOrdered, Name = "Reverse")]
     [Link(Type = ChainType.Unordered, Name = "Hash")]
     public int Id { get; set; }
@@ -277,7 +277,7 @@ public partial class SyncItem
     public int Id { get; set; }
 
     [Key(1)]
-    [Link(Type = ChainType.Ordered, AddValue = true)]
+    [Link(Type = ChainType.Ordered, GenerateValue = true)]
     public int Revision { get; set; }
 
     [Key(2)]

@@ -44,11 +44,11 @@ public static class ObjectProtectionStateHelper
     }
 
     /// <summary>
-    /// Attempts to transition the state from <c>Protected</c> to <c>Unprotected</c> atomically.
+    /// Transitions the state from <c>Protected</c> to <c>Unprotected</c> atomically; other states are left unchanged.
     /// </summary>
     /// <param name="state">A reference to the state byte to unprotect.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void TryUnprotect(ref byte state)
+    public static void Unprotect(ref byte state)
     {
         Interlocked.CompareExchange(ref state, (byte)ObjectProtectionState.Unprotected, (byte)ObjectProtectionState.Protected);
     }

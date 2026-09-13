@@ -7,7 +7,10 @@ namespace ValueLink;
 /// <summary>
 /// Exposes the owner lock used by read-committed operations.
 /// </summary>
-public interface IReadCommittedSemaphore
+public interface IReadCommittedLockProvider
 {
+    /// <summary>
+    /// Gets the lock protecting the owner.
+    /// </summary>
     Lock LockObject { get; }
 }
