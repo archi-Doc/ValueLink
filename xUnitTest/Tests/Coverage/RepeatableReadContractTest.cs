@@ -177,10 +177,13 @@ public class RepeatableReadContractTest
                 cancellation.Cancel();
             }
 
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
+            var exception = await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
             {
                 using var canceled = await acquisition;
             });
+            Assert.Equal(cancellation.Token, exception.CancellationToken);
+            using var stillLocked = await Acquire(0, TestContext.Current.CancellationToken);
+            Assert.Null(stillLocked);
             Assert.Equal(1, owner.SemaphoreCount);
         }
 

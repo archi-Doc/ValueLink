@@ -346,6 +346,8 @@ Created:
             else
             {// Timeout/Canceled
                 ((IRepeatableReadSemaphore)this).LockAndRelease(ref count);
+                // SemaphoreLock returns false for both timeout and cancellation.
+                cancellationToken.ThrowIfCancellationRequested();
                 return default;
             }
         }
@@ -474,8 +476,10 @@ Created:
                 }
             }
             else
-            {// Timeout
+            {// Timeout/Canceled
                 ((IRepeatableReadSemaphore)this).LockAndRelease(ref count);
+                // SemaphoreLock returns false for both timeout and cancellation.
+                cancellationToken.ThrowIfCancellationRequested();
                 return default;
             }
         }
