@@ -213,7 +213,7 @@ public class UnorderedChain<TKey, TObj> : IReadOnlyCollection<TObj>, ICollection
     /// </summary>
     /// <param name="key">The key to search in a collection.</param>
     /// <returns>The elements with the specified key.</returns>
-    public IEnumerable<TObj> Enumerate(TKey? key) => this.chain.EnumerateValue(key);
+    public IEnumerable<TObj> Enumerate(TKey? key) => this.chain.EnumerateValues(key);
 
     /// <summary>
     /// Gets the keys in chain enumeration order, including duplicates.

@@ -17,17 +17,17 @@ public static class IntegralityResultHelper
 
         bytes = [(byte)IntegralityResult.Incomplete,];
         // The memory overload wraps ordinary storage without a shared reference counter.
-        Incomplete = BytePool.RentMemory.CreateFrom(bytes.AsMemory());
+        Incomplete = BytePool.RentedMemory.CreateFrom(bytes.AsMemory());
 
         bytes = [(byte)IntegralityResult.InvalidData,];
-        InvalidData = BytePool.RentMemory.CreateFrom(bytes.AsMemory());
+        InvalidData = BytePool.RentedMemory.CreateFrom(bytes.AsMemory());
 
         // bytes = new byte[] { (byte)IntegralityResult.NotImplemented, };
         // NotImplemented = BytePool.RentArray.CreateFrom(bytes).AsMemory();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void ParseMemoryAndResult(BytePool.RentMemory rentMemory, out IntegralityResult result)
+    public static void ParseMemoryAndResult(BytePool.RentedMemory rentMemory, out IntegralityResult result)
     {
         if (rentMemory.Length == 0)
         {
@@ -43,9 +43,9 @@ public static class IntegralityResultHelper
         }
     }
 
-    public static readonly BytePool.RentMemory Incomplete;
+    public static readonly BytePool.RentedMemory Incomplete;
 
-    public static readonly BytePool.RentMemory InvalidData;
+    public static readonly BytePool.RentedMemory InvalidData;
 
-    // public static readonly BytePool.RentMemory NotImplemented;
+    // public static readonly BytePool.RentedMemory NotImplemented;
 }

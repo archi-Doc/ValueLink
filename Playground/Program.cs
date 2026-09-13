@@ -15,7 +15,7 @@ namespace QuickStart.Evolution
     /// <summary>
     /// Provides serializable data for storage-point experiments.
     /// </summary>
-    [TinyhandObject(LockObject = "syncObject")]
+    [TinyhandObject(LockMemberName = "syncObject")]
     [ValueLinkObject]
     public partial class Class1
     {

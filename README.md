@@ -386,7 +386,7 @@ public partial class SyncItem
 
 `MaxItems` limits reported keys and new items; `RemoveIfItemNotFound` removes local entries absent from the remote key list. `MaxMemoryLength` limits object-response packets, not probe responses. `MaxIntegrationCount` limits object-request iterations after probing. Override `Validate` to accept/reject incoming objects and `Trim` for application-specific removal; the default `Trim` removes nothing.
 
-The broker transfers ownership of its returned `BytePool.RentMemory` to the engine. When calling `Differentiate` outside a broker, return that buffer after use. Request bytes are valid only until the broker task completes.
+The broker transfers ownership of its returned `BytePool.RentedMemory` to the engine. When calling `Differentiate` outside a broker, return that buffer after use. Request bytes are valid only until the broker task completes.
 
 Integration may make partial changes before returning an incomplete/error result. Error responses retain the iteration and integration counts completed so far. Broker exceptions and cancellation propagate. Serialize concurrent runs targeting the same owner. Reported counts cover integration and trimming, but exclude removals during key comparison; `IsModified` is not a complete change log. Generated link setters, including Tinyhand partial-property update hooks, invalidate both object and owner hashes. After directly changing serialized fields, ordinary properties, or nested mutable content, call `((IIntegralityObject)item).ClearIntegralityHash()` yourself.
 

@@ -19,10 +19,10 @@ public partial record CreditData
     }
 
     [Link(Primary = true, Unique = true, Type = ChainType.Unordered)]
-    [Key(0, AddProperty = "Credit", PropertyAccessibility = PropertyAccessibility.GetterOnly)]
+    [Key(0, PropertyName = "Credit", PropertyAccessibility = PropertyAccessibility.GetterOnly)]
     private int credit;
 
-    // [Key(3, AddProperty = "Borrowers", PropertyAccessibility = PropertyAccessibility.GetterOnly)]
+    // [Key(3, PropertyName = "Borrowers", PropertyAccessibility = PropertyAccessibility.GetterOnly)]
     // private StorageData<Borrower.GoshujinClass> borrowers = new();
 }
 

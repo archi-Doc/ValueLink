@@ -31,9 +31,9 @@ public class Member
         var name = obj.SimpleName;
         string generatedName;
         if (obj.KeyAttribute is not null &&
-            !string.IsNullOrEmpty(obj.KeyAttribute.AddProperty))
+            !string.IsNullOrEmpty(obj.KeyAttribute.PropertyName))
         {
-            generatedName = obj.KeyAttribute.AddProperty;
+            generatedName = obj.KeyAttribute.PropertyName;
         }
         else if (char.IsLower(name[0]))
         {

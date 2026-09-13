@@ -10,7 +10,7 @@ namespace Playground.NestedClass;
 /// </summary>
 public sealed partial class NestedClassA
 {
-    [TinyhandObject(LockObject = "lockObject")]
+    [TinyhandObject(LockMemberName = "lockObject")]
     private sealed partial class Data
     {
         [TinyhandObject]

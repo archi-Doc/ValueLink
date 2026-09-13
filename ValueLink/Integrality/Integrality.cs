@@ -80,7 +80,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
     {
         // Probe
         var rentMemory = this.CreateProbePacket(goshujin);
-        BytePool.RentMemory resultMemory;
+        BytePool.RentedMemory resultMemory;
         try
         {
             resultMemory = await brokerDelegate(rentMemory.Memory, cancellationToken).ConfigureAwait(false);
@@ -97,14 +97,14 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         }
 
         // ProbeResponse: resultMemory
-        (IntegralityResult Result, BytePool.RentMemory RentMemory) resultMemory2;
+        (IntegralityResult Result, BytePool.RentedMemory RentedMemory) resultMemory2;
         ulong targetHash;
         try
         {
             resultMemory2 = this.ProcessProbeResponsePacket(goshujin, resultMemory.Memory, out targetHash);
             if (resultMemory2.Result != IntegralityResult.Incomplete)
             {
-                resultMemory2.RentMemory.Return();
+                resultMemory2.RentedMemory.Return();
                 return new(resultMemory2.Result);
             }
         }
@@ -129,7 +129,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
             // Get: resultMemory2
             try
             {
-                resultMemory = await brokerDelegate(resultMemory2.RentMemory.Memory, cancellationToken).ConfigureAwait(false);
+                resultMemory = await brokerDelegate(resultMemory2.RentedMemory.Memory, cancellationToken).ConfigureAwait(false);
                 IntegralityResultHelper.ParseMemoryAndResult(resultMemory, out var result);
                 if (result != IntegralityResult.Success)
                 {
@@ -139,7 +139,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
             }
             finally
             {
-                resultMemory2.RentMemory.Return();
+                resultMemory2.RentedMemory.Return();
             }
 
             // GetResponse: resultMemory
@@ -153,7 +153,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
             }
         }
 
-        resultMemory2.RentMemory.Return();
+        resultMemory2.RentedMemory.Return();
 
         if (resultMemory2.Result != IntegralityResult.Success && resultMemory2.Result != IntegralityResult.Incomplete)
         {
@@ -161,7 +161,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         }
 
         // Trim
-        if (goshujin is ILockObject g)
+        if (goshujin is ILockProvider g)
         {
             using (g.LockObject.EnterScope())
             {
@@ -189,7 +189,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
     /// <remarks>
     /// The caller owns the returned buffer and must return it after use.
     /// </remarks>
-    public BytePool.RentMemory Differentiate(TGoshujin target, ReadOnlyMemory<byte> integration)
+    public BytePool.RentedMemory Differentiate(TGoshujin target, ReadOnlyMemory<byte> integration)
         => target.Differentiate(this, integration);
 
     /// <summary>
@@ -214,7 +214,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         return 0;
     }
 
-    private BytePool.RentMemory CreateProbePacket(TGoshujin goshujin)
+    private BytePool.RentedMemory CreateProbePacket(TGoshujin goshujin)
     {
         var writer = TinyhandWriter.CreateFromBytePool();
         try
@@ -229,7 +229,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         }
     }
 
-    private (IntegralityResult Result, BytePool.RentMemory RentMemory) ProcessProbeResponsePacket(TGoshujin goshujin, Memory<byte> memory, out ulong targetHash)
+    private (IntegralityResult Result, BytePool.RentedMemory RentedMemory) ProcessProbeResponsePacket(TGoshujin goshujin, Memory<byte> memory, out ulong targetHash)
     {
         var reader = new TinyhandReader(memory.Span);
         try
@@ -276,7 +276,7 @@ public class Integrality<TGoshujin, TObject> : IIntegralityInternal
         }
     }
 
-    private (IntegralityResult Result, BytePool.RentMemory RentMemory) ProcessGetResponsePacket(TGoshujin obj, Memory<byte> memory, ref int integratedObjects)
+    private (IntegralityResult Result, BytePool.RentedMemory RentedMemory) ProcessGetResponsePacket(TGoshujin obj, Memory<byte> memory, ref int integratedObjects)
     {
         var reader = new TinyhandReader(memory.Span);
         try

@@ -105,6 +105,8 @@ public interface IRepeatableReadObject<TWriter>
         if (!entered)
         {
             semaphore?.LockAndReleaseOne();
+            // SemaphoreLock returns false for both timeout and cancellation.
+            cancellationToken.ThrowIfCancellationRequested();
             return null;
         }
         else if (this.State.IsInvalid())

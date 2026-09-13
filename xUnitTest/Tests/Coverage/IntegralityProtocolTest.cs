@@ -43,7 +43,7 @@ public class IntegralityProtocolTest
     [MemberData(nameof(Results))]
     public void ResultPacketsAndCountersRetainTheirMeaning(IntegralityResult expected)
     {
-        var memory = BytePool.RentArray.CreateFrom(new[] { (byte)expected }).AsMemory();
+        var memory = BytePool.RentedArray.CreateFrom(new[] { (byte)expected }).AsMemory();
         try
         {
             IntegralityResultHelper.ParseMemoryAndResult(memory, out var result);
@@ -94,7 +94,7 @@ public class IntegralityProtocolTest
         var previous = owner.IdChain.FindFirst(0);
         var bytes = new byte[length];
         bytes[0] = state;
-        var result = await Engine().Integrate(owner, (_, _) => Task.FromResult(BytePool.RentArray.CreateFrom(bytes).AsMemory()), TestContext.Current.CancellationToken);
+        var result = await Engine().Integrate(owner, (_, _) => Task.FromResult(BytePool.RentedArray.CreateFrom(bytes).AsMemory()), TestContext.Current.CancellationToken);
         Assert.Equal(IntegralityResult.InvalidData, result.Result);
         Assert.False(result.IsModified);
         Assert.Same(previous, Assert.Single(owner));
@@ -208,12 +208,12 @@ public class IntegralityProtocolTest
         cancellation.Cancel();
         if (cancel)
         {
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => engine.Integrate(owner, (_, token) => Task.FromCanceled<BytePool.RentMemory>(token), cancellation.Token));
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => engine.Integrate(owner, (_, token) => Task.FromCanceled<BytePool.RentedMemory>(token), cancellation.Token));
         }
         else
         {
             var exception = new InvalidOperationException("broker failure");
-            Assert.Same(exception, await Assert.ThrowsAsync<InvalidOperationException>(() => engine.Integrate(owner, (_, _) => Task.FromException<BytePool.RentMemory>(exception), TestContext.Current.CancellationToken)));
+            Assert.Same(exception, await Assert.ThrowsAsync<InvalidOperationException>(() => engine.Integrate(owner, (_, _) => Task.FromException<BytePool.RentedMemory>(exception), TestContext.Current.CancellationToken)));
         }
 
         Assert.Empty(owner);

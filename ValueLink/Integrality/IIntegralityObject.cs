@@ -51,7 +51,7 @@ public interface IIntegralityGoshujin : IIntegralityObject
     /// <param name="engine">The synchronization limits and validation policy.</param>
     /// <param name="integration">The incoming synchronization request.</param>
     /// <returns>An owned response buffer to return after use.</returns>
-    BytePool.RentMemory Differentiate(IIntegralityInternal engine, ReadOnlyMemory<byte> integration);
+    BytePool.RentedMemory Differentiate(IIntegralityInternal engine, ReadOnlyMemory<byte> integration);
 
     /// <summary>
     /// Validates and adds or replaces a single object, returning the outcome.

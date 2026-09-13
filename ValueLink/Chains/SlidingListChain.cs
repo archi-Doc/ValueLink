@@ -113,13 +113,13 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
             return false;
         }
 
-        if (this.chain.Get(position) is { } prev)
+        if (this.chain.GetOrDefault(position) is { } prev)
         {
             ref Link prevLink = ref this.objectToLink(prev);
             prevLink.Position = -1;
         }
 
-        if (this.chain.Set(position, obj))
+        if (this.chain.TrySet(position, obj))
         {
             link.Position = position;
             return true;
@@ -145,7 +145,7 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
         ref Link link = ref this.objectToLink(obj);
         if (link.IsLinked)
         {
-            var result = this.chain.Remove(link.Position);
+            var result = this.chain.TryRemoveAt(link.Position);
             link.Position = -1;
             return result;
         }
@@ -170,7 +170,7 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
 
         if (link.IsLinked)
         {
-            var result = this.chain.Remove(link.Position);
+            var result = this.chain.TryRemoveAt(link.Position);
             link.Position = -1;
             return result;
         }
@@ -198,7 +198,7 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
         ref Link link = ref this.objectToLink(previousInstance);
         if (link.IsLinked)
         {
-            this.chain.Set(link.Position, newInstance);
+            this.chain.TrySet(link.Position, newInstance);
         }
     }
 
@@ -210,7 +210,7 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     /// <summary>
     /// Gets the number of consumed window positions, including holes left by removal.
     /// </summary>
-    public int Consumed => this.chain.Consumed;
+    public int Consumed => this.chain.UsedSlotCount;
 
     /// <summary>
     /// Gets the number of objects currently linked to this chain.
@@ -232,7 +232,7 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     /// </summary>
     /// <param name="position">The position of the object.</param>
     /// <returns>The object.</returns>
-    public T? Get(int position) => this.chain.Get(position);
+    public T? Get(int position) => this.chain.GetOrDefault(position);
 
     /// <summary>
     /// Gets a value indicating whether there is space in the <see cref="SlidingListChain{T}"/> and if a new element can be added.
@@ -242,7 +242,7 @@ public class SlidingListChain<T> : IReadOnlyCollection<T>, ICollection
     /// <summary>
     /// Gets the first element of the <see cref="SlidingListChain{T}"/>, or a default value if the <see cref="SlidingListChain{T}"/> contains no elements.
     /// </summary>
-    public T? FirstOrDefault => this.chain.FirstOrDefault;
+    public T? FirstOrDefault => this.chain.GetFirstOrDefault();
 
     /// <summary>
     /// Gets the logical position at the start of the window, even when empty.

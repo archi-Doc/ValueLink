@@ -1155,7 +1155,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
         {
             using (var scopeIfNotNull = ssb.ScopeBrace($"if (this.{this.ObjectAttribute!.GoshujinInstance} is not null)"))
             {
-                ssb.AppendLine("writer.Write_Locator();");
+                ssb.AppendLine("writer.WriteLocatorRecord();");
                 ssb.AppendLine(writeLocator);
             }
         }
@@ -2074,7 +2074,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
     internal void GenerateGosjujin_Integrality_Differentiate(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        using (var methodScope = ssb.ScopeBrace($"BytePool.RentMemory {ValueLinkBody.IIntegralityGoshujin}.Differentiate(IIntegralityInternal engine, ReadOnlyMemory<byte> integration)"))
+        using (var methodScope = ssb.ScopeBrace($"BytePool.RentedMemory {ValueLinkBody.IIntegralityGoshujin}.Differentiate(IIntegralityInternal engine, ReadOnlyMemory<byte> integration)"))
         {
             if (this.UniqueLink is null)
             {
@@ -2423,9 +2423,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
 
         using (var scopeMethod = ssb.ScopeBrace($"bool {TinyhandBody.IStructuralObject}.ProcessJournalRecord(ref TinyhandReader reader)"))
         {
-            ssb.AppendLine("if (!reader.TryReadJournalRecord(out JournalRecord record)) return false;");
+            ssb.AppendLine("if (!reader.TryReadJournalRecord(out JournalRecordType record)) return false;");
 
-            using (var scopeLocator = ssb.ScopeBrace("if (record == JournalRecord.Locator)"))
+            using (var scopeLocator = ssb.ScopeBrace("if (record == JournalRecordType.Locator)"))
             {// Locator
                 var typeObject = this.UniqueLink.Target.TypeObject;
                 ssb.AppendLine($"var key = {typeObject.CodeReader()};");
@@ -2439,7 +2439,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 ssb.AppendLine("}");
             }
 
-            using (var scopeAdd = ssb.ScopeBrace("else if (record == JournalRecord.AddItem)"))
+            using (var scopeAdd = ssb.ScopeBrace("else if (record == JournalRecordType.AddItem)"))
             {// AddItem
                 ssb.AppendLine("try");
                 ssb.AppendLine("{");
@@ -2466,7 +2466,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 ssb.AppendLine("catch {}");
             }
 
-            using (var scopeRemove = ssb.ScopeBrace("else if (record == JournalRecord.DeleteItem)"))
+            using (var scopeRemove = ssb.ScopeBrace("else if (record == JournalRecordType.DeleteItem)"))
             {// Remove
                 var typeObject = this.UniqueLink.Target.TypeObject;
                 ssb.AppendLine($"var key = {typeObject.CodeReader()};");
@@ -2697,7 +2697,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             // Chains
             ssb.AppendLine();
             // ssb.AppendLine("reader = chainsReader;"); // reader -> chainsReader
-            ssb.AppendLine("var numberOfData = chainsReader.ReadMapHeader2();");
+            ssb.AppendLine("var numberOfData = chainsReader.ReadMapHeaderOrEmptyArray();");
             using (var loop = ssb.ScopeBrace("while (numberOfData-- > 0)"))
             {
                 this.DeserializeChainAutomata.Generate(ssb, info);
