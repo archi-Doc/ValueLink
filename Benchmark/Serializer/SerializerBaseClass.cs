@@ -161,7 +161,7 @@ public partial class SerializerBaseClass
             }
 
             // map
-            var chains = reader.ReadMapHeader2();
+            var chains = reader.ReadMapHeaderOrEmptyArray();
 
             {
                 var name = reader.ReadStringSpan();

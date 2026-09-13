@@ -178,7 +178,7 @@ public class IntegralityTest
         target.Add(new(1, "A"));
         var calls = 0;
         var result = await engine.Integrate(new SimpleIntegralityClass.GoshujinClass(), (packet, _) =>
-            Task.FromResult(++calls == 1 ? engine.Differentiate(target, packet) : BytePool.RentArray.CreateFrom(new byte[] { state, 255 }).AsMemory()), TestContext.Current.CancellationToken);
+            Task.FromResult(++calls == 1 ? engine.Differentiate(target, packet) : BytePool.RentedArray.CreateFrom(new byte[] { state, 255 }).AsMemory()), TestContext.Current.CancellationToken);
         Assert.Equal(IntegralityResult.InvalidData, result.Result);
     }
 

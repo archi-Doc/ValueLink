@@ -13,25 +13,25 @@ namespace xUnitTest;
 [ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
 public partial record PropertyAccessibilityClass : IEquatableObject
 {
-    [Key(0, AddProperty = "Id", PropertyAccessibility = PropertyAccessibility.PublicSetter)]
+    [Key(0, PropertyName = "Id", PropertyAccessibility = PropertyAccessibility.PublicSetter)]
     [Link(Unique = true, Primary = true, Type = ChainType.Unordered)]
     private int _id;
 
-    [Key(1, AddProperty = "B", PropertyAccessibility = PropertyAccessibility.ProtectedSetter)]
+    [Key(1, PropertyName = "B", PropertyAccessibility = PropertyAccessibility.ProtectedSetter)]
     private int _b;
 
-    [Key(2, AddProperty = "C", PropertyAccessibility = PropertyAccessibility.GetterOnly)]
+    [Key(2, PropertyName = "C", PropertyAccessibility = PropertyAccessibility.GetterOnly)]
     private int _c = 3;
 
-    [Key(3, AddProperty = "X")]
+    [Key(3, PropertyName = "X")]
     [MaxLength(10)]
     private string _x = string.Empty;
 
-    [Key(4, AddProperty = "Y", PropertyAccessibility = PropertyAccessibility.GetterOnly)]
+    [Key(4, PropertyName = "Y", PropertyAccessibility = PropertyAccessibility.GetterOnly)]
     [Link(Type = ChainType.Unordered)]
     private string _y = string.Empty;
 
-    [Key(5, AddProperty = "Z", PropertyAccessibility = PropertyAccessibility.PublicSetter)]
+    [Key(5, PropertyName = "Z", PropertyAccessibility = PropertyAccessibility.PublicSetter)]
     [Link(Type = ChainType.Ordered)]
     private string _z = string.Empty;
 

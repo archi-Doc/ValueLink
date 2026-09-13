@@ -184,7 +184,7 @@ internal static class JournalShared
             if (remove is null &&
                 obj.CodeWriter(ssb.FullObject) is { } writeAdd)
             {
-                ssb.AppendLine("writer.Write(JournalRecord.AddItem);");
+                ssb.AppendLine("writer.Write(JournalRecordType.AddItem);");
                 ssb.AppendLine(writeAdd);
             }
 
@@ -192,7 +192,7 @@ internal static class JournalShared
             if (remove is not null &&
                 remove.CodeWriter($"{ssb.FullObject}.{remove.SimpleName}") is { } writeRemove)
             {
-                ssb.AppendLine("writer.Write(JournalRecord.DeleteItem);");
+                ssb.AppendLine("writer.Write(JournalRecordType.DeleteItem);");
                 ssb.AppendLine(writeRemove);
             }
 
@@ -226,7 +226,7 @@ internal static class JournalShared
             /*if (obj.UniqueLink is not null &&
                 obj.UniqueLink.TypeObject.CodeWriter($"this.original.{obj.UniqueLink.TargetName}") is { } writeLocator)
             {// this.instance
-                ssb.AppendLine("writer.Write_Locator();");
+                ssb.AppendLine("writer.WriteLocatorRecord();");
                 ssb.AppendLine(writeLocator);
             }*/
 
@@ -241,7 +241,7 @@ internal static class JournalShared
                         var writeKey = memberObject.CodeWriteKey();
                         if (writeKey is not null)
                         {
-                            ssb.AppendLine("writer.Write_Key();");
+                            ssb.AppendLine("writer.WriteKeyRecord();");
                             ssb.AppendLine(writeKey);
                         }
 
@@ -249,7 +249,7 @@ internal static class JournalShared
                         var writeValue = memberObject.CodeWriter($"this.instance.{memberObject.SimpleName}");
                         if (writeValue is not null)
                         {
-                            ssb.AppendLine("writer.Write_Value();");
+                            ssb.AppendLine("writer.WriteValueRecord();");
                             ssb.AppendLine(writeValue);
                         }
                     }

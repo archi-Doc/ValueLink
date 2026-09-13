@@ -137,7 +137,7 @@ internal static partial class NativeContracts
         Check(oldHash != ((IIntegralityObject)source).GetIntegralityHash(), "Tinyhand partial setter invalidates cached hashes");
         result = await engine.Integrate(target, (request, _) => Task.FromResult(engine.Differentiate(source, request)));
         Check(result.IsSuccess && target.IdChain.FindFirst(1)?.PartialRevision == 30, "Synchronize partial property");
-        result = await engine.Integrate(target, (_, _) => Task.FromResult(BytePool.RentArray.CreateFrom(new byte[] { 255, 0 }).AsMemory()));
+        result = await engine.Integrate(target, (_, _) => Task.FromResult(BytePool.RentedArray.CreateFrom(new byte[] { 255, 0 }).AsMemory()));
         Check(result.Result == IntegralityResult.InvalidData && target.Count == 1, "Malformed response");
     }
 
