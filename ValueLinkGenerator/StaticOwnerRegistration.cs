@@ -13,6 +13,8 @@ namespace ValueLink.Generator;
 /// <summary>Resolves closed owner types and emits formatter registration without runtime reflection.</summary>
 internal sealed class StaticOwnerRegistration
 {
+    private const int ExpansionLimit = 16384;
+
     private readonly Compilation compilation;
     private readonly SourceProductionContext context;
     private readonly HashSet<ITypeSymbol> types = new(SymbolEqualityComparer.Default);
@@ -21,6 +23,7 @@ internal sealed class StaticOwnerRegistration
     private readonly Queue<IMethodSymbol> pendingMethods = new();
     private readonly Dictionary<IMethodSymbol, (ITypeSymbol?[] Types, IMethodSymbol[] Methods)> methodBodies = new(SymbolEqualityComparer.Default);
     private readonly Dictionary<INamedTypeSymbol, string> owners = new(SymbolEqualityComparer.Default);
+    private int constructedTypeCount;
     private bool limitReported;
 
     internal StaticOwnerRegistration(Compilation compilation, SourceProductionContext context)
@@ -163,7 +166,9 @@ internal sealed class StaticOwnerRegistration
         type = type.WithNullableAnnotation(NullableAnnotation.None);
         if (this.types.Add(type))
         {
-            if (this.types.Count > 16384)
+            // Only constructed types can expand recursively; plain types are bounded by the compilation.
+            if ((type is IArrayTypeSymbol || type is INamedTypeSymbol { IsGenericType: true }) &&
+                ++this.constructedTypeCount > ExpansionLimit)
             {
                 this.ReportLimit(type);
                 return;
@@ -218,12 +223,25 @@ internal sealed class StaticOwnerRegistration
 
     private void AddMethod(IMethodSymbol? method)
     {
-        if (this.HasErrors || method is null || !this.IsClosed(method.ContainingType) || !method.TypeArguments.All(this.IsClosed) || !this.methods.Add(method))
+        if (this.HasErrors || method is null || !this.IsClosed(method.ContainingType) || !method.TypeArguments.All(this.IsClosed))
         {
             return;
         }
 
-        if (this.methods.Count > 16384)
+        // A factory can expose a closed owner only through its return type, even when
+        // its body is in another assembly and the caller uses an inferred type.
+        if (!method.IsGenericMethod && !method.ContainingType.IsGenericType)
+        {// Plain methods are bounded by the compilation and have no body to substitute.
+            this.AddType(method.ReturnType);
+            return;
+        }
+
+        if (!this.methods.Add(method))
+        {
+            return;
+        }
+
+        if (this.methods.Count > ExpansionLimit)
         {
             this.ReportLimit(method.ContainingType);
             return;
@@ -234,15 +252,13 @@ internal sealed class StaticOwnerRegistration
 
     private void ProcessMethod(IMethodSymbol method)
     {
-        // A factory can expose a closed owner only through its return type, even when
-        // its body is in another assembly and the caller uses an inferred type.
         this.AddType(method.ReturnType);
         foreach (var argument in method.TypeArguments)
         {
             this.AddType(argument);
         }
 
-        if ((!method.IsGenericMethod && !method.ContainingType.IsGenericType) || method.DeclaringSyntaxReferences.Length == 0)
+        if (method.DeclaringSyntaxReferences.Length == 0)
         {
             return;
         }

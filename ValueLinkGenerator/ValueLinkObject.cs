@@ -581,6 +581,11 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 // Shared chain
                 if (x.UnsafeTargetChain)
                 {
+                    if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.TinyhandObject))
+                    {// Shared nodes would be serialized as duplicate chains and objects.
+                        this.Body.AddDiagnostic(ValueLinkBody.Error_SharedChainTinyhand, x.Location);
+                    }
+
                     var linkage = this.Links.FirstOrDefault(y => !y.UnsafeTargetChain && y.ChainName == x.ChainName);
                     if (linkage is null)
                     {// No chain
@@ -673,8 +678,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 {
                     continue;
                 }
-                else if (!x.IsSerializable || x.IsReadOnly)
-                {// Not serializable
+                else if (!x.IsSerializable || x.IsReadOnly || x.IsStatic || x.IsInitOnly)
+                {// Not serializable, or not an instance member the writer can assign.
                     continue;
                 }
 
@@ -1099,7 +1104,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             var overrideString = this.ObjectFlag.HasFlag(ValueLinkObjectFlag.DerivedFromStoragePoint) ? "override " : string.Empty;
             using (var scopeMethod = ssb.ScopeBrace($"public {overrideString}Task DeleteData(DateTime forceDeleteAfter = default, bool writeJournal = true)"))
             {
-                ssb.AppendLine($"if (this.Goshujin is {{ }} goshujin) return goshujin.Delete(this.{this.UniqueLink?.TargetName}, forceDeleteAfter);");
+                ssb.AppendLine($"if (this.{this.ObjectAttribute!.GoshujinPropertyName} is {{ }} goshujin) return goshujin.Delete(this.{this.UniqueLink?.TargetName}, forceDeleteAfter);");
                 ssb.AppendLine($"else return ((IDataLocker<{this.TargetDataObject?.FullName}>)this).DeletePoint(forceDeleteAfter, false);");
             }
         }
@@ -1405,7 +1410,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 using (var scopeTry = ssb.ScopeBrace("try"))
                 {
                     ssb.AppendLine($"var goshujin = this.original.{this.GoshujinInstanceIdentifier};");
-                    ssb.AppendLine($"if (goshujin is not null) {{ using (goshujin.LockObject.EnterScope()) {{ try {{ if (this.original.State == RepeatableReadObjectState.Created) {this.ValueLinkInternalHelper}.{ValueLinkBody.RemoveFromGoshujinName}(this.original, null, false); }} finally {{ (({ValueLinkBody.IRepeatableReadSemaphore})goshujin).ReleaseOne(); }} }} }}");
+
+                    // Creation journals the add, so an abandoned record must journal its removal.
+                    ssb.AppendLine($"if (goshujin is not null) {{ using (goshujin.LockObject.EnterScope()) {{ try {{ if (this.original.State == RepeatableReadObjectState.Created) {this.ValueLinkInternalHelper}.{ValueLinkBody.RemoveFromGoshujinName}(this.original, null, true); }} finally {{ (({ValueLinkBody.IRepeatableReadSemaphore})goshujin).ReleaseOne(); }} }} }}");
                 }
 
                 using (var scopeFinally = ssb.ScopeBrace("finally"))
@@ -1454,15 +1461,15 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 }
 
                 using (var scopeEraseFlag = ssb.ScopeBrace("else"))
-                {
-                    ssb.AppendLine("this.original.State = RepeatableReadObjectState.Valid;");
+                {// Publish a new record; a record deleted by an earlier commit stays obsolete.
+                    ssb.AppendLine("if (this.original.State == RepeatableReadObjectState.Created) this.original.State = RepeatableReadObjectState.Valid;");
                     ssb.AppendLine("return this.original;");
                 }
             }
 
             ssb.AppendLine($"if (this.__erase_flag__) this.instance.{this.GoshujinInstanceIdentifier} = null;");
             ssb.AppendLine($"var goshujin = this.original.{this.GoshujinInstanceIdentifier};");
-            using (var scopeSame = ssb.ScopeBrace($"if (goshujin == this.Goshujin)"))
+            using (var scopeSame = ssb.ScopeBrace($"if (goshujin == this.{this.ObjectAttribute!.GoshujinPropertyName})"))
             {
                 using (var scopeGoshujin = ssb.ScopeBrace($"if (goshujin is not null)"))
                 {
@@ -1524,17 +1531,16 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             {
                 // ssb.AppendLine($"var @interface = ({this.IValueLinkObjectInternal})this.instance;");
 
-                using (var scopeGoshujin = ssb.ScopeBrace("if (this.Goshujin is not null)"))
+                using (var scopeGoshujin = ssb.ScopeBrace($"if (this.{this.ObjectAttribute!.GoshujinPropertyName} is not null)"))
                 {
-                    using (var scopeLock = ssb.ScopeBrace("using (this.Goshujin.LockObject.EnterScope())"))
+                    using (var scopeLock = ssb.ScopeBrace($"using (this.{this.ObjectAttribute!.GoshujinPropertyName}.LockObject.EnterScope())"))
                     {
-                        if (this.UniqueLink is { } link &&
-                        link.Member is { } member)
-                        {
-                            ssb.AppendLine($"if (this.Goshujin.{this.UniqueLink.ChainName}.ContainsKey(this.instance.{member.Object.SimpleName})) return default;");
+                        if (this.UniqueLink is not null)
+                        {// The key may have no writer member, so read it from the record itself.
+                            ssb.AppendLine($"if (this.{this.ObjectAttribute!.GoshujinPropertyName}.{this.UniqueLink.ChainName}.ContainsKey(this.instance.{this.UniqueLink.TargetName})) return default;");
                         }
 
-                        ssb.AppendLine($"if (!(({ValueLinkBody.IRepeatableReadSemaphore})this.Goshujin).TryAcquireOne()) return default;");
+                        ssb.AppendLine($"if (!(({ValueLinkBody.IRepeatableReadSemaphore})this.{this.ObjectAttribute!.GoshujinPropertyName}).TryAcquireOne()) return default;");
 
                         if (this.Links is not null)
                         {
@@ -1547,7 +1553,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                             }
                         }
 
-                        ssb.AppendLine($"{this.ValueLinkInternalHelper}.{ValueLinkBody.AddToGoshujinName}(this.instance, this.Goshujin);");
+                        // A throwing link hook leaves the move incomplete; the writer still owns only the source acquisition.
+                        ssb.AppendLine($"try {{ {this.ValueLinkInternalHelper}.{ValueLinkBody.AddToGoshujinName}(this.instance, this.{this.ObjectAttribute!.GoshujinPropertyName}); }} catch {{ (({ValueLinkBody.IRepeatableReadSemaphore})this.{this.ObjectAttribute!.GoshujinPropertyName}).ReleaseOne(); throw; }}");
                     }
                 }
 
@@ -1557,7 +1564,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             // Structural
             if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.StructuralEnabled))
             {
-                ssb.AppendLine($"(({TinyhandBody.IStructuralObject})this.instance).SetupStructure(this.Goshujin);");
+                ssb.AppendLine($"(({TinyhandBody.IStructuralObject})this.instance).SetupStructure(this.{this.ObjectAttribute!.GoshujinPropertyName});");
             }
 
             ssb.AppendLine($"this.original.State = {ValueLinkBody.RepeatableReadObjectState}.Obsolete;");
@@ -1568,7 +1575,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 ssb.AppendLine("this.instance.State = RepeatableReadObjectState.Obsolete;");
                 if (this.ObjectFlag.HasFlag(ValueLinkObjectFlag.StructuralEnabled))
                 {
-                    ssb.AppendLine($"(({TinyhandBody.IStructuralObject})this.instance).DeleteData().Wait();");
+                    ssb.AppendLine($"(({TinyhandBody.IStructuralObject})this.instance).DeleteData().ConfigureAwait(false).GetAwaiter().GetResult();");
                 }
             }
 
@@ -2199,9 +2206,9 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             ssb.AppendLine($"if (obj is not {this.TypeObject!.FullName} newObj) return IntegralityResult.InvalidData;");
             ssb.AppendLine($"var oldObj = this.{this.UniqueLink.ChainName}.FindFirst(newObj.{this.UniqueLink.TargetName});");
             ssb.AppendLine($"if (!engine.Validate(this, newObj, oldObj)) return IntegralityResult.InvalidData;");
-            ssb.AppendLine("if (oldObj is not null) oldObj.Goshujin = default;");
+            ssb.AppendLine($"if (oldObj is not null) oldObj.{this.ObjectAttribute!.GoshujinPropertyName} = default;");
             ssb.AppendLine($"else if (this.{this.UniqueLink.ChainName}.Count >= engine.MaxItems) return IntegralityResult.LimitExceeded;");
-            ssb.AppendLine($"newObj.Goshujin = this;");
+            ssb.AppendLine($"newObj.{this.ObjectAttribute!.GoshujinPropertyName} = this;");
             ssb.AppendLine("return IntegralityResult.Success;");
         }
     }
@@ -2247,7 +2254,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                     }
                 }
 
-                ssb.AppendLine("if (list is not null) foreach (var x in list) x.Goshujin = default;");
+                ssb.AppendLine($"if (list is not null) foreach (var x in list) x.{this.ObjectAttribute!.GoshujinPropertyName} = default;");
             }
 
             scopeLock?.Dispose();
@@ -2780,7 +2787,7 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
                 using (var scopeLock = ssb.ScopeBrace("using (var w = x.TryLock())"))
                 {
                     ssb.AppendLine("if (w is null) return null;");
-                    ssb.AppendLine("w.Goshujin = this; return w.Commit();");
+                    ssb.AppendLine($"w.{this.ObjectAttribute!.GoshujinPropertyName} = this; return w.Commit();");
                 }
             }
         }
@@ -2862,8 +2869,8 @@ public class ValueLinkObject : VisceralObjectBase<ValueLinkObject>
             {
                 using (var scopeLock = ssb.ScopeBrace("using (var w = x.TryLock())"))
                 {
-                    ssb.AppendLine("if (w is null || w.Goshujin != this) return null;");
-                    ssb.AppendLine("w.Goshujin = null; return w.Commit();");
+                    ssb.AppendLine($"if (w is null || w.{this.ObjectAttribute!.GoshujinPropertyName} != this) return null;");
+                    ssb.AppendLine($"w.{this.ObjectAttribute!.GoshujinPropertyName} = null; return w.Commit();");
                 }
             }
         }

@@ -1,6 +1,7 @@
 // Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Tinyhand;
 using ValueLink;
@@ -55,10 +56,84 @@ public partial class SerializableEntry : IStructuralObject
 }
 
 /// <summary>
+/// Provides a list primary chain for snapshot tests.
+/// </summary>
+[ValueLinkObject(Isolation = IsolationLevel.Serializable)]
+public partial class SerializableListSnapshot
+{
+    public int Id { get; set; }
+
+    [Link(Type = ChainType.List, Name = "Items", Primary = true)]
+    public SerializableListSnapshot(int id) => this.Id = id;
+}
+
+/// <summary>
+/// Provides a linked-list primary chain for snapshot tests.
+/// </summary>
+[ValueLinkObject(Isolation = IsolationLevel.Serializable)]
+public partial class SerializableLinkedSnapshot
+{
+    public int Id { get; set; }
+
+    [Link(Type = ChainType.LinkedList, Name = "Items", Primary = true)]
+    public SerializableLinkedSnapshot(int id) => this.Id = id;
+}
+
+/// <summary>
+/// Provides an observable primary chain for snapshot tests.
+/// </summary>
+[ValueLinkObject(Isolation = IsolationLevel.Serializable)]
+public partial class SerializableObservableSnapshot
+{
+    public int Id { get; set; }
+
+    [Link(Type = ChainType.Observable, Name = "Items", Primary = true)]
+    public SerializableObservableSnapshot(int id) => this.Id = id;
+}
+
+/// <summary>
+/// Provides a reverse-ordered primary chain for snapshot tests.
+/// </summary>
+[ValueLinkObject(Isolation = IsolationLevel.Serializable)]
+public partial class SerializableReverseSnapshot
+{
+    [Link(Type = ChainType.ReverseOrdered, Primary = true)]
+    public int Id { get; set; }
+}
+
+/// <summary>
 /// Tests serializable storage operations and lock release.
 /// </summary>
 public class SerializableContractTest
 {
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(5)]
+    public void SnapshotsCopyEveryPrimaryChainKindInOrder(int count)
+    {
+        var ids = Enumerable.Range(0, count).ToArray();
+
+        var list = new SerializableListSnapshot.GoshujinClass();
+        var linked = new SerializableLinkedSnapshot.GoshujinClass();
+        var observable = new SerializableObservableSnapshot.GoshujinClass();
+        var reverse = new SerializableReverseSnapshot.GoshujinClass();
+        foreach (var id in ids)
+        {
+            list.Add(new(id));
+            linked.Add(new(id));
+            observable.Add(new(id));
+            reverse.Add(new() { Id = id });
+        }
+
+        Assert.Equal(list.ItemsChain, list.GetArray());
+        Assert.Equal(ids, list.GetArray().Select(x => x.Id));
+        Assert.Equal(ids, linked.GetArray().Select(x => x.Id));
+        Assert.Equal(ids, observable.GetArray().Select(x => x.Id));
+        Assert.Equal(Enumerable.Reverse(ids), reverse.GetArray().Select(x => x.Id));
+        Assert.All(new[] { list.LockObject, linked.LockObject, observable.LockObject, reverse.LockObject }, x => Assert.False(x.IsLocked));
+    }
+
     [Theory]
     [InlineData(StoreMode.StoreOnly)]
     [InlineData(StoreMode.TryRelease)]

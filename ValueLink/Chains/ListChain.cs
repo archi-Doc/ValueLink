@@ -348,7 +348,7 @@ public class ListChain<T> : IList<T>, IReadOnlyList<T>
 
         if ((uint)index > (uint)this.Count)
         {
-            throw new IndexOutOfRangeException();
+            throw new ArgumentOutOfRangeException(nameof(index));
         }
 
         ref Link link = ref this.objectToLink(obj);

@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Tinyhand;
@@ -73,7 +72,7 @@ public abstract class RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter> 
                 }
             }
 
-            array = (this is IEnumerable<TObject> e) ? e.ToArray() : Array.Empty<TObject>();
+            array = Internal.ChainHelper.ToArray<TObject>((IGoshujin)this);
         }
 
         foreach (var x in array)
@@ -102,9 +101,9 @@ public abstract class RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter> 
         {
             ((IRepeatableReadSemaphore)this).SetObsolete();
 
-            array = (this is IEnumerable<TObject> e) ? e.ToArray() : Array.Empty<TObject>();
-            var g = this as IGoshujin;
-            g?.ClearChains();
+            var g = (IGoshujin)this;
+            array = Internal.ChainHelper.ToArray<TObject>(g);
+            g.ClearChains();
         }
 
         foreach (var x in array)
@@ -125,7 +124,7 @@ public abstract class RepeatableReadGoshujin<TKey, TObject, TGoshujin, TWriter> 
         TObject[] array;
         using (this.LockObject.EnterScope())
         {
-            array = (this is IEnumerable<TObject> e) ? e.ToArray() : Array.Empty<TObject>();
+            array = Internal.ChainHelper.ToArray<TObject>((IGoshujin)this);
         }
 
         return array;

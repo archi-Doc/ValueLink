@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Arc.Threading;
 using Tinyhand;
@@ -33,7 +32,7 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : ISerializableSe
             await this.LockObject.EnterAsync().ConfigureAwait(false);
             try
             {
-                array = (this is IEnumerable<TObject> e) ? e.ToArray() : Array.Empty<TObject>();
+                array = Internal.ChainHelper.ToArray<TObject>((IGoshujin)this);
             }
             finally
             {
@@ -76,10 +75,9 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : ISerializableSe
         TObject[] array;
         using (this.LockObject.EnterScope())
         {
-            array = (this is IEnumerable<TObject> e) ? e.ToArray() : [];
-
-            var g = this as IGoshujin;
-            g?.ClearChains();
+            var g = (IGoshujin)this;
+            array = Internal.ChainHelper.ToArray<TObject>(g);
+            g.ClearChains();
         }
 
         foreach (var x in array)
@@ -101,7 +99,7 @@ public abstract class SerializableGoshujin<TObject, TGoshujin> : ISerializableSe
         TObject[] array;
         using (this.LockObject.EnterScope())
         {
-            array = (this is IEnumerable<TObject> e) ? e.ToArray() : Array.Empty<TObject>();
+            array = Internal.ChainHelper.ToArray<TObject>((IGoshujin)this);
         }
 
         return array;

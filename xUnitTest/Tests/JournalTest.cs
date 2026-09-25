@@ -344,6 +344,25 @@ public class JournalTest
     }
 
     [Fact]
+    public void AbandonedCreateIsNotReplayed()
+    {
+        var tester = new JournalTester();
+        var g2 = new JournalTestClass2.GoshujinClass();
+        g2.StructuralRoot = tester;
+        g2.Add(new JournalTestClass2(new(1), "one"));
+        using (var w = g2.TryLock(new JournalIdentifier(7), AcquisitionMode.CreateOnly))
+        {
+            Assert.NotNull(w);
+        }
+
+        Assert.Null(g2.TryGet(new JournalIdentifier(7)));
+        var g3 = new JournalTestClass2.GoshujinClass();
+        JournalHelper.ReplayJournal(g3, tester.GetJournal()).IsTrue();
+        Assert.Null(g3.TryGet(new JournalIdentifier(7)));
+        g2.ObjectEquals(g3).IsTrue();
+    }
+
+    [Fact]
     public void TestGoshujin2()
     {
         var tester = new JournalTester();

@@ -7,6 +7,7 @@ using ValueLink.Integrality;
 using System.Threading.Tasks;
 using Tinyhand.Formatters;
 using System;
+using System.Linq;
 using Arc.Collections;
 
 namespace xUnitTest;
@@ -124,6 +125,31 @@ public partial class SerializableIntegralityClass : IEquatableObject
 }
 
 /// <summary>
+/// Provides a synchronization fixture whose owner property is renamed.
+/// </summary>
+[TinyhandObject]
+[ValueLinkObject(Integrality = true, Isolation = IsolationLevel.Serializable, GoshujinPropertyName = "Owner")]
+public partial class RenamedOwnerIntegralityClass
+{
+    public RenamedOwnerIntegralityClass()
+    {
+    }
+
+    public RenamedOwnerIntegralityClass(int id, string name)
+    {
+        this.Id = id;
+        this.Name = name;
+    }
+
+    [Key(0)]
+    [Link(Primary = true, Unique = true, Type = ChainType.Unordered)]
+    public int Id { get; set; }
+
+    [Key(1)]
+    public string Name { get; set; } = string.Empty;
+}
+
+/// <summary>
 /// Connects two in-memory owners for synchronization tests.
 /// </summary>
 public static class IntegralityTestHelper
@@ -231,6 +257,65 @@ public class IntegralityTest
         {
             Assert.True(goshujin.LockObject.IsLocked);
             return true;
+        }
+    }
+
+    [Fact]
+    public void RenamedOwnerPropertyIsUsedByIntegration()
+    {
+        var engine = new RenamedOwnerIntegrality { MaxItems = 10, RemoveIfItemNotFound = true };
+        var source = new RenamedOwnerIntegralityClass.GoshujinClass();
+        var target = new RenamedOwnerIntegralityClass.GoshujinClass();
+        var replaced = new RenamedOwnerIntegralityClass(1, "Old");
+        var removed = new RenamedOwnerIntegralityClass(2, "Removed");
+        source.Add(replaced);
+        source.Add(removed);
+        target.Add(new(1, "New"));
+        target.Add(new(3, "Added"));
+
+        var result = engine.IntegrateForTest(source, target);
+        Assert.True(result.IsSuccess);
+        Assert.Null(replaced.Owner);
+        Assert.Null(removed.Owner);
+        Assert.Equal(["New", "Added"], new[] { 1, 3 }.Select(x => source.IdChain.FindFirst(x)!.Name));
+        Assert.All(source, x => Assert.Same(source, x.Owner));
+
+        var single = new RenamedOwnerIntegralityClass(4, "Single");
+        Assert.Equal(IntegralityResult.Success, engine.IntegrateObject(source, single));
+        Assert.Same(source, single.Owner);
+    }
+
+    private sealed class RenamedOwnerIntegrality : Integrality<RenamedOwnerIntegralityClass.GoshujinClass, RenamedOwnerIntegralityClass>
+    {
+    }
+
+    [Fact]
+    public async Task SerializableTrimRunsUnderTheOwnerLock()
+    {
+        var engine = new TrimmingIntegrality { MaxItems = 10, RemoveIfItemNotFound = true };
+        var source = new SerializableIntegralityClass.GoshujinClass();
+        var target = new SerializableIntegralityClass.GoshujinClass();
+        target.Add(new(1, "A"));
+        target.Add(new(2, "B"));
+        var result = await Task.Run(() => engine.IntegrateForTest(source, target), TestContext.Current.CancellationToken)
+            .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        Assert.Equal(1, engine.TrimCalls);
+        Assert.Equal(1, result.TrimmedCount);
+        Assert.Equal(2, result.IntegratedCount);
+        Assert.False(source.LockObject.IsLocked);
+        Assert.Null(source.IdChain.FindFirst(2));
+        Assert.NotNull(source.IdChain.FindFirst(1));
+    }
+
+    private sealed class TrimmingIntegrality : Integrality<SerializableIntegralityClass.GoshujinClass, SerializableIntegralityClass>
+    {
+        public int TrimCalls { get; private set; }
+
+        public override int Trim(SerializableIntegralityClass.GoshujinClass goshujin, int integratedCount)
+        {
+            Assert.True(goshujin.LockObject.IsLocked);
+            this.TrimCalls++;
+            return goshujin.IdChain.FindFirst(2) is { } item && goshujin.Remove(item) ? 1 : 0;
         }
     }
 
