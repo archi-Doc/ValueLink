@@ -161,7 +161,19 @@ public class Integrality<TGoshujin, TObject> : IIntegralityEngine
         }
 
         // Trim
-        if (goshujin is ILockProvider g)
+        if (goshujin is ISerializableSemaphore serializable)
+        {// Generated Serializable owners expose a non-reentrant SemaphoreLock, not ILockProvider.
+            await serializable.LockObject.EnterAsync().ConfigureAwait(false);
+            try
+            {
+                trimmedCount = this.Trim(goshujin, integratedCount);
+            }
+            finally
+            {
+                serializable.LockObject.Exit();
+            }
+        }
+        else if (goshujin is ILockProvider g)
         {
             using (g.LockObject.EnterScope())
             {
@@ -206,6 +218,9 @@ public class Integrality<TGoshujin, TObject> : IIntegralityEngine
     /// <summary>
     /// Optionally removes objects after integration. The default removes none; Serializable owners call this under their lock.
     /// </summary>
+    /// <remarks>
+    /// The Serializable owner lock is non-reentrant: do not acquire it again or call owner members that take it, such as GetArray or the owner's GetIntegralityHash.
+    /// </remarks>
     /// <param name="goshujin">The Goshujin.</param>
     /// <param name="integratedCount">The number of successfully integrated objects.</param>
     /// <returns>The number of objects trimmed.</returns>

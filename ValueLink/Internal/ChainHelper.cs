@@ -1,13 +1,55 @@
 // Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace ValueLink.Internal;
 
 internal static class ChainHelper
 {
+    /// <summary>
+    /// Copies the objects of an owner's primary chain; an owner without one yields an empty array.
+    /// </summary>
+    /// <typeparam name="T">The type of owned objects.</typeparam>
+    /// <param name="goshujin">The owner, whose lock the caller must hold when required.</param>
+    /// <returns>A snapshot of object references in primary-chain order.</returns>
+    internal static T[] ToArray<T>(IGoshujin goshujin)
+    {
+        var objects = goshujin.EnumerateObjects();
+        T[] array;
+        if (objects is ICollection<T> collection)
+        {// ListChain: a single array copy.
+            if (collection.Count == 0)
+            {
+                return [];
+            }
+
+            array = new T[collection.Count];
+            collection.CopyTo(array, 0);
+            return array;
+        }
+        else if (objects is ICollection nonGeneric)
+        {// Other chains copy through their struct enumerators; an owner without a primary chain returns an empty object array.
+            if (nonGeneric.Count == 0)
+            {
+                return [];
+            }
+
+            array = new T[nonGeneric.Count];
+            nonGeneric.CopyTo(array, 0);
+            return array;
+        }
+        else if (objects is IEnumerable<T> enumerable)
+        {
+            return enumerable.ToArray();
+        }
+
+        return [];
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void CopyTo<T, TEnumerator>(int count, TEnumerator enumerator, Array array, int index)
         where TEnumerator : struct, IEnumerator<T>

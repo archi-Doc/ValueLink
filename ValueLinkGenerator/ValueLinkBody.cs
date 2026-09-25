@@ -57,12 +57,12 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
     public static readonly string ReadCommittedGoshujin = "ReadCommittedGoshujin";
     public static readonly string IValueLinkObjectInternal = "IValueLinkObjectInternal";
     public static readonly string ValueLinkInternalHelper = "ValueLinkInternalHelper";
-    public static readonly string IRepeatableReadSemaphore = "ValueLink.IRepeatableReadSemaphore";
-    public static readonly string ISerializableSemaphore = "ValueLink.ISerializableSemaphore";
-    public static readonly string IReadCommittedLockProvider = "ValueLink.IReadCommittedLockProvider";
+    public static readonly string IRepeatableReadSemaphore = "global::ValueLink.IRepeatableReadSemaphore";
+    public static readonly string ISerializableSemaphore = "global::ValueLink.ISerializableSemaphore";
+    public static readonly string IReadCommittedLockProvider = "global::ValueLink.IReadCommittedLockProvider";
     public static readonly string IIntegralityObject = "IIntegralityObject";
     public static readonly string IIntegralityGoshujin = "IIntegralityGoshujin";
-    public static readonly string Integrality = "ValueLink.Integrality.IIntegralityEngine";
+    public static readonly string Integrality = "global::ValueLink.Integrality.IIntegralityEngine";
     public static readonly string KeyHashDictionaryName = "__keyhash_dictionary__";
     public static readonly string UnsafeConstructorName = "UnsafeConstructor";
     public static readonly string IDataLocker = "ValueLink.IDataLocker<TData>";
@@ -214,6 +214,9 @@ public class ValueLinkBody : VisceralBody<ValueLinkObject>
 
     internal static readonly DiagnosticDescriptor Error_UnboundedOwnerRegistration = new(
         "CLG037", "Owner registration graph is too large", "Type '{0}' exceeds the static registration limit; check recursively expanding generic models or helpers", "ValueLinkGenerator", DiagnosticSeverity.Error, true);
+
+    internal static readonly DiagnosticDescriptor Error_SharedChainTinyhand = new(
+        "CLG038", "Shared chain serialization", "UnsafeTargetChain is not supported on a TinyhandObject because the shared chain cannot be serialized", "ValueLinkGenerator", DiagnosticSeverity.Error, true);
 
     public ValueLinkBody(GeneratorExecutionContext context)
         : base(context)

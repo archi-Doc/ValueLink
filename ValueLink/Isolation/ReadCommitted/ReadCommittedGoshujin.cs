@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Tinyhand;
@@ -339,14 +338,7 @@ Retry:
                 return [];
             }
 
-            if (((IGoshujin)this).EnumerateObjects() is IEnumerable<TObject> enumerable)
-            {
-                return enumerable.ToArray();
-            }
-            else
-            {
-                return [];
-            }
+            return Internal.ChainHelper.ToArray<TObject>((IGoshujin)this);
         }
     }
 
@@ -389,11 +381,7 @@ Retry:
 
             if (this is IGoshujin goshujin)
             {
-                if (goshujin.EnumerateObjects() is IEnumerable<TObject> enumerable)
-                {
-                    array = enumerable.ToArray();
-                }
-
+                array = Internal.ChainHelper.ToArray<TObject>(goshujin);
                 goshujin.ClearChains();
             }
         }

@@ -198,7 +198,7 @@ Empty name options select the defaults above.
 
 `PublicGetter` gives the generated value a public getter and inherits setter access from the target. Use `Public` to expose both accessors, or `Protected`, `Private`, or `Inherit` as needed. Getter-only targets do not receive writable value properties. Partial properties retain their declared accessor visibility.
 
-With `AutoLink = false`, manually choose initial membership after assigning the owner. A generated value change can still add or update that link. Constructor attributes can define unkeyed chains or index a member using `TargetMember`. `UnsafeTargetChain` requires compatible key/object types and the correct `ref obj.SomeLink` argument for each shared entry; see [TargetChainTest](xUnitTest/Tests/TargetChainTest.cs).
+With `AutoLink = false`, manually choose initial membership after assigning the owner. A generated value change can still add or update that link. Constructor attributes can define unkeyed chains or index a member using `TargetMember`. `UnsafeTargetChain` requires compatible key/object types and the correct `ref obj.SomeLink` argument for each shared entry; see [TargetChainTest](xUnitTest/Tests/TargetChainTest.cs). Shared chains cannot be serialized, so `UnsafeTargetChain` is rejected on `[TinyhandObject]` types (CLG038).
 
 ### Generator options
 
@@ -384,7 +384,7 @@ public partial class SyncItem
 }
 ```
 
-`MaxItems` limits reported keys and new items; `RemoveIfItemNotFound` removes local entries absent from the remote key list. `MaxResponseLength` limits object-response packets, not probe responses. `MaxIterationCount` limits object-request iterations after probing. Override `Validate` to accept/reject incoming objects and `Trim` for application-specific removal; the default `Trim` removes nothing.
+`MaxItems` limits reported keys and new items; `RemoveIfItemNotFound` removes local entries absent from the remote key list. `MaxResponseLength` limits object-response packets, not probe responses. `MaxIterationCount` limits object-request iterations after probing. Override `Validate` to accept/reject incoming objects and `Trim` for application-specific removal; the default `Trim` removes nothing. `Serializable` owners call both under their non-reentrant owner lock, so do not acquire it again or call `GetArray` inside them.
 
 The broker transfers ownership of its returned `BytePool.RentedMemory` to the engine. When calling `Differentiate` outside a broker, return that buffer after use. Request bytes are valid only until the broker task completes.
 

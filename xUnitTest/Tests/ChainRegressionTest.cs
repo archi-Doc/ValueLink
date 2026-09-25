@@ -32,6 +32,19 @@ public class ChainRegressionTest
         Assert.False(other.ListChain.Contains(item));
     }
 
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(3)]
+    public void ListInvalidInsertThrowsArgumentOutOfRangeAndKeepsTheObject(int index)
+    {
+        var owner = new ListChainTestClass.GoshujinClass();
+        var first = new ListChainTestClass(1) { Goshujin = owner };
+        var second = new ListChainTestClass(2) { Goshujin = owner };
+        Assert.Throws<ArgumentOutOfRangeException>(() => owner.ListChain.Insert(index, first));
+        Assert.Equal(new[] { first, second }, owner.ListChain.ToArray());
+        Assert.Equal(0, first.ListLink.Index);
+    }
+
     [Fact]
     public void ObservableInsertAtEndCanMoveAnExistingObject()
     {

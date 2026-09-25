@@ -70,6 +70,28 @@ public class RepeatableWriterRegressionTest
     }
 
     [Fact]
+    public void EmptyCommitAfterDeletionKeepsTheRecordObsolete()
+    {
+        var owner = new TrackedEntry.GoshujinClass();
+        TrackedEntry record, deleted;
+        using (var writer = owner.TryLock(1, AcquisitionMode.CreateOnly))
+        {
+            Assert.NotNull(writer);
+            record = writer.Commit()!;
+            writer.Delete();
+            deleted = writer.Commit()!;
+            Assert.Equal(RepeatableReadObjectState.Obsolete, deleted.State);
+            Assert.Same(deleted, writer.Commit());
+        }
+
+        Assert.Equal(RepeatableReadObjectState.Obsolete, deleted.State);
+        Assert.Equal(RepeatableReadObjectState.Obsolete, record.State);
+        Assert.Null(deleted.TryLock());
+        Assert.Empty(owner.GetArray());
+        Assert.Equal(0, owner.AcquisitionCount);
+    }
+
+    [Fact]
     public void DisposedWritersCannotPublishOrEditRecords()
     {
         var owner = new TrackedEntry.GoshujinClass();
@@ -126,6 +148,54 @@ public class RepeatableWriterRegressionTest
 
         Assert.Equal(0, owner.AcquisitionCount);
         Assert.Empty(owner.GetArray());
+    }
+
+    [Fact]
+    public void ThrowingAddedHookDuringAMoveDoesNotLeakTheTargetAcquisition()
+    {
+        var source = new ThrowingHookRecord.GoshujinClass();
+        var target = new ThrowingHookRecord.GoshujinClass();
+        ThrowingHookRecord record;
+        using (var writer = source.TryLock(1, AcquisitionMode.CreateOnly)!)
+        {
+            record = writer.Commit()!;
+        }
+
+        using (var writer = record.TryLock()!)
+        {
+            writer.ThrowOnAdd = true;
+            writer.Goshujin = target;
+            Assert.Throws<InvalidOperationException>(() => writer.Commit());
+        }
+
+        Assert.Equal(0, source.AcquisitionCount);
+        Assert.Equal(0, target.AcquisitionCount);
+        Assert.True(((IRepeatableReadSemaphore)target).CanRelease);
+        Assert.Same(record, source.TryGet(1));
+        Assert.Equal(RepeatableReadObjectState.Valid, record.State);
+    }
+
+    [Fact]
+    public void MovingIntoAnOwnerChecksAUniqueKeyWithoutAWriterMember()
+    {
+        var source = new IgnoredKeyRecord.GoshujinClass();
+        var target = new IgnoredKeyRecord.GoshujinClass();
+        using (var writer = source.TryLock(1, AcquisitionMode.CreateOnly)!)
+        {
+            writer.Commit();
+        }
+
+        using (var writer = target.TryLock(1, AcquisitionMode.CreateOnly)!)
+        {
+            writer.Commit();
+        }
+
+        var moving = source.TryGet(1)!;
+        Assert.Null(target.Add(moving));
+        Assert.Equal(1, target.Count);
+        Assert.Same(moving, source.TryGet(1));
+        Assert.Equal(0, source.AcquisitionCount);
+        Assert.Equal(0, target.AcquisitionCount);
     }
 
     [Fact]
@@ -206,4 +276,35 @@ public partial record CustomAccessorRecord
         get { this.Reads++; return this.value; }
         private set { this.Writes++; this.value = value; }
     }
+}
+
+/// <summary>
+/// Exercises acquisition cleanup when a link hook fails during a move between owners.
+/// </summary>
+[ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
+public partial record ThrowingHookRecord
+{
+    [Link(Type = ChainType.Ordered, Primary = true, Unique = true)]
+    public int Id { get; private set; }
+
+    public bool ThrowOnAdd { get; private set; }
+
+    private void IdLinkAdded()
+    {
+        if (this.ThrowOnAdd)
+        {
+            throw new InvalidOperationException("Hook failed.");
+        }
+    }
+}
+
+/// <summary>
+/// Exercises a unique key that is excluded from generated writer members.
+/// </summary>
+[ValueLinkObject(Isolation = IsolationLevel.RepeatableRead)]
+public partial record IgnoredKeyRecord
+{
+    [Link(Type = ChainType.Ordered, Primary = true, Unique = true)]
+    [Tinyhand.IgnoreMember]
+    public int Id { get; private set; }
 }

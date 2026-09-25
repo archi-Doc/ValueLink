@@ -42,6 +42,7 @@ public class GeneratorDiagnosticTest
         ["CLG028", "[ValueLinkObject] public partial class Item { [Link(Type=ChainType.List, Unique=true)] public int Id {get;set;} }"],
         ["CLG031", "[ValueLinkObject(Integrality=true)] public partial class Item { [Link(Type=ChainType.Ordered, Unique=true)] public string Id {get;set;} = string.Empty; }"],
         ["CLG033", "[ValueLinkObject(Integrality=true)] public partial class Item { [Link(Type=ChainType.Ordered, Unique=true)] public int Id {get;set;} }"],
+        ["CLG038", "[Tinyhand.TinyhandObject, ValueLinkObject] public partial class Item { [Tinyhand.Key(0), Link(Type=ChainType.Unordered, Primary=true)] public int Id {get;set;} [Tinyhand.Key(1), Link(UnsafeTargetChain=\"IdChain\")] public int Other {get;set;} }"],
     ];
 
     public static IEnumerable<object[]> ValidDeclarations =>
@@ -52,6 +53,9 @@ public class GeneratorDiagnosticTest
         ["[Linked] public partial class Item {} public partial class Item { [Link(Type=ChainType.Ordered)] public int Id {get;set;} }", "Item"],
         ["[Linked] public partial class Item { [Link(Type=ChainType.Ordered)] public partial int Id {get;set;} }", "Item"],
         ["public interface IHidden { int Number { get; set; } } [ValueLinkObject(Isolation=IsolationLevel.RepeatableRead)] public partial record Item : IHidden { [Link(Type=ChainType.Ordered, Unique=true, Primary=true)] public int Id {get;private set;} int IHidden.Number {get;set;} }", "Item"],
+        ["[ValueLinkObject(Isolation=IsolationLevel.RepeatableRead)] public partial record Item { [Link(Type=ChainType.Ordered, Unique=true, Primary=true)] public int Id {get;private set;} public static int Counter {get;set;} private static int count; public const int Max = 1; public string Name {get;init;} = string.Empty; }", "Item"],
+        ["namespace Company.ValueLink.Models; [ValueLinkObject(Isolation=IsolationLevel.RepeatableRead)] public partial record Item { [Link(Type=ChainType.Ordered, Unique=true, Primary=true)] public int Id {get;private set;} }", "Company.ValueLink.Models.Item"],
+        ["namespace Company.ValueLink.Models; [ValueLinkObject(Isolation=IsolationLevel.Serializable)] public partial class Item { [Link(Type=ChainType.Ordered, Primary=true)] public int Id {get;set;} }", "Company.ValueLink.Models.Item"],
     ];
 
     [Theory]
@@ -290,6 +294,57 @@ public class GeneratorDiagnosticTest
         {
             Assert.Single(result.Diagnostics.Where(x => x.Id == "CLG037"));
         }
+    }
+
+    [Fact]
+    public void RenamedOwnerPropertyGeneratesCompilableRepeatableReadWriters()
+    {
+        // Integrality with a renamed owner property is compiled with Tinyhand in IntegralityTest.
+        var driver = Driver().RunGeneratorsAndUpdateCompilation(Compile("[ValueLinkObject(Isolation=IsolationLevel.RepeatableRead, GoshujinPropertyName=\"Owner\")] public partial record Item { [Link(Type=ChainType.Ordered, Unique=true, Primary=true)] public int Id {get;private set;} }"), out var output, out var diagnostics, TestContext.Current.CancellationToken);
+        AssertNoErrors(output, diagnostics);
+        Assert.All(driver.GetRunResult().Results, x => Assert.Null(x.Exception));
+        var item = output.GetTypeByMetadataName("Item")!;
+        Assert.Single(item.GetMembers("Owner"));
+        Assert.Empty(item.GetMembers("Goshujin"));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void LargeNonGenericCodeDoesNotHitTheRegistrationLimit(bool types)
+    {
+        // The limit bounds recursive generic expansion; plain declarations and calls are bounded by the source.
+        const int Count = 17_000;
+        var source = new System.Text.StringBuilder("[Tinyhand.TinyhandObject, Linked] public partial class Item { [Tinyhand.Key(0), Link(Type=ChainType.List, Primary=true)] public int Id {get;set;} } ");
+        if (types)
+        {
+            for (var i = 0; i < Count; i++)
+            {
+                source.Append("public class T").Append(i).Append(" {} ");
+            }
+        }
+        else
+        {
+            source.Append("public static class Many { ");
+            for (var i = 0; i < Count; i++)
+            {
+                source.Append("public static void M").Append(i).Append("() {} ");
+            }
+
+            source.Append("public static void Call() { ");
+            for (var i = 0; i < Count; i++)
+            {
+                source.Append('M').Append(i).Append("(); ");
+            }
+
+            source.Append("} }");
+        }
+
+        var driver = Driver().RunGenerators(Compile(source.ToString()), TestContext.Current.CancellationToken);
+        var result = driver.GetRunResult();
+        Assert.All(result.Results, x => Assert.Null(x.Exception));
+        Assert.DoesNotContain(result.Diagnostics, x => x.Id == "CLG037");
+        Assert.Contains(GeneratedText(driver), x => x.Contains("RegisterObject<global::Item.@GoshujinClass>()", StringComparison.Ordinal));
     }
 
     private static CSharpCompilation Compile(string declaration) => CSharpCompilation.Create(
