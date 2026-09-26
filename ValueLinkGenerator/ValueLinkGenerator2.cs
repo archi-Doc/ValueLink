@@ -69,7 +69,7 @@ public class ValueLinkGeneratorV2 : IIncrementalGenerator, IGeneratorInformation
 
         // Bound recursive type expansion before preparing the generated object graph.
         var registration = new StaticOwnerRegistration(compilation, context);
-        var ownerRegistration = registration.Generate();
+        var ownerRegistration = registration.Generate(source.Types.Objects);
         if (registration.HasErrors)
         {
             return;

@@ -347,10 +347,107 @@ public class GeneratorDiagnosticTest
         Assert.Contains(GeneratedText(driver), x => x.Contains("RegisterObject<global::Item.@GoshujinClass>()", StringComparison.Ordinal));
     }
 
-    private static CSharpCompilation Compile(string declaration) => CSharpCompilation.Create(
+    public static IEnumerable<object[]> LocalOwnerDeclarations =>
+    [
+        ["[Tinyhand.TinyhandObject, Linked] public partial class Item { [Tinyhand.Key(0), Link(Type=ChainType.List, Primary=true)] public int Id {get;set;} }"],
+        ["[Tinyhand.TinyhandObject, ValueLinkObject(GoshujinClassName=\"Owner\")] public partial class Item { [Tinyhand.Key(0), Link(Type=ChainType.Ordered, Primary=true)] public int Id {get;set;} } [Tinyhand.TinyhandObject, Linked] public partial class Other {}"],
+        ["public partial class Outer { [Tinyhand.TinyhandObject, Linked] private partial class Hidden { [Tinyhand.Key(0), Link(Type=ChainType.Unordered, Primary=true)] public int Id {get;set;} } }"],
+        ["[Tinyhand.TinyhandObject, ValueLinkObject(Isolation=IsolationLevel.RepeatableRead)] public partial record Item { [Tinyhand.Key(0), Link(Type=ChainType.Ordered, Unique=true, Primary=true)] public int Id {get;private set;} }"],
+        ["[Linked] public partial class Plain { [Link(Type=ChainType.Ordered, Primary=true)] public int Id {get;set;} } [Tinyhand.TinyhandObject, Linked] public partial class Item { public Plain.GoshujinClass Children {get;set;} = new(); }"],
+        ["[assembly: Tinyhand.TinyhandRegister(typeof(System.Collections.Generic.List<Item>))] [Tinyhand.TinyhandObject, Linked] public partial class Item {}"],
+    ];
+
+    [Theory]
+    [MemberData(nameof(LocalOwnerDeclarations))]
+    public void SkippingTheWalkMatchesWalkedRegistrations(string declaration)
+    {
+        // Without another ValueLink assembly or a generic owner, the generator skips the whole-program walk.
+        var skipped = Compile(declaration, LocalReferences.Value);
+        Assert.DoesNotContain(skipped.SourceModule.ReferencedAssemblySymbols, UsesValueLink);
+        var walked = Compile(declaration);
+        Assert.Contains(walked.SourceModule.ReferencedAssemblySymbols, UsesValueLink);
+
+        var expected = Driver().RunGenerators(walked, TestContext.Current.CancellationToken);
+        var actual = Driver().RunGenerators(skipped, TestContext.Current.CancellationToken);
+        Assert.Contains(GeneratedText(expected), x => x.Contains("RegisterObject<", StringComparison.Ordinal));
+        Assert.Equal(GeneratedText(expected), GeneratedText(actual));
+        Assert.Equal(expected.GetRunResult().Diagnostics.Select(x => x.ToString()), actual.GetRunResult().Diagnostics.Select(x => x.ToString()));
+    }
+
+    [Fact]
+    public void LocalGenericOwnersAreWalkedWithoutOtherValueLinkAssemblies()
+    {
+        var compilation = Compile("[Tinyhand.TinyhandObject, Linked] public partial class Item<T> { [Tinyhand.Key(0), Link(Type=ChainType.Ordered, Primary=true)] public int Id {get;set;} } public class Use { public Item<int>.GoshujinClass Items = new(); }", LocalReferences.Value);
+        Assert.DoesNotContain(compilation.SourceModule.ReferencedAssemblySymbols, UsesValueLink);
+        var driver = Driver().RunGenerators(compilation, TestContext.Current.CancellationToken);
+        Assert.All(driver.GetRunResult().Results, x => Assert.Null(x.Exception));
+        Assert.Contains(GeneratedText(driver), x => x.Contains("RegisterObject<global::Item<int>.@GoshujinClass>()", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void RecursiveNonOwnerGenericsDoNotFailWhenNoGenericOwnerCanExist()
+    {
+        // The walk that reports CLG037 is unnecessary when every possible owner is a local non-generic declaration.
+        var compilation = Compile("[Tinyhand.TinyhandObject, Linked] public partial class Trigger {} public partial class Item<T> { public Item<System.Collections.Generic.List<T>> Next {get;set;} = null!; } public class Root { public Item<int> Item = new(); }", LocalReferences.Value);
+        var driver = Driver().RunGenerators(compilation, TestContext.Current.CancellationToken);
+        Assert.DoesNotContain(driver.GetRunResult().Diagnostics, x => x.Id == "CLG037");
+        Assert.Contains(GeneratedText(driver), x => x.Contains("RegisterObject<global::Trigger.@GoshujinClass>()", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void InterpolatedScopingLinesMatchStringLines()
+    {
+        ulong key = 0xABCDEF;
+        string? missing = null;
+        var number = -12;
+        var name = "Item";
+
+        var plain = new ValueLinkGenerator::Arc.Visceral.ScopingStringBuilder();
+        using (plain.ScopeBrace("class " + name))
+        {
+            plain.AppendLine("const ulong Key = 0x" + key.ToString("X") + "; // " + missing + number + 'c' + true + DayOfWeek.Friday);
+        }
+
+        var interpolated = new ValueLinkGenerator::Arc.Visceral.ScopingStringBuilder();
+        using (interpolated.ScopeBrace($"class {name}"))
+        {
+            interpolated.AppendLine($"const ulong Key = 0x{key:X}; // {missing}{number}{'c'}{true}{DayOfWeek.Friday}");
+        }
+
+        // Exercise the handler explicitly as well, in case overload resolution picked the string overload above.
+        var explicitHandler = new ValueLinkGenerator::Arc.Visceral.ScopingStringBuilder();
+        var preface = new ValueLinkGenerator::Arc.Visceral.ScopingStringBuilder.LineHandler(6, 1, explicitHandler);
+        preface.AppendLiteral("class ");
+        preface.AppendFormatted(name);
+        using (explicitHandler.ScopeBrace(ref preface))
+        {
+            var line = new ValueLinkGenerator::Arc.Visceral.ScopingStringBuilder.LineHandler(0, 0, explicitHandler);
+            line.AppendLiteral("const ulong Key = 0x");
+            line.AppendFormatted(key, "X");
+            line.AppendLiteral("; // ");
+            line.AppendFormatted(missing);
+            line.AppendFormatted(number);
+            line.AppendFormatted('c');
+            line.AppendFormatted(true);
+            line.AppendFormatted(DayOfWeek.Friday);
+            explicitHandler.AppendLine(ref line);
+        }
+
+        var expected = plain.Finalize();
+        Assert.Equal(expected, interpolated.Finalize());
+        Assert.Equal(expected, explicitHandler.Finalize());
+    }
+
+    private static readonly Lazy<MetadataReference[]> LocalReferences = new(() => References.Value
+        .Where(x => !string.Equals(Path.GetFileName(((PortableExecutableReference)x).FilePath), "NativeAotModels.dll", StringComparison.OrdinalIgnoreCase)).ToArray());
+
+    private static bool UsesValueLink(IAssemblySymbol assembly)
+        => assembly.Name != "ValueLink" && assembly.Modules.Any(x => x.ReferencedAssemblies.Any(y => y.Name == "ValueLink"));
+
+    private static CSharpCompilation Compile(string declaration, MetadataReference[]? references = null) => CSharpCompilation.Create(
         "GeneratorContract",
         [CSharpSyntaxTree.ParseText("using ValueLink; using Linked = ValueLink.ValueLinkObjectAttribute; " + declaration, ParseOptions, "Input.cs")],
-        References.Value,
+        references ?? References.Value,
         new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: NullableContextOptions.Enable));
 
     private static GeneratorDriver Driver() => CSharpGeneratorDriver.Create([new Generator().AsSourceGenerator()], parseOptions: ParseOptions);

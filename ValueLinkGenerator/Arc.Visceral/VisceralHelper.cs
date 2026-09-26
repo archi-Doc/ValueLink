@@ -26,14 +26,16 @@ internal static class VisceralHelper
             return constructorArguments[constructorIndex];
         }
         else if (name != null)
-        {// Named Argument.
-            var pair = namedArguments.FirstOrDefault(x => x.Key == name);
-            if (pair.Equals(default(KeyValuePair<string, object?>)))
+        {// Named Argument. A loop avoids a closure per lookup and the reflection-based KeyValuePair equality.
+            foreach (var pair in namedArguments)
             {
-                return null;
+                if (pair.Key == name)
+                {
+                    return pair.Value;
+                }
             }
 
-            return pair.Value;
+            return null;
         }
         else
         {

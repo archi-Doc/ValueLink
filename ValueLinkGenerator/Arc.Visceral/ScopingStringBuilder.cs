@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Arc.Visceral;
@@ -91,24 +92,28 @@ public class ScopingStringBuilder
         return new Scope(this, true, true);
     }
 
+    /// <summary>
+    /// Appends an interpolated preface line directly to the buffer and opens a brace scope.
+    /// </summary>
+    /// <param name="preface">The interpolated preface, written to the buffer as it is formatted.</param>
+    /// <returns>The opened scope.</returns>
+    public IScope ScopeBrace([InterpolatedStringHandlerArgument("")] ref LineHandler preface)
+    {
+        this.Append("\r\n", false);
+        this.Append("{\r\n");
+        return new Scope(this, true, true);
+    }
+
     public IScope ScopeObject(string objectName, bool addPeriod = true) => new Scope(this, objectName, addPeriod);
 
     public IScope ScopeFullObject(string fullObjectName) => new Scope(this, fullObjectName);
 
     public void Append(string text, bool indentFlag = true)
     {
-        if (this.CurrentScope.IsDisposed)
-        {
-            throw new ObjectDisposedException(nameof(Scope));
-        }
-
+        this.ThrowIfDisposed();
         if (indentFlag)
         {
-            var n = this.CurrentScope.CurrentIndent < MaxIndent ? this.CurrentScope.CurrentIndent : MaxIndent;
-            while (n-- > 0)
-            {
-                this.sb.Append(this.IndentString);
-            }
+            this.AppendIndent();
         }
 
         this.sb.Append(text);
@@ -117,16 +122,21 @@ public class ScopingStringBuilder
 
     public void AppendLine(string? text = null, bool indentFlag = true)
     {
-        if (this.CurrentScope.IsDisposed)
-        {
-            throw new ObjectDisposedException(nameof(Scope));
-        }
-
+        this.ThrowIfDisposed();
         if (text != null)
         {
             this.Append(text, indentFlag);
         }
 
+        this.Append("\r\n", false);
+    }
+
+    /// <summary>
+    /// Appends an indented interpolated line directly to the buffer, without creating an intermediate string.
+    /// </summary>
+    /// <param name="handler">The interpolated line, written to the buffer as it is formatted.</param>
+    public void AppendLine([InterpolatedStringHandlerArgument("")] ref LineHandler handler)
+    {
         this.Append("\r\n", false);
     }
 
@@ -191,19 +201,72 @@ public class ScopingStringBuilder
             s.Append("\r\n");
         }
 
-        s.Append(this.sb);
+        // Prepend the small prefix instead of copying the whole body into another builder.
+        this.sb.Insert(0, s.ToString());
+        var result = this.sb.ToString();
         this.sb.Clear();
         this.header.Clear();
         this.usingSystem.Clear();
         this.usingOther.Clear();
 
-        return s.ToString();
+        return result;
+    }
+
+    private void ThrowIfDisposed()
+    {
+        if (this.CurrentScope.IsDisposed)
+        {
+            throw new ObjectDisposedException(nameof(Scope));
+        }
+    }
+
+    private void AppendIndent()
+    {
+        var n = this.CurrentScope.CurrentIndent < MaxIndent ? this.CurrentScope.CurrentIndent : MaxIndent;
+        while (n-- > 0)
+        {
+            this.sb.Append(this.IndentString);
+        }
     }
 
     private StringBuilder sb = new StringBuilder();
     private List<string> header = new();
     private SortedSet<string> usingSystem = new();
     private SortedSet<string> usingOther = new();
+
+    /// <summary>
+    /// Writes an indented interpolated line directly to the builder; formatting matches default string interpolation.
+    /// </summary>
+    [InterpolatedStringHandler]
+    public readonly struct LineHandler
+    {
+        private readonly StringBuilder sb;
+
+        public LineHandler(int literalLength, int formattedCount, ScopingStringBuilder ssb)
+        {
+            ssb.ThrowIfDisposed();
+            ssb.AppendIndent();
+            this.sb = ssb.sb;
+        }
+
+        public void AppendLiteral(string value) => this.sb.Append(value);
+
+        public void AppendFormatted(string? value) => this.sb.Append(value);
+
+        public void AppendFormatted<T>(T value) => this.AppendFormatted(value, null);
+
+        public void AppendFormatted<T>(T value, string? format)
+        {
+            if (value is IFormattable formattable)
+            {
+                this.sb.Append(formattable.ToString(format, null));
+            }
+            else if (value is not null)
+            {
+                this.sb.Append(value.ToString());
+            }
+        }
+    }
 
     /// <summary>
     /// Closes a generated code scope when disposed.
