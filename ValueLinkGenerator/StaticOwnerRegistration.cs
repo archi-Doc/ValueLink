@@ -2,7 +2,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -14,6 +16,7 @@ namespace ValueLink.Generator;
 internal sealed class StaticOwnerRegistration
 {
     private const int ExpansionLimit = 16384;
+    private const string ValueLinkAssemblyName = "ValueLink";
 
     private readonly Compilation compilation;
     private readonly SourceProductionContext context;
@@ -23,7 +26,9 @@ internal sealed class StaticOwnerRegistration
     private readonly Queue<IMethodSymbol> pendingMethods = new();
     private readonly Dictionary<IMethodSymbol, (ITypeSymbol?[] Types, IMethodSymbol[] Methods)> methodBodies = new(SymbolEqualityComparer.Default);
     private readonly Dictionary<INamedTypeSymbol, string> owners = new(SymbolEqualityComparer.Default);
+    private readonly Dictionary<INamedTypeSymbol, string> attributeNames = new(SymbolEqualityComparer.Default);
     private int constructedTypeCount;
+    private bool nullableAnalysisOptionMissing;
     private bool limitReported;
 
     internal StaticOwnerRegistration(Compilation compilation, SourceProductionContext context)
@@ -34,59 +39,26 @@ internal sealed class StaticOwnerRegistration
 
     internal bool HasErrors { get; private set; }
 
-    internal (string Calls, string Bridges) Generate()
+    internal (string Calls, string Bridges) Generate(ImmutableArray<INamedTypeSymbol> localObjects)
     {
         if (this.compilation.GetTypeByMetadataName("Tinyhand.TinyhandObjectAttribute") is null)
         {
             return (string.Empty, string.Empty);
         }
 
-        foreach (var tree in this.compilation.SyntaxTrees)
+        if (this.RequiresWalk(localObjects))
         {
-            this.context.CancellationToken.ThrowIfCancellationRequested();
-            var model = this.compilation.GetSemanticModel(tree);
-            foreach (var node in tree.GetRoot(this.context.CancellationToken).DescendantNodes())
-            {
-                if (node is TypeDeclarationSyntax declaration)
-                {
-                    this.AddType(model.GetDeclaredSymbol(declaration, this.context.CancellationToken));
-                }
-                else if (node is TypeSyntax type)
-                {
-                    this.AddType(model.GetTypeInfo(type, this.context.CancellationToken).Type);
-                }
-                else if (node is InvocationExpressionSyntax invocation)
-                {
-                    this.AddMethod(model.GetSymbolInfo(invocation, this.context.CancellationToken).Symbol as IMethodSymbol);
-                }
-            }
+            this.Walk();
         }
-
-        // Tinyhand's explicit roots also cover models used only in external generic helpers.
-        foreach (var attribute in this.compilation.Assembly.GetAttributes())
-        {
-            if (attribute.AttributeClass?.ToDisplayString() == "Tinyhand.TinyhandRegisterAttribute")
+        else
+        {// Every owner the walk could reach is a local non-generic declaration, so register those directly.
+            foreach (var x in localObjects)
             {
-                foreach (var argument in attribute.ConstructorArguments)
+                this.context.CancellationToken.ThrowIfCancellationRequested();
+                if (!x.IsRefLikeType && this.IsClosed(x))
                 {
-                    if (argument.Value is ITypeSymbol type)
-                    {
-                        this.AddType(type);
-                    }
+                    this.AddOwner(x, x.GetAttributes());
                 }
-            }
-        }
-
-        while (!this.HasErrors && (this.pendingTypes.Count > 0 || this.pendingMethods.Count > 0))
-        {
-            this.context.CancellationToken.ThrowIfCancellationRequested();
-            if (this.pendingMethods.Count > 0)
-            {
-                this.ProcessMethod(this.pendingMethods.Dequeue());
-            }
-            else
-            {
-                this.ProcessType(this.pendingTypes.Dequeue());
             }
         }
 
@@ -122,28 +94,184 @@ internal sealed class StaticOwnerRegistration
 
     private static string Name(ITypeSymbol type) => type.WithNullableAnnotation(NullableAnnotation.None).ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
+#pragma warning disable RSEXPERIMENTAL001 // Isolated so that a missing experimental member fails only this call.
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static SemanticModel GetSemanticModelWithoutNullableAnalysis(Compilation compilation, SyntaxTree tree)
+        => compilation.GetSemanticModel(tree, SemanticModelOptions.DisableNullableAnalysis);
+#pragma warning restore RSEXPERIMENTAL001
+
+    /// <summary>
+    /// Determines whether owners can exist beyond local non-generic declarations: closed generic owners
+    /// need the walk to find their instantiations, and another assembly that uses ValueLink may define owners.
+    /// </summary>
+    private bool RequiresWalk(ImmutableArray<INamedTypeSymbol> localObjects)
+    {
+        foreach (var x in localObjects)
+        {
+            for (var type = x; type is not null; type = type.ContainingType)
+            {
+                if (type.Arity > 0)
+                {
+                    return true;
+                }
+            }
+        }
+
+        foreach (var assembly in this.compilation.SourceModule.ReferencedAssemblySymbols)
+        {
+            if (assembly.Name == ValueLinkAssemblyName)
+            {
+                continue;
+            }
+
+            foreach (var module in assembly.Modules)
+            {
+                foreach (var reference in module.ReferencedAssemblies)
+                {
+                    if (reference.Name == ValueLinkAssemblyName)
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private void Walk()
+    {
+        var cancellationToken = this.context.CancellationToken;
+        foreach (var tree in this.compilation.SyntaxTrees)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var model = this.GetSemanticModel(tree);
+            foreach (var node in tree.GetRoot(cancellationToken).DescendantNodes())
+            {
+                if (node is TypeDeclarationSyntax declaration)
+                {
+                    this.AddType(model.GetDeclaredSymbol(declaration, cancellationToken));
+                }
+                else if (node is TypeSyntax type)
+                {
+                    if (type is not PredefinedTypeSyntax)
+                    {// Special types never lead to owners.
+                        this.AddType(model.GetTypeInfo(type, cancellationToken).Type);
+                    }
+                }
+                else if (node is InvocationExpressionSyntax invocation)
+                {
+                    this.AddMethod(model.GetSymbolInfo(invocation, cancellationToken).Symbol as IMethodSymbol);
+                }
+            }
+        }
+
+        // Tinyhand's explicit roots also cover models used only in external generic helpers.
+        foreach (var attribute in this.compilation.Assembly.GetAttributes())
+        {
+            if (this.AttributeName(attribute) == "Tinyhand.TinyhandRegisterAttribute")
+            {
+                foreach (var argument in attribute.ConstructorArguments)
+                {
+                    if (argument.Value is ITypeSymbol type)
+                    {
+                        this.AddType(type);
+                    }
+                }
+            }
+        }
+
+        while (!this.HasErrors && (this.pendingTypes.Count > 0 || this.pendingMethods.Count > 0))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (this.pendingMethods.Count > 0)
+            {
+                this.ProcessMethod(this.pendingMethods.Dequeue());
+            }
+            else
+            {
+                this.ProcessType(this.pendingTypes.Dequeue());
+            }
+        }
+    }
+
+    // Owner discovery ignores nullability, and nullable flow analysis dominates binding cost.
+    private SemanticModel GetSemanticModel(SyntaxTree tree)
+    {
+        if (!this.nullableAnalysisOptionMissing)
+        {
+            try
+            {
+                return GetSemanticModelWithoutNullableAnalysis(this.compilation, tree);
+            }
+            catch (MissingMethodException)
+            {// The option is experimental; a host compiler without it keeps the default model.
+                this.nullableAnalysisOptionMissing = true;
+            }
+            catch (TypeLoadException)
+            {
+                this.nullableAnalysisOptionMissing = true;
+            }
+        }
+
+        return this.compilation.GetSemanticModel(tree);
+    }
+
+    private string? AttributeName(AttributeData attribute)
+    {
+        if (attribute.AttributeClass is not { } attributeClass)
+        {
+            return null;
+        }
+
+        if (!this.attributeNames.TryGetValue(attributeClass, out var name))
+        {
+            name = attributeClass.ToDisplayString();
+            this.attributeNames.Add(attributeClass, name);
+        }
+
+        return name;
+    }
+
     private bool IsClosed(ITypeSymbol type)
     {
         var remaining = 4096;
-        return Check(type, 64);
+        return this.IsClosed(type, type, 64, ref remaining);
+    }
 
-        bool Check(ITypeSymbol candidate, int depth)
+    private bool IsClosed(ITypeSymbol root, ITypeSymbol candidate, int depth, ref int remaining)
+    {
+        if (depth == 0 || --remaining < 0)
         {
-            if (depth == 0 || --remaining < 0)
+            this.ReportLimit(root);
+            return false;
+        }
+
+        if (candidate is IArrayTypeSymbol array)
+        {
+            return this.IsClosed(root, array.ElementType, depth - 1, ref remaining);
+        }
+
+        if (candidate is not INamedTypeSymbol named ||
+            named.TypeKind == TypeKind.Error || named.IsExtension || named.IsAnonymousType || named.IsUnboundGenericType)
+        {// Type parameters and other non-named types are open.
+            return false;
+        }
+
+        if (named.ContainingType is { } containingType && !this.IsClosed(root, containingType, depth - 1, ref remaining))
+        {
+            return false;
+        }
+
+        foreach (var argument in named.TypeArguments)
+        {
+            if (!this.IsClosed(root, argument, depth - 1, ref remaining))
             {
-                this.ReportLimit(type);
                 return false;
             }
-
-            return candidate switch
-            {
-                ITypeParameterSymbol => false,
-                IArrayTypeSymbol array => Check(array.ElementType, depth - 1),
-                INamedTypeSymbol named => named.TypeKind != TypeKind.Error && !named.IsExtension && !named.IsAnonymousType && !named.IsUnboundGenericType &&
-                    (named.ContainingType is null || Check(named.ContainingType, depth - 1)) && named.TypeArguments.All(x => Check(x, depth - 1)),
-                _ => false,
-            };
         }
+
+        return true;
     }
 
     private void ReportLimit(ITypeSymbol type)
@@ -158,7 +286,9 @@ internal sealed class StaticOwnerRegistration
 
     private void AddType(ITypeSymbol? type)
     {
-        if (this.HasErrors || type is null || type.SpecialType == SpecialType.System_Void || type.IsRefLikeType || !this.IsClosed(type))
+        // A known type already passed the checks below; testing it first avoids rechecking and re-annotating it.
+        if (this.HasErrors || type is null || type.SpecialType == SpecialType.System_Void || type.IsRefLikeType ||
+            this.types.Contains(type) || !this.IsClosed(type))
         {
             return;
         }
@@ -197,14 +327,7 @@ internal sealed class StaticOwnerRegistration
             this.AddType(argument);
         }
 
-        var attributes = named.GetAttributes();
-        var link = attributes.FirstOrDefault(x => x.AttributeClass?.ToDisplayString() == ValueLinkObjectAttributeMock.FullName);
-        var serializable = attributes.Any(x => x.AttributeClass?.ToDisplayString() is "Tinyhand.TinyhandObjectAttribute" or "Tinyhand.TinyhandUnionAttribute");
-        if (link is not null && serializable)
-        {
-            var name = link.NamedArguments.FirstOrDefault(x => x.Key == "GoshujinClassName").Value.Value as string;
-            this.owners[named] = string.IsNullOrEmpty(name) ? "GoshujinClass" : name!;
-        }
+        var serializable = this.AddOwner(named, named.GetAttributes());
 
         // Follow concrete member types of source models and referenced Tinyhand models.
         if (SymbolEqualityComparer.Default.Equals(named.ContainingAssembly, this.compilation.Assembly) ||
@@ -213,19 +336,82 @@ internal sealed class StaticOwnerRegistration
             this.AddType(named.BaseType);
             foreach (var member in named.GetMembers())
             {
-                if (!member.IsImplicitlyDeclared && !member.GetAttributes().Any(x => x.AttributeClass?.ToDisplayString() == "Tinyhand.IgnoreMemberAttribute"))
+                var memberType = member switch { IFieldSymbol field => field.Type, IPropertySymbol property => property.Type, _ => null };
+                if (memberType is null || member.IsImplicitlyDeclared || this.types.Contains(memberType))
+                {// Skip binding attributes of members that cannot add a type.
+                    continue;
+                }
+
+                var ignored = false;
+                foreach (var attribute in member.GetAttributes())
                 {
-                    this.AddType(member switch { IFieldSymbol field => field.Type, IPropertySymbol property => property.Type, _ => null });
+                    if (this.AttributeName(attribute) == "Tinyhand.IgnoreMemberAttribute")
+                    {
+                        ignored = true;
+                        break;
+                    }
+                }
+
+                if (!ignored)
+                {
+                    this.AddType(memberType);
                 }
             }
         }
     }
 
+    /// <summary>
+    /// Records a ValueLink object that Tinyhand serializes as an owner.
+    /// </summary>
+    /// <returns>True if the type is a Tinyhand object or union.</returns>
+    private bool AddOwner(INamedTypeSymbol named, ImmutableArray<AttributeData> attributes)
+    {
+        AttributeData? link = null;
+        var serializable = false;
+        foreach (var attribute in attributes)
+        {
+            var name = this.AttributeName(attribute);
+            if (link is null && name == ValueLinkObjectAttributeMock.FullName)
+            {
+                link = attribute;
+            }
+            else if (name is "Tinyhand.TinyhandObjectAttribute" or "Tinyhand.TinyhandUnionAttribute")
+            {
+                serializable = true;
+            }
+        }
+
+        if (link is not null && serializable)
+        {
+            string? goshujinClassName = null;
+            foreach (var argument in link.NamedArguments)
+            {
+                if (argument.Key == "GoshujinClassName")
+                {
+                    goshujinClassName = argument.Value.Value as string;
+                    break;
+                }
+            }
+
+            this.owners[named] = string.IsNullOrEmpty(goshujinClassName) ? "GoshujinClass" : goshujinClassName!;
+        }
+
+        return serializable;
+    }
+
     private void AddMethod(IMethodSymbol? method)
     {
-        if (this.HasErrors || method is null || !this.IsClosed(method.ContainingType) || !method.TypeArguments.All(this.IsClosed))
+        if (this.HasErrors || method is null || !this.IsClosed(method.ContainingType))
         {
             return;
+        }
+
+        foreach (var argument in method.TypeArguments)
+        {
+            if (!this.IsClosed(argument))
+            {
+                return;
+            }
         }
 
         // A factory can expose a closed owner only through its return type, even when
@@ -308,7 +494,7 @@ internal sealed class StaticOwnerRegistration
         foreach (var reference in definition.DeclaringSyntaxReferences)
         {
             var syntax = reference.GetSyntax(this.context.CancellationToken);
-            var model = this.compilation.GetSemanticModel(syntax.SyntaxTree);
+            var model = this.GetSemanticModel(syntax.SyntaxTree);
             foreach (var node in syntax.DescendantNodes())
             {
                 if (node is TypeSyntax type)
